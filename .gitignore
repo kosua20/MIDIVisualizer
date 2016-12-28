@@ -1,0 +1,6 @@
+build/
+.DS_Store
+.thumb
+ext/
+tracks/
+*.xcodeproj
