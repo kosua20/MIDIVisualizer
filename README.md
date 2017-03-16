@@ -1,4 +1,4 @@
-#MIDI Visualizer
+# MIDI Visualizer
 
 A small MIDI visualizer, written in C++/OpenGL. Relies on GLFW3 and GLEW.
 
