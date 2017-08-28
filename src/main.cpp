@@ -48,7 +48,7 @@ int main( int argc, char** argv) {
 	
 	printHelp();
 	
-	if(argc != 2 && argc != 3 && argc != 5 && argc != 6){
+	if(argc > 3 && argc != 5 && argc != 6){
 		std::cerr << "[ERROR]: wrong number of arguments" << std::endl;
 		return 1;
 	}
@@ -86,7 +86,7 @@ int main( int argc, char** argv) {
 	}
 	
 	// Read arguments.
-	const std::string midiFilePath = argv[1];
+	const std::string midiFilePath = argc > 1 ? argv[1] : "song.mid";
 	glm::vec3 baseColor = 1.35f*glm::vec3(0.57f,0.19f,0.98f);
 	float scale = 0.5;
 	if(argc == 3 || argc == 6 ){
