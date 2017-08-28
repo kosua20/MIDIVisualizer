@@ -1,7 +1,7 @@
 #ifndef ProgramUtilities_h
 #define ProgramUtilities_h
 
-#include <GL/glew.h>
+#include <gl3w/gl3w.h>
 #include <string>
 #include <vector>
 
@@ -28,6 +28,7 @@ GLuint createGLProgramFromStrings(const std::string & vertexContent, const std::
 /// Flip an image vertically (line by line).
 void flipImage(std::vector<unsigned char> & image, const int width, const int height);
 
+void flipImage(unsigned char* & image, const int width, const int height);
 
 // Texture loading.
 
@@ -36,7 +37,7 @@ GLuint loadTexture(const std::string& path, bool sRGB);
 
 GLuint loadTexture(const std::string& path, const GLuint program, const GLuint textureSlot, const std::string& uniformName, bool sRGB = false);
 
-GLuint loadTexture(std::vector<unsigned char> image, unsigned imwidth, unsigned imheight, bool sRGB);
+GLuint loadTexture( unsigned char* image, unsigned imwidth, unsigned imheight, bool sRGB);
 
 // Cubemap texture.
 GLuint loadTextureCubeMap(const std::string& pathBase, bool sRGB);

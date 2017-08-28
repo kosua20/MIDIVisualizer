@@ -79,7 +79,7 @@ GLuint loadShader(const std::string & prog, GLuint type){
 	if (success != GL_TRUE) {
 		GLint infoLogLength;
 		glGetShaderiv(id, GL_INFO_LOG_LENGTH, &infoLogLength);
-		std::vector<char> infoLog(std::max(infoLogLength, int(1)));
+		std::vector<char> infoLog((std::max)(infoLogLength, int(1)));
 		glGetShaderInfoLog(id, infoLogLength, NULL, &infoLog[0]);
 
 		std::cerr << std::endl 
@@ -144,7 +144,7 @@ GLuint createGLProgramFromStrings(const std::string & vertexContent, const std::
 	if(!success) {
 		GLint infoLogLength;
 		glGetProgramiv(id, GL_INFO_LOG_LENGTH, &infoLogLength);
-		std::vector<char> infoLog(std::max(infoLogLength, int(1)));
+		std::vector<char> infoLog((std::max)(infoLogLength, int(1)));
 		glGetProgramInfoLog(id, infoLogLength, NULL, &infoLog[0]);
 		
 		std::cerr << "Failed loading program: " << &infoLog[0] << std::endl;
@@ -185,6 +185,19 @@ void flipImage(std::vector<unsigned char> & image, const int width, const int he
 	}
 }
 
+void flipImage(unsigned char* & image, const int width, const int height) {
+	// Compute the number of components per pixel.
+	int components = 4;// image.size() / (width * height);
+	// The width in bytes.
+	int widthInBytes = width * components;
+	int halfHeight = height / 2;
+
+	// For each line of the first half, we swap it with the mirroring line, starting from the end of the image.
+	for (int h = 0; h < halfHeight; h++) {
+		std::swap_ranges(image + h * widthInBytes, image + (h + 1) * widthInBytes, image + (height - h - 1) * widthInBytes);
+	}
+}
+
 GLuint loadTexture(const std::string& path, const GLuint program, const GLuint textureSlot, const std::string& uniformName, bool sRGB){
 	
 	GLuint textureId = loadTexture(path, sRGB);
@@ -220,7 +233,7 @@ GLuint loadTexture(const std::string& path, bool sRGB){
 	return textureId;
 }
 
-GLuint loadTexture(std::vector<unsigned char> image, unsigned imwidth, unsigned imheight, bool sRGB){
+GLuint loadTexture( unsigned char* image, unsigned imwidth, unsigned imheight, bool sRGB){
 	
 	flipImage(image,imwidth, imheight);
 	GLuint textureId;

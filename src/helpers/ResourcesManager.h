@@ -11,7 +11,7 @@ class ResourcesManager {
 
 public:
 	
-	static std::vector<unsigned char> getDataForImage(const std::string & fileName, unsigned int & imwidth, unsigned int & imheight);
+	static  unsigned char* getDataForImage(const std::string & fileName, unsigned int & imwidth, unsigned int & imheight);
 	
 	static std::string getStringForShader(const std::string & shaderName);
 	
@@ -20,7 +20,7 @@ public:
 private:
 	static std::map<std::string, std::string> shadersLibrary;
 	
-	static std::map<std::string, std::vector<unsigned char>> imagesLibrary;
+	static std::map<std::string,  unsigned char*> imagesLibrary;
 	
 	static std::map<std::string, glm::vec2> imagesSize;
 };
