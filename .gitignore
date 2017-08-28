@@ -3,4 +3,10 @@ build/
 .thumb
 ext/
 tracks/
+x64/
+.vs/
+*.VC.db
+*.user
 *.xcodeproj
+*.xcuserstate
+*/xcuserdata/*
