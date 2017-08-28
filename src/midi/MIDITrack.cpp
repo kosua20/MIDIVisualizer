@@ -165,9 +165,9 @@ void MIDITrack::extractNotes(short lowerBound, short higherBound, bool normalize
 	double timeInUnits = 0;
 	
 	for(auto& event : events){
-		timeInUnits += double(event.delta);
 		
 		if(event.category == midiEvent){
+			timeInUnits += double(event.delta);
 			if(event.type == noteOn && event.data[2] > 0){
 				if(event.data[1]>= lowerBound && event.data[1] <= higherBound){
 					currentNotes[event.data[1] - (normalize ? lowerBound : 0)] = std::make_tuple(timeInUnits, event.data[2], event.data[0]);
@@ -183,24 +183,29 @@ void MIDITrack::extractNotes(short lowerBound, short higherBound, bool normalize
 					
 					MIDINote note(noteInd, start/1000000.0f, duration/1000000.0f, std::get<1>(noteTuple), std::get<2>(noteTuple));
 					notes.push_back(note);
-					
 					currentNotes.erase(noteInd);
 				}
+			} else if(event.type == programChange){
+				// It seems those should be ignored.
+				timeInUnits -= double(event.delta);
+			} else {
+				//std::cout << "Unknown midi event: " << int(event.type) << "," << double(event.delta) << std::endl;
 			}
 		} else if(event.category == metaEvent && event.type == setTempo){
 			int tempo = (event.data[0] & 0xFF) << 16 | (event.data[1] & 0xFF) << 8 | (event.data[0] & 0xFF);
 			_unitTime = double(tempo) / _unitsPerQuarterNote;
 			
 			secondsPerMeasure = computeMeasureDuration(tempo);
-			std::cout << "[INFO]: Tempo changes detected." << std::endl;
+			//std::cout << "[INFO]: Tempo changes detected." << double(event.delta) << std::endl;
 		} else if(event.category == metaEvent && event.type == timeSignature){
 			secondsPerMeasure /= _timeSignature;
 			_timeSignature = double(event.data[0]) / double(std::pow(2,event.data[1]));
 			secondsPerMeasure *= _timeSignature;
-			std::cout << "[INFO]: Time signature changes detected." << std::endl;
+			//std::cout << "[INFO]: Time signature changes detected." << double(event.delta) << std::endl;
+		} else {
+			//std::cout << "Unknown event: " << double(event.delta) << std::endl;
 		}
 	}
-	
 	
 	// Sort.
 	std::sort(notes.begin(), notes.end(), [](const MIDINote & note1, const MIDINote & note2) { return(note1.start < note2.start); } );
