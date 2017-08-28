@@ -1,7 +1,7 @@
 #ifndef MIDIScene_h
 #define MIDIScene_h
 #include <GLFW/glfw3.h>
-#include <GL/glew.h>
+#include <gl3w/gl3w.h>
 #include <glm/glm.hpp>
 #include "../midi/MIDIFile.h"
 

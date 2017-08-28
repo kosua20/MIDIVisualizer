@@ -1,7 +1,7 @@
 #ifndef Renderer_h
 #define Renderer_h
 #include <GLFW/glfw3.h>
-#include <GL/glew.h>
+#include <gl3w/gl3w.h>
 #include <glm/glm.hpp>
 #include <memory>
 

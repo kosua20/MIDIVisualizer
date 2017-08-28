@@ -1,4 +1,4 @@
-#include <GL/glew.h> // to load OpenGL extensions at runtime
+#include <gl3w/gl3w.h> // to load OpenGL extensions at runtime
 #include <GLFW/glfw3.h> // to set up the OpenGL context and manage window lifecycle and inputs
 
 #include <stdio.h>
@@ -76,12 +76,14 @@ int main( int argc, char** argv) {
 	// Bind the OpenGL context and the new window.
 	glfwMakeContextCurrent(window);
 
-	// On OS X, GLEW needs the experimental flag, else some extensions won't be loaded.
-	glewExperimental = GL_TRUE;
-
-	// Initialize GLEW, for loading modern OpenGL extensions.
-	glewInit();
-	checkGLError();
+	if (gl3wInit()) {
+		std::cerr << "Failed to initialize OpenGL" << std::endl;
+		return -1;
+	}
+	if (!gl3wIsSupported(3, 2)) {
+		std::cerr << "OpenGL 3.2 not supported\n" << std::endl;
+		return -1;
+	}
 	
 	// Read arguments.
 	const std::string midiFilePath = argv[1];
