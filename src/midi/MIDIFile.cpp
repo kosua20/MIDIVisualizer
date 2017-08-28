@@ -77,6 +77,13 @@ MIDIFile::MIDIFile(const std::string & filePath){
 		track.extractNotes(21,108, true);
 	}
 	mergeTracks();
+
+	// Normalize duration.
+	/*const float firstNoteStart = tracks[0].notes[0].start;
+	for (size_t i = 0; i < tracks[0].notes.size(); ++i) {
+		tracks[0].notes[i].start -= firstNoteStart;
+	}*/
+
 	input.close();
 	
 	
@@ -103,10 +110,12 @@ void MIDIFile::mergeTracks(){
 		for(auto& note : tracks[i].notes){
 			tracks[0].notes.push_back(note);
 		}
-		
+		//might want to move it out of the loop
 		std::sort(tracks[0].notes.begin(), tracks[0].notes.end(), [](const MIDINote & note1, const MIDINote & note2) { return(note1.start < note2.start); } );
 		
 	}
+
+	
 }
 
 void MIDIFile::getNotesActive(std::vector<int> & actives, double time, size_t track){

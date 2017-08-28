@@ -1,5 +1,6 @@
 #include <tuple>
 #include <cmath>
+#include <algorithm>
 #include "MIDITrack.h"
 
 MIDIEvent MIDITrack::readMIDIEvent(const std::vector<char> & buffer, size_t & position, size_t delta){
