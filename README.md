@@ -20,7 +20,7 @@ You can run the executable from the command-line, specifying a MIDI file to read
 
     MIDIVisualizer.exe path\to\file.mid [scale] [red green blue]
     
-If you're not familiar with command-line, you can create a shortcut to the executable and specify the arguments in its properties. Right-click on the shortcut icon, select 'Properties', then the 'Shortcut' tab, and append the arguments in the 'Target' field.
+If you're not familiar with command-line, you can create a shortcut to the executable and specify the arguments in its properties. Right-click on the shortcut icon, select `Properties`, then the `Shortcut` tab, and append the arguments in the `Target` field.
 
 ![Instructions for Windows](help.png)
 
