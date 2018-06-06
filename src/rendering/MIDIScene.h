@@ -9,12 +9,10 @@ class MIDIScene {
 
 public:
 
-	MIDIScene();
-
 	~MIDIScene();
 
 	/// Init function
-	void init(const std::string & midiFilePath, const glm::vec3& baseColor, const float scale);
+	MIDIScene(const std::string & midiFilePath, const glm::vec3& baseColor, const float scale);
 	
 	
 	void updatesActiveNotes(double time);
@@ -30,6 +28,14 @@ public:
 	void clean();
 
 	const MIDIFile& midiFile() { return _midiFile; }
+	
+	void setScale(const float scale);
+	
+	void setColor(const glm::vec3 & color){ _baseColor = color; };
+	
+	glm::vec3 getColor(){ return _baseColor; };
+	
+	glm::vec3 & getColorRef(){ return _baseColor; };
 	
 private:
 	

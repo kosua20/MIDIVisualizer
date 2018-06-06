@@ -10,11 +10,10 @@
 
 #include "MIDIScene.h"
 
-MIDIScene::MIDIScene() { }
 
 MIDIScene::~MIDIScene(){}
 
-void MIDIScene::init(const std::string & midiFilePath, const glm::vec3& baseColor, const float scale){
+MIDIScene::MIDIScene(const std::string & midiFilePath, const glm::vec3& baseColor, const float scale){
 	
 	// MIDI processing.
 	_midiFile = MIDIFile(midiFilePath);
@@ -117,10 +116,7 @@ void MIDIScene::init(const std::string & midiFilePath, const glm::vec3& baseColo
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
 	
 	// Flash texture loading.
-	unsigned int imwidth;
-	unsigned int imheight;
-	auto flashTexture = ResourcesManager::getDataForImage("flash", imwidth, imheight);
-	_texFlash = loadTexture(flashTexture, imwidth, imheight, false);
+	_texFlash = ResourcesManager::getTextureFor("flash");
 	glUseProgram(_programFlashesId);
 	glActiveTexture(GL_TEXTURE0);
 	GLuint texUniID = glGetUniformLocation(_programFlashesId, "textureFlash");
@@ -142,23 +138,28 @@ void MIDIScene::init(const std::string & midiFilePath, const glm::vec3& baseColo
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
 	
 	// Particles trajectories texture loading.
-	unsigned int imwidth1;
-	unsigned int imheight1;
-	auto particlesTexture = ResourcesManager::getDataForImage("particles", imwidth1, imheight1);
-	_texParticles = loadTexture(particlesTexture, imwidth1, imheight1, false);
+	_texParticles = ResourcesManager::getTextureFor("particles");
 	glUseProgram(_programParticulesId);
 	glActiveTexture(GL_TEXTURE0);
 	GLuint texUniID1 = glGetUniformLocation(_programParticulesId, "textureParticles");
 	glUniform1i(texUniID1, 0);
 	
 	// Pass texture size to shader.
+	const glm::vec2 tsize = ResourcesManager::getTextureSizeFor("particles");
 	GLuint texSizeID = glGetUniformLocation(_programParticulesId, "inverseTextureSize");
-	glUniform2f(texSizeID,1.0/float(imwidth1), 1.0/float(imheight1));
+	glUniform2f(texSizeID,1.0/float(tsize[0]), 1.0/float(tsize[1]));
 	glUseProgram(0);
 	
 	// Prepare actives notes array.
 	_actives = std::vector<std::pair<double,double>>(88,std::make_pair(-10000.0,0.0));
 
+}
+
+void MIDIScene::setScale(const float scale){
+	glUseProgram(_programId);
+	GLuint speedID = glGetUniformLocation(_programId, "mainSpeed");
+	glUniform1f(speedID, scale);
+	glUseProgram(0);
 }
 
 void MIDIScene::updatesActiveNotes(double time){
@@ -283,8 +284,8 @@ void MIDIScene::clean(){
 	glDeleteVertexArrays(1, &_vao);
 	glDeleteVertexArrays(1, &_vaoFlashes);
 	glDeleteVertexArrays(1, &_vaoParticles);
-	glDeleteTextures(1, &_texFlash);
-	glDeleteTextures(1, &_texParticles);
+	//glDeleteTextures(1, &_texFlash);
+	//glDeleteTextures(1, &_texParticles);
 	glDeleteProgram(_programId);
 	glDeleteProgram(_programFlashesId);
 	glDeleteProgram(_programParticulesId);
