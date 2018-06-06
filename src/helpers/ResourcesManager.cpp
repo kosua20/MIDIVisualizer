@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "ResourcesManager.h"
-
+#include "ProgramUtilities.h"
 // Ressources headers.
 
 #include "../ressources/data.h"
@@ -47,6 +47,43 @@ void ResourcesManager::loadResources(){
 	imagesSize["flash"] = glm::vec2(256, 256);
 	imagesSize["particles"] = glm::vec2(337, 24);
 	
+	{
+		unsigned int imwidth;
+		unsigned int imheight;
+		auto fontTexture = ResourcesManager::getDataForImage("font", imwidth, imheight);
+		textureLibrary["font"] = loadTexture(fontTexture, imwidth, imheight, false);
+	}
+	
+	{
+		unsigned int imwidth;
+		unsigned int imheight;
+		auto flashTexture = ResourcesManager::getDataForImage("flash", imwidth, imheight);
+		textureLibrary["flash"] = loadTexture(flashTexture, imwidth, imheight, false);
+	}
+	
+	{
+		unsigned int imwidth1;
+		unsigned int imheight1;
+		auto particlesTexture = ResourcesManager::getDataForImage("particles", imwidth1, imheight1);
+		textureLibrary["particles"] = loadTexture(particlesTexture, imwidth1, imheight1, false);
+	}
+}
+
+GLuint ResourcesManager::getTextureFor(const std::string & fileName){
+	if(textureLibrary.count(fileName) > 0){
+		return textureLibrary[fileName];
+	}
+	
+	std::cerr << "[WARNING]: Unable to find texture for name \"" << fileName << "\"." << std::endl;
+	return 0;
+}
+
+glm::vec2 ResourcesManager::getTextureSizeFor(const std::string & fileName){
+	if(imagesSize.count(fileName) > 0){
+		return imagesSize[fileName];
+	}
+	std::cerr << "[WARNING]: Unable to find texture size for name \"" << fileName << "\"." << std::endl;
+	return glm::vec2(0.0f,0.0f);
 }
 
 std::map<std::string, std::string> ResourcesManager::shadersLibrary = {};
@@ -54,3 +91,5 @@ std::map<std::string, std::string> ResourcesManager::shadersLibrary = {};
 std::map<std::string,  unsigned char*> ResourcesManager::imagesLibrary = {};
 
 std::map<std::string, glm::vec2> ResourcesManager::imagesSize = {};
+
+std::map<std::string, GLuint> ResourcesManager::textureLibrary = {};
