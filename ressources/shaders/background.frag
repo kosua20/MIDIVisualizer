@@ -6,6 +6,9 @@ in INTERFACE {
 
 uniform float time;
 uniform float secondsPerMeasure;
+uniform bool useDigits = true;
+uniform bool useHLines = true;
+uniform bool useVLines = true;
 uniform vec2 inverseScreenSize;
 uniform sampler2D screenTexture;
 
@@ -102,7 +105,7 @@ void main(){
 	
 	// Octaves lines.
 	for(int i = 0; i < 8; i++){
-		float lineIntensity = 0.7 * step(abs(In.uv.x - octaveLinesPositions[i]),inverseScreenSize.x);
+		float lineIntensity = useVLines ? (0.7 * step(abs(In.uv.x - octaveLinesPositions[i]),inverseScreenSize.x)) : 0.0;
 		intensity = max(intensity, lineIntensity);
 	}
 	
@@ -118,12 +121,12 @@ void main(){
 		vec2 position = vec2(0.005,bottomLimit + (secondsPerMeasure*(currentMesure+i) - time)*mainSpeed*0.5);
 		
 		// Compute intensity for the number display, and for the horizontal line.
-		float numberIntensity = printNumber(currentMesure + i,position, In.uv, scale);
-		float lineIntensity = 0.25*(step(abs(In.uv.y - position.y - 0.5 / scale.y), inverseScreenSize.y));
+		
+		float numberIntensity = useDigits ? printNumber(currentMesure + i,position, In.uv, scale) : 0.0;
+		float lineIntensity = useHLines ? (0.25*(step(abs(In.uv.y - position.y - 0.5 / scale.y), inverseScreenSize.y))) : 0.0;
 		
 		intensity = max(intensity, max(numberIntensity, lineIntensity));
 	}
-	intensity = 1.0;
 	if(intensity == 0.0){
 		// Transparent background.
 		discard;
