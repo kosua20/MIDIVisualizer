@@ -12,8 +12,11 @@ class Background : public ScreenQuad {
 public:
 
 	/// Init function with measure time.
-	void init(double secondsPerMeasure, const float scale);
-
+	Background(double secondsPerMeasure, const float scale);
+	
+	void setScale(const float scale);
+	
+	void setDisplay(const bool digits, const bool horiz, const bool vert);
 };
 
 #endif

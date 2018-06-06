@@ -7,13 +7,10 @@
 
 #include "Background.h"
 
-void Background::init(double secondsPerMeasure, const float scale){
+Background::Background(double secondsPerMeasure, const float scale){
 	
 	// Load font atlas.
-	unsigned int imwidth;
-	unsigned int imheight;
-	auto fontTexture = ResourcesManager::getDataForImage("font", imwidth, imheight);
-	GLuint textureId = loadTexture(fontTexture, imwidth, imheight, false);
+	GLuint textureId = ResourcesManager::getTextureFor("font");
 
 	ScreenQuad::init(textureId, ResourcesManager::getStringForShader("background_frag"));
 	
@@ -25,5 +22,20 @@ void Background::init(double secondsPerMeasure, const float scale){
 	glUniform1f(speedID, scale);
 	glUseProgram(0);
 	
+}
+
+void Background::setScale(const float scale){
+	glUseProgram(_programId);
+	GLuint speedID = glGetUniformLocation(_programId, "mainSpeed");
+	glUniform1f(speedID, scale);
+	glUseProgram(0);
+}
+
+void Background::setDisplay(const bool digits, const bool horiz, const bool vert){
+	glUseProgram(_programId);
+	GLuint id1 = glGetUniformLocation(_programId, "useDigits"); glUniform1i(id1, digits);
+	GLuint id2 = glGetUniformLocation(_programId, "useHLines"); glUniform1i(id2, horiz);
+	GLuint id3 = glGetUniformLocation(_programId, "useVLines"); glUniform1i(id3, vert);
+	glUseProgram(0);
 }
 
