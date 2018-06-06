@@ -39,6 +39,7 @@ private:
 	double _unitsPerQuarterNote;
 	double _unitTime;
 	double _timeSignature;
+	int _tempo;
 	
 	MIDIEvent readMIDIEvent(const std::vector<char> & buffer, size_t & position, size_t delta);
 	MIDIEvent readMetaEvent(const std::vector<char> & buffer, size_t & position, size_t delta);
@@ -52,8 +53,15 @@ public:
 	
 	void extractNotes(short lowerBound, short higherBound, bool normalize);
 	
+	void updateMetrics(const int tempo, const double signature);
+
+	int getTempo() const { return _tempo; }
+	double getSignature() const { return _timeSignature;  }
+
 	std::vector<MIDINote> getNotes(NoteType type);
 	
+	bool containsNotes();
+
 	void printNotes();
 	void printEvents();
 	
@@ -62,6 +70,7 @@ public:
 	std::string name;
 	std::string instrument;
 	double secondsPerMeasure;
+	bool hasTempo;
 	
 };
 

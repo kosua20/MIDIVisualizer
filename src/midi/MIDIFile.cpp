@@ -72,9 +72,23 @@ MIDIFile::MIDIFile(const std::string & filePath){
 		tracks.emplace_back();
 		pos = tracks.back().readTrack(buffer, pos, unitsPerQuarterNote);
 	}
-	
-	for(auto& track : tracks){
-		track.extractNotes(21, 108, true);
+	if (format == singleTrack) {
+		for (auto& track : tracks) {
+			track.extractNotes(21, 108, true);
+		}
+	} else if (format == tempoTrack) {
+		// There should be at least one track specifying the tempo, and one note track.
+		int tid = 0;
+		while(tid < _tracksCount && !tracks[tid].hasTempo) {
+			++tid;
+		}
+		int forcedTempo = tracks[tid].getTempo();
+		int forcedSignature = tracks[tid].getSignature();
+		// The tid track has a tempo !
+		for (auto& track : tracks) {
+			track.updateMetrics(forcedTempo, forcedSignature);
+			track.extractNotes(21, 108, true);
+		}
 	}
 	mergeTracks();
 

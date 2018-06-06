@@ -6,12 +6,18 @@
 MIDIEvent MIDITrack::readMIDIEvent(const std::vector<char> & buffer, size_t & position, size_t delta){
 	
 	uint8_t firstByte = read8(buffer, position);
+	size_t positionOffset = 1;
+
+	MIDIEventType type = static_cast<MIDIEventType>((firstByte & 0xF0) >> 4);
+	if (type == ignoreType) {
+		position += positionOffset;
+		return MIDIEvent(midiEvent, static_cast<uint8_t>(type), delta, {});
+	}
+
 	uint8_t secondByte = read8(buffer, position+1);
 	uint8_t thirdByte = read8(buffer, position+2);
-	
-	size_t positionOffset = 3;
-	
-	MIDIEventType type = static_cast<MIDIEventType>((firstByte & 0xF0) >> 4);
+	positionOffset += 2;
+
 	if(MIDIEventTypeName.count(type) == 0){
 		thirdByte = secondByte;
 		secondByte = firstByte;
@@ -110,7 +116,7 @@ size_t MIDITrack::readTrack(const std::vector<char>& buffer, size_t pos, uint16_
 	
 	// Scan events for track info.
 	// Could do it while creating events, but let's separate tasks, shall we?
-	int tempo = 0x555555;
+	_tempo = 0x555555;
 	bool minorKey = false;
 	short keyShift = 0;
 	_timeSignature = 4.0/4.0;
@@ -130,7 +136,7 @@ size_t MIDITrack::readTrack(const std::vector<char>& buffer, size_t pos, uint16_
 				}
 				instrument = tempName;
 			} else if (event.type == setTempo){
-				tempo = (event.data[0] & 0xFF) << 16 | (event.data[1] & 0xFF) << 8 | (event.data[0] & 0xFF);
+				_tempo = (event.data[0] & 0xFF) << 16 | (event.data[1] & 0xFF) << 8 | (event.data[0] & 0xFF);
 			} else if (event.type == timeSignature){
 				_timeSignature = double(event.data[0]) / double(std::pow(2,event.data[1]));
 			} else if (event.type == keySignature){
@@ -142,12 +148,12 @@ size_t MIDITrack::readTrack(const std::vector<char>& buffer, size_t pos, uint16_
 	
 	// micro s / delta =  (micros/qnote) / (delta/qnote) = tempo / unitsPerQuarterNote
 	_unitsPerQuarterNote = double(unitsPerQuarterNote);
-	_unitTime = double(tempo) / _unitsPerQuarterNote;
+	_unitTime = double(_tempo) / _unitsPerQuarterNote;
+	hasTempo = _tempo != 0x555555;
 	
+	secondsPerMeasure = computeMeasureDuration(_tempo);
 	
-	secondsPerMeasure = computeMeasureDuration(tempo);
-	
-	std::cout << "[INFO]: Track " << name << " (length: " << length << ", instrument: " << instrument <<", tempo: " << tempo << ", " << (minorKey ? "minor": "major") << ", measure duration: " << secondsPerMeasure << ")." << std::endl;
+	std::cout << "[INFO]: Track " << name << " (length: " << length << ", instrument: " << instrument <<", tempo: " << _tempo << ", " << (minorKey ? "minor": "major") << ", measure duration: " << secondsPerMeasure << ")." << std::endl;
 	
 	return backupPos + 8 + length;
 }
@@ -158,12 +164,24 @@ double MIDITrack::computeMeasureDuration(int tempo){
 	return double(tempo) * 4.0 * _timeSignature / 1000000.0;
 }
 
+bool MIDITrack::containsNotes() {
+	for (auto& event : events) {
+		if (event.category == midiEvent) {
+			if (event.type == noteOn || event.type == noteOff) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 void MIDITrack::extractNotes(short lowerBound, short higherBound, bool normalize){
 	notes.clear();
 	
 	std::map<short, std::tuple<double, short, short>> currentNotes;
 	double timeInUnits = 0;
 	
+
 	for(auto& event : events){
 		
 		if(event.category == midiEvent){
@@ -192,11 +210,11 @@ void MIDITrack::extractNotes(short lowerBound, short higherBound, bool normalize
 				//std::cout << "Unknown midi event: " << int(event.type) << "," << double(event.delta) << std::endl;
 			}
 		} else if(event.category == metaEvent && event.type == setTempo){
-			int tempo = (event.data[0] & 0xFF) << 16 | (event.data[1] & 0xFF) << 8 | (event.data[0] & 0xFF);
-			_unitTime = double(tempo) / _unitsPerQuarterNote;
+			_tempo = (event.data[0] & 0xFF) << 16 | (event.data[1] & 0xFF) << 8 | (event.data[0] & 0xFF);
+			_unitTime = double(_tempo) / _unitsPerQuarterNote;
 			
-			secondsPerMeasure = computeMeasureDuration(tempo);
 			//std::cout << "[INFO]: Tempo changes detected." << double(event.delta) << std::endl;
+			secondsPerMeasure = computeMeasureDuration(_tempo);
 		} else if(event.category == metaEvent && event.type == timeSignature){
 			secondsPerMeasure /= _timeSignature;
 			_timeSignature = double(event.data[0]) / double(std::pow(2,event.data[1]));
@@ -211,6 +229,17 @@ void MIDITrack::extractNotes(short lowerBound, short higherBound, bool normalize
 	std::sort(notes.begin(), notes.end(), [](const MIDINote & note1, const MIDINote & note2) { return(note1.start < note2.start); } );
 	
 	std::cout << "[INFO]: " << notes.size() << " notes extracted and sorted." << std::endl;
+}
+
+void MIDITrack::updateMetrics(const int tempo, const double signature)
+{
+	_tempo = tempo;
+	_unitTime = double(tempo) / _unitsPerQuarterNote;
+	secondsPerMeasure = computeMeasureDuration(tempo);
+
+	secondsPerMeasure /= _timeSignature;
+	_timeSignature = signature;
+	secondsPerMeasure *= _timeSignature;
 }
 
 std::vector<MIDINote> MIDITrack::getNotes(NoteType type){
