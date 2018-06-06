@@ -54,8 +54,6 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
 
 int main( int argc, char** argv) {
 	
-	printHelp();
-	
 	if(argc > 3 && argc != 5 && argc != 6){
 		std::cerr << "[ERROR]: wrong number of arguments" << std::endl;
 		return 1;
@@ -96,6 +94,7 @@ int main( int argc, char** argv) {
 	// Read arguments.
 	std::string midiFilePath;
 	if(argc<2){
+		// We are in direct-to-gui mode.
 		nfdchar_t *outPath = NULL;
 		nfdresult_t result = NFD_OpenDialog( NULL, NULL, &outPath );
 		if(result == NFD_OKAY){
@@ -106,6 +105,8 @@ int main( int argc, char** argv) {
 			return 10;
 		}
 	} else {
+		// We are in command-line mode.
+		printHelp();
 		midiFilePath = std::string(argv[1]);
 	}
 	glm::vec3 baseColor = 1.35f*glm::vec3(0.57f,0.19f,0.98f);
@@ -156,6 +157,7 @@ int main( int argc, char** argv) {
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	ImGui_ImplGlfwGL3_Init(window, false);
 	ImGui::StyleColorsDark();
+	io.IniFilename = NULL;
 	
 	// Start the display/interaction loop.
 	while (!glfwWindowShouldClose(window)) {
