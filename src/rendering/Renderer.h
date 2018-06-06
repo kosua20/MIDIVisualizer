@@ -21,8 +21,10 @@ public:
 	~Renderer();
 	
 	/// Init function
-	void init(int width, int height, const std::string& midiFilePath, const glm::vec3& baseColor, const float scale);
-
+	void init(int width, int height);
+	
+	void loadFile(const std::string & midiFilePath, const glm::vec3& baseColor, const float scale);
+	
 	/// Draw function
 	void draw();
 
@@ -39,17 +41,24 @@ public:
 private:
 	
 	float _timer;
+	float _timerStart;
 	bool _shouldPlay;
+	bool _showGUI;
+	bool _showParticles;
+	bool _showFlashes;
+	bool _showBlur;
+	bool _showHLines, _showVLines, _showDigits;
+	float _scale;
 	
 	Camera _camera;
 	
 	std::shared_ptr<Framebuffer> _particlesFramebuffer;
 	std::shared_ptr<Framebuffer> _blurFramebuffer;
 
-	MIDIScene _scene;
+	std::shared_ptr<MIDIScene> _scene;
 	ScreenQuad _blurringScreen;
 	ScreenQuad _blurryScreen;
-	Background _background;
+	std::shared_ptr<Background> _background;
 	
 };
 

@@ -1,6 +1,8 @@
 #include <gl3w/gl3w.h> // to load OpenGL extensions at runtime
 #include <GLFW/glfw3.h> // to set up the OpenGL context and manage window lifecycle and inputs
-
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw_gl3.h>
+#include <nfd/nfd.h>
 #include <stdio.h>
 #include <iostream>
 
@@ -36,10 +38,16 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		glfwSetWindowShouldClose(window, GL_TRUE);
 		return;
 	}
-	
-	// Get pointer to the renderer.
-	Renderer *renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
-	renderer->keyPressed(key, action);
+	if(!ImGui::GetIO().WantCaptureKeyboard){
+		// Get pointer to the renderer.
+		Renderer *renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
+		renderer->keyPressed(key, action);
+	}
+	ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
+	ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
 }
 
 /// The main function
@@ -86,7 +94,20 @@ int main( int argc, char** argv) {
 	}
 	
 	// Read arguments.
-	const std::string midiFilePath = argc > 1 ? argv[1] : "song.mid";
+	std::string midiFilePath;
+	if(argc<2){
+		nfdchar_t *outPath = NULL;
+		nfdresult_t result = NFD_OpenDialog( NULL, NULL, &outPath );
+		if(result == NFD_OKAY){
+			midiFilePath = std::string(outPath);
+		} else if(result == NFD_CANCEL){
+			return 0;
+		} else {
+			return 10;
+		}
+	} else {
+		midiFilePath = std::string(argv[1]);
+	}
 	glm::vec3 baseColor = 1.35f*glm::vec3(0.57f,0.19f,0.98f);
 	float scale = 0.5;
 	if(argc == 3 || argc == 6 ){
@@ -104,11 +125,10 @@ int main( int argc, char** argv) {
 	
 	// Create the renderer.
 	Renderer renderer;
-	
+	renderer.init(INITIAL_SIZE_WIDTH,INITIAL_SIZE_HEIGHT);
 	try {
 		// Load midi file, graphics setup.
-		renderer.init(INITIAL_SIZE_WIDTH,INITIAL_SIZE_HEIGHT, midiFilePath, baseColor, scale);
-	
+		renderer.loadFile(midiFilePath, baseColor, scale);
 	} catch (...) {
 		// File not found, probably (error message handled locally).
 		glfwDestroyWindow(window);
@@ -122,23 +142,40 @@ int main( int argc, char** argv) {
 	// Callbacks.
 	glfwSetFramebufferSizeCallback(window, resize_callback);	// Resizing the window
 	glfwSetKeyCallback(window,key_callback);					// Pressing a key
+	//glfwSetMouseButtonCallback(window,mouse_button_callback);	// Clicking the mouse buttons
+	//glfwSetCursorPosCallback(window,cursor_pos_callback);		// Moving the cursor
+	glfwSetScrollCallback(window,scroll_callback);				// Scrolling
+	glfwSetCharCallback(window, ImGui_ImplGlfw_CharCallback);
 	
 	// On HiDPI screens, we might have to initially resize the framebuffers size.
 	int width, height;
 	glfwGetFramebufferSize(window, &width, &height);
 	renderer.resize(width, height);
-
+	
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGui_ImplGlfwGL3_Init(window, false);
+	ImGui::StyleColorsDark();
+	
 	// Start the display/interaction loop.
 	while (!glfwWindowShouldClose(window)) {
+		ImGui_ImplGlfwGL3_NewFrame();
+		
 		// Update the content of the window.
 		renderer.draw();
+		
+		// Interface rendering.
+		ImGui::Render();
+		ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
 		//Display the result fo the current rendering loop.
 		glfwSwapBuffers(window);
 		// Update events (inputs,...).
 		glfwPollEvents();
 		
 	}
-
+	
+	ImGui_ImplGlfwGL3_Shutdown();
+	ImGui::DestroyContext();
 	// Remove the window.
 	glfwDestroyWindow(window);
 	// Clean other ressources
