@@ -5,8 +5,8 @@ CXX = g++
 INCLUDEDIR = -I/usr/include/ -I/usr/local/include/ -Isrc/helpers/ -Isrc/libs/ -Isrc/libs/glfw/include/
 
 #Libraries needed: OpenGL, GLEW and glfw3. glfw3 requires Cocoa, IOKit and CoreVideo.
-LIBDIR = -Lsrc/libs/glfw/lib-mac/
-LIBS = $(LIBDIR) -lglfw3 -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo
+LIBDIR = -Lsrc/libs/glfw/lib-mac/ -Lsrc/libs/nfd/lib-mac/
+LIBS = $(LIBDIR) -lglfw3 -lnfd -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo -framework AppKit
 
 #Compiler flags: C++11 standard, and display 'all' warnings.
 CXXFLAGS = -std=c++11 -Wall -O3

@@ -6,7 +6,7 @@ INCLUDEDIR = -I/usr/include/ -I/usr/local/include/ -Isrc/helpers/ -Isrc/libs/
 #Library directory (just in case)
 LIBDIR = -L/usr/local/lib
 #Libraries needed: OpenGL and glfw3.  glfw3 require X11, Xi, and so on...
-LIBS = -lglfw3 -lGL -lX11 -lXi -lXrandr -lXxf86vm -lXinerama -lXcursor -lrt -lm -pthread -ldl
+LIBS = -lglfw3 -lnfd -lGL -lX11 -lXi -lXrandr -lXxf86vm -lXinerama -lXcursor -lrt -lm -pthread -ldl
 
 
 #Compiler flags: C++11 standard, and display 'all' warnings.
