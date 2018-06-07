@@ -9,6 +9,7 @@
 #include "../helpers/ResourcesManager.h"
 
 #include "Renderer.h"
+#include <algorithm>
 
 
 Renderer::Renderer(){ }
@@ -134,6 +135,7 @@ void Renderer::draw(){
 			ImGui::SameLine();
 			ImGui::PushItemWidth(100);
 			if(ImGui::InputFloat("Scale", &_scale, 0.01f, 0.1f)){
+				_scale = std::max(_scale, 0.01f);
 				_scene->setScale(_scale);
 				_background->setScale(_scale);
 			}

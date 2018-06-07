@@ -42,6 +42,9 @@
     <Filter Include="Source Files\rendering\camera">
       <UniqueIdentifier>{3029502e-777a-4a25-96a9-23b2bce3e715}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\libs\imgui">
+      <UniqueIdentifier>{70ef3669-5d29-4f8b-8c00-e56309008893}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\helpers\MeshUtilities.cpp">
@@ -104,6 +107,18 @@
     <ClCompile Include="src\ressources\flash_image.cpp">
       <Filter>Source Files\ressources</Filter>
     </ClCompile>
+    <ClCompile Include="src\libs\imgui\imgui_impl_glfw_gl3.cpp">
+      <Filter>Source Files\libs\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\imgui\imgui.cpp">
+      <Filter>Source Files\libs\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\imgui\imgui_demo.cpp">
+      <Filter>Source Files\libs\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\imgui\imgui_draw.cpp">
+      <Filter>Source Files\libs\imgui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\helpers\MeshUtilities.h">
@@ -156,6 +171,27 @@
     </ClInclude>
     <ClInclude Include="src\ressources\data.h">
       <Filter>Source Files\ressources</Filter>
+    </ClInclude>
+    <ClInclude Include="src\libs\imgui\imgui_impl_glfw_gl3.h">
+      <Filter>Source Files\libs\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\libs\imgui\imgui_internal.h">
+      <Filter>Source Files\libs\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\libs\imgui\stb_rect_pack.h">
+      <Filter>Source Files\libs\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\libs\imgui\stb_textedit.h">
+      <Filter>Source Files\libs\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\libs\imgui\stb_truetype.h">
+      <Filter>Source Files\libs\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\libs\imgui\imconfig.h">
+      <Filter>Source Files\libs\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\libs\imgui\imgui.h">
+      <Filter>Source Files\libs\imgui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
