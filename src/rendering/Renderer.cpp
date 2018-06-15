@@ -48,7 +48,7 @@ void Renderer::init(int width, int height){
 	checkGLError();
 }
 
-void Renderer::loadFile(const std::string & midiFilePath, const glm::vec3& baseColor, const float scale){
+void Renderer::loadFile(const pathstring & midiFilePath, const glm::vec3& baseColor, const float scale){
 	// Player.
 	_timer = 0.0;
 	_shouldPlay = false;

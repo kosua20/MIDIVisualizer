@@ -13,7 +13,7 @@
 
 MIDIScene::~MIDIScene(){}
 
-MIDIScene::MIDIScene(const std::string & midiFilePath, const glm::vec3& baseColor, const float scale){
+MIDIScene::MIDIScene(const pathstring & midiFilePath, const glm::vec3& baseColor, const float scale){
 	
 	// MIDI processing.
 	_midiFile = MIDIFile(midiFilePath);

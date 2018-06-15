@@ -6,9 +6,10 @@
 
 MIDIFile::MIDIFile(){};
 
-MIDIFile::MIDIFile(const std::string & filePath){
-	
-	std::ifstream input(filePath, std::ios::in|std::ios::binary);
+MIDIFile::MIDIFile(const pathstring & filePath){
+	// Using the underlying char array to trigger wchar support on Windows.
+	std::ifstream input(filePath.c_str(), std::ios::in|std::ios::binary);
+
 	if(!input.is_open()) {
 		std::cerr << "[ERROR]: Couldn't find file at path " << filePath << std::endl;
 		throw "BadInput";
