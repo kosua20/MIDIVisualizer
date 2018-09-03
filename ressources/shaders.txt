@@ -1,0 +1,597 @@
+
+{ "background_frag", "
+
+#version 330
+
+in INTERFACE {
+	vec2 uv;
+} In ;
+
+uniform float time;
+uniform float secondsPerMeasure;
+uniform vec2 inverseScreenSize;
+uniform bool useDigits = true;
+uniform bool useHLines = true;
+uniform bool useVLines = true;
+uniform sampler2D screenTexture;
+
+const float octaveLinesPositions[8] = float[](2.0/52.0, 9.0/52.0, 16.0/52.0, 23.0/52.0, 30.0/52.0, 37.0/52.0, 44.0/52.0, 51.0/52.0);
+
+uniform float mainSpeed;
+#define bottomLimit 0.25
+
+out vec3 fragColor;
+
+
+float printDigit(int digit, vec2 uv){
+	// Clamping to avoid artifacts.
+	if(uv.x < 0.01 || uv.x > 0.99 || uv.y < 0.01 || uv.y > 0.99){
+		return 0.0;
+	}
+	
+	// UV from [0,1] to local tile frame.
+	vec2 localUV = uv * vec2(50.0/256.0,0.5);
+	// Select the digit.
+	vec2 globalUV = vec2( mod(digit,5)*50.0/256.0,digit < 5 ? 0.5 : 0.0);
+	// Combine global and local shifts.
+	vec2 finalUV = globalUV + localUV;
+	
+	// Read from font atlas. Return if above a threshold.
+	float isIn = texture(screenTexture, finalUV).r;
+	return isIn < 0.5 ? 0.0 : isIn ;
+	
+}
+
+
+float printNumber(float num, vec2 position, vec2 uv, vec2 scale){
+	
+	if(position.y > 1.0 || position.y < 0.0){
+		return 0.0;
+	}
+	
+	// We limit to the [0,999] range.
+	float number = min(999.0, max(0.0,num));
+	
+	// Extract digits.
+	int hundredDigit = int(floor( number / 100.0 ));
+	int tenDigit	 = int(floor( number / 10.0 - hundredDigit * 10.0));
+	int unitDigit	 = int(floor( number - hundredDigit * 100.0 - tenDigit * 10.0));
+	
+	// Position of the text.
+	vec2 initialPos = scale*(uv-position);
+	
+	// Get intensity for each digit at the current fragment.
+	float hundred = printDigit(hundredDigit, initialPos);
+	float ten	  =	printDigit(tenDigit,	 initialPos - vec2(scale.x * 0.009,0.0));
+	float unit	  = printDigit(unitDigit,	 initialPos - vec2(scale.x * 0.009 * 2.0,0.0));
+	
+	// If hundred digit == 0, hide it.
+	float hundredVisibility = (1.0-step(float(hundredDigit),0.5));
+	hundred *= hundredVisibility;
+	// If ten digit == 0 and hundred digit == 0, hide ten.
+	float tenVisibility = max(hundredVisibility,(1.0-step(float(tenDigit),0.5)));
+	ten*= tenVisibility;
+	
+	return hundred + ten + unit;
+}
+
+
+void main(){
+	
+	float intensity = 0.0;
+	
+	// Keys
+	if(gl_FragCoord.y < bottomLimit/inverseScreenSize.y){
+		
+		// White keys, and separators.
+		intensity = int(abs(fract(In.uv.x*52.0)) >= 2.0 * 52.0 * inverseScreenSize.x);
+		
+		// Upper keyboard.
+		if(gl_FragCoord.y > 0.10/inverseScreenSize.y){
+			// Handle black keys.
+			int index = int(floor(In.uv.x*52.0+0.5))-1;
+			
+			if(!(index < 0 || index==1 || index==4 || index==8 || index==11 || index==15 || index==18 || index==22 || index==25 || index==29 || index==32 || index==36 || index==39 || index==43 || index==46 || index>=50)){
+				
+				intensity = 0.0;
+				// Separating lines on black keys.
+				if(abs(fract(In.uv.x*52.0+0.5)) < 2.0*52.0*inverseScreenSize.x){
+					intensity = 1.0;
+				}
+			}
+		}
+		
+		fragColor = vec3(intensity);
+		// Done.
+		return;
+	}
+	
+	// Octaves lines.
+	for(int i = 0; i < 8; i++){
+		float lineIntensity = useVLines ? (0.7 * step(abs(In.uv.x - octaveLinesPositions[i]),inverseScreenSize.x)) : 0.0;
+		intensity = max(intensity, lineIntensity);
+	}
+	
+	vec2 scale = 1.5*vec2(64.0,50.0*inverseScreenSize.x/inverseScreenSize.y);
+	
+	// Text on the side.
+	int currentMesure = int(floor(time/secondsPerMeasure));
+	// How many mesures do we check.
+	int count = int(ceil(0.75*(2.0/mainSpeed)))+2;
+	
+	for(int i = 0; i < count; i++){
+		// Compute position of the measure currentMesure+i.
+		vec2 position = vec2(0.005,bottomLimit + (secondsPerMeasure*(currentMesure+i) - time)*mainSpeed*0.5);
+		
+		// Compute intensity for the number display, and for the horizontal line.
+		float numberIntensity = useDigits ? printNumber(currentMesure + i,position, In.uv, scale) : 0.0;
+		float lineIntensity = useHLines ? (0.25*(step(abs(In.uv.y - position.y - 0.5 / scale.y), inverseScreenSize.y))) : 0.0;
+		
+		intensity = max(intensity, max(numberIntensity, lineIntensity));
+	}
+	
+	if(intensity == 0.0){
+		// Transparent background.
+		discard;
+	}
+	
+	fragColor = vec3(intensity);
+	
+}
+
+"},
+
+
+
+{ "background_vert", "
+
+#version 330
+
+layout(location = 0) in vec3 v;
+
+out INTERFACE {
+	vec2 uv;
+} Out ;
+
+
+void main(){
+	
+	// We directly output the position.
+	gl_Position = vec4(v, 1.0);
+	// Output the UV coordinates computed from the positions.
+	Out.uv = v.xy * 0.5 + 0.5;
+	
+}
+
+"},
+
+
+
+{ "flashes_vert", "
+
+#version 330
+
+layout(location = 0) in vec2 v;
+layout(location = 1) in int isOn;
+
+uniform float time;
+uniform vec2 inverseScreenSize;
+
+#define notesCount 52.0
+
+const float shifts[88] = float[](0, 0.5, 1, 2, 2.5, 3, 3.5, 4, 5, 5.5, 6, 6.5, 7, 7.5, 8, 9, 9.5, 10, 10.5, 11, 12, 12.5, 13, 13.5, 14, 14.5, 15, 16, 16.5, 17, 17.5, 18, 19, 19.5, 20, 20.5, 21, 21.5, 22, 23, 23.5, 24, 24.5, 25, 26, 26.5, 27, 27.5, 28, 28.5, 29, 30, 30.5, 31, 31.5, 32, 33, 33.5, 34, 34.5, 35, 35.5, 36, 37, 37.5, 38, 38.5, 39, 40, 40.5, 41, 41.5, 42, 42.5, 43, 44, 44.5, 45, 45.5, 46, 47, 47.5, 48, 48.5, 49, 49.5, 50, 51);
+const vec2 scale = 0.9*vec2(3.5,3.0);
+
+out INTERFACE {
+	vec2 uv;
+	float on;
+	float id;
+} Out;
+
+
+void main(){
+	
+	// Scale quad, keep the square ratio.
+	vec2 scaledPosition = v * 2.0 * scale /notesCount * vec2(1.0, inverseScreenSize.y/inverseScreenSize.x);
+	// Shift based on note/flash id.
+	vec2 globalShift = vec2(-1.0 + (shifts[gl_InstanceID] * 2.0 + 1.0) / notesCount,-0.5);
+	
+	gl_Position = vec4(scaledPosition + globalShift, 0.0 , 1.0) ;
+	
+	// Pass infos to the fragment shader.
+	Out.uv = v;
+	Out.on = float(isOn>0);
+	Out.id = float(gl_InstanceID);
+
+}
+
+"},
+
+
+
+{ "flashes_frag", "
+
+#version 330
+
+in INTERFACE {
+	vec2 uv;
+	float on;
+	float id;
+} In;
+
+uniform sampler2D textureFlash;
+uniform float time;
+uniform vec3 baseColor;
+
+#define numberSprites 8.0
+
+out vec4 fragColor;
+
+
+float rand(vec2 co){
+	return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+
+void main(){
+	
+	// If not on, discard flash immediatly.
+	if(In.on < 0.5){
+		discard;
+	}
+	
+	float mask = 0.0;
+	
+	// If up half, read from texture atlas.
+	if(In.uv.y > 0.0){
+		// Select a sprite, depending on time and flash id.
+		float shift = floor(mod(15.0 * time, numberSprites)) + floor(rand(In.id * vec2(time,1.0)));
+		vec2 globalUV = vec2(0.5 * mod(shift, 2.0), 0.25 * floor(shift/2.0));
+		
+		// Scale UV to fit in one sprite from atlas.
+		vec2 localUV = In.uv * 0.5 + vec2(0.25,-0.25);
+		localUV.y = min(-0.05,localUV.y); //Safety clamp on the upper side (or you could set clamp_t)
+		
+		// Read in black and white texture do determine opacity (mask).
+		vec2 finalUV = globalUV + localUV;
+		mask = texture(textureFlash,finalUV).r;
+	}
+	
+	// Colored sprite.
+	vec4 spriteColor = vec4(baseColor,In.on * mask);
+	
+	// Circular halo effect.
+	float haloAlpha = 1.0 - smoothstep(0.07,0.5,length(In.uv));
+	vec4 haloColor = vec4(1.0,1.0,1.0, In.on * haloAlpha * 0.92);
+	
+	// Mix the sprite color and the halo effect.
+	fragColor = mix(spriteColor, haloColor, haloColor.a);
+	
+	// Boost intensity.
+	fragColor *= 1.1;
+	
+}
+
+"},
+
+
+
+{ "notes_vert", "
+
+#version 330
+
+layout(location = 0) in vec2 v;
+layout(location = 1) in vec4 id; //note id, start, duration, is minor
+
+uniform float time;
+uniform float mainSpeed;
+
+#define notesCount 52.0
+
+out INTERFACE {
+	float isMinor;
+	vec2 uv;
+	vec2 noteSize;
+} Out;
+
+
+void main(){
+	
+	// Size of the note : width, height based on duration and current speed.
+	Out.noteSize = vec2(0.9*2.0/notesCount, id.z*mainSpeed);
+	
+	// Compute note shift.
+	// Horizontal shift based on note id, width of keyboard, and if the note is minor or not.
+	// Vertical shift based on note start time, current time, speed, and height of the note quad.
+	const float a = (1.0/(notesCount-1.0)) * (2.0 - 2.0/notesCount);
+	const float b = -1.0 + 1.0/notesCount;
+	vec2 noteShift = vec2(id.x * a + b + id.w/notesCount, Out.noteSize.y * 0.5 - 0.5 + mainSpeed * (id.y - time));
+	
+	// Scale uv.
+	Out.uv = Out.noteSize * v;
+	Out.isMinor = id.w;
+	// Output position.
+	gl_Position = vec4(Out.noteSize * v + noteShift, 0.0 , 1.0) ;
+
+}
+
+"},
+
+
+
+{ "notes_frag", "
+
+#version 330
+
+in INTERFACE {
+	float isMinor;
+	vec2 uv;
+	vec2 noteSize;
+} In;
+
+uniform vec3 baseColor;
+uniform vec2 inverseScreenSize;
+
+#define cornerRadius 0.01
+#define bottomLimit 0.25
+
+out vec3 fragColor;
+
+
+void main(){
+	
+	// If lower area of the screen, discard fragment as it should be hidden behind the keyboard.
+	if(gl_FragCoord.y < bottomLimit/inverseScreenSize.y){
+		discard;
+	}
+	
+	// Rounded corner (super-ellipse equation).
+	float radiusPosition = pow(abs(In.uv.x/(0.5*In.noteSize.x)), In.noteSize.x/cornerRadius) + pow(abs(In.uv.y/(0.5*In.noteSize.y)), In.noteSize.y/cornerRadius);
+	
+	if(	radiusPosition > 1.0){
+		discard;
+	}
+	
+	// Fragment color.
+	fragColor = (0.8+0.2*(1.0-In.isMinor))*baseColor;
+	
+	if(	radiusPosition > 0.8){
+		fragColor *= 1.05;
+	}
+	
+}
+
+"},
+
+
+
+{ "particlesblur_vert", "
+
+#version 330
+
+layout(location = 0) in vec3 v;
+
+out INTERFACE {
+	vec2 uv;
+} Out ;
+
+
+void main(){
+	
+	// We directly output the position.
+	gl_Position = vec4(v, 1.0);
+	// Output the UV coordinates computed from the positions.
+	Out.uv = v.xy * 0.5 + 0.5;
+	
+}
+
+"},
+
+
+
+{ "particlesblur_frag", "
+
+#version 330
+
+in INTERFACE {
+	vec2 uv;
+} In ;
+
+uniform sampler2D screenTexture;
+uniform vec2 inverseScreenSize;
+
+out vec3 fragColor;
+
+
+void main(){
+	
+	// We have to unroll the box blur loop manually.
+	// 5x5 box blur, taking every other pixel.
+	vec3 color = textureOffset(screenTexture, In.uv, 2*ivec2(-2,-2)).rgb;
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(-2,-1)).rgb;
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(-2,0)).rgb;
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(-2,1)).rgb;
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(-2,2)).rgb;
+	
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(-1,-2)).rgb;
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(-1,-1)).rgb;
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(-1,0)).rgb;
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(-1,1)).rgb;
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(-1,2)).rgb;
+	
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(0,-2)).rgb;
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(0,-1)).rgb;
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(0,0)).rgb;
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(0,1)).rgb;
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(0,2)).rgb;
+	
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(1,-2)).rgb;
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(1,-1)).rgb;
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(1,0)).rgb;
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(1,1)).rgb;
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(1,2)).rgb;
+	
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(2,-2)).rgb;
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(2,-1)).rgb;
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(2,0)).rgb;
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(2,1)).rgb;
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(2,2)).rgb;
+	
+	// Include decay for fade out.
+	fragColor = color*0.99 / 25.0;
+	
+}
+
+"},
+
+
+
+{ "particles_vert", "
+
+#version 330
+
+layout(location = 0) in vec2 v;
+
+uniform float time;
+uniform float scale;
+uniform vec3 baseColor;
+uniform vec2 inverseScreenSize;
+uniform sampler2D textureParticles;
+uniform vec2 inverseTextureSize;
+uniform int globalId;
+uniform float duration;
+
+#define notesCount 52.0
+
+const float shifts[88] = float[](0, 0.5, 1, 2, 2.5, 3, 3.5, 4, 5, 5.5, 6, 6.5, 7, 7.5, 8, 9, 9.5, 10, 10.5, 11, 12, 12.5, 13, 13.5, 14, 14.5, 15, 16, 16.5, 17, 17.5, 18, 19, 19.5, 20, 20.5, 21, 21.5, 22, 23, 23.5, 24, 24.5, 25, 26, 26.5, 27, 27.5, 28, 28.5, 29, 30, 30.5, 31, 31.5, 32, 33, 33.5, 34, 34.5, 35, 35.5, 36, 37, 37.5, 38, 38.5, 39, 40, 40.5, 41, 41.5, 42, 42.5, 43, 44, 44.5, 45, 45.5, 46, 47, 47.5, 48, 48.5, 49, 49.5, 50, 51);
+
+out INTERFACE {
+	vec4 color;
+} Out;
+
+
+float rand(vec2 co){
+	return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+
+void main(){
+	
+	// Fade color based on time.
+	Out.color = vec4(baseColor, 1.0-time*time);
+	
+	float localTime = 0.2 * time * duration;
+	float particlesCount = 1.0/inverseTextureSize.y;
+	
+	// Pick particle id at random.
+	float particleId = float(gl_InstanceID) + floor(particlesCount * 10.0 * rand(vec2(globalId,globalId)));
+	float textureId = mod(particleId,particlesCount);
+	float particleShift = floor(particleId/particlesCount);
+	
+	// Particle uv, in pixels.
+	vec2 particleUV = vec2(localTime / inverseTextureSize.x + 10.0 * particleShift, textureId);
+	// UV in [0,1]
+	particleUV = (particleUV+0.5)*vec2(1.0,-1.0)*inverseTextureSize;
+	// Avoid wrapping.
+	particleUV.x = clamp(particleUV.x,0.0,1.0);
+	// Read corresponding trajectory to get particle current position.
+	vec3 position = texture(textureParticles, particleUV).xyz;
+	// Center position (from [0,1] to [-0.5,0.5] on x axis.
+	position.x -= 0.5;
+	
+	// Compute shift, randomly disturb it.
+	vec2 shift = 0.5*position.xy;
+	float random = rand(vec2(particleId + float(globalId),time*0.000002+100.0*float(globalId)));
+	shift += vec2(0.0,0.1*random);
+	
+	// Scale shift with time (expansion effect).
+	shift = shift*time;
+	// and with altitude of the particle (ditto).
+	shift.x *= pow(shift.y,0.3);
+	
+	// Combine global shift (due to note id) and local shift (based on read position).
+	vec2 globalShift = vec2(-1.0 + (shifts[globalId] * 2.0 + 1.0) / notesCount,-0.58);
+	vec2 localShift = 0.003 * scale * v + shift * duration * vec2(1.0,0.5);
+	vec2 screenScaling = vec2(1.0,inverseScreenSize.y/inverseScreenSize.x);
+	vec2 finalPos = globalShift + screenScaling * localShift;
+	
+	// Discard particles that reached the end of their trajectories by putting them off-screen.
+	finalPos = mix(vec2(-200.0),finalPos, position.z);
+	// Output final particle position.
+	gl_Position = vec4(finalPos,0.0,1.0);
+	
+}
+
+"},
+
+
+
+{ "particles_frag", "
+
+#version 330
+
+in INTERFACE {
+	vec4 color;
+} In;
+
+out vec4 fragColor;
+
+
+void main(){
+	
+	fragColor = In.color;
+	
+}
+
+"},
+
+
+
+{ "screenquad_vert", "
+
+#version 330
+
+layout(location = 0) in vec3 v;
+
+out INTERFACE {
+	vec2 uv;
+} Out ;
+
+
+void main(){
+	
+	// We directly output the position.
+	gl_Position = vec4(v, 1.0);	
+	// Output the UV coordinates computed from the positions.
+	Out.uv = v.xy * 0.5 + 0.5;
+
+}
+
+"},
+
+
+
+{ "screenquad_frag", "
+
+#version 330
+
+in INTERFACE {
+	vec2 uv;
+} In ;
+
+uniform sampler2D screenTexture;
+uniform vec2 inverseScreenSize;
+
+out vec3 fragColor;
+
+
+void main(){
+	
+	fragColor = texture(screenTexture,In.uv).rgb;
+	
+}
+
+"}
+
+
+
