@@ -20,13 +20,14 @@ SRCDIR = src
 #Paths to the source files
 #Collect sources from subdirectories (up to depth 3) 
 # /!\ at depth 4, src/helpers/glm/detail contains dummy cpp files that we want to ignore.
-SRC_DEPTH_1 = $(wildcard $(SRCDIR)/*.cpp)
 SRC_DEPTH_2 = $(wildcard $(SRCDIR)/*/*.cpp)
 SRC_DEPTH_3 = $(wildcard $(SRCDIR)/*/*/*.cpp)
-SOURCES = $(SRC_DEPTH_3) $(SRC_DEPTH_2) $(SRC_DEPTH_1)
+SOURCES = $(SRC_DEPTH_3) $(SRC_DEPTH_2) $(SRCDIR)/main.cpp
+TOOLSOURCES = $(SRC_DEPTH_3) $(SRC_DEPTH_2) $(SRCDIR)/packager.cpp
 
 #Paths to the object files
 OBJECTS = $(SOURCES:$(SRCDIR)/%.cpp=$(BUILDDIR)/%.o)
+TOOLOBJECTS = $(TOOLSOURCES:$(SRCDIR)/%.cpp=$(BUILDDIR)/%.o)
 
 #Paths to the subdirectories
 SUBDIRS_LIST = $(shell find src -type d)
@@ -34,14 +35,20 @@ SUBDIRS = $(SUBDIRS_LIST:$(SRCDIR)%=$(BUILDDIR)%)
 
 #Executable name
 EXECNAME = midiviz
+TOOLNAME = midiviz-packager
 
 #Re-create the build dir if needed, compile and link.
-all: dirs $(EXECNAME)
+all: $(TOOLNAME) $(EXECNAME)
 
 #Linking phase: combine all objects files to generate the executable
-$(EXECNAME): $(OBJECTS)
+$(EXECNAME): dirs $(OBJECTS)
 	@echo "Linking $(EXECNAME)..."
 	@$(CXX) $(LIBDIR) $(OBJECTS) $(LIBS) -o $(BUILDDIR)/$(EXECNAME)
+	@echo "Done!"
+
+$(TOOLNAME): dirs $(TOOLOBJECTS)
+	@echo "Linking $(TOOLNAME)..."
+	@$(CXX) $(TOOLOBJECTS) $(LIBS) -o $(BUILDDIR)/$(TOOLNAME)
 	@echo "Done!"
 
 #Compiling phase: generate the object files from the source files
@@ -52,6 +59,11 @@ $(BUILDDIR)/%.o : $(SRCDIR)/%.cpp
 #Run the executable
 run:
 	@./$(BUILDDIR)/$(EXECNAME)
+
+# Package the images as raw arrays and write them in the source directory.
+package: dirs $(TOOLNAME)
+	@./$(BUILDDIR)/$(TOOLNAME)
+	@echo "You can now compile $(EXECNAME) with the udpated data."
 
 #Create the build directory and its subdirectories
 dirs:
