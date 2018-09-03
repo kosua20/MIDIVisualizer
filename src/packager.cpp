@@ -6,7 +6,7 @@
 
 void printHelp(){
 	std::cout << "---- Infos ---- MIDIVisualizer Packager --------" << std::endl
-	<< "Generate header and source files for resources images." << std::endl
+	<< "Generate header and source files for resources images and shaders." << std::endl
 	<< "Usage: run it from the root directory of the project." << std::endl
 	<< "--------------------------------------------" << std::endl;
 
@@ -70,7 +70,27 @@ int main( int argc, char** argv) {
 	headerFile << "\n#endif\n";
 	headerFile.close();
 	
-	
+	// Now the shaders.
+	std::ifstream shadersInput(resourcesDir + "shaders.txt");
+	std::ofstream shadersOutput(outputDir + "shaders1.cpp");
+	if(!shadersInput.is_open() || !shadersOutput.is_open()){
+		std::cerr << "Unable to open handle to shaders file." << std::endl;
+		return 1;
+	}
+	shadersOutput << "#include \"data.h\"" << std::endl
+				<< "const std::map<std::string, std::string> shaders = {";
+	std::string line;
+	while(std::getline(shadersInput, line)){
+		if(line.empty() || line[0] == '\n'){
+			continue;
+		}
+		bool noNewLine = (line.size() == 3 && line == "\"},") || (line.size() == 2 && line == "\"}");
+		
+		shadersOutput << line << (noNewLine ? "\n" : "\\n");
+	}
+	shadersOutput << "};" << std::endl;
+	shadersOutput.close();
+	shadersInput.close();
 	return 0;
 }
 
