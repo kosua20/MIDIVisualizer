@@ -27,10 +27,13 @@ float rand(vec2 co){
 
 void main(){
 	
+	const float expansionFactor = 1.0;
+	const float speedScaling = 0.2;
+	
 	// Fade color based on time.
 	Out.color = vec4(baseColor, 1.0-time*time);
 	
-	float localTime = 0.2 * time * duration;
+	float localTime = speedScaling * time * duration;
 	float particlesCount = 1.0/inverseTextureSize.y;
 	
 	// Pick particle id at random.
@@ -55,7 +58,7 @@ void main(){
 	shift += vec2(0.0,0.1*random);
 	
 	// Scale shift with time (expansion effect).
-	shift = shift*time;
+	shift = shift*time*expansionFactor;
 	// and with altitude of the particle (ditto).
 	shift.x *= pow(shift.y,0.3);
 	

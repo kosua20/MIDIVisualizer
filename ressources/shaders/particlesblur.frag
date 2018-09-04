@@ -12,6 +12,8 @@ out vec3 fragColor;
 
 void main(){
 	
+	const float attenuationFactor = 0.99;
+	
 	// We have to unroll the box blur loop manually.
 	// 5x5 box blur, taking every other pixel.
 	vec3 color = textureOffset(screenTexture, In.uv, 2*ivec2(-2,-2)).rgb;
@@ -45,6 +47,6 @@ void main(){
 	color += textureOffset(screenTexture, In.uv, 2*ivec2(2,2)).rgb;
 	
 	// Include decay for fade out.
-	fragColor = color*0.99 / 25.0;
+	fragColor = color * attenuationFactor / 25.0;
 	
 }
