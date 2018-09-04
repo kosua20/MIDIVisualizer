@@ -18,6 +18,7 @@ int main( int argc, char** argv) {
 	const std::string outputDir = "src/ressources/";
 	
 	std::vector<std::string> imagesToLoad = { "flash", "font", "particles"};
+	std::vector<std::string> shadersToLoad = { "background", "flashes", "notes", "particles", "particlesblur", "screenquad"};
 	
 	// Header file.
 	std::ofstream headerFile(outputDir + "data.h");
@@ -34,7 +35,6 @@ int main( int argc, char** argv) {
 			   << "extern const std::map<std::string, std::string> shaders;" << std::endl << std::endl;
 	
 	
-
 	// Each image has its own cpp + a line in the header file.
 	for(const auto & imageName : imagesToLoad){
 		const std::string imagePath = resourcesDir + imageName + ".png";
@@ -71,26 +71,49 @@ int main( int argc, char** argv) {
 	headerFile.close();
 	
 	// Now the shaders.
-	std::ifstream shadersInput(resourcesDir + "shaders.txt");
-	std::ofstream shadersOutput(outputDir + "shaders1.cpp");
-	if(!shadersInput.is_open() || !shadersOutput.is_open()){
-		std::cerr << "Unable to open handle to shaders file." << std::endl;
+	std::ofstream shadersOutput(outputDir + "shaders.cpp");
+	if(!shadersOutput.is_open()){
+		std::cerr << "Unable to open handle to shaders output file." << std::endl;
 		return 1;
 	}
 	shadersOutput << "#include \"data.h\"" << std::endl
-				<< "const std::map<std::string, std::string> shaders = {";
-	std::string line;
-	while(std::getline(shadersInput, line)){
-		if(line.empty() || line[0] == '\n'){
+				<< "const std::map<std::string, std::string> shaders = {\n";
+	
+	for(size_t sid = 0; sid < shadersToLoad.size(); ++sid){
+		const auto & shaderName = shadersToLoad[sid];
+		const std::string shaderBasePath = resourcesDir + "shaders/" + shaderName;
+		std::ifstream vertShader(shaderBasePath + ".vert");
+		std::ifstream fragShader(shaderBasePath + ".frag");
+		if(!vertShader.is_open() || !fragShader.is_open()){
+			std::cerr << "Unable to open handle to shaders input file for " << shaderName << "." << std::endl;
 			continue;
 		}
-		bool noNewLine = (line.size() == 3 && line == "\"},") || (line.size() == 2 && line == "\"}");
+		std::string buffLine;
 		
-		shadersOutput << line << (noNewLine ? "\n" : "\\n");
+		// Vertex shader content.
+		shadersOutput << "{ \"" << shaderName << "_" << "vert" << "\", \"";
+		while (std::getline(vertShader, buffLine)) {
+			if(buffLine.empty()){
+				continue;
+			}
+			shadersOutput << buffLine << "\\n ";
+		}
+		shadersOutput << "\"}, " << std::endl;
+		
+		// Fragment shader content.
+		shadersOutput << "{ \"" << shaderName << "_" << "frag" << "\", \"";
+		while (std::getline(fragShader, buffLine)) {
+			if(buffLine.empty()){
+				continue;
+			}
+			shadersOutput << buffLine << "\\n ";
+		}
+		shadersOutput << "\"}" << (sid == shadersToLoad.size()-1 ? "" : "," ) << std::endl;
+		
 	}
+	
 	shadersOutput << "};" << std::endl;
 	shadersOutput.close();
-	shadersInput.close();
 	return 0;
 }
 
