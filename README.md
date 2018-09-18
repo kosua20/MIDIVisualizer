@@ -6,7 +6,7 @@ A small MIDI visualizer, written in C++/OpenGL.
 
 ## Usage
 
-On all platforms, you can now **run the application by simply double-clicking** on it. You will then be able to select a MIDI file to load. A *Settings* panel now allows you to modify display parameters such as color, scale, lines,...
+On all platforms, you can now **run the application by simply double-clicking** on it. You will then be able to select a MIDI file to load. A *Settings* panel now allows you to modify display parameters such as color, scale, lines,... Note that MIDIVisualizer is currently not able to *play* soundtracks, only *display* them.
 
 Press `p` to play/pause the track, `r` to restart at the beginning of the track, and `i` to show/hide the *Settings* panel. 
 
