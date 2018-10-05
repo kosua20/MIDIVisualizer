@@ -4,11 +4,6 @@
 #include "MIDIUtils.h"
 #include "MIDITrack.h"
 
-#ifdef _WIN32
-typedef std::wstring pathstring;
-#else
-typedef std::string pathstring;
-#endif
 
 class MIDIFile {
 	
@@ -24,7 +19,7 @@ public:
 	
 	MIDIFile();
 	
-	MIDIFile(const pathstring & filePath);
+	MIDIFile(const std::string & filePath);
 	
 	~MIDIFile();
 	

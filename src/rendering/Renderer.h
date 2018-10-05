@@ -23,7 +23,7 @@ public:
 	/// Init function
 	void init(int width, int height);
 	
-	void loadFile(const pathstring & midiFilePath, const glm::vec3& baseColor, const float scale);
+	void loadFile(const std::string & midiFilePath, const glm::vec3& baseColor, const float scale);
 	
 	/// Draw function
 	void draw();

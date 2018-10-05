@@ -12,7 +12,7 @@ public:
 	~MIDIScene();
 
 	/// Init function
-	MIDIScene(const pathstring & midiFilePath, const glm::vec3& baseColor, const float scale);
+	MIDIScene(const std::string & midiFilePath, const glm::vec3& baseColor, const float scale);
 	
 	
 	void updatesActiveNotes(double time);

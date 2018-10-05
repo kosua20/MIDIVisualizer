@@ -4,11 +4,41 @@
 
 #include "MIDIFile.h"
 
+#ifdef _WIN32
+#define NOMINMAX
+#include <windows.h>
+
+WCHAR * widen(const std::string & str){
+	const int size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, NULL, 0);
+	WCHAR *arr = new WCHAR[size];
+	MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, (LPWSTR)arr, size);
+	// Will leak on Windows.
+	/// \todo Stop leaking.
+	return arr;
+}
+
+std::string narrow(WCHAR * str){
+	const int size = WideCharToMultiByte(CP_UTF8, 0, str, -1, NULL, 0, NULL, NULL);
+	std::string res(size - 1, 0);
+	WideCharToMultiByte(CP_UTF8, 0, str, -1, &res[0], size, NULL, NULL);
+	return res;
+}
+
+#else
+
+const char * widen(const std::string & str){
+	return str.c_str();
+}
+std::string narrow(char * str) {
+	return std::string(str);
+}
+
+#endif
+
 MIDIFile::MIDIFile(){};
 
-MIDIFile::MIDIFile(const pathstring & filePath){
-	// Using the underlying char array to trigger wchar support on Windows.
-	std::ifstream input(filePath.c_str(), std::ios::in|std::ios::binary);
+MIDIFile::MIDIFile(const std::string & filePath){
+	std::ifstream input(widen(filePath), std::ios::in|std::ios::binary);
 
 	if(!input.is_open()) {
 		std::cerr << "[ERROR]: Couldn't find file at path " << filePath << std::endl;

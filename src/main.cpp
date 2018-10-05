@@ -92,13 +92,13 @@ int main( int argc, char** argv) {
 	}
 	
 	// Read arguments.
-	pathstring midiFilePath;
+	std::string midiFilePath;
 	if(argc<2){
 		// We are in direct-to-gui mode.
 		nfdchar_t *outPath = NULL;
 		nfdresult_t result = NFD_OpenDialog( NULL, NULL, &outPath );
 		if(result == NFD_OKAY){
-			midiFilePath = pathstring(outPath);
+			midiFilePath = std::string(outPath);
 		} else if(result == NFD_CANCEL){
 			return 0;
 		} else {
@@ -107,7 +107,7 @@ int main( int argc, char** argv) {
 	} else {
 		// We are in command-line mode.
 		printHelp();
-		midiFilePath = pathstring(argv[1]);
+		midiFilePath = std::string(argv[1]);
 	}
 	glm::vec3 baseColor = 1.35f*glm::vec3(0.57f,0.19f,0.98f);
 	float scale = 0.5;
