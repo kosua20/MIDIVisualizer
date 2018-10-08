@@ -15,7 +15,7 @@ public:
 	MIDIScene(const std::string & midiFilePath, const glm::vec3& baseColor, const float scale);
 	
 	
-	void updatesActiveNotes(double time);
+	void updatesActiveNotes(double time, double delta);
 	
 	/// Draw function
 	void draw(float time, glm::vec2 invScreenSize);
@@ -56,7 +56,16 @@ private:
 	size_t _primitiveCount;
 	size_t _notesCount;
 	
-	std::vector<std::pair<double,double>> _actives;
+	std::vector<int> _actives;
+	std::vector<bool> _activesLastFrame;
+
+	struct Particles {
+		int note = -1;
+		float duration = 0.0f;
+		float elapsed = 0.0f;
+	};
+	std::vector<Particles> _particles;
+
 	MIDIFile _midiFile;
 	
 	glm::vec3 _baseColor;

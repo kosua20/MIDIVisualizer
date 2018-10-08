@@ -156,7 +156,11 @@ void MIDIFile::mergeTracks(){
 }
 
 void MIDIFile::getNotesActive(std::vector<int> & actives, double time, size_t track){
-	actives.resize(88);
+	// actives.resize(88);
+	// Reset all notes.
+	for(int i = 0; i < actives.size(); ++i){
+		 actives[i] = 0;
+	}
 	size_t count = tracks[track].notes.size();
 	for(size_t i = 0; i < count;++i){
 		auto& note = tracks[track].notes[i];

@@ -151,8 +151,8 @@ MIDIScene::MIDIScene(const std::string & midiFilePath, const glm::vec3& baseColo
 	glUseProgram(0);
 	
 	// Prepare actives notes array.
-	_actives = std::vector<std::pair<double,double>>(88,std::make_pair(-10000.0,0.0));
-
+	_actives = std::vector<int>(88, 0);
+	_particles = std::vector<Particles>(256);
 }
 
 void MIDIScene::setScale(const float scale){
@@ -162,9 +162,38 @@ void MIDIScene::setScale(const float scale){
 	glUseProgram(0);
 }
 
-void MIDIScene::updatesActiveNotes(double time){
-	// Get notes actives within a range around the current time.
-	_midiFile.getNotesActiveFull(_actives,time,0);
+void MIDIScene::updatesActiveNotes(double time, double delta){
+	// Update the particle systems lifetimes.
+	for(auto & particle : _particles){
+		particle.elapsed += delta;
+		if(particle.elapsed >= particle.duration){
+			particle.note = -1;
+			particle.duration = particle.elapsed = 0.0f;
+		}
+	}
+	// Get notes actives.
+	_midiFile.getNotesActive(_actives, time, 0);
+	for(int i = 0; i < 88; ++i){
+		// Check if the note was triggered again.
+		if(!_activesLastFrame[i] && _actives[i]){
+			// Find an available particles system and update it with the note parameters.
+			for(auto & particle : _particles){
+				if(particle.note < 0){
+					// Update with new note parameter.
+					/*auto& note = tracks[track].notes[i];
+					double newDuration = std::max(note.duration*2.0, note.duration + 1.2);
+					if(note.start - 0.25 <= time && note.start + newDuration >= time){
+						actives[note.note] = std::make_pair((time - note.start + 0.25) / newDuration, newDuration);
+					}*/
+					particle.note = i;
+					break;
+				}
+			}
+		}
+
+		// Update status for next frame.
+		_activesLastFrame[i] = _actives[i];
+	}
 }
 
 void MIDIScene::drawParticles(float time, glm::vec2 invScreenSize, bool prepass){
@@ -204,14 +233,17 @@ void MIDIScene::drawParticles(float time, glm::vec2 invScreenSize, bool prepass)
 	glBindVertexArray(_vaoParticles);
 	
 	// For each active note, set uniforms and draw particles system.
-	for(size_t i = 0; i < 88; ++i){
-		if(_actives[i].first >= 0.0){
-			glUniform1i(globalShiftId, i);
-			glUniform1f(timeId,_actives[i].first );
-			glUniform1f(durationId,_actives[i].second );
+	for(const auto & particle : _particles){
+		if(particle.note >= 0){
+			glUniform1i(globalShiftId, particle.note);
+			glUniform1f(timeId, particle.elapsed);
+			glUniform1f(durationId, particle.duration);
+			//glUniform1f(timeId, _actives[i].first);
+			//glUniform1f(durationId, _actives[i].second);
 			glDrawElementsInstanced(GL_TRIANGLES, _primitiveCount, GL_UNSIGNED_INT, (void*)0, 500);
 		}
 	}
+	
 	
 	glBindVertexArray(0);
 	glUseProgram(0);
@@ -247,12 +279,11 @@ void MIDIScene::drawFlashes(float time, glm::vec2 invScreenSize){
 	glEnable(GL_BLEND);
 	
 	// Get notes actives at exactly the current time.
-	std::vector<int> actives;
-    _midiFile.getNotesActive(actives,time,0);
+	
 	
 	// Update the flags buffer accordingly.
 	glBindBuffer(GL_ARRAY_BUFFER, _flagsBufferId);
-	glBufferSubData(GL_ARRAY_BUFFER, 0,actives.size()*sizeof(GLint) ,&(actives[0]));
+	glBufferSubData(GL_ARRAY_BUFFER, 0, _actives.size()*sizeof(GLint) ,&(_actives[0]));
 	
 	glUseProgram(_programFlashesId);
 	
