@@ -4,6 +4,11 @@
 #include "MIDIUtils.h"
 #include "MIDITrack.h"
 
+struct ActiveNoteInfos {
+	float start = 0.0f;
+	float duration = 0.0f;
+	bool enabled = false;
+};
 
 class MIDIFile {
 	
@@ -27,9 +32,9 @@ public:
 	
 	void mergeTracks();
 	
-	void getNotesActive(std::vector<int>& actives, double time, size_t track);
+	void getNotesActive(std::vector<ActiveNoteInfos>& actives, double time, size_t track);
 	
-	void getNotesActiveFull(std::vector<std::pair<double,double>>& actives, double time, size_t track);
+	//void getNotesActiveFull(std::vector<std::pair<double,double>>& actives, double time, size_t track);
 	
 	std::vector<MIDITrack> tracks;
 };
