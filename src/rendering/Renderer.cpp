@@ -116,7 +116,7 @@ void Renderer::draw(){
 	if(_showGUI){
 		//ImGui::ShowDemoWindow();
 		if(ImGui::Begin("Settings", NULL, ImGuiWindowFlags_NoResize)){
-			ImGui::Text("Welcome in MIDIVisualizer v2.0!");
+			ImGui::Text("Welcome in MIDIVisualizer v2.1!");
 			ImGui::Text("Keys:");
 			ImGui::Text("\tp: start/stop playing");
 			ImGui::Text("\tr: reset track");
