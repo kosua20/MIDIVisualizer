@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <lodepng/lodepng.h>
+#include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "../helpers/ProgramUtilities.h"
@@ -10,6 +11,10 @@
 
 #include "MIDIScene.h"
 
+#ifdef _WIN32
+#undef MIN
+#undef MAX
+#endif
 
 MIDIScene::~MIDIScene(){}
 
@@ -151,8 +156,9 @@ MIDIScene::MIDIScene(const std::string & midiFilePath, const glm::vec3& baseColo
 	glUseProgram(0);
 	
 	// Prepare actives notes array.
-	_actives = std::vector<ActiveNoteInfos>(88);
-	_activesLastFrame = std::vector<bool>(88, false);
+	_actives = std::vector<int>(88, 0);
+	_previousTime = 0.0;
+	// Particle systems pool.
 	_particles = std::vector<Particles>(256);
 }
 
@@ -166,26 +172,27 @@ void MIDIScene::setScale(const float scale){
 void MIDIScene::updatesActiveNotes(double time){
 	// Update the particle systems lifetimes.
 	for(auto & particle : _particles){
-
-		//if(note.start - 0.25 <= time && note.start + newDuration >= time){
+		// Give a bit of a head start to the animation.
 		particle.elapsed = (time - particle.start + 0.25) / particle.duration;
-
+		// Disable old particles.
 		if(time >= particle.start + particle.duration){
 			particle.note = -1;
 			particle.duration = particle.start = particle.elapsed = 0.0f;
 		}
 	}
 	// Get notes actives.
-	_midiFile.getNotesActive(_actives, time, 0);
+	auto actives = std::vector<ActiveNoteInfos>(88);
+	_midiFile.getNotesActive(actives, time, 0);
 	for(int i = 0; i < 88; ++i){
-		// Check if the note was triggered again.
-		const auto & note = _actives[i];
-		if(!_activesLastFrame[i] && note.enabled){
+		const auto & note = actives[i];
+		_actives[i] = int(note.enabled);
+		// Check if the note was triggered at this frame.
+		if(note.start > _previousTime && note.start <= time){
 			// Find an available particles system and update it with the note parameters.
 			for(auto & particle : _particles){
 				if(particle.note < 0){
 					// Update with new note parameter.
-					particle.duration = std::max(note.duration*2.0, note.duration + 1.2);
+					particle.duration = (std::max)(note.duration*2.0, note.duration + 1.2);
 					particle.start = note.start;
 					particle.note = i;
 					particle.elapsed = 0.0f;
@@ -193,10 +200,8 @@ void MIDIScene::updatesActiveNotes(double time){
 				}
 			}
 		}
-
-		// Update status for next frame.
-		_activesLastFrame[i] = _actives[i].enabled;
 	}
+	_previousTime = time;
 }
 
 void MIDIScene::drawParticles(float time, glm::vec2 invScreenSize, bool prepass){
@@ -234,14 +239,12 @@ void MIDIScene::drawParticles(float time, glm::vec2 invScreenSize, bool prepass)
 	
 	// Select the geometry.
 	glBindVertexArray(_vaoParticles);
-	// For each active note, set uniforms and draw particles system.
+	// For each activ particles system, draw it with the right parameters.
 	for(const auto & particle : _particles){
 		if(particle.note >= 0){
 			glUniform1i(globalShiftId, particle.note);
 			glUniform1f(timeId, particle.elapsed);
 			glUniform1f(durationId, particle.duration);
-			//glUniform1f(timeId, _actives[i].first);
-			//glUniform1f(durationId, _actives[i].second);
 			glDrawElementsInstanced(GL_TRIANGLES, _primitiveCount, GL_UNSIGNED_INT, (void*)0, 500);
 		}
 	}

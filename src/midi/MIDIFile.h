@@ -34,8 +34,6 @@ public:
 	
 	void getNotesActive(std::vector<ActiveNoteInfos>& actives, double time, size_t track);
 	
-	//void getNotesActiveFull(std::vector<std::pair<double,double>>& actives, double time, size_t track);
-	
 	std::vector<MIDITrack> tracks;
 };
 

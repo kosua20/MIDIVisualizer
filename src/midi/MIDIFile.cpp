@@ -156,7 +156,6 @@ void MIDIFile::mergeTracks(){
 }
 
 void MIDIFile::getNotesActive(std::vector<ActiveNoteInfos> & actives, double time, size_t track){
-	// actives.resize(88);
 	// Reset all notes.
 	for(int i = 0; i < actives.size(); ++i){
 		 actives[i].enabled = false;
@@ -166,26 +165,12 @@ void MIDIFile::getNotesActive(std::vector<ActiveNoteInfos> & actives, double tim
 		auto& note = tracks[track].notes[i];
 		if(note.start <= time && note.start+note.duration >= time){
 			actives[note.note].enabled = true;
-			actives[note.note].duration =  note.duration;
+			actives[note.note].duration = note.duration;
 			actives[note.note].start = note.start;
 		}
 		
 	}
 }
-
-// void MIDIFile::getNotesActiveFull(std::vector<std::pair<double,double>> & actives, double time, size_t track){
-// 	for(size_t j = 0; j < 88; ++j){
-// 		actives[j] = std::make_pair(-1000.0,0.0);
-// 	}
-// 	size_t count = tracks[track].notes.size();
-// 	for(size_t i = 0; i < count;++i){
-// 		auto& note = tracks[track].notes[i];
-// 		double newDuration = std::max(note.duration*2.0, note.duration+1.2);
-// 		if(note.start-0.25 <= time && note.start+newDuration >= time){
-// 			actives[note.note] = std::make_pair((time-note.start+0.25)/newDuration, newDuration);
-// 		} 
-// 	}
-// }
 
 
 

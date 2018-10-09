@@ -56,8 +56,7 @@ private:
 	size_t _primitiveCount;
 	size_t _notesCount;
 	
-	std::vector<ActiveNoteInfos> _actives;
-	std::vector<bool> _activesLastFrame;
+	std::vector<int> _actives;
 
 	struct Particles {
 		int note = -1;
@@ -66,6 +65,7 @@ private:
 		float elapsed = 0.0f;
 	};
 	std::vector<Particles> _particles;
+	double _previousTime;
 
 	MIDIFile _midiFile;
 	
