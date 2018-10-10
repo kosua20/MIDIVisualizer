@@ -89,7 +89,7 @@ MIDIFile::MIDIFile(const std::string & filePath){
 		std::cerr << "[ERROR]: " << "No tracks." << std::endl;
 		throw "BadInput";
 	}
-	if(format==multipleSongs){
+	if(format == multipleSongs){
 		std::cerr << "[ERROR]: " << "Nooop. Lazy dev." << std::endl;
 		throw "LazyDev";
 	}
@@ -113,16 +113,25 @@ MIDIFile::MIDIFile(const std::string & filePath){
 		while(tid < _tracksCount && !tracks[tid].hasTempo) {
 			++tid;
 		}
-		int forcedTempo = tracks[tid].getTempo();
-		int forcedSignature = tracks[tid].getSignature();
-		// The tid track has a tempo !
+		
+		int forcedTempo = 500000;
+		int forcedSignature = 4.0/4.0;
+
+		if(tid < _tracksCount){
+			forcedTempo = tracks[tid].getTempo();
+			forcedSignature = tracks[tid].getSignature();
+		} else {
+			//std::cout << "[Warning]: Track should contain a tempo. Using default fallback." << std::endl;
+		}	
+		// Enforce the tempo.
 		for (auto& track : tracks) {
 			track.updateMetrics(forcedTempo, forcedSignature);
 			track.extractNotes(21, 108, true);
 		}
+		
 	}
+	
 	mergeTracks();
-
 	input.close();
 	
 }
@@ -135,6 +144,7 @@ MIDIFile::~MIDIFile(){
 void MIDIFile::printTracks(){
 	for(auto& track : tracks){
 		track.printEvents();
+		track.printNotes();
 	}
 }
 

@@ -146,10 +146,15 @@ size_t MIDITrack::readTrack(const std::vector<char>& buffer, size_t pos, uint16_
 		}
 	}
 	
+	hasTempo = _tempo != 0x555555;
+	if(!hasTempo){
+		// Assume default 120BPM tempo, just in case.
+		_tempo = 500000;
+	}
 	// micro s / delta =  (micros/qnote) / (delta/qnote) = tempo / unitsPerQuarterNote
 	_unitsPerQuarterNote = double(unitsPerQuarterNote);
 	_unitTime = double(_tempo) / _unitsPerQuarterNote;
-	hasTempo = _tempo != 0x555555;
+	
 	
 	secondsPerMeasure = computeMeasureDuration(_tempo);
 	
