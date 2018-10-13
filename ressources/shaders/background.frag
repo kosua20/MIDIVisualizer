@@ -10,6 +10,7 @@ uniform vec2 inverseScreenSize;
 uniform bool useDigits = true;
 uniform bool useHLines = true;
 uniform bool useVLines = true;
+uniform float minorsWidth = 1.0;
 uniform sampler2D screenTexture;
 
 const float octaveLinesPositions[8] = float[](2.0/52.0, 9.0/52.0, 16.0/52.0, 23.0/52.0, 30.0/52.0, 37.0/52.0, 44.0/52.0, 51.0/52.0);
@@ -89,12 +90,9 @@ void main(){
 			int index = int(floor(In.uv.x*52.0+0.5))-1;
 			
 			if(!(index < 0 || index==1 || index==4 || index==8 || index==11 || index==15 || index==18 || index==22 || index==25 || index==29 || index==32 || index==36 || index==39 || index==43 || index==46 || index>=50)){
-				
-				intensity = 0.0;
-				// Separating lines on black keys.
-				if(abs(fract(In.uv.x*52.0+0.5)) < 2.0*52.0*inverseScreenSize.x){
-					intensity = 1.0;
-				}
+				// If the minor keys are not thinner, preserve a 1 px margin on each side.
+				float marginSize = minorsWidth != 1.0 ? minorsWidth : 1.0 - (2.0*52.0*inverseScreenSize.x);
+				intensity = step(marginSize, abs(fract(In.uv.x*52.0+0.5)*2.0-1.0));
 			}
 		}
 		

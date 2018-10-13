@@ -45,7 +45,7 @@ void Renderer::init(int width, int height){
 	
 	_blurringScreen.init(_particlesFramebuffer->textureId(), ResourcesManager::getStringForShader("particlesblur_frag"));
 	_blurryScreen.init(_blurFramebuffer->textureId(), ResourcesManager::getStringForShader("screenquad_frag"));
-	
+	_minorsWidth = 0.8f;
 	// Check setup errors.
 	checkGLError();
 }
@@ -60,6 +60,8 @@ void Renderer::loadFile(const std::string & midiFilePath, const glm::vec3& baseC
 	_background = std::make_shared<Background>(_scene->midiFile().tracks[0].secondsPerMeasure, _scale);
 	_scene->setScale(_scale);
 	_background->setScale(_scale);
+	_scene->setMinorWidth(_minorsWidth);
+	_background->setMinorWidth(_minorsWidth);
 	_background->setDisplay(_showDigits, _showHLines, _showVLines);
 }
 
@@ -145,6 +147,12 @@ void Renderer::draw(){
 				_scale = std::max(_scale, 0.01f);
 				_scene->setScale(_scale);
 				_background->setScale(_scale);
+			}
+			
+			if(ImGui::InputFloat("Minor keys width", &_minorsWidth, 0.1f, 1.0f)){
+				_minorsWidth = std::min(std::max(_minorsWidth, 0.1f), 1.0f);
+				_scene->setMinorWidth(_minorsWidth);
+				_background->setMinorWidth(_minorsWidth);
 			}
 			ImGui::PopItemWidth();
 			ImGui::Checkbox("Particles ", &_showParticles); 

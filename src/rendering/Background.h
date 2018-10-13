@@ -16,6 +16,8 @@ public:
 	
 	void setScale(const float scale);
 	
+	void setMinorWidth(const float width);
+	
 	void setDisplay(const bool digits, const bool horiz, const bool vert);
 };
 

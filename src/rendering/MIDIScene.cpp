@@ -171,6 +171,13 @@ void MIDIScene::setScale(const float scale){
 	glUseProgram(0);
 }
 
+void MIDIScene::setMinorWidth(const float width){
+	glUseProgram(_programId);
+	GLuint widthId = glGetUniformLocation(_programId, "minorsWidth");
+	glUniform1f(widthId, width);
+	glUseProgram(0);
+}
+
 void MIDIScene::updatesActiveNotes(double time){
 	// Update the particle systems lifetimes.
 	for(auto & particle : _particles){

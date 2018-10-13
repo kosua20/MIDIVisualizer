@@ -31,6 +31,13 @@ void Background::setScale(const float scale){
 	glUseProgram(0);
 }
 
+void Background::setMinorWidth(const float width){
+	glUseProgram(_programId);
+	GLuint widthId = glGetUniformLocation(_programId, "minorsWidth");
+	glUniform1f(widthId, width);
+	glUseProgram(0);
+}
+
 void Background::setDisplay(const bool digits, const bool horiz, const bool vert){
 	glUseProgram(_programId);
 	GLuint id1 = glGetUniformLocation(_programId, "useDigits"); glUniform1i(id1, digits);

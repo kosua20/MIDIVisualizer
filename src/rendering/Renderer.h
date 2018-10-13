@@ -50,6 +50,7 @@ private:
 	bool _showBlurNotes;
 	bool _showHLines, _showVLines, _showDigits;
 	float _scale;
+	float _minorsWidth;
 	bool _lockParticleColor;
 
 	Camera _camera;

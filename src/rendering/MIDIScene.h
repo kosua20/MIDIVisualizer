@@ -30,6 +30,8 @@ public:
 	const MIDIFile& midiFile() { return _midiFile; }
 	
 	void setScale(const float scale);
+
+	void setMinorWidth(const float width);
 	
 	void setColor(const glm::vec3 & color){ _baseColor = color; };
 

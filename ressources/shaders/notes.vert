@@ -5,6 +5,7 @@ layout(location = 1) in vec4 id; //note id, start, duration, is minor
 
 uniform float time;
 uniform float mainSpeed;
+uniform float minorsWidth = 1.0;
 
 #define notesCount 52.0
 
@@ -17,8 +18,9 @@ out INTERFACE {
 
 void main(){
 	
+	float scalingFactor = id.w != 0.0 ? minorsWidth : 1.0;
 	// Size of the note : width, height based on duration and current speed.
-	Out.noteSize = vec2(0.9*2.0/notesCount, id.z*mainSpeed);
+	Out.noteSize = vec2(0.9*2.0/notesCount * scalingFactor, id.z*mainSpeed);
 	
 	// Compute note shift.
 	// Horizontal shift based on note id, width of keyboard, and if the note is minor or not.
