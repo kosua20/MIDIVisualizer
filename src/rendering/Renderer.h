@@ -49,6 +49,7 @@ private:
 	bool _showBlur;
 	bool _showHLines, _showVLines, _showDigits;
 	float _scale;
+	bool _lockParticleColor;
 	
 	Camera _camera;
 	

@@ -24,7 +24,8 @@ void Renderer::init(int width, int height){
 	_showDigits = true;
 	_showHLines = true;
 	_showVLines = true;
-	
+	_lockParticleColor = true;
+
 	ResourcesManager::loadResources();
 	
 	// GL options
@@ -116,7 +117,7 @@ void Renderer::draw(){
 	if(_showGUI){
 		//ImGui::ShowDemoWindow();
 		if(ImGui::Begin("Settings", NULL, ImGuiWindowFlags_NoResize)){
-			ImGui::Text("Welcome in MIDIVisualizer v2.1!");
+			ImGui::Text("Welcome in MIDIVisualizer v2.2!");
 			ImGui::Text("Keys:");
 			ImGui::Text("\tp: start/stop playing");
 			ImGui::Text("\tr: reset track");
@@ -149,7 +150,20 @@ void Renderer::draw(){
 			if(m1 || m2 || m3){
 				_background->setDisplay(_showDigits, _showHLines, _showVLines);
 			}
-			ImGui::ColorEdit3("Color", &_scene->getColorRef()[0]);
+			bool colNotesEdit = ImGui::ColorEdit3("Notes", &_scene->getColorRef()[0]);
+			bool colPartsEdit = ImGui::ColorEdit3("Effects", &_scene->getParticlesColorRef()[0]);
+			if(ImGui::Checkbox("Lock colors", &_lockParticleColor)){
+				// If we enable the lock, make sure the colors are synched.
+				colNotesEdit = true;
+			}
+			// Keep the colors in sync if needed.
+			if(_lockParticleColor){
+				if(colNotesEdit){
+					_scene->setParticlesColor(_scene->getColor());
+				} else if(colPartsEdit){
+					_scene->setColor(_scene->getParticlesColor());
+				}
+			}
 			ImGui::Text("Written by S. Rodriguez (kosua20)");
 			ImGui::Text("github.com/kosua20/MIDIVisualizer");
 		}
