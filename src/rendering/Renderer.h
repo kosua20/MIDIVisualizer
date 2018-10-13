@@ -47,10 +47,11 @@ private:
 	bool _showParticles;
 	bool _showFlashes;
 	bool _showBlur;
+	bool _showBlurNotes;
 	bool _showHLines, _showVLines, _showDigits;
 	float _scale;
 	bool _lockParticleColor;
-	
+
 	Camera _camera;
 	
 	std::shared_ptr<Framebuffer> _particlesFramebuffer;

@@ -18,7 +18,7 @@ public:
 	void updatesActiveNotes(double time);
 	
 	/// Draw function
-	void draw(float time, glm::vec2 invScreenSize);
+	void draw(float time, glm::vec2 invScreenSize, bool prepass);
 	
 	void drawFlashes(float time, glm::vec2 invScreenSize);
 	
@@ -43,6 +43,8 @@ public:
 	
 	glm::vec3 & getParticlesColorRef(){ return _particlesColor; };
 	
+	int & getParticlesCountRef(){ return _particlesCount; };
+
 private:
 	
 	GLuint _programId;
@@ -61,6 +63,7 @@ private:
 	
 	size_t _primitiveCount;
 	size_t _notesCount;
+	int _particlesCount; // Have to use an int because of ImGui.
 	
 	std::vector<int> _actives;
 

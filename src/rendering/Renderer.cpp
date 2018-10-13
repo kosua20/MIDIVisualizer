@@ -21,6 +21,7 @@ void Renderer::init(int width, int height){
 	_showParticles = true;
 	_showFlashes = true;
 	_showBlur = true;
+	_showBlurNotes = false;
 	_showDigits = true;
 	_showHLines = true;
 	_showVLines = true;
@@ -80,9 +81,14 @@ void Renderer::draw(){
 		// Draw blurred particles from previous frames.
 		_blurryScreen.draw(_timer, 1.0f/ _camera._screenSize);
 		if(_showParticles){
-		// Draw the new particles.
+			// Draw the new particles.
 			_scene->drawParticles(_timer, 1.0f/ _camera._screenSize, true);
 		}
+		if(_showBlurNotes){
+			// Draw the notes.
+			_scene->draw(_timer, 1.0f/ _camera._screenSize, true);
+		}
+		
 		_particlesFramebuffer->unbind();
 	
 	
@@ -107,7 +113,7 @@ void Renderer::draw(){
 	// Draw the keys, grid, and measure numbers.
 	_background->draw(_timer, 1.0f/ _camera._screenSize);
 	// Draw the notes.
-	_scene->draw(_timer, 1.0f/ _camera._screenSize);
+	_scene->draw(_timer, 1.0f/ _camera._screenSize, false);
 	
 	if(_showFlashes){
 		// Draw the flashes.
@@ -141,21 +147,34 @@ void Renderer::draw(){
 				_background->setScale(_scale);
 			}
 			ImGui::PopItemWidth();
-			ImGui::Checkbox("Particles", &_showParticles); ImGui::SameLine();
-			ImGui::Checkbox("Blur", &_showBlur); ImGui::SameLine();
-			ImGui::Checkbox("Flashes", &_showFlashes);
-			bool m1 = ImGui::Checkbox("Digits", &_showDigits); ImGui::SameLine();
-			bool m2 = ImGui::Checkbox("H. lines", &_showHLines);  ImGui::SameLine();
+			ImGui::Checkbox("Particles ", &_showParticles); 
+			if(_showParticles){
+				ImGui::SameLine();
+				ImGui::PushItemWidth(100);
+				ImGui::SliderInt("Count", &(_scene->getParticlesCountRef()), 1, 512);
+				ImGui::PopItemWidth();
+			}
+			ImGui::Checkbox("Blur      ", &_showBlur); ImGui::SameLine();
+			ImGui::Checkbox("Blur notes", &_showBlurNotes); 
+
+			ImGui::Checkbox("Flashes   ", &_showFlashes); ImGui::SameLine();
+			bool m1 = ImGui::Checkbox("Digits", &_showDigits); 
+			bool m2 = ImGui::Checkbox("H. lines  ", &_showHLines);  ImGui::SameLine();
 			bool m3 = ImGui::Checkbox("V. lines", &_showVLines);
+			
 			if(m1 || m2 || m3){
 				_background->setDisplay(_showDigits, _showHLines, _showVLines);
 			}
-			bool colNotesEdit = ImGui::ColorEdit3("Notes", &_scene->getColorRef()[0]);
-			bool colPartsEdit = ImGui::ColorEdit3("Effects", &_scene->getParticlesColorRef()[0]);
+
+
+			bool colNotesEdit = ImGui::ColorEdit3("Notes", &_scene->getColorRef()[0], ImGuiColorEditFlags_NoInputs); ImGui::SameLine();
+			bool colPartsEdit = ImGui::ColorEdit3("Effects", &_scene->getParticlesColorRef()[0], ImGuiColorEditFlags_NoInputs);
+			ImGui::SameLine();
 			if(ImGui::Checkbox("Lock colors", &_lockParticleColor)){
 				// If we enable the lock, make sure the colors are synched.
 				colNotesEdit = true;
 			}
+
 			// Keep the colors in sync if needed.
 			if(_lockParticleColor){
 				if(colNotesEdit){

@@ -160,6 +160,8 @@ MIDIScene::MIDIScene(const std::string & midiFilePath, const glm::vec3& baseColo
 	_previousTime = 0.0;
 	// Particle systems pool.
 	_particles = std::vector<Particles>(256);
+	// Number of particles per set.
+	_particlesCount = 500;
 }
 
 void MIDIScene::setScale(const float scale){
@@ -226,11 +228,11 @@ void MIDIScene::drawParticles(float time, glm::vec2 invScreenSize, bool prepass)
 	
 	// Prepass : bigger, darker particles.
 	if(prepass){
-		glUniform1f(scaleId,2.0);
-		glUniform3f(colorId,0.6*_particlesColor[0],0.6*_particlesColor[1],0.6*_particlesColor[2]);
+		glUniform1f(scaleId,2.0f);
+		glUniform3f(colorId,0.6f*_particlesColor[0],0.6f*_particlesColor[1],0.6f*_particlesColor[2]);
 	} else {
-		glUniform1f(scaleId,1.0);
-		glUniform3f(colorId,1.6*_particlesColor[0],1.6*_particlesColor[1],1.6*_particlesColor[2]);
+		glUniform1f(scaleId,1.0f);
+		glUniform3f(colorId,1.6f*_particlesColor[0],1.6f*_particlesColor[1],1.6f*_particlesColor[2]);
 	}
 	
 	// Particles trajectories texture.
@@ -245,7 +247,7 @@ void MIDIScene::drawParticles(float time, glm::vec2 invScreenSize, bool prepass)
 			glUniform1i(globalShiftId, particle.note);
 			glUniform1f(timeId, particle.elapsed);
 			glUniform1f(durationId, particle.duration);
-			glDrawElementsInstanced(GL_TRIANGLES, _primitiveCount, GL_UNSIGNED_INT, (void*)0, 500);
+			glDrawElementsInstanced(GL_TRIANGLES, _primitiveCount, GL_UNSIGNED_INT, (void*)0, _particlesCount);
 		}
 	}
 	
@@ -257,7 +259,7 @@ void MIDIScene::drawParticles(float time, glm::vec2 invScreenSize, bool prepass)
 }
 
 
-void MIDIScene::draw(float time, glm::vec2 invScreenSize){
+void MIDIScene::draw(float time, glm::vec2 invScreenSize, bool prepass){
 	
 	glUseProgram(_programId);
 	
@@ -267,7 +269,12 @@ void MIDIScene::draw(float time, glm::vec2 invScreenSize){
 	GLuint colorId = glGetUniformLocation(_programId, "baseColor");
 	glUniform2fv(screenId,1, &(invScreenSize[0]));
 	glUniform1f(timeId,time);
-	glUniform3fv(colorId, 1, &(_baseColor[0]));
+	if(prepass){
+		glUniform3f(colorId, 0.6f*_baseColor[0], 0.6f*_baseColor[1], 0.6f*_baseColor[2]);
+	} else {
+		glUniform3fv(colorId, 1, &(_baseColor[0]));
+	}
+	
 	
 	// Draw the geometry.
 	glBindVertexArray(_vao);
