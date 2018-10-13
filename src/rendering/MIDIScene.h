@@ -32,10 +32,16 @@ public:
 	void setScale(const float scale);
 	
 	void setColor(const glm::vec3 & color){ _baseColor = color; };
+
+	void setParticlesColor(const glm::vec3 & color){ _particlesColor = color; };
 	
 	glm::vec3 getColor(){ return _baseColor; };
 	
 	glm::vec3 & getColorRef(){ return _baseColor; };
+
+	glm::vec3 getParticlesColor(){ return _particlesColor; };
+	
+	glm::vec3 & getParticlesColorRef(){ return _particlesColor; };
 	
 private:
 	
@@ -70,6 +76,7 @@ private:
 	MIDIFile _midiFile;
 	
 	glm::vec3 _baseColor;
+	glm::vec3 _particlesColor;
 	
 };
 

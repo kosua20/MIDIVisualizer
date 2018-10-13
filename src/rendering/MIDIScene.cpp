@@ -25,7 +25,7 @@ MIDIScene::MIDIScene(const std::string & midiFilePath, const glm::vec3& baseColo
 	
 	// Color.
 	_baseColor = baseColor;
-	
+	_particlesColor = baseColor;
 	// Data.
 	
 	// Load geometry and notes shared data.
@@ -227,10 +227,10 @@ void MIDIScene::drawParticles(float time, glm::vec2 invScreenSize, bool prepass)
 	// Prepass : bigger, darker particles.
 	if(prepass){
 		glUniform1f(scaleId,2.0);
-		glUniform3f(colorId,0.6*_baseColor[0],0.6*_baseColor[1],0.6*_baseColor[2]);
+		glUniform3f(colorId,0.6*_particlesColor[0],0.6*_particlesColor[1],0.6*_particlesColor[2]);
 	} else {
 		glUniform1f(scaleId,1.0);
-		glUniform3f(colorId,1.6*_baseColor[0],1.6*_baseColor[1],1.6*_baseColor[2]);
+		glUniform3f(colorId,1.6*_particlesColor[0],1.6*_particlesColor[1],1.6*_particlesColor[2]);
 	}
 	
 	// Particles trajectories texture.
