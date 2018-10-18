@@ -18,7 +18,7 @@ public:
 	
 	void setMinorWidth(const float width);
 	
-	void setDisplay(const bool digits, const bool horiz, const bool vert);
+	void setDisplay(const bool digits, const bool horiz, const bool vert, const bool keys);
 };
 
 #endif

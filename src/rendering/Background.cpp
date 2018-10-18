@@ -38,11 +38,12 @@ void Background::setMinorWidth(const float width){
 	glUseProgram(0);
 }
 
-void Background::setDisplay(const bool digits, const bool horiz, const bool vert){
+void Background::setDisplay(const bool digits, const bool horiz, const bool vert, const bool keys){
 	glUseProgram(_programId);
 	GLuint id1 = glGetUniformLocation(_programId, "useDigits"); glUniform1i(id1, digits);
 	GLuint id2 = glGetUniformLocation(_programId, "useHLines"); glUniform1i(id2, horiz);
 	GLuint id3 = glGetUniformLocation(_programId, "useVLines"); glUniform1i(id3, vert);
+	GLuint id4 = glGetUniformLocation(_programId, "useKeys"); glUniform1i(id4, keys);
 	glUseProgram(0);
 }
 

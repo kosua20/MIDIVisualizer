@@ -49,6 +49,7 @@ private:
 	bool _showBlur;
 	bool _showBlurNotes;
 	bool _showHLines, _showVLines, _showDigits;
+	bool _showKeys;
 	float _scale;
 	float _minorsWidth;
 	bool _lockParticleColor;

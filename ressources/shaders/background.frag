@@ -10,6 +10,7 @@ uniform vec2 inverseScreenSize;
 uniform bool useDigits = true;
 uniform bool useHLines = true;
 uniform bool useVLines = true;
+uniform bool useKeys = true;
 uniform float minorsWidth = 1.0;
 uniform sampler2D screenTexture;
 
@@ -82,18 +83,20 @@ void main(){
 	// Keys
 	if(gl_FragCoord.y < bottomLimit/inverseScreenSize.y){
 		
-		// White keys, and separators.
-		intensity = int(abs(fract(In.uv.x*52.0)) >= 2.0 * 52.0 * inverseScreenSize.x);
+		if(useKeys){
+			// White keys, and separators.
+			intensity = int(abs(fract(In.uv.x*52.0)) >= 2.0 * 52.0 * inverseScreenSize.x);
 		
-		// Upper keyboard.
-		if(gl_FragCoord.y > 0.10/inverseScreenSize.y){
-			// Handle black keys.
-			int index = int(floor(In.uv.x*52.0+0.5))-1;
+			// Upper keyboard.
+			if(gl_FragCoord.y > 0.10/inverseScreenSize.y){
+				// Handle black keys.
+				int index = int(floor(In.uv.x*52.0+0.5))-1;
 			
-			if(index > 0 && isMinor[index]){
-				// If the minor keys are not thinner, preserve a 1 px margin on each side.
-				float marginSize = minorsWidth != 1.0 ? minorsWidth : 1.0 - (2.0*52.0*inverseScreenSize.x);
-				intensity = step(marginSize, abs(fract(In.uv.x*52.0+0.5)*2.0-1.0));
+				if(index > 0 && isMinor[index]){
+					// If the minor keys are not thinner, preserve a 1 px margin on each side.
+					float marginSize = minorsWidth != 1.0 ? minorsWidth : 1.0 - (2.0*52.0*inverseScreenSize.x);
+					intensity = step(marginSize, abs(fract(In.uv.x*52.0+0.5)*2.0-1.0));
+				}
 			}
 		}
 		

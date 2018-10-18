@@ -25,6 +25,7 @@ void Renderer::init(int width, int height){
 	_showDigits = true;
 	_showHLines = true;
 	_showVLines = true;
+	_showKeys = true;
 	_lockParticleColor = true;
 
 	ResourcesManager::loadResources();
@@ -62,7 +63,7 @@ void Renderer::loadFile(const std::string & midiFilePath, const glm::vec3& baseC
 	_background->setScale(_scale);
 	_scene->setMinorWidth(_minorsWidth);
 	_background->setMinorWidth(_minorsWidth);
-	_background->setDisplay(_showDigits, _showHLines, _showVLines);
+	_background->setDisplay(_showDigits, _showHLines, _showVLines, _showKeys);
 }
 
 
@@ -169,9 +170,10 @@ void Renderer::draw(){
 			bool m1 = ImGui::Checkbox("Digits", &_showDigits); 
 			bool m2 = ImGui::Checkbox("H. lines  ", &_showHLines);  ImGui::SameLine();
 			bool m3 = ImGui::Checkbox("V. lines", &_showVLines);
+			bool m4 = ImGui::Checkbox("Keyboard", &_showKeys);
 			
-			if(m1 || m2 || m3){
-				_background->setDisplay(_showDigits, _showHLines, _showVLines);
+			if(m1 || m2 || m3 || m4){
+				_background->setDisplay(_showDigits, _showHLines, _showVLines, _showKeys);
 			}
 
 
