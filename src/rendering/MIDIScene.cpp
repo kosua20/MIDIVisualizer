@@ -178,6 +178,15 @@ void MIDIScene::setMinorWidth(const float width){
 	glUseProgram(0);
 }
 
+void MIDIScene::setParticlesParameters(const float speed, const float expansion){
+	glUseProgram(_programParticulesId);
+	GLuint id0 = glGetUniformLocation(_programParticulesId, "speedScaling");
+	glUniform1f(id0, speed);
+	GLuint id1 = glGetUniformLocation(_programParticulesId, "expansionFactor");
+	glUniform1f(id1, expansion);
+	glUseProgram(0);	
+}
+
 void MIDIScene::updatesActiveNotes(double time){
 	// Update the particle systems lifetimes.
 	for(auto & particle : _particles){

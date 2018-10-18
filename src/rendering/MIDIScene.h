@@ -33,10 +33,12 @@ public:
 
 	void setMinorWidth(const float width);
 	
+	void setParticlesParameters(const float speed, const float expansion);
+	
 	void setColor(const glm::vec3 & color){ _baseColor = color; };
 
 	void setParticlesColor(const glm::vec3 & color){ _particlesColor = color; };
-	
+
 	glm::vec3 getColor(){ return _baseColor; };
 	
 	glm::vec3 & getColorRef(){ return _baseColor; };

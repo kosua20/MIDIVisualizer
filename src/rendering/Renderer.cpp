@@ -27,7 +27,8 @@ void Renderer::init(int width, int height){
 	_showVLines = true;
 	_showKeys = true;
 	_lockParticleColor = true;
-
+ 	_particlesSpeed = 0.2f;
+ 	_particlesExpansion = 1.0f;
 	ResourcesManager::loadResources();
 	
 	// GL options
@@ -64,6 +65,7 @@ void Renderer::loadFile(const std::string & midiFilePath, const glm::vec3& baseC
 	_scene->setMinorWidth(_minorsWidth);
 	_background->setMinorWidth(_minorsWidth);
 	_background->setDisplay(_showDigits, _showHLines, _showVLines, _showKeys);
+	_scene->setParticlesParameters(_particlesSpeed, _particlesExpansion);
 }
 
 
@@ -159,8 +161,18 @@ void Renderer::draw(){
 			ImGui::Checkbox("Particles ", &_showParticles); 
 			if(_showParticles){
 				ImGui::SameLine();
+				ImGui::PushID("ParticlesSettings");
 				ImGui::PushItemWidth(100);
 				ImGui::SliderInt("Count", &(_scene->getParticlesCountRef()), 1, 512);
+				
+				bool mp0 = ImGui::InputFloat("Speed", &_particlesSpeed, 0.001f, 1.0f);
+				ImGui::SameLine();
+				bool mp1 = ImGui::InputFloat("Expansion", &_particlesExpansion, 0.1f, 5.0f);
+
+				if(mp1 || mp0){
+					_scene->setParticlesParameters(_particlesSpeed, _particlesExpansion);
+				}
+				ImGui::PopID();
 				ImGui::PopItemWidth();
 			}
 			ImGui::Checkbox("Blur      ", &_showBlur); ImGui::SameLine();
