@@ -12,43 +12,27 @@ public:
 	~MIDIScene();
 
 	/// Init function
-	MIDIScene(const std::string & midiFilePath, const glm::vec3& baseColor, const float scale);
+	MIDIScene(const std::string & midiFilePath);
 	
 	
 	void updatesActiveNotes(double time);
 	
 	/// Draw function
-	void draw(float time, glm::vec2 invScreenSize, bool prepass);
+	void draw(float time, glm::vec2 invScreenSize, const glm::vec3 & baseColor, bool prepass);
 	
-	void drawFlashes(float time, glm::vec2 invScreenSize);
+	void drawFlashes(float time, glm::vec2 invScreenSize, const glm::vec3 & baseColor);
 	
-	void drawParticles(float time, glm::vec2 invScreenSize, bool prepass);
+	void drawParticles(const float time, const glm::vec2 & invScreenSize, const glm::vec3 & particlesColor, const float particlesScale, const GLuint lookTexture, const int particlesCount, bool prepass);
 	
 	/// Clean function
 	void clean();
 
 	const MIDIFile& midiFile() { return _midiFile; }
 	
-	void setScale(const float scale);
+	void setScaleAndMinorWidth(const float scale, const float minorWidth);
 
-	void setMinorWidth(const float width);
-	
 	void setParticlesParameters(const float speed, const float expansion);
 	
-	void setColor(const glm::vec3 & color){ _baseColor = color; };
-
-	void setParticlesColor(const glm::vec3 & color){ _particlesColor = color; };
-
-	glm::vec3 getColor(){ return _baseColor; };
-	
-	glm::vec3 & getColorRef(){ return _baseColor; };
-
-	glm::vec3 getParticlesColor(){ return _particlesColor; };
-	
-	glm::vec3 & getParticlesColorRef(){ return _particlesColor; };
-	
-	int & getParticlesCountRef(){ return _particlesCount; };
-
 private:
 	
 	GLuint _programId;
@@ -64,10 +48,11 @@ private:
 	
 	GLuint _vaoParticles;
 	GLuint _texParticles;
+	//GLuint _lookParticles;
 	
 	size_t _primitiveCount;
 	size_t _notesCount;
-	int _particlesCount; // Have to use an int because of ImGui.
+	
 	
 	std::vector<int> _actives;
 
@@ -82,8 +67,7 @@ private:
 
 	MIDIFile _midiFile;
 	
-	glm::vec3 _baseColor;
-	glm::vec3 _particlesColor;
+	
 	
 };
 

@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <iostream>
 #include <vector>
-#include <lodepng/lodepng.h>
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -18,15 +17,11 @@
 
 MIDIScene::~MIDIScene(){}
 
-MIDIScene::MIDIScene(const std::string & midiFilePath, const glm::vec3& baseColor, const float scale){
+MIDIScene::MIDIScene(const std::string & midiFilePath){
 	
 	// MIDI processing.
 	_midiFile = MIDIFile(midiFilePath);
 	
-	// Color.
-	_baseColor = baseColor;
-	_particlesColor = baseColor;
-	// Data.
 	
 	// Load geometry and notes shared data.
 	std::vector<float> vertices = {-0.5,-0.5, 0.5, -0.5, 0.5,0.5, -0.5, 0.5};
@@ -99,8 +94,8 @@ MIDIScene::MIDIScene(const std::string & midiFilePath, const glm::vec3& baseColo
 	glBindVertexArray(0);
 	checkGLError();
 	
-	GLuint speedID = glGetUniformLocation(_programId, "mainSpeed");
-	glUniform1f(speedID, scale);
+	//GLuint speedID = glGetUniformLocation(_programId, "mainSpeed");
+	//glUniform1f(speedID, scale);
 	
 	// Flashes shaders.
 	_programFlashesId = createGLProgramFromStrings(ResourcesManager::getStringForShader("flashes_vert"), ResourcesManager::getStringForShader("flashes_frag"));
@@ -149,6 +144,12 @@ MIDIScene::MIDIScene(const std::string & midiFilePath, const glm::vec3& baseColo
 	GLuint texUniID1 = glGetUniformLocation(_programParticulesId, "textureParticles");
 	glUniform1i(texUniID1, 0);
 	
+	//_lookParticles = ResourcesManager::getTextureFor("blank");
+	glUseProgram(_programParticulesId);
+	glActiveTexture(GL_TEXTURE1);
+	GLuint texUniID2 = glGetUniformLocation(_programParticulesId, "lookParticles");
+	glUniform1i(texUniID2, 1);
+	
 	// Pass texture size to shader.
 	const glm::vec2 tsize = ResourcesManager::getTextureSizeFor("particles");
 	GLuint texSizeID = glGetUniformLocation(_programParticulesId, "inverseTextureSize");
@@ -160,21 +161,14 @@ MIDIScene::MIDIScene(const std::string & midiFilePath, const glm::vec3& baseColo
 	_previousTime = 0.0;
 	// Particle systems pool.
 	_particles = std::vector<Particles>(256);
-	// Number of particles per set.
-	_particlesCount = 500;
 }
 
-void MIDIScene::setScale(const float scale){
+void MIDIScene::setScaleAndMinorWidth(const float scale, const float minorWidth){
 	glUseProgram(_programId);
 	GLuint speedID = glGetUniformLocation(_programId, "mainSpeed");
 	glUniform1f(speedID, scale);
-	glUseProgram(0);
-}
-
-void MIDIScene::setMinorWidth(const float width){
-	glUseProgram(_programId);
 	GLuint widthId = glGetUniformLocation(_programId, "minorsWidth");
-	glUniform1f(widthId, width);
+	glUniform1f(widthId, minorWidth);
 	glUseProgram(0);
 }
 
@@ -184,7 +178,7 @@ void MIDIScene::setParticlesParameters(const float speed, const float expansion)
 	glUniform1f(id0, speed);
 	GLuint id1 = glGetUniformLocation(_programParticulesId, "expansionFactor");
 	glUniform1f(id1, expansion);
-	glUseProgram(0);	
+	glUseProgram(0);
 }
 
 void MIDIScene::updatesActiveNotes(double time){
@@ -222,7 +216,7 @@ void MIDIScene::updatesActiveNotes(double time){
 	_previousTime = time;
 }
 
-void MIDIScene::drawParticles(float time, glm::vec2 invScreenSize, bool prepass){
+void MIDIScene::drawParticles(const float time, const glm::vec2 & invScreenSize, const glm::vec3 & particlesColor, const float particlesScale, const GLuint lookTexture, const int particlesCount, bool prepass){
 
 	// Need alpha blending.
 	glEnable(GL_BLEND);
@@ -235,7 +229,7 @@ void MIDIScene::drawParticles(float time, glm::vec2 invScreenSize, bool prepass)
 	GLuint durationId = glGetUniformLocation(_programParticulesId, "duration");
 	glUniform2fv(screenId,1, &(invScreenSize[0]));
 	glUniform1f(timeId,time);
-	glUniform1f(timeId,0.0);
+	glUniform1f(timeId,0.0);//wut?
 
 	// Variable uniforms.
 	GLuint globalShiftId = glGetUniformLocation(_programParticulesId, "globalId");
@@ -244,16 +238,18 @@ void MIDIScene::drawParticles(float time, glm::vec2 invScreenSize, bool prepass)
 	
 	// Prepass : bigger, darker particles.
 	if(prepass){
-		glUniform1f(scaleId,2.0f);
-		glUniform3f(colorId,0.6f*_particlesColor[0],0.6f*_particlesColor[1],0.6f*_particlesColor[2]);
+		glUniform1f(scaleId, particlesScale*2.0f);
+		glUniform3f(colorId,0.6f*particlesColor[0], 0.6f*particlesColor[1], 0.6f*particlesColor[2]);
 	} else {
-		glUniform1f(scaleId,1.0f);
-		glUniform3f(colorId,1.6f*_particlesColor[0],1.6f*_particlesColor[1],1.6f*_particlesColor[2]);
+		glUniform1f(scaleId, particlesScale);
+		glUniform3f(colorId,1.6f*particlesColor[0], 1.6f*particlesColor[1], 1.6f*particlesColor[2]);
 	}
 	
 	// Particles trajectories texture.
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, _texParticles);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, lookTexture);
 	
 	// Select the geometry.
 	glBindVertexArray(_vaoParticles);
@@ -263,7 +259,7 @@ void MIDIScene::drawParticles(float time, glm::vec2 invScreenSize, bool prepass)
 			glUniform1i(globalShiftId, particle.note);
 			glUniform1f(timeId, particle.elapsed);
 			glUniform1f(durationId, particle.duration);
-			glDrawElementsInstanced(GL_TRIANGLES, _primitiveCount, GL_UNSIGNED_INT, (void*)0, _particlesCount);
+			glDrawElementsInstanced(GL_TRIANGLES, _primitiveCount, GL_UNSIGNED_INT, (void*)0, particlesCount);
 		}
 	}
 	
@@ -275,7 +271,7 @@ void MIDIScene::drawParticles(float time, glm::vec2 invScreenSize, bool prepass)
 }
 
 
-void MIDIScene::draw(float time, glm::vec2 invScreenSize, bool prepass){
+void MIDIScene::draw(float time, glm::vec2 invScreenSize, const glm::vec3 & baseColor, bool prepass){
 	
 	glUseProgram(_programId);
 	
@@ -286,9 +282,9 @@ void MIDIScene::draw(float time, glm::vec2 invScreenSize, bool prepass){
 	glUniform2fv(screenId,1, &(invScreenSize[0]));
 	glUniform1f(timeId,time);
 	if(prepass){
-		glUniform3f(colorId, 0.6f*_baseColor[0], 0.6f*_baseColor[1], 0.6f*_baseColor[2]);
+		glUniform3f(colorId, 0.6f*baseColor[0], 0.6f*baseColor[1], 0.6f*baseColor[2]);
 	} else {
-		glUniform3fv(colorId, 1, &(_baseColor[0]));
+		glUniform3fv(colorId, 1, &(baseColor[0]));
 	}
 	
 	
@@ -301,7 +297,7 @@ void MIDIScene::draw(float time, glm::vec2 invScreenSize, bool prepass){
 	
 }
 
-void MIDIScene::drawFlashes(float time, glm::vec2 invScreenSize){
+void MIDIScene::drawFlashes(float time, glm::vec2 invScreenSize, const glm::vec3 & baseColor){
 	
 	// Need alpha blending.
 	glEnable(GL_BLEND);
@@ -321,7 +317,7 @@ void MIDIScene::drawFlashes(float time, glm::vec2 invScreenSize){
 	GLuint colorId = glGetUniformLocation(_programFlashesId, "baseColor");
 	glUniform2fv(screenId1,1, &(invScreenSize[0]));
 	glUniform1f(timeId1,time);
-	glUniform3fv(colorId, 1, &(_baseColor[0]));
+	glUniform3fv(colorId, 1, &(baseColor[0]));
 	
 	// Flash texture.
 	glActiveTexture(GL_TEXTURE0);
