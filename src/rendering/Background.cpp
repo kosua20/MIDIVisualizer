@@ -7,7 +7,7 @@
 
 #include "Background.h"
 
-Background::Background(double secondsPerMeasure, const float scale){
+Background::Background(double secondsPerMeasure){
 	
 	// Load font atlas.
 	GLuint textureId = ResourcesManager::getTextureFor("font");
@@ -18,21 +18,14 @@ Background::Background(double secondsPerMeasure, const float scale){
 	glUseProgram(_programId);
 	GLuint sigID = glGetUniformLocation(_programId, "secondsPerMeasure");
 	glUniform1f(sigID, secondsPerMeasure);
-	GLuint speedID = glGetUniformLocation(_programId, "mainSpeed");
-	glUniform1f(speedID, scale);
 	glUseProgram(0);
 	
 }
 
-void Background::setScale(const float scale){
+void Background::setScaleAndMinorWidth(const float scale, const float width){
 	glUseProgram(_programId);
 	GLuint speedID = glGetUniformLocation(_programId, "mainSpeed");
 	glUniform1f(speedID, scale);
-	glUseProgram(0);
-}
-
-void Background::setMinorWidth(const float width){
-	glUseProgram(_programId);
 	GLuint widthId = glGetUniformLocation(_programId, "minorsWidth");
 	glUniform1f(widthId, width);
 	glUseProgram(0);
