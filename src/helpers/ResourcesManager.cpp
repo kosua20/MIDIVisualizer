@@ -67,6 +67,13 @@ void ResourcesManager::loadResources(){
 		auto particlesTexture = ResourcesManager::getDataForImage("particles", imwidth1, imheight1);
 		textureLibrary["particles"] = loadTexture(particlesTexture, imwidth1, imheight1, false);
 	}
+	
+	{
+		unsigned int imwidth1 = 2;
+		unsigned int imheight1 = 2;
+		unsigned char blankTexture[] = { 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255};
+		textureLibrary["blank"] = loadTexture(blankTexture, imwidth1, imheight1, false);
+	}
 }
 
 GLuint ResourcesManager::getTextureFor(const std::string & fileName){

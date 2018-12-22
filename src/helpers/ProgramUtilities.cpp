@@ -198,20 +198,20 @@ void flipImage(unsigned char* & image, const int width, const int height) {
 	}
 }
 
-GLuint loadTexture(const std::string& path, const GLuint program, const GLuint textureSlot, const std::string& uniformName, bool sRGB){
-	
-	GLuint textureId = loadTexture(path, sRGB);
-	
-	glUseProgram(program);
-	glActiveTexture(GL_TEXTURE0 + textureSlot);
-	GLuint texUniID = glGetUniformLocation(program, uniformName.c_str());
-	glUniform1i(texUniID, textureSlot);
-	
-	return textureId;
-}
-
+//GLuint loadTexture(const std::string& path, const GLuint program, const GLuint textureSlot, const std::string& uniformName, bool sRGB){
+//
+//	GLuint textureId = loadTexture(path, sRGB);
+//
+//	glUseProgram(program);
+//	glActiveTexture(GL_TEXTURE0 + textureSlot);
+//	GLuint texUniID = glGetUniformLocation(program, uniformName.c_str());
+//	glUniform1i(texUniID, textureSlot);
+//
+//	return textureId;
+//}
+//
 GLuint loadTexture(const std::string& path, bool sRGB){
-	
+
 	// Load and upload the texture.
 	std::vector<unsigned char> image;
 	unsigned imwidth, imheight;
@@ -220,7 +220,7 @@ GLuint loadTexture(const std::string& path, bool sRGB){
 		std::cerr << "Unable to load the texture at path " << path << "." << std::endl;
 		return 0;
 	}
-	
+
 	flipImage(image,imwidth, imheight);
 	GLuint textureId;
 	glGenTextures(1, &textureId);
@@ -229,7 +229,7 @@ GLuint loadTexture(const std::string& path, bool sRGB){
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-	
+
 	return textureId;
 }
 
@@ -247,57 +247,57 @@ GLuint loadTexture( unsigned char* image, unsigned imwidth, unsigned imheight, b
 	return textureId;
 }
 
-
-
-GLuint loadTextureCubeMap(const std::string& pathBase, const GLuint program, const GLuint textureSlot, const std::string& uniformName, bool sRGB){
-	
-	GLuint textureId = loadTextureCubeMap(pathBase, sRGB);
-	
-	// Active the slot.
-	glUseProgram(program);
-	glActiveTexture(GL_TEXTURE0 + textureSlot);
-	
-	// Bind the uniform.
-	GLuint texUniID = glGetUniformLocation(program, uniformName.c_str());
-	glUniform1i(texUniID, textureSlot);
-	
-	return textureId;
-}
-
-GLuint loadTextureCubeMap(const std::string& pathBase, bool sRGB){
-	
-	std::vector<std::string> names { pathBase + "_r.png", pathBase + "_l.png",
-		pathBase + "_u.png", pathBase + "_d.png",
-		pathBase + "_b.png", pathBase + "_f.png"};
-	
-	// Create and bind texture.
-	GLuint textureId;
-	glGenTextures(1, &textureId);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
-	
-	// Texture settings.
-	glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR );
-	glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	
-	std::vector<unsigned char> image;
-	unsigned imwidth, imheight;
-	
-	// For each side, load the image and upload it in the right slot.
-	for(size_t side = 0; side < 6; ++side){
-		image.clear();
-		
-		unsigned error = lodepng::decode(image, imwidth, imheight, names[side]);
-		if(error != 0){
-			std::cerr << "Unable to load the texture at path " << names[side] << "." << std::endl;
-			return 0;
-		}
-		
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + side, 0, sRGB ? GL_SRGB8_ALPHA8 : GL_RGBA, imwidth, imheight, 0, GL_RGBA, GL_UNSIGNED_BYTE, &(image[0]));
-	}
-	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
-	
-	return textureId;
-}
+//
+//
+//GLuint loadTextureCubeMap(const std::string& pathBase, const GLuint program, const GLuint textureSlot, const std::string& uniformName, bool sRGB){
+//	
+//	GLuint textureId = loadTextureCubeMap(pathBase, sRGB);
+//	
+//	// Active the slot.
+//	glUseProgram(program);
+//	glActiveTexture(GL_TEXTURE0 + textureSlot);
+//	
+//	// Bind the uniform.
+//	GLuint texUniID = glGetUniformLocation(program, uniformName.c_str());
+//	glUniform1i(texUniID, textureSlot);
+//	
+//	return textureId;
+//}
+//
+//GLuint loadTextureCubeMap(const std::string& pathBase, bool sRGB){
+//	
+//	std::vector<std::string> names { pathBase + "_r.png", pathBase + "_l.png",
+//		pathBase + "_u.png", pathBase + "_d.png",
+//		pathBase + "_b.png", pathBase + "_f.png"};
+//	
+//	// Create and bind texture.
+//	GLuint textureId;
+//	glGenTextures(1, &textureId);
+//	glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
+//	
+//	// Texture settings.
+//	glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR );
+//	glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+//	glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+//	glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+//	glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+//	
+//	std::vector<unsigned char> image;
+//	unsigned imwidth, imheight;
+//	
+//	// For each side, load the image and upload it in the right slot.
+//	for(size_t side = 0; side < 6; ++side){
+//		image.clear();
+//		
+//		unsigned error = lodepng::decode(image, imwidth, imheight, names[side]);
+//		if(error != 0){
+//			std::cerr << "Unable to load the texture at path " << names[side] << "." << std::endl;
+//			return 0;
+//		}
+//		
+//		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + side, 0, sRGB ? GL_SRGB8_ALPHA8 : GL_RGBA, imwidth, imheight, 0, GL_RGBA, GL_UNSIGNED_BYTE, &(image[0]));
+//	}
+//	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+//	
+//	return textureId;
+//}
