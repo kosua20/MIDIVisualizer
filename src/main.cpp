@@ -127,9 +127,11 @@ int main( int argc, char** argv) {
 	// Create the renderer.
 	Renderer renderer;
 	renderer.init(INITIAL_SIZE_WIDTH,INITIAL_SIZE_HEIGHT);
+	renderer.setColorAndScale(baseColor, scale);
+	
 	try {
 		// Load midi file, graphics setup.
-		renderer.loadFile(midiFilePath, baseColor, scale);
+		renderer.loadFile(midiFilePath);
 	} catch (...) {
 		// File not found, probably (error message handled locally).
 		glfwDestroyWindow(window);

@@ -23,7 +23,9 @@ public:
 	/// Init function
 	void init(int width, int height);
 	
-	void loadFile(const std::string & midiFilePath, const glm::vec3& baseColor, const float scale);
+	void setColorAndScale(const glm::vec3 & baseColor, const float scale);
+	
+	void loadFile(const std::string & midiFilePath);
 	
 	/// Draw function
 	void draw();
@@ -40,21 +42,33 @@ public:
 
 private:
 	
+	struct AppearanceState {
+		glm::vec3 baseColor = glm::vec3(1.0f, 1.0f, 1.0f);
+		glm::vec3 particlesColor = glm::vec3(1.0f, 1.0f, 1.0f);
+		float scale = 0.5;
+		float minorsWidth = 0.8f;
+		float particlesSpeed = 0.2f;
+		float particlesExpansion = 1.0f;
+		float particlesScale = 1.0f;
+		int particlesCount = 256; // Have to use an int because of ImGui.
+		GLuint lookParticles = 0;
+		
+		bool showParticles = true;
+		bool showFlashes = true;
+		bool showBlur = true;
+		bool showBlurNotes = false;
+		bool showHLines = true;
+		bool showVLines = true;
+		bool showDigits = true;
+		bool showKeys = true;
+		bool lockParticleColor = true;
+	} _state;
+	
 	float _timer;
 	float _timerStart;
 	bool _shouldPlay;
 	bool _showGUI;
-	bool _showParticles;
-	bool _showFlashes;
-	bool _showBlur;
-	bool _showBlurNotes;
-	bool _showHLines, _showVLines, _showDigits;
-	bool _showKeys;
-
-	float _particlesSpeed, _particlesExpansion;
-	float _scale;
-	float _minorsWidth;
-	bool _lockParticleColor;
+	
 
 	Camera _camera;
 	
