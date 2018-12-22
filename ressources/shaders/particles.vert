@@ -20,6 +20,7 @@ const float shifts[88] = float[](0, 0.5, 1, 2, 2.5, 3, 3.5, 4, 5, 5.5, 6, 6.5, 7
 
 out INTERFACE {
 	vec4 color;
+	vec2 uv;
 } Out;
 
 
@@ -30,7 +31,7 @@ float rand(vec2 co){
 
 void main(){
 	
-	
+	Out.uv = v + 0.5;
 	// Fade color based on time.
 	Out.color = vec4(baseColor, 1.0-time*time);
 	
@@ -73,5 +74,6 @@ void main(){
 	finalPos = mix(vec2(-200.0),finalPos, position.z);
 	// Output final particle position.
 	gl_Position = vec4(finalPos,0.0,1.0);
+	
 	
 }
