@@ -21,6 +21,7 @@ const float shifts[88] = float[](0, 0.5, 1, 2, 2.5, 3, 3.5, 4, 5, 5.5, 6, 6.5, 7
 out INTERFACE {
 	vec4 color;
 	vec2 uv;
+	float id;
 } Out;
 
 
@@ -30,7 +31,7 @@ float rand(vec2 co){
 
 
 void main(){
-	
+	Out.id = float(gl_InstanceID % 4);
 	Out.uv = v + 0.5;
 	// Fade color based on time.
 	Out.color = vec4(baseColor, 1.0-time*time);

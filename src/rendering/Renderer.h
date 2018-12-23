@@ -50,8 +50,8 @@ private:
 		float particlesSpeed = 0.2f;
 		float particlesExpansion = 1.0f;
 		float particlesScale = 1.0f;
-		int particlesCount = 256; // Have to use an int because of ImGui.
-		GLuint lookParticles = 0;
+		int particlesCount = 256;
+		std::vector<GLuint> particlesTexs;
 		
 		bool showParticles = true;
 		bool showFlashes = true;

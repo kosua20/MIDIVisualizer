@@ -37,10 +37,8 @@ void Renderer::init(int width, int height){
 	
 	_blurringScreen.init(_particlesFramebuffer->textureId(), ResourcesManager::getStringForShader("particlesblur_frag"));
 	_blurryScreen.init(_blurFramebuffer->textureId(), ResourcesManager::getStringForShader("screenquad_frag"));
-	
-	_state.lookParticles = ResourcesManager::getTextureFor("blank");
-	//_state.baseColor = 1.35f*glm::vec3(0.57f,0.19f,0.98f);
-	//_state.particlesColor=  _state.baseColor;
+	const GLuint blankID = ResourcesManager::getTextureFor("blank");
+	_state.particlesTexs = std::vector<GLuint>(4, blankID);
 	// Check setup errors.
 	checkGLError();
 }
@@ -85,7 +83,7 @@ void Renderer::draw(){
 		_blurryScreen.draw(_timer, 1.0f/ _camera._screenSize);
 		if(_state.showParticles){
 			// Draw the new particles.
-			_scene->drawParticles(_timer, 1.0f/ _camera._screenSize, _state.particlesColor, _state.particlesScale, _state.lookParticles, _state.particlesCount, true);
+			_scene->drawParticles(_timer, 1.0f/ _camera._screenSize, _state.particlesColor, _state.particlesScale, _state.particlesTexs, _state.particlesCount, true);
 		}
 		if(_state.showBlurNotes){
 			// Draw the notes.
@@ -111,7 +109,7 @@ void Renderer::draw(){
 	}
 	// Draw the particles.
 	if(_state.showParticles){
-		_scene->drawParticles(_timer, 1.0f/ _camera._screenSize, _state.particlesColor, _state.particlesScale, _state.lookParticles, _state.particlesCount, false);
+		_scene->drawParticles(_timer, 1.0f/ _camera._screenSize, _state.particlesColor, _state.particlesScale, _state.particlesTexs, _state.particlesCount, false);
 	}
 	// Draw the keys, grid, and measure numbers.
 	_background->draw(_timer, 1.0f/ _camera._screenSize);
@@ -177,13 +175,26 @@ void Renderer::draw(){
 				ImGui::SameLine();
 				if(ImGui::Button("Load...")){
 					// Read arguments.
-					std::string imageFilePath;
-					nfdchar_t *outPath = NULL;
-					nfdresult_t result = NFD_OpenDialog( "png", NULL, &outPath );
+					nfdpathset_t outPaths;
+					nfdresult_t result = NFD_OpenDialogMultiple("png;jpg,jpeg;", NULL, &outPaths);
+					
 					if(result == NFD_OKAY){
-						imageFilePath = std::string(outPath);
-						const GLuint tid = loadTexture(imageFilePath, false);
-						_state.lookParticles = tid;
+						_state.particlesTexs.clear();
+						for(size_t i = 0; i < NFD_PathSet_GetCount(&outPaths); ++i) {
+							nfdchar_t *outPath = NFD_PathSet_GetPath(&outPaths, i);
+							const std::string imageFilePath = std::string(outPath);
+							const GLuint tid = loadTexture(imageFilePath, false);
+							_state.particlesTexs.push_back(tid);
+						}
+						NFD_PathSet_Free(&outPaths);
+						// Keep filling until we have four texture IDs.
+						int id = 0;
+						const int initCount = _state.particlesTexs.size();
+						while (_state.particlesTexs.size() < 4) {
+							_state.particlesTexs.push_back(_state.particlesTexs[id]);
+							id = (id+1)%initCount;
+						}
+						
 						if(_state.particlesScale <= 9.0f){
 							_state.particlesScale = 10.0f;
 						}
@@ -193,7 +204,8 @@ void Renderer::draw(){
 				ImGui::SameLine();
 				if(ImGui::Button("Default")){
 					// Use a white square particle appearance by default.
-					_state.lookParticles = ResourcesManager::getTextureFor("blank");
+					const GLuint blankID =  ResourcesManager::getTextureFor("blank");
+					_state.particlesTexs = std::vector<GLuint>(4, blankID);
 					_state.particlesScale = 1.0f;
 				}
 				ImGui::PopID();

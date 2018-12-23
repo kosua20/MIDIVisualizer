@@ -144,11 +144,14 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 	GLuint texUniID1 = glGetUniformLocation(_programParticulesId, "textureParticles");
 	glUniform1i(texUniID1, 0);
 	
-	//_lookParticles = ResourcesManager::getTextureFor("blank");
 	glUseProgram(_programParticulesId);
-	glActiveTexture(GL_TEXTURE1);
-	GLuint texUniID2 = glGetUniformLocation(_programParticulesId, "lookParticles");
-	glUniform1i(texUniID2, 1);
+	for(int i = 0; i < 4; ++i){
+		glActiveTexture(GL_TEXTURE1 + i);
+		const std::string nameStr = "lookParticles[" + std::to_string(i) + "]";
+		GLuint texUniID2 = glGetUniformLocation(_programParticulesId, nameStr.c_str());
+		glUniform1i(texUniID2, 1 + i);
+	}
+	
 	
 	// Pass texture size to shader.
 	const glm::vec2 tsize = ResourcesManager::getTextureSizeFor("particles");
@@ -216,7 +219,7 @@ void MIDIScene::updatesActiveNotes(double time){
 	_previousTime = time;
 }
 
-void MIDIScene::drawParticles(const float time, const glm::vec2 & invScreenSize, const glm::vec3 & particlesColor, const float particlesScale, const GLuint lookTexture, const int particlesCount, bool prepass){
+void MIDIScene::drawParticles(const float time, const glm::vec2 & invScreenSize, const glm::vec3 & particlesColor, const float particlesScale, const std::vector<GLuint> &lookTextures, const int particlesCount, bool prepass){
 
 	// Need alpha blending.
 	glEnable(GL_BLEND);
@@ -248,8 +251,11 @@ void MIDIScene::drawParticles(const float time, const glm::vec2 & invScreenSize,
 	// Particles trajectories texture.
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, _texParticles);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, lookTexture);
+	for(int i = 0; i < 4; ++i){
+		glActiveTexture(GL_TEXTURE1 + i);
+		glBindTexture(GL_TEXTURE_2D, lookTextures[i]);
+	}
+	
 	
 	// Select the geometry.
 	glBindVertexArray(_vaoParticles);
