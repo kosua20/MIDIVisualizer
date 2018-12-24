@@ -29,7 +29,9 @@ public:
 	
 	/// Draw function
 	void draw();
-
+	
+	void drawGUI();
+	
 	/// Clean function
 	void clean();
 
@@ -45,6 +47,7 @@ private:
 	struct AppearanceState {
 		glm::vec3 baseColor = glm::vec3(1.0f, 1.0f, 1.0f);
 		glm::vec3 particlesColor = glm::vec3(1.0f, 1.0f, 1.0f);
+		glm::vec3 backgroundColor = glm::vec3(0.0f,0.0f,0.0f);
 		float scale = 0.5;
 		float minorsWidth = 0.8f;
 		float particlesSpeed = 0.2f;
