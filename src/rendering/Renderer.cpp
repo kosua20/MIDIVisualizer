@@ -39,7 +39,7 @@ void Renderer::init(int width, int height){
 	_blurringScreen.init(_particlesFramebuffer->textureId(), ResourcesManager::getStringForShader("particlesblur_frag"));
 	_blurryScreen.init(_blurFramebuffer->textureId(), ResourcesManager::getStringForShader("screenquad_frag"));
 	const GLuint blankID = ResourcesManager::getTextureFor("blank");
-	_state.particlesTexs = std::vector<GLuint>(PARTICLES_TEXTURE_COUNT, blankID);
+	_state.particles.texs = std::vector<GLuint>(PARTICLES_TEXTURE_COUNT, blankID);
 	// Check setup errors.
 	checkGLError();
 }
@@ -47,7 +47,7 @@ void Renderer::init(int width, int height){
 void Renderer::setColorAndScale(const glm::vec3 & baseColor, const float scale){
 	_state.scale = scale;
 	_state.baseColor = baseColor;
-	_state.particlesColor=  _state.baseColor;
+	_state.particles.color = _state.baseColor;
 }
 
 void Renderer::loadFile(const std::string & midiFilePath){
@@ -57,12 +57,12 @@ void Renderer::loadFile(const std::string & midiFilePath){
 
 	// Init objects.
 	_scene = std::make_shared<MIDIScene>(midiFilePath);
-	_scene->setScaleAndMinorWidth(_state.scale, _state.minorsWidth);
-	_scene->setParticlesParameters(_state.particlesSpeed, _state.particlesExpansion);
+	_scene->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
+	_scene->setParticlesParameters(_state.particles.speed, _state.particles.expansion);
 	
 	_background = std::make_shared<Background>(_scene->midiFile().tracks[0].secondsPerMeasure);
-	_background->setScaleAndMinorWidth(_state.scale, _state.minorsWidth);
-	_background->setDisplay(_state.showDigits, _state.showHLines, _state.showVLines, _state.showKeys);
+	_background->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
+	_background->setDisplay(_state.background.digits, _state.background.hLines, _state.background.vLines, _state.background.keys);
 }
 
 
@@ -85,7 +85,7 @@ void Renderer::draw(){
 		_blurryScreen.draw(_timer, 1.0f/ _camera._screenSize);
 		if(_state.showParticles){
 			// Draw the new particles.
-			_scene->drawParticles(_timer, 1.0f/ _camera._screenSize, _state.particlesColor, _state.particlesScale, _state.particlesTexs, _state.particlesCount, true);
+			_scene->drawParticles(_timer, 1.0f/ _camera._screenSize, _state.particles.color, _state.particles.scale, _state.particles.texs, _state.particles.count, true);
 		}
 		if(_state.showBlurNotes){
 			// Draw the notes.
@@ -110,7 +110,7 @@ void Renderer::draw(){
 	}
 	// Draw the particles.
 	if(_state.showParticles){
-		_scene->drawParticles(_timer, 1.0f/ _camera._screenSize, _state.particlesColor, _state.particlesScale, _state.particlesTexs, _state.particlesCount, false);
+		_scene->drawParticles(_timer, 1.0f/ _camera._screenSize, _state.particles.color, _state.particles.scale, _state.particles.texs, _state.particles.count, false);
 	}
 	// Draw the keys, grid, and measure numbers.
 	_background->draw(_timer, 1.0f/ _camera._screenSize);
@@ -188,7 +188,7 @@ void Renderer::drawGUI(){
 		
 		
 		bool colNotesEdit = ImGui::ColorEdit3("Notes", &_state.baseColor[0], ImGuiColorEditFlags_NoInputs); ImGui::SameLine(80);
-		bool colPartsEdit = ImGui::ColorEdit3("Effects", &_state.particlesColor[0], ImGuiColorEditFlags_NoInputs);
+		bool colPartsEdit = ImGui::ColorEdit3("Effects", &_state.particles.color[0], ImGuiColorEditFlags_NoInputs);
 		ImGui::SameLine(160);
 		if(ImGui::Checkbox("Lock colors", &_state.lockParticleColor)){
 			// If we enable the lock, make sure the colors are synched.
@@ -207,8 +207,8 @@ void Renderer::drawGUI(){
 		bool smw1 = false;
 		
 		if (ImGui::CollapsingHeader("Background##HEADER", ImGuiTreeNodeFlags_DefaultOpen)) {
-			if(ImGui::ColorEdit3("Color##Background", &_state.backgroundColor[0], ImGuiColorEditFlags_NoInputs)){
-				glClearColor(_state.backgroundColor[0],_state.backgroundColor[1],_state.backgroundColor[2], 1.0f);
+			if(ImGui::ColorEdit3("Color##Background", &_state.background.color[0], ImGuiColorEditFlags_NoInputs)){
+				glClearColor(_state.background.color[0],_state.background.color[1],_state.background.color[2], 1.0f);
 				_particlesFramebuffer->bind();
 				glClear(GL_COLOR_BUFFER_BIT);
 				_particlesFramebuffer->unbind();
@@ -217,21 +217,21 @@ void Renderer::drawGUI(){
 				_blurFramebuffer->unbind();
 				glUseProgram(_blurringScreen.programId());
 				GLuint id1 = glGetUniformLocation(_blurringScreen.programId(), "backgroundColor");
-				glUniform3fv(id1, 1, &_state.backgroundColor[0]);
+				glUniform3fv(id1, 1, &_state.background.color[0]);
 				glUseProgram(0);
 			}
 			ImGui::SameLine(120);
 			ImGui::PushItemWidth(80);
-			smw1 = ImGui::InputFloat("Minor keys size", &_state.minorsWidth, 0.1f, 1.0f, "%.2f");
+			smw1 = ImGui::InputFloat("Minor keys size", &_state.background.minorsWidth, 0.1f, 1.0f, "%.2f");
 			ImGui::PopItemWidth();
-			bool m2 = ImGui::Checkbox("Horizontal lines", &_state.showHLines);  ImGui::SameLine(160);
-			bool m3 = ImGui::Checkbox("Vertical lines", &_state.showVLines);
-			bool m4 = ImGui::Checkbox("Keyboard", &_state.showKeys); ImGui::SameLine(160);
-			bool m1 = ImGui::Checkbox("Digits", &_state.showDigits);
+			bool m2 = ImGui::Checkbox("Horizontal lines", &_state.background.hLines);  ImGui::SameLine(160);
+			bool m3 = ImGui::Checkbox("Vertical lines", &_state.background.vLines);
+			bool m4 = ImGui::Checkbox("Keyboard", &_state.background.keys); ImGui::SameLine(160);
+			bool m1 = ImGui::Checkbox("Digits", &_state.background.digits);
 			
 			
 			if(m1 || m2 || m3 || m4){
-				_background->setDisplay(_state.showDigits, _state.showHLines, _state.showVLines, _state.showKeys);
+				_background->setDisplay(_state.background.digits, _state.background.hLines, _state.background.vLines, _state.background.keys);
 			}
 		}
 		
@@ -243,24 +243,24 @@ void Renderer::drawGUI(){
 				
 				
 				ImGui::PushItemWidth(100);
-				ImGui::SliderInt("Count", &_state.particlesCount, 1, 512);
+				ImGui::SliderInt("Count", &_state.particles.count, 1, 512);
 				ImGui::SameLine(160);
-				if(ImGui::InputFloat("Size", &_state.particlesScale, 1.0f, 10.0f)){
-					_state.particlesScale = std::max(1.0f, _state.particlesScale);
+				if(ImGui::InputFloat("Size", &_state.particles.scale, 1.0f, 10.0f)){
+					_state.particles.scale = std::max(1.0f, _state.particles.scale);
 				}
 				
-				const bool mp0 = ImGui::InputFloat("Speed", &_state.particlesSpeed, 0.001f, 1.0f);
+				const bool mp0 = ImGui::InputFloat("Speed", &_state.particles.speed, 0.001f, 1.0f);
 				ImGui::SameLine(160);
-				const bool mp1 = ImGui::InputFloat("Expansion", &_state.particlesExpansion, 0.1f, 5.0f);
+				const bool mp1 = ImGui::InputFloat("Expansion", &_state.particles.expansion, 0.1f, 5.0f);
 				if(mp1 || mp0){
-					_scene->setParticlesParameters(_state.particlesSpeed, _state.particlesExpansion);
+					_scene->setParticlesParameters(_state.particles.speed, _state.particles.expansion);
 				}
 				
 				if(ImGui::Button("Default image")){
 					// Use a white square particle appearance by default.
 					const GLuint blankID =  ResourcesManager::getTextureFor("blank");
-					_state.particlesTexs = std::vector<GLuint>(PARTICLES_TEXTURE_COUNT, blankID);
-					_state.particlesScale = 1.0f;
+					_state.particles.texs = std::vector<GLuint>(PARTICLES_TEXTURE_COUNT, blankID);
+					_state.particles.scale = 1.0f;
 				}
 				ImGui::SameLine(160);
 				if(ImGui::Button("Load images...")){
@@ -269,24 +269,24 @@ void Renderer::drawGUI(){
 					nfdresult_t result = NFD_OpenDialogMultiple("png;jpg,jpeg;", NULL, &outPaths);
 					
 					if(result == NFD_OKAY){
-						_state.particlesTexs.clear();
+						_state.particles.texs.clear();
 						for(size_t i = 0; i < NFD_PathSet_GetCount(&outPaths); ++i) {
 							nfdchar_t *outPath = NFD_PathSet_GetPath(&outPaths, i);
 							const std::string imageFilePath = std::string(outPath);
 							const GLuint tid = loadTexture(imageFilePath, false);
-							_state.particlesTexs.push_back(tid);
+							_state.particles.texs.push_back(tid);
 						}
 						NFD_PathSet_Free(&outPaths);
 						// Keep filling until we have four texture IDs.
 						int id = 0;
-						const int initCount = _state.particlesTexs.size();
-						while (_state.particlesTexs.size() < PARTICLES_TEXTURE_COUNT) {
-							_state.particlesTexs.push_back(_state.particlesTexs[id]);
+						const int initCount = _state.particles.texs.size();
+						while (_state.particles.texs.size() < PARTICLES_TEXTURE_COUNT) {
+							_state.particles.texs.push_back(_state.particles.texs[id]);
 							id = (id+1)%initCount;
 						}
 						
-						if(_state.particlesScale <= 9.0f){
-							_state.particlesScale = 10.0f;
+						if(_state.particles.scale <= 9.0f){
+							_state.particles.scale = 10.0f;
 						}
 						
 					}
@@ -315,17 +315,17 @@ void Renderer::drawGUI(){
 		
 		if(smw0 || smw1){
 			_state.scale = std::max(_state.scale, 0.01f);
-			_state.minorsWidth = std::min(std::max(_state.minorsWidth, 0.1f), 1.0f);
-			_scene->setScaleAndMinorWidth(_state.scale, _state.minorsWidth);
-			_background->setScaleAndMinorWidth(_state.scale, _state.minorsWidth);
+			_state.background.minorsWidth = std::min(std::max(_state.background.minorsWidth, 0.1f), 1.0f);
+			_scene->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
+			_background->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
 		}
 		
 		// Keep the colors in sync if needed.
 		if(_state.lockParticleColor){
 			if(colNotesEdit){
-				_state.particlesColor = _state.baseColor;
+				_state.particles.color = _state.baseColor;
 			} else if(colPartsEdit){
-				_state.baseColor = _state.particlesColor;
+				_state.baseColor = _state.particles.color;
 			}
 		}
 		

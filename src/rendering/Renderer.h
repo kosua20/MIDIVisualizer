@@ -44,26 +44,34 @@ public:
 
 private:
 	
-	struct AppearanceState {
-		glm::vec3 baseColor = glm::vec3(1.0f, 1.0f, 1.0f);
-		glm::vec3 particlesColor = glm::vec3(1.0f, 1.0f, 1.0f);
-		glm::vec3 backgroundColor = glm::vec3(0.0f,0.0f,0.0f);
-		float scale = 0.5;
+	struct BackgroundState {
+		glm::vec3 color = glm::vec3(0.0f,0.0f,0.0f);
 		float minorsWidth = 0.8f;
-		float particlesSpeed = 0.2f;
-		float particlesExpansion = 1.0f;
-		float particlesScale = 1.0f;
-		int particlesCount = 256;
-		std::vector<GLuint> particlesTexs;
-		
+		bool hLines = true;
+		bool vLines = true;
+		bool digits = true;
+		bool keys = true;
+	};
+	
+	
+	struct ParticlesState {
+		glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);
+		std::vector<GLuint> texs;
+		float speed = 0.2f;
+		float expansion = 1.0f;
+		float scale = 1.0f;
+		int count = 256;
+	};
+	
+	struct AppearanceState {
+		BackgroundState background;
+		ParticlesState particles;
+		glm::vec3 baseColor = glm::vec3(1.0f, 1.0f, 1.0f);
+		float scale = 0.5;
 		bool showParticles = true;
 		bool showFlashes = true;
 		bool showBlur = true;
 		bool showBlurNotes = false;
-		bool showHLines = true;
-		bool showVLines = true;
-		bool showDigits = true;
-		bool showKeys = true;
 		bool lockParticleColor = true;
 	} _state;
 	
