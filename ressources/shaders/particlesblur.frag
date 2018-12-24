@@ -6,6 +6,7 @@ in INTERFACE {
 
 uniform sampler2D screenTexture;
 uniform vec2 inverseScreenSize;
+uniform vec3 backgroundColor = vec3(0.0, 0.0, 0.0);
 
 out vec3 fragColor;
 
@@ -47,6 +48,6 @@ void main(){
 	color += textureOffset(screenTexture, In.uv, 2*ivec2(2,2)).rgb;
 	
 	// Include decay for fade out.
-	fragColor = color * attenuationFactor / 25.0;
+	fragColor = mix(backgroundColor, color/25.0, attenuationFactor);
 	
 }
