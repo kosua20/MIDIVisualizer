@@ -5,6 +5,9 @@
 #include <glm/glm.hpp>
 #include "../midi/MIDIFile.h"
 
+
+#define PARTICLES_TEXTURE_COUNT 4
+
 class MIDIScene {
 
 public:

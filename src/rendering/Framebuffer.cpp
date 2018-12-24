@@ -65,6 +65,10 @@ void Framebuffer::resize(int width, int height){
 	// Resize the texture.
 	glBindTexture(GL_TEXTURE_2D, _idColor);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	// Clear everything for safety;
+	bind();
+	glClear(GL_COLOR_BUFFER_BIT);
+	unbind();
 }
 
 void Framebuffer::resize(glm::vec2 size){

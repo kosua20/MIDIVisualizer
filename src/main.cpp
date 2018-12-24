@@ -159,6 +159,8 @@ int main( int argc, char** argv) {
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	ImGui_ImplGlfwGL3_Init(window, false);
 	ImGui::StyleColorsDark();
+	ImGui::GetStyle().FrameRounding = 3;
+	
 	io.IniFilename = NULL;
 	
 	// Start the display/interaction loop.

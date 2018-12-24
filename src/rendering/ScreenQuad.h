@@ -22,6 +22,8 @@ public:
 	/// Clean function
 	void clean();
 	
+	GLuint programId(){return _programId; }
+	
 protected:
 	GLuint _programId;
 	
