@@ -81,9 +81,9 @@ void main(){
 	float intensity = 0.0;
 	
 	// Keys
-	if(gl_FragCoord.y < bottomLimit/inverseScreenSize.y){
+	if(useKeys && gl_FragCoord.y < bottomLimit/inverseScreenSize.y){
 		
-		if(useKeys){
+		
 			// White keys, and separators.
 			intensity = int(abs(fract(In.uv.x*52.0)) >= 2.0 * 52.0 * inverseScreenSize.x);
 		
@@ -98,11 +98,12 @@ void main(){
 					intensity = step(marginSize, abs(fract(In.uv.x*52.0+0.5)*2.0-1.0));
 				}
 			}
-		}
+			fragColor = vec3(intensity);
+			// Done.
+			return;
 		
-		fragColor = vec3(intensity);
-		// Done.
-		return;
+		
+		
 	}
 	
 	// Octaves lines.
