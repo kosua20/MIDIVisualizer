@@ -15,7 +15,7 @@
 
 
 void printHelp(){
-	std::cout << "---- Infos ---- MIDIVisualizer v2.2 --------" << std::endl
+	std::cout << "---- Infos ---- MIDIVisualizer v" << MIDIVIZ_VERSION_MAJOR << "." << MIDIVIZ_VERSION_MINOR << " --------" << std::endl
 	<< "Visually display a midi file in realtime." << std::endl
 	<< "Usage: midiviz path/to/file.mid [s] [r g b]" << std::endl
 	<< "\t(where s is a scaling factor and r,g,b are float color components in [0,1])" << std::endl

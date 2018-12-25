@@ -10,7 +10,7 @@
 
 #include "Renderer.h"
 #include <algorithm>
-
+#include <fstream>
 
 Renderer::Renderer(){ }
 
@@ -38,10 +38,12 @@ void Renderer::init(int width, int height){
 	
 	_blurringScreen.init(_particlesFramebuffer->textureId(), ResourcesManager::getStringForShader("particlesblur_frag"));
 	_blurryScreen.init(_blurFramebuffer->textureId(), ResourcesManager::getStringForShader("screenquad_frag"));
-	const GLuint blankID = ResourcesManager::getTextureFor("blank");
-	_state.particles.texs = std::vector<GLuint>(PARTICLES_TEXTURE_COUNT, blankID);
+	
+	resetSettings(false);
+	
 	// Check setup errors.
 	checkGLError();
+	
 }
 
 void Renderer::setColorAndScale(const glm::vec3 & baseColor, const float scale){
@@ -132,36 +134,28 @@ void Renderer::drawGUI(){
 	
 	if(ImGui::Begin("Settings", NULL, ImGuiWindowFlags_AlwaysAutoResize)){
 		
-		if(ImGui::Button(_shouldPlay ? "Pause" : "Play")){
+		if(ImGui::Button(_shouldPlay ? "Pause (p)" : "Play (p)")){
 			_shouldPlay = !_shouldPlay;
 			_timerStart = glfwGetTime() - _timer;
 		}
 		ImGui::SameLine();
-		if(ImGui::Button("Reset")){
+		if(ImGui::Button("Restart (r)")){
 			_timer = 0;
 			_timerStart = glfwGetTime();
 		}
 		
 		ImGui::SameLine();
-		ImGui::Button("Keys");
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::BeginTooltip();
-			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-			ImGui::Text("Keys:");
-			ImGui::TextUnformatted("\tp: start/stop playing");
-			ImGui::TextUnformatted("\tr: reset track");
-			ImGui::Text("\ti: hide this panel");
-			ImGui::PopTextWrapPos();
-			ImGui::EndTooltip();
+		if(ImGui::Button("Hide (i)")){
+			_showGUI = false;
 		}
 		ImGui::SameLine();
-		ImGui::Button("Infos");
+		ImGui::TextDisabled("(?)");
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::BeginTooltip();
 			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-			ImGui::TextUnformatted("MIDIVisualizer v2.3");
+			const std::string versionString = std::string("MIDIVisualizer v") + std::to_string(MIDIVIZ_VERSION_MAJOR) + "." + std::to_string(MIDIVIZ_VERSION_MINOR);
+			ImGui::TextUnformatted(versionString.c_str());
 			ImGui::TextUnformatted("Created by S. Rodriguez (kosua20)");
 			ImGui::TextUnformatted("github.com/kosua20/MIDIVisualizer");
 			ImGui::PopTextWrapPos();
@@ -172,12 +166,10 @@ void Renderer::drawGUI(){
 		
 		if(ImGui::Button("Load MIDI file...")){
 			// Read arguments.
-			std::string midiFilePath;
 			nfdchar_t *outPath = NULL;
 			nfdresult_t result = NFD_OpenDialog( NULL, NULL, &outPath );
 			if(result == NFD_OKAY){
-				midiFilePath = std::string(outPath);
-				loadFile(midiFilePath);
+				loadFile(std::string(outPath));
 			}
 		}
 		ImGui::SameLine(160);
@@ -307,10 +299,30 @@ void Renderer::drawGUI(){
 			}
 		}
 		
+		ImGui::Separator();
 		
-		
-		
-		
+		if(ImGui::Button("Save config...")){
+			// Read arguments.
+			nfdchar_t *savePath = NULL;
+			nfdresult_t result = NFD_SaveDialog( "ini", NULL, &savePath );
+			if(result == NFD_OKAY){
+				saveSettings(std::string(savePath));
+			}
+			
+		}
+		ImGui::SameLine();
+		if(ImGui::Button("Load config...")){
+			// Read arguments.
+			nfdchar_t *outPath = NULL;
+			nfdresult_t result = NFD_OpenDialog( "ini", NULL, &outPath );
+			if(result == NFD_OKAY){
+				loadSettings(std::string(outPath));
+			}
+		}
+		ImGui::SameLine();
+		if(ImGui::Button("Reset##config")){
+			resetSettings(true);
+		}
 		
 		
 		if(smw0 || smw1){
@@ -333,6 +345,139 @@ void Renderer::drawGUI(){
 	ImGui::End();
 }
 
+void Renderer::saveSettings(const std::string & path){
+	std::ofstream configFile(path);
+	if(!configFile.is_open()){
+		std::cerr << "Unable to save state to file at path " << path << std::endl;
+		return;
+	}
+	configFile << MIDIVIZ_VERSION_MAJOR << " " << MIDIVIZ_VERSION_MINOR << std::endl;
+	
+	configFile << _state.baseColor[0] << " " << _state.baseColor[1] << " " << _state.baseColor[2] << std::endl;
+	configFile << _state.background.color[0] << " " << _state.background.color[1] << " " << _state.background.color[2] << std::endl;
+	configFile << _state.particles.color[0] << " " << _state.particles.color[1] << " " << _state.particles.color[2] << std::endl;
+	
+	configFile << _state.scale << std::endl;
+	configFile << _state.showParticles << std::endl;
+	configFile << _state.showFlashes << std::endl;
+	configFile << _state.showBlur << std::endl;
+	configFile << _state.showBlurNotes << std::endl;
+	configFile << _state.lockParticleColor << std::endl;
+	
+	configFile << _state.background.minorsWidth << std::endl;
+	configFile << _state.background.hLines << std::endl;
+	configFile << _state.background.vLines << std::endl;
+	configFile << _state.background.digits << std::endl;
+	configFile << _state.background.keys << std::endl;
+	
+	configFile << _state.particles.speed << std::endl;
+	configFile << _state.particles.expansion << std::endl;
+	configFile << _state.particles.count << std::endl;
+	
+	configFile.close();
+}
+
+void Renderer::loadSettings(const std::string & path){
+	std::ifstream configFile(path);
+	if(!configFile.is_open()){
+		std::cerr << "Unable to load state from file at path " << path << std::endl;
+		return;
+	}
+	int majVersion = 0; int minVersion = 0;
+	configFile >> majVersion >> minVersion;
+	
+	if(majVersion > MIDIVIZ_VERSION_MAJOR || (majVersion == MIDIVIZ_VERSION_MAJOR && minVersion > MIDIVIZ_VERSION_MINOR)){
+		std::cout << "The config is more recent, some settings might be ignored." << std::endl;
+	}
+	if(majVersion < MIDIVIZ_VERSION_MAJOR || (majVersion == MIDIVIZ_VERSION_MAJOR && minVersion < MIDIVIZ_VERSION_MINOR)){
+		std::cout << "The config is older, some newer settings will be left as-is." << std::endl;
+	}
+	
+	// MIDIVIZ_VERSION_MAJOR == 3, MIDIVIZ_VERSION_MINOR == 0
+	// This part is always valid, as it was present when the saving system was introduced.
+	// Note: we don't restore the texture IDs and scale.
+	{
+		configFile >> _state.baseColor[0] >> _state.baseColor[1] >> _state.baseColor[2] ;
+		configFile >> _state.background.color[0] >> _state.background.color[1] >> _state.background.color[2] ;
+		configFile >> _state.particles.color[0] >> _state.particles.color[1] >> _state.particles.color[2] ;
+	
+		configFile >> _state.scale ;
+		configFile >> _state.showParticles ;
+		configFile >> _state.showFlashes ;
+		configFile >> _state.showBlur ;
+		configFile >> _state.showBlurNotes ;
+		configFile >> _state.lockParticleColor ;
+	
+		configFile >> _state.background.minorsWidth ;
+		configFile >> _state.background.hLines ;
+		configFile >> _state.background.vLines ;
+		configFile >> _state.background.digits ;
+		configFile >> _state.background.keys ;
+	
+		configFile >> _state.particles.speed ;
+		configFile >> _state.particles.expansion ;
+		configFile >> _state.particles.count ;
+	
+	}
+	
+	updateAllSettings();
+}
+
+void Renderer::resetSettings(bool forceApply){
+	 _state.baseColor = 1.35f*glm::vec3(0.57f,0.19f,0.98f);
+	 _state.background.color = glm::vec3(0.0f, 0.0f, 0.0f) ;
+	 _state.particles.color =  _state.baseColor;
+	
+	_state.scale = 0.5f ;
+	_state.showParticles = true ;
+	_state.showFlashes = true ;
+	_state.showBlur = true ;
+	_state.showBlurNotes = false ;
+	_state.lockParticleColor = true ;
+	
+	_state.background.minorsWidth = 0.8f;
+	_state.background.hLines = true;
+	_state.background.vLines = true ;
+	_state.background.digits = true ;
+	_state.background.keys = true ;
+	
+	_state.particles.speed = 0.2f;
+	_state.particles.expansion = 1.0f;
+	_state.particles.scale = 1.0f;
+	_state.particles.count = 256;
+	
+	const GLuint blankID = ResourcesManager::getTextureFor("blank");
+	_state.particles.texs = std::vector<GLuint>(PARTICLES_TEXTURE_COUNT, blankID);
+	
+	if(forceApply){
+		updateAllSettings();
+	}
+}
+
+void Renderer::updateAllSettings(){
+	// Apply all modifications.
+	
+	// One-shot parameters.
+	_scene->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
+	_background->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
+	_scene->setParticlesParameters(_state.particles.speed, _state.particles.expansion);
+	_background->setDisplay(_state.background.digits, _state.background.hLines, _state.background.vLines, _state.background.keys);
+	
+	// Background color.
+	glClearColor(_state.background.color[0],_state.background.color[1],_state.background.color[2], 1.0f);
+	_particlesFramebuffer->bind();
+	glClear(GL_COLOR_BUFFER_BIT);
+	_particlesFramebuffer->unbind();
+	_blurFramebuffer->bind();
+	glClear(GL_COLOR_BUFFER_BIT);
+	_blurFramebuffer->unbind();
+	glUseProgram(_blurringScreen.programId());
+	GLuint id1 = glGetUniformLocation(_blurringScreen.programId(), "backgroundColor");
+	glUniform3fv(id1, 1, &_state.background.color[0]);
+	glUseProgram(0);
+	
+	// All other parameters are directly used at render.
+}
 
 void Renderer::clean(){
 	

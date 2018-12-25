@@ -11,6 +11,8 @@
 #include "ScreenQuad.h"
 #include "Background.h"
 
+#define MIDIVIZ_VERSION_MAJOR 3
+#define MIDIVIZ_VERSION_MINOR 0
 
 class Renderer {
 
@@ -30,8 +32,6 @@ public:
 	/// Draw function
 	void draw();
 	
-	void drawGUI();
-	
 	/// Clean function
 	void clean();
 
@@ -43,6 +43,16 @@ public:
 
 
 private:
+	
+	void drawGUI();
+	
+	void loadSettings(const std::string & path);
+	
+	void saveSettings(const std::string & path);
+	
+	void resetSettings(bool forceApply);
+	
+	void updateAllSettings();
 	
 	struct BackgroundState {
 		glm::vec3 color = glm::vec3(0.0f,0.0f,0.0f);
