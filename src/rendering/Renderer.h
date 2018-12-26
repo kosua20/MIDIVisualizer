@@ -52,44 +52,43 @@ private:
 	
 	void resetSettings(bool forceApply);
 	
-	void updateAllSettings();
+	void applyAllSettings();
 	
 	struct BackgroundState {
-		glm::vec3 color = glm::vec3(0.0f,0.0f,0.0f);
-		float minorsWidth = 0.8f;
-		bool hLines = true;
-		bool vLines = true;
-		bool digits = true;
-		bool keys = true;
+		glm::vec3 color;
+		float minorsWidth;
+		bool hLines;
+		bool vLines;
+		bool digits;
+		bool keys;
 	};
 	
 	
 	struct ParticlesState {
-		glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);
+		glm::vec3 color ;
 		std::vector<GLuint> texs;
-		float speed = 0.2f;
-		float expansion = 1.0f;
-		float scale = 1.0f;
-		int count = 256;
+		float speed;
+		float expansion ;
+		float scale;
+		int count;
 	};
 	
 	struct AppearanceState {
 		BackgroundState background;
 		ParticlesState particles;
-		glm::vec3 baseColor = glm::vec3(1.0f, 1.0f, 1.0f);
-		float scale = 0.5;
-		bool showParticles = true;
-		bool showFlashes = true;
-		bool showBlur = true;
-		bool showBlurNotes = false;
-		bool lockParticleColor = true;
+		glm::vec3 baseColor;
+		float scale;
+		bool showParticles;
+		bool showFlashes;
+		bool showBlur;
+		bool showBlurNotes;
+		bool lockParticleColor;
 	} _state;
 	
 	float _timer;
 	float _timerStart;
 	bool _shouldPlay;
 	bool _showGUI;
-	
 	bool _showDebug;
 
 	Camera _camera;

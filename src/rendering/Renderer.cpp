@@ -425,7 +425,8 @@ void Renderer::loadSettings(const std::string & path){
 	
 	}
 	
-	updateAllSettings();
+	configFile.close();
+	applyAllSettings();
 }
 
 void Renderer::resetSettings(bool forceApply){
@@ -455,11 +456,11 @@ void Renderer::resetSettings(bool forceApply){
 	_state.particles.texs = std::vector<GLuint>(PARTICLES_TEXTURE_COUNT, blankID);
 	
 	if(forceApply){
-		updateAllSettings();
+		applyAllSettings();
 	}
 }
 
-void Renderer::updateAllSettings(){
+void Renderer::applyAllSettings(){
 	// Apply all modifications.
 	
 	// One-shot parameters.
