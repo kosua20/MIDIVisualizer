@@ -190,9 +190,14 @@ void Renderer::drawGUI(){
 				loadFile(std::string(outPath));
 			}
 		}
-		ImGui::SameLine(160);
-		ImGui::PushItemWidth(100);
 		
+		ImGui::PushItemWidth(80);
+		if( ImGui::Combo("Quality", (int*)(&_state.quality), "Half\0Low\0Medium\0High\0Double\0\0")){
+			resize(_camera._screenSize[0],_camera._screenSize[1]);
+		}
+		ImGui::PopItemWidth();
+		ImGui::PushItemWidth(100);
+		ImGui::SameLine(160);
 		const bool smw0 = ImGui::InputFloat("Scale", &_state.scale, 0.01f, 0.1f);
 		ImGui::PopItemWidth();
 		
@@ -394,6 +399,9 @@ void Renderer::applyAllSettings(){
 	glUniform3fv(id1, 1, &_state.background.color[0]);
 	glUseProgram(0);
 	
+	// Resize the framebuffers.
+	resize(_camera._screenSize[0], _camera._screenSize[1]);
+	
 	// All other parameters are directly used at render.
 }
 
@@ -418,10 +426,10 @@ void Renderer::resize(int width, int height){
 	// Update the projection matrix.
 	_camera.screen(width, height);
 	// Resize the framebuffers.
-	_particlesFramebuffer->resize(_camera._screenSize);
-	
-	_blurFramebuffer->resize(_camera._screenSize);
-	
+	const auto & currentQuality = Quality::availables.at(_state.quality);
+	_particlesFramebuffer->resize(currentQuality.particlesResolution * _camera._screenSize);
+	_blurFramebuffer->resize(currentQuality.blurResolution * _camera._screenSize);
+	_finalFramebuffer->resize(currentQuality.finalResolution * _camera._screenSize);
 }
 
 void Renderer::keyPressed(int key, int action){
