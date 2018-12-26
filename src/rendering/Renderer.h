@@ -95,10 +95,12 @@ private:
 	
 	std::shared_ptr<Framebuffer> _particlesFramebuffer;
 	std::shared_ptr<Framebuffer> _blurFramebuffer;
+	std::shared_ptr<Framebuffer> _finalFramebuffer;
 
 	std::shared_ptr<MIDIScene> _scene;
 	ScreenQuad _blurringScreen;
 	ScreenQuad _blurryScreen;
+	ScreenQuad _finalScreen;
 	std::shared_ptr<Background> _background;
 	
 };

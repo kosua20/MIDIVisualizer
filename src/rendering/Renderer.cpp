@@ -34,11 +34,13 @@ void Renderer::init(int width, int height){
 	_camera.screen(width, height);
 	
 	// Setup framebuffers.
-	_particlesFramebuffer = std::shared_ptr<Framebuffer>(new Framebuffer(_camera._screenSize[0],_camera._screenSize[1], GL_RGBA,GL_UNSIGNED_BYTE,GL_LINEAR,GL_CLAMP_TO_EDGE));
-	_blurFramebuffer = std::shared_ptr<Framebuffer>(new Framebuffer(_camera._screenSize[0],_camera._screenSize[1], GL_RGBA,GL_UNSIGNED_BYTE,GL_LINEAR,GL_CLAMP_TO_EDGE));
+	_particlesFramebuffer = std::shared_ptr<Framebuffer>(new Framebuffer(_camera._screenSize[0], _camera._screenSize[1], GL_RGBA,GL_UNSIGNED_BYTE,GL_LINEAR,GL_CLAMP_TO_EDGE));
+	_blurFramebuffer = std::shared_ptr<Framebuffer>(new Framebuffer(_camera._screenSize[0], _camera._screenSize[1], GL_RGBA,GL_UNSIGNED_BYTE,GL_LINEAR,GL_CLAMP_TO_EDGE));
+	_finalFramebuffer = std::shared_ptr<Framebuffer>(new Framebuffer(_camera._screenSize[0], _camera._screenSize[1], GL_RGBA,GL_UNSIGNED_BYTE,GL_LINEAR,GL_CLAMP_TO_EDGE));
 	
 	_blurringScreen.init(_particlesFramebuffer->textureId(), ResourcesManager::getStringForShader("particlesblur_frag"));
 	_blurryScreen.init(_blurFramebuffer->textureId(), ResourcesManager::getStringForShader("screenquad_frag"));
+	_finalScreen.init(_finalFramebuffer->textureId(), ResourcesManager::getStringForShader("screenquad_frag"));
 	
 	resetSettings(false);
 	
@@ -77,22 +79,24 @@ void Renderer::draw(){
 	// Update active notes listing (for particles).
 	_scene->updatesActiveNotes(_timer);
 	
-	// Set viewport.
-	glViewport(0,0,_camera._screenSize[0],_camera._screenSize[1]);
+	const glm::vec2 invSize = 1.0f / _camera._screenSize;
+	
 	
 	if(_state.showBlur){
 		// Bind particles buffer.
 		_particlesFramebuffer->bind();
+		// Set viewport.
+		glViewport(0,0,_particlesFramebuffer->_width ,_particlesFramebuffer->_height);
 		
 		// Draw blurred particles from previous frames.
-		_blurryScreen.draw(_timer, 1.0f/ _camera._screenSize);
+		_blurryScreen.draw(_timer, invSize);
 		if(_state.showParticles){
 			// Draw the new particles.
-			_scene->drawParticles(_timer, 1.0f/ _camera._screenSize, _state.particles.color, _state.particles.scale, _state.particles.texs, _state.particles.count, true);
+			_scene->drawParticles(_timer, invSize, _state.particles.color, _state.particles.scale, _state.particles.texs, _state.particles.count, true);
 		}
 		if(_state.showBlurNotes){
 			// Draw the notes.
-			_scene->draw(_timer, 1.0f/ _camera._screenSize, _state.baseColor, true);
+			_scene->draw(_timer, invSize, _state.baseColor, true);
 		}
 		
 		_particlesFramebuffer->unbind();
@@ -100,30 +104,43 @@ void Renderer::draw(){
 	
 		// Bind blur framebuffer.
 		_blurFramebuffer->bind();
+		glViewport(0,0,_blurFramebuffer->_width ,_blurFramebuffer->_height);
 		// Perform box blur on result from particles pass.
-		_blurringScreen.draw(_timer, 1.0f/ _camera._screenSize);
+		_blurringScreen.draw(_timer, invSize);
 		_blurFramebuffer->unbind();
 	}
+	
+	const glm::vec2 invSizeFb = glm::vec2(1.0f/_finalFramebuffer->_width, 1.0f/_finalFramebuffer->_height);
+	
+	// Set viewport
+	_finalFramebuffer->bind();
+	glViewport(0,0,_finalFramebuffer->_width ,_finalFramebuffer->_height);
 	
 	// Final pass (directly on screen).
 	glClear(GL_COLOR_BUFFER_BIT);
 	// Draw the blurred particles.
 	if(_state.showBlur){
-		_blurryScreen.draw(_timer, 1.0f/ _camera._screenSize);
+		_blurryScreen.draw(_timer, invSize);
 	}
 	// Draw the particles.
 	if(_state.showParticles){
-		_scene->drawParticles(_timer, 1.0f/ _camera._screenSize, _state.particles.color, _state.particles.scale, _state.particles.texs, _state.particles.count, false);
+		_scene->drawParticles(_timer, invSize, _state.particles.color, _state.particles.scale, _state.particles.texs, _state.particles.count, false);
 	}
 	// Draw the keys, grid, and measure numbers.
-	_background->draw(_timer, 1.0f/ _camera._screenSize);
+	_background->draw(_timer, invSizeFb);
 	// Draw the notes.
-	_scene->draw(_timer, 1.0f/ _camera._screenSize, _state.baseColor, false);
+	_scene->draw(_timer, invSizeFb, _state.baseColor, false);
 	
 	if(_state.showFlashes){
 		// Draw the flashes.
-		_scene->drawFlashes(_timer, 1.0f/ _camera._screenSize, _state.baseColor);
+		_scene->drawFlashes(_timer, invSize, _state.baseColor);
 	}
+	_finalFramebuffer->unbind();
+	
+	
+	
+	glViewport(0,0,_camera._screenSize[0],_camera._screenSize[1]);
+	_finalScreen.draw(_timer, invSize);
 	
 	if(_showGUI){
 		drawGUI();
@@ -494,6 +511,7 @@ void Renderer::clean(){
 	_blurryScreen.clean();
 	_particlesFramebuffer->clean();
 	_blurFramebuffer->clean();
+	_finalFramebuffer->clean();
 	
 }
 
