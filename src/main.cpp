@@ -149,7 +149,7 @@ int main( int argc, char** argv) {
 	//glfwSetCursorPosCallback(window,cursor_pos_callback);		// Moving the cursor
 	glfwSetScrollCallback(window,scroll_callback);				// Scrolling
 	glfwSetCharCallback(window, ImGui_ImplGlfw_CharCallback);
-	
+	glfwSwapInterval(1);
 	// On HiDPI screens, we might have to initially resize the framebuffers size.
 	int width, height;
 	glfwGetFramebufferSize(window, &width, &height);
