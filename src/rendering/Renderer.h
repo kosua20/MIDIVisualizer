@@ -11,8 +11,7 @@
 #include "ScreenQuad.h"
 #include "Background.h"
 
-#define MIDIVIZ_VERSION_MAJOR 3
-#define MIDIVIZ_VERSION_MINOR 0
+#include "State.h"
 
 class Renderer {
 
@@ -46,44 +45,9 @@ private:
 	
 	void drawGUI();
 	
-	void loadSettings(const std::string & path);
-	
-	void saveSettings(const std::string & path);
-	
-	void resetSettings(bool forceApply);
-	
 	void applyAllSettings();
 	
-	struct BackgroundState {
-		glm::vec3 color;
-		float minorsWidth;
-		bool hLines;
-		bool vLines;
-		bool digits;
-		bool keys;
-	};
-	
-	
-	struct ParticlesState {
-		glm::vec3 color ;
-		std::vector<GLuint> texs;
-		float speed;
-		float expansion ;
-		float scale;
-		int count;
-	};
-	
-	struct AppearanceState {
-		BackgroundState background;
-		ParticlesState particles;
-		glm::vec3 baseColor;
-		float scale;
-		bool showParticles;
-		bool showFlashes;
-		bool showBlur;
-		bool showBlurNotes;
-		bool lockParticleColor;
-	} _state;
+	State _state;
 	
 	float _timer;
 	float _timerStart;
