@@ -18,6 +18,7 @@ Renderer::~Renderer(){}
 
 void Renderer::init(int width, int height){
 	_showGUI = true;
+	_showDebug = false;
 	
 	ResourcesManager::loadResources();
 	
@@ -324,7 +325,6 @@ void Renderer::drawGUI(){
 			resetSettings(true);
 		}
 		
-		
 		if(smw0 || smw1){
 			_state.scale = std::max(_state.scale, 0.01f);
 			_state.background.minorsWidth = std::min(std::max(_state.background.minorsWidth, 0.1f), 1.0f);
@@ -339,6 +339,11 @@ void Renderer::drawGUI(){
 			} else if(colPartsEdit){
 				_state.baseColor = _state.particles.color;
 			}
+		}
+		
+		if(_showDebug){
+			ImGui::Separator();
+			ImGui::Text("%.1f FPS / %.1f ms", ImGui::GetIO().Framerate,ImGui::GetIO().DeltaTime * 1000.0f );
 		}
 		
 	}
@@ -514,10 +519,10 @@ void Renderer::keyPressed(int key, int action){
 		} else if (key == GLFW_KEY_R){
 			_timer = 0;
 			_timerStart = glfwGetTime();
-		} else if (key == GLFW_KEY_L){
-			
 		} else if (key == GLFW_KEY_I){
 			_showGUI = !_showGUI;
+		} else if (key == GLFW_KEY_D){
+			_showDebug = !_showDebug;
 		}
 	}
 	

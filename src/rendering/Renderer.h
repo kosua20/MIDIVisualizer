@@ -90,6 +90,7 @@ private:
 	bool _shouldPlay;
 	bool _showGUI;
 	
+	bool _showDebug;
 
 	Camera _camera;
 	
