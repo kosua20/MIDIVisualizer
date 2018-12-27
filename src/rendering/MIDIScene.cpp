@@ -30,11 +30,14 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 	
 	std::vector<float> data;
 	auto notesM = _midiFile.tracks[0].getNotes(majorNotes);
+	
+	_duration = 0.0;
 	for(auto& note : notesM){
 		data.push_back(float(note.note));
 		data.push_back(note.start);
 		data.push_back(note.duration);
 		data.push_back(0.0);
+		_duration = std::max(_duration, note.start + note.duration);
 	}
 	auto notesm = _midiFile.tracks[0].getNotes(minorNotes);
 	for(auto& note : notesm){
@@ -42,8 +45,10 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 		data.push_back(note.start);
 		data.push_back(note.duration);
 		data.push_back(1.0);
+		_duration = std::max(_duration, note.start + note.duration);
 	}
 	_notesCount = notesM.size() + notesm.size();
+	std::cout << "[INFO]: Final track duration " << _duration << " sec." << std::endl;
 	
 	// Create an array buffer to host the geometry data.
 	GLuint vbo = 0;
@@ -93,9 +98,6 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 
 	glBindVertexArray(0);
 	checkGLError();
-	
-	//GLuint speedID = glGetUniformLocation(_programId, "mainSpeed");
-	//glUniform1f(speedID, scale);
 	
 	// Flashes shaders.
 	_programFlashesId = createGLProgramFromStrings(ResourcesManager::getStringForShader("flashes_vert"), ResourcesManager::getStringForShader("flashes_frag"));

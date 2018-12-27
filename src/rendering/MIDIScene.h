@@ -35,6 +35,8 @@ public:
 
 	void setParticlesParameters(const float speed, const float expansion);
 	
+	double duration(){ return _duration; };
+	
 private:
 	
 	GLuint _programId;
@@ -54,7 +56,7 @@ private:
 	
 	size_t _primitiveCount;
 	size_t _notesCount;
-	
+	double _duration;
 	
 	std::vector<int> _actives;
 
