@@ -12,6 +12,10 @@
 #include <algorithm>
 #include <fstream>
 
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write/stb_image_write.h>
+
 Renderer::Renderer(){ }
 
 Renderer::~Renderer(){}
@@ -19,6 +23,8 @@ Renderer::~Renderer(){}
 void Renderer::init(int width, int height){
 	_showGUI = true;
 	_showDebug = false;
+	_exportFramerate = 60;
+	_performExport = false;
 	
 	ResourcesManager::loadResources();
 	
@@ -72,6 +78,11 @@ void Renderer::loadFile(const std::string & midiFilePath){
 
 
 void Renderer::draw(const float currentTime){
+	
+	if(_performExport){
+		_performExport = false;
+		renderFile(_exportPath, _exportFramerate);
+	}
 	
 	// Compute the time elapsed since last frame, or keep the same value if playback is disabled.
 	_timer = _shouldPlay ? (currentTime - _timerStart) : _timer;
@@ -368,6 +379,22 @@ void Renderer::drawGUI(const float currentTime){
 			}
 		}
 		
+		
+		ImGui::Separator();
+		if(ImGui::Button("Render offline...")){
+			// Read arguments.
+			nfdchar_t *outPath = NULL;
+			nfdresult_t result = NFD_PickFolder(NULL, &outPath );
+			if(result == NFD_OKAY){
+				_exportPath = std::string(outPath);
+				_performExport = !_exportPath.empty();
+			}
+		}
+		ImGui::SameLine(160);
+		ImGui::PushItemWidth(100);
+		ImGui::InputInt("Rate", &_exportFramerate);
+		ImGui::PopItemWidth();
+		
 		if(_showDebug){
 			ImGui::Separator();
 			ImGui::Text("Debug: "); ImGui::SameLine(); ImGui::TextDisabled("(press D to hide)");
@@ -379,7 +406,53 @@ void Renderer::drawGUI(const float currentTime){
 	ImGui::End();
 }
 
-
+void Renderer::renderFile(const std::string & outputDirPath, const float frameRate){
+	_showGUI = false;
+	// Reset.
+	_timer = 0;
+	_timerStart = 0;
+	// Start playing.
+	_shouldPlay = true;
+	// Image writing setup.
+	stbi_flip_vertically_on_write(true);
+	GLubyte * data = new GLubyte[_finalFramebuffer->_width * _finalFramebuffer->_height * 3];
+	
+	// Generate and save frames.
+	int framesCount = std::ceil((_scene->duration()+10.0f) * frameRate);
+	int targetSize = std::to_string(framesCount).size();
+	
+	// Start by clearing up the blur and particles buffers.
+	resize(_camera._screenSize[0], _camera._screenSize[1]);
+	
+	std::cout << "[EXPORT]: Will export " << framesCount << " frames to \"" << outputDirPath << "\"." << std::endl;
+	for(size_t fid = 0; fid < framesCount; ++fid){
+		std::cout << "\r[EXPORT]: Processing frame " << fid << "/" << framesCount << "." << std::flush;
+		// Render.
+		draw(_timer);
+		glFinish();
+		glFlush();
+		// Readback.
+		_finalFramebuffer->bind();
+		glReadPixels(0, 0, (GLsizei)_finalFramebuffer->_width, (GLsizei)_finalFramebuffer->_height, GL_RGB,GL_UNSIGNED_BYTE, &data[0]);
+		_finalFramebuffer->unbind();
+		// Write to disk.
+		std::string intString = std::to_string(fid);
+		while(intString.size() < targetSize){
+			intString = "0" + intString;
+		}
+		const std::string outputFilePath = outputDirPath + "/output_" + intString + ".png";
+		stbi_write_png(outputFilePath.c_str(), _finalFramebuffer->_width, _finalFramebuffer->_height, 3, data, 3*_finalFramebuffer->_width);
+		
+		_timer += (1.0/frameRate);
+	}
+	std::cout << std::endl;
+	std::cout << "[EXPORT]: Done." << std::endl;
+	
+	_showGUI = true;
+	_shouldPlay = false;
+	_timer = 0;
+	_exportPath = "";
+}
 
 
 void Renderer::applyAllSettings(){

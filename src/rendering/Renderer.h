@@ -47,14 +47,19 @@ private:
 	
 	void applyAllSettings();
 	
-	State _state;
+	void renderFile(const std::string & outputDirPath, const float frameRate);
 	
+	State _state;
+	int _exportFramerate;
 	float _timer;
 	float _timerStart;
 	bool _shouldPlay;
 	bool _showGUI;
 	bool _showDebug;
 
+	bool _performExport;
+	std::string _exportPath;
+	
 	Camera _camera;
 	
 	std::shared_ptr<Framebuffer> _particlesFramebuffer;
