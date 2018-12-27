@@ -29,7 +29,7 @@ public:
 	void loadFile(const std::string & midiFilePath);
 	
 	/// Draw function
-	void draw();
+	void draw(const float currentTime);
 	
 	/// Clean function
 	void clean();
@@ -43,7 +43,7 @@ public:
 
 private:
 	
-	void drawGUI();
+	void drawGUI(const float currentTime);
 	
 	void applyAllSettings();
 	

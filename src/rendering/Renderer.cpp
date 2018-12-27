@@ -36,7 +36,7 @@ void Renderer::init(int width, int height){
 	// Setup framebuffers.
 	_particlesFramebuffer = std::shared_ptr<Framebuffer>(new Framebuffer(_camera._screenSize[0], _camera._screenSize[1], GL_RGBA,GL_UNSIGNED_BYTE,GL_LINEAR,GL_CLAMP_TO_EDGE));
 	_blurFramebuffer = std::shared_ptr<Framebuffer>(new Framebuffer(_camera._screenSize[0], _camera._screenSize[1], GL_RGBA,GL_UNSIGNED_BYTE,GL_LINEAR,GL_CLAMP_TO_EDGE));
-	_finalFramebuffer = std::shared_ptr<Framebuffer>(new Framebuffer(_camera._screenSize[0], _camera._screenSize[1], GL_RGBA,GL_UNSIGNED_BYTE,GL_LINEAR,GL_CLAMP_TO_EDGE));
+	_finalFramebuffer = std::shared_ptr<Framebuffer>(new Framebuffer(_camera._screenSize[0], _camera._screenSize[1], GL_RGB,GL_UNSIGNED_BYTE,GL_LINEAR,GL_CLAMP_TO_EDGE));
 	
 	_blurringScreen.init(_particlesFramebuffer->textureId(), ResourcesManager::getStringForShader("particlesblur_frag"));
 	_blurryScreen.init(_blurFramebuffer->textureId(), ResourcesManager::getStringForShader("screenquad_frag"));
@@ -71,10 +71,10 @@ void Renderer::loadFile(const std::string & midiFilePath){
 }
 
 
-void Renderer::draw(){
+void Renderer::draw(const float currentTime){
 	
 	// Compute the time elapsed since last frame, or keep the same value if playback is disabled.
-	_timer = _shouldPlay ? (glfwGetTime() - _timerStart) : _timer;
+	_timer = _shouldPlay ? (currentTime - _timerStart) : _timer;
 	
 	// Update active notes listing (for particles).
 	_scene->updatesActiveNotes(_timer);
@@ -143,23 +143,24 @@ void Renderer::draw(){
 	_finalScreen.draw(_timer, invSize);
 	
 	if(_showGUI){
-		drawGUI();
+		drawGUI(currentTime);
 	}
 }
 
-void Renderer::drawGUI(){
+void Renderer::drawGUI(const float currentTime){
 	//ImGui::ShowTestWindow();
+	
 	
 	if(ImGui::Begin("Settings", NULL, ImGuiWindowFlags_AlwaysAutoResize)){
 		
 		if(ImGui::Button(_shouldPlay ? "Pause (p)" : "Play (p)")){
 			_shouldPlay = !_shouldPlay;
-			_timerStart = glfwGetTime() - _timer;
+			_timerStart = currentTime - _timer;
 		}
 		ImGui::SameLine();
 		if(ImGui::Button("Restart (r)")){
 			_timer = 0;
-			_timerStart = glfwGetTime();
+			_timerStart = currentTime;
 		}
 		
 		ImGui::SameLine();
@@ -258,7 +259,9 @@ void Renderer::drawGUI(){
 				
 				
 				ImGui::PushItemWidth(100);
-				ImGui::SliderInt("Count", &_state.particles.count, 1, 512);
+				if(ImGui::SliderInt("Count", &_state.particles.count, 1, 512)){
+					_state.particles.count = std::min(std::max(_state.particles.count, 1), 512);
+				}
 				ImGui::SameLine(160);
 				if(ImGui::InputFloat("Size", &_state.particles.scale, 1.0f, 10.0f)){
 					_state.particles.scale = std::max(1.0f, _state.particles.scale);
@@ -367,7 +370,9 @@ void Renderer::drawGUI(){
 		
 		if(_showDebug){
 			ImGui::Separator();
+			ImGui::Text("Debug: "); ImGui::SameLine(); ImGui::TextDisabled("(press D to hide)");
 			ImGui::Text("%.1f FPS / %.1f ms", ImGui::GetIO().Framerate,ImGui::GetIO().DeltaTime * 1000.0f );
+			
 		}
 		
 	}
