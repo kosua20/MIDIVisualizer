@@ -57,7 +57,7 @@ private:
 	bool _showGUI;
 	bool _showDebug;
 
-	bool _performExport;
+	int _performExport;
 	std::string _exportPath;
 	
 	Camera _camera;

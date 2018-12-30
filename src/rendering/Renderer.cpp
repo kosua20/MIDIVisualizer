@@ -24,7 +24,7 @@ void Renderer::init(int width, int height){
 	_showGUI = true;
 	_showDebug = false;
 	_exportFramerate = 60;
-	_performExport = false;
+	_performExport = 0;
 	
 	ResourcesManager::loadResources();
 	
@@ -68,20 +68,48 @@ void Renderer::loadFile(const std::string & midiFilePath){
 
 	// Init objects.
 	_scene = std::make_shared<MIDIScene>(midiFilePath);
-	_scene->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
-	_scene->setParticlesParameters(_state.particles.speed, _state.particles.expansion);
-	
 	_background = std::make_shared<Background>(_scene->midiFile().tracks[0].secondsPerMeasure);
-	_background->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
-	_background->setDisplay(_state.background.digits, _state.background.hLines, _state.background.vLines, _state.background.keys);
+//	_scene->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
+//	_scene->setParticlesParameters(_state.particles.speed, _state.particles.expansion);
+//
+//	_background->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
+//	_background->setDisplay(_state.background.digits, _state.background.hLines, _state.background.vLines, _state.background.keys);
+	
+	applyAllSettings();
 }
 
 
 void Renderer::draw(const float currentTime){
 	
-	if(_performExport){
-		_performExport = false;
-		renderFile(_exportPath, _exportFramerate);
+	if(_performExport>0){
+		// Let a bit of time at ImGui to display the modal message.
+		if(_performExport<10){
+			// Spawn the popup on first frame.
+			if(_performExport==1){
+				ImGui::OpenPopup("Exporting...");
+			}
+			// Pop up details.
+			if (ImGui::BeginPopupModal("Exporting...", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+			{
+				const int framesCount = std::ceil((_scene->duration()+10.0f) * _exportFramerate);
+				ImGui::Text("Scene duration: %ds. (+10s. buffer).", int(std::round(_scene->duration())));
+				ImGui::Text("Framerate: %d fps.", _exportFramerate);
+				ImGui::Text("Destination directory: %s", _exportPath.c_str());
+				ImGui::Text("Exporting %d frames at resolution %dx%d...", framesCount, _finalFramebuffer->_width, _finalFramebuffer->_height);
+				ImGui::TextDisabled("For more info and real-time progress, please look at the console log.");
+				
+				ImGui::EndPopup();
+			}
+			// Next "frame".
+			_performExport += 1;
+			return;
+		
+		} else {
+			// After the popup animation, start the real export.
+			_performExport = 0;
+			renderFile(_exportPath, _exportFramerate);
+		}
+		
 	}
 	
 	// Compute the time elapsed since last frame, or keep the same value if playback is disabled.
@@ -387,7 +415,7 @@ void Renderer::drawGUI(const float currentTime){
 			nfdresult_t result = NFD_PickFolder(NULL, &outPath );
 			if(result == NFD_OKAY){
 				_exportPath = std::string(outPath);
-				_performExport = !_exportPath.empty();
+				_performExport = int(!_exportPath.empty());
 			}
 		}
 		ImGui::SameLine(160);
