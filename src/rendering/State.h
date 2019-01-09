@@ -62,6 +62,7 @@ public:
 	Quality::Level quality;
 	glm::vec3 baseColor;
 	float scale;
+	float attenuation;
 	bool showParticles;
 	bool showFlashes;
 	bool showBlur;

@@ -122,20 +122,21 @@ void Renderer::draw(const float currentTime){
 	
 	
 	if(_state.showBlur){
+		const glm::vec2 invSizeB = 1.0f / glm::vec2(_particlesFramebuffer->_width ,_particlesFramebuffer->_height);
 		// Bind particles buffer.
 		_particlesFramebuffer->bind();
 		// Set viewport.
 		glViewport(0,0,_particlesFramebuffer->_width ,_particlesFramebuffer->_height);
-		
+		//glClear(GL_COLOR_BUFFER_BIT);
 		// Draw blurred particles from previous frames.
-		_blurryScreen.draw(_timer, invSize);
+		_blurryScreen.draw(_timer, invSizeB);
 		if(_state.showParticles){
 			// Draw the new particles.
-			_scene->drawParticles(_timer, invSize, _state.particles.color, _state.particles.scale, _state.particles.texs, _state.particles.count, true);
+			_scene->drawParticles(_timer, invSizeB, _state.particles.color, _state.particles.scale, _state.particles.texs, _state.particles.count, true);
 		}
 		if(_state.showBlurNotes){
 			// Draw the notes.
-			_scene->draw(_timer, invSize, _state.baseColor, true);
+			_scene->draw(_timer, invSizeB, _state.baseColor, true);
 		}
 		
 		_particlesFramebuffer->unbind();
@@ -257,6 +258,15 @@ void Renderer::drawGUI(const float currentTime){
 		if(_state.showBlur) {
 			ImGui::SameLine(160);
 			ImGui::Checkbox("Blur notes", &_state.showBlurNotes);
+			ImGui::PushItemWidth(172);
+			if(ImGui::SliderFloat("Attenuation", &_state.attenuation, 0.0f, 1.0f)){
+				_state.attenuation = std::min(1.0f, std::max(0.0f, _state.attenuation));
+				glUseProgram(_blurringScreen.programId());
+				const GLuint id1 = glGetUniformLocation(_blurringScreen.programId(), "attenuationFactor");
+				glUniform1f(id1, _state.attenuation);
+				glUseProgram(0);
+			}
+			ImGui::PopItemWidth();
 		}
 		
 		bool smw1 = false;
@@ -503,6 +513,8 @@ void Renderer::applyAllSettings(){
 	glUseProgram(_blurringScreen.programId());
 	GLuint id1 = glGetUniformLocation(_blurringScreen.programId(), "backgroundColor");
 	glUniform3fv(id1, 1, &_state.background.color[0]);
+	GLuint id2 = glGetUniformLocation(_blurringScreen.programId(), "attenuationFactor");
+	glUniform1f(id2, _state.attenuation);
 	glUseProgram(0);
 	
 	// Resize the framebuffers.

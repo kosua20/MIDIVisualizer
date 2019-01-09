@@ -63,6 +63,7 @@ void State::save(const std::string & path){
 	configFile << particles.count << std::endl;
 	
 	configFile << Quality::availables.at(quality).name << std::endl;
+	configFile << attenuation << std::endl;
 	
 	configFile.close();
 }
@@ -120,6 +121,12 @@ void State::load(const std::string & path){
 		}
 	}
 	
+	// MIDIVIZ_VERSION_MAJOR == 3, MIDIVIZ_VERSION_MINOR == 2
+	// Added attenuation factor.
+	if(majVersion >= 3  && minVersion >= 2){
+		configFile >> attenuation ;
+	}
+	
 	configFile.close();
 }
 
@@ -129,6 +136,7 @@ void State::reset(){
 	particles.color = baseColor;
 	
 	scale = 0.5f ;
+	attenuation = 0.99f;
 	showParticles = true ;
 	showFlashes = true ;
 	showBlur = true ;

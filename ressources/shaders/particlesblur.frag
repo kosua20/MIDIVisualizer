@@ -7,13 +7,12 @@ in INTERFACE {
 uniform sampler2D screenTexture;
 uniform vec2 inverseScreenSize;
 uniform vec3 backgroundColor = vec3(0.0, 0.0, 0.0);
+uniform float attenuationFactor = 0.99;
 
 out vec3 fragColor;
 
 
 void main(){
-	
-	const float attenuationFactor = 0.99;
 	
 	// We have to unroll the box blur loop manually.
 	// 5x5 blur, using a sparse sample grid.
