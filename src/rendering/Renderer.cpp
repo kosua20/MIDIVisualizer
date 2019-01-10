@@ -466,7 +466,7 @@ void Renderer::renderFile(const std::string & outputDirPath, const float frameRa
 	
 	std::cout << "[EXPORT]: Will export " << framesCount << " frames to \"" << outputDirPath << "\"." << std::endl;
 	for(size_t fid = 0; fid < framesCount; ++fid){
-		std::cout << "\r[EXPORT]: Processing frame " << fid << "/" << framesCount << "." << std::flush;
+		std::cout << "\r[EXPORT]: Processing frame " << (fid+1) << "/" << framesCount << "." << std::flush;
 		// Render.
 		draw(_timer);
 		glFinish();
