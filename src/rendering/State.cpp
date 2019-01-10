@@ -141,7 +141,7 @@ void State::reset(){
 	showFlashes = true ;
 	showBlur = true ;
 	showBlurNotes = false ;
-	lockParticleColor = true ;
+	lockParticleColor = false ;
 	
 	background.minorsWidth = 0.8f;
 	background.hLines = true;

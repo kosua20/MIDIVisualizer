@@ -165,6 +165,7 @@
     <ClCompile Include="src\rendering\MIDIScene.cpp" />
     <ClCompile Include="src\rendering\Renderer.cpp" />
     <ClCompile Include="src\rendering\ScreenQuad.cpp" />
+    <ClCompile Include="src\rendering\State.cpp" />
     <ClCompile Include="src\ressources\flash_image.cpp" />
     <ClCompile Include="src\ressources\font_image.cpp" />
     <ClCompile Include="src\ressources\particles_image.cpp" />
@@ -194,6 +195,7 @@
     <ClInclude Include="src\rendering\MIDIScene.h" />
     <ClInclude Include="src\rendering\Renderer.h" />
     <ClInclude Include="src\rendering\ScreenQuad.h" />
+    <ClInclude Include="src\rendering\State.h" />
     <ClInclude Include="src\ressources\data.h" />
   </ItemGroup>
   <ItemGroup>

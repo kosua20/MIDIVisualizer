@@ -119,6 +119,9 @@
     <ClCompile Include="src\libs\imgui\imgui_draw.cpp">
       <Filter>Source Files\libs\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="src\rendering\State.cpp">
+      <Filter>Source Files\rendering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\helpers\MeshUtilities.h">
@@ -192,6 +195,9 @@
     </ClInclude>
     <ClInclude Include="src\libs\imgui\imgui.h">
       <Filter>Source Files\libs\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\State.h">
+      <Filter>Source Files\rendering</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
