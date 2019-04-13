@@ -90,7 +90,7 @@ MIDIFile::MIDIFile(const std::string & filePath){
 		throw "BadInput";
 	}
 	if(format == multipleSongs){
-		std::cerr << "[ERROR]: " << "Nooop. Lazy dev." << std::endl;
+		std::cerr << "[ERROR]: " << "Unsupported MIDI file (type 2)." << std::endl;
 		throw "LazyDev";
 	}
 	
@@ -141,7 +141,7 @@ MIDIFile::~MIDIFile(){
 }
 
 
-void MIDIFile::printTracks(){
+void MIDIFile::printTracks() const {
 	for(auto& track : tracks){
 		track.printEvents();
 		track.printNotes();

@@ -274,21 +274,27 @@ std::vector<MIDINote> MIDITrack::getNotes(NoteType type){
 	return selected;
 }
 
-void MIDITrack::printNotes(){
+void MIDITrack::printNotes() const {
 	for(auto& note : notes){
 		std::cout << "Note " << note.note << "(" << note.duration << "s at "<< note.start << "s)" << " on channel " << note.channel << " with velocity " << note.velocity << "." << std::endl;
 	}
 }
 
 	
-void MIDITrack::printEvents(){
+void MIDITrack::printEvents() const {
 	for(auto& event : events){
 		if(event.category == systemEvent){
 			std::cout << "[INFO]: " << "Sysex event (" << event.delta << "): type is "<< std::hex << std::showbase << event.type << std::dec << ", length is " << event.data.size() << std::endl;
 		} else if (event.category == metaEvent){
 			std::cout << "[INFO]: " << "Meta event (" << event.delta << "): type is " << metaEventTypeName[static_cast<MetaEventType>(event.type)] << ", length is " << event.data.size() << std::endl;
 		} else if (event.category == midiEvent){
-			std::cout << "[INFO]: " << "MIDI Event " << (MIDIEventTypeName.count(static_cast<MIDIEventType>(event.type)) ? MIDIEventTypeName[static_cast<MIDIEventType>(event.type)] : "unknown") << " (" << event.delta << ") on channel " << event.data[0] << " with note " << event.data[1] << " and velocity " << event.data[2] << "." << std::endl;
+			const bool isKnown = MIDIEventTypeName.count(static_cast<MIDIEventType>(event.type)) > 0;
+			if(isKnown){
+				std::cout << "[INFO]: " << "MIDI Event " << MIDIEventTypeName.at(static_cast<MIDIEventType>(event.type)) << " (" << event.delta << ") on channel " << event.data[0] << " with note " << event.data[1] << " and velocity " << event.data[2] << "." << std::endl;
+			} else {
+				std::cout << "[INFO]: " << "MIDI Event unknown (" << event.delta << "), data size " << event.data.size() << "." << std::endl;
+			}
+			
 		}
 	}
 }

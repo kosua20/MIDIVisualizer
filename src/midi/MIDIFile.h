@@ -28,7 +28,7 @@ public:
 	
 	~MIDIFile();
 	
-	void printTracks();
+	void printTracks() const;
 	
 	void mergeTracks();
 	

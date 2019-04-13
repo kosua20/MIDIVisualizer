@@ -62,8 +62,8 @@ public:
 	
 	bool containsNotes();
 
-	void printNotes();
-	void printEvents();
+	void printNotes() const;
+	void printEvents() const;
 	
 	std::vector<MIDINote> notes;
 	std::vector<MIDIEvent> events;

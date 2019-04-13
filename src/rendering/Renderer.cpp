@@ -439,7 +439,9 @@ void Renderer::drawGUI(const float currentTime){
 			ImGui::Separator();
 			ImGui::Text("Debug: "); ImGui::SameLine(); ImGui::TextDisabled("(press D to hide)");
 			ImGui::Text("%.1f FPS / %.1f ms", ImGui::GetIO().Framerate,ImGui::GetIO().DeltaTime * 1000.0f );
-			
+			if(ImGui::Button("Print MIDI content to console")){
+				_scene->midiFile().printTracks();
+			}
 		}
 		
 	}
