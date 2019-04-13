@@ -208,11 +208,15 @@ void MIDITrack::extractNotes(short lowerBound, short higherBound, bool normalize
 					notes.push_back(note);
 					currentNotes.erase(noteInd);
 				}
-			} else if(event.type == programChange){
+			} else if(event.type == programChange || event.type == channelPressure){
 				// It seems those should be ignored.
 				timeInUnits -= double(event.delta);
 			} else {
-				//std::cout << "Unknown midi event: " << int(event.type) << "," << double(event.delta) << std::endl;
+				const bool unknownEvent = MIDIEventTypeName.count(static_cast<MIDIEventType>(event.type)) == 0;
+				if(unknownEvent){
+					//std::cout << "Unknown midi event: " << int(event.type) << "," << double(event.delta) << std::endl;
+					timeInUnits -= double(event.delta);
+				}
 			}
 		} else if(event.category == metaEvent && event.type == setTempo){
 			_tempo = (event.data[0] & 0xFF) << 16 | (event.data[1] & 0xFF) << 8 | (event.data[0] & 0xFF);
