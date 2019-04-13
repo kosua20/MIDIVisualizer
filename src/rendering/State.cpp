@@ -64,6 +64,7 @@ void State::save(const std::string & path){
 	
 	configFile << Quality::availables.at(quality).name << std::endl;
 	configFile << attenuation << std::endl;
+	configFile << showNotes << std::endl;
 	
 	configFile.close();
 }
@@ -127,6 +128,12 @@ void State::load(const std::string & path){
 		configFile >> attenuation ;
 	}
 	
+	// MIDIVIZ_VERSION_MAJOR == 3, MIDIVIZ_VERSION_MINOR == 3
+	// Added attenuation factor.
+	if(majVersion >= 3  && minVersion >= 3){
+		configFile >> showNotes ;
+	}
+	
 	configFile.close();
 }
 
@@ -142,6 +149,7 @@ void State::reset(){
 	showBlur = true ;
 	showBlurNotes = false ;
 	lockParticleColor = true ;
+	showNotes = true;
 	
 	background.minorsWidth = 0.8f;
 	background.hLines = true;

@@ -171,7 +171,9 @@ void Renderer::draw(const float currentTime){
 	// Draw the keys, grid, and measure numbers.
 	_background->draw(_timer, invSizeFb);
 	// Draw the notes.
-	_scene->draw(_timer, invSizeFb, _state.baseColor, false);
+	if(_state.showNotes){
+		_scene->draw(_timer, invSizeFb, _state.baseColor, false);
+	}
 	
 	if(_state.showFlashes){
 		// Draw the flashes.
@@ -255,12 +257,12 @@ void Renderer::drawGUI(const float currentTime){
 		
 		ImGui::Checkbox("Particles", &_state.showParticles); ImGui::SameLine(160);
 		ImGui::Checkbox("Flashes", &_state.showFlashes);
-		
+		ImGui::Checkbox("Notes", &_state.showNotes); ImGui::SameLine(160);
 		ImGui::Checkbox("Blur", &_state.showBlur);
 		if(_state.showBlur) {
-			ImGui::SameLine(160);
 			ImGui::Checkbox("Blur notes", &_state.showBlurNotes);
-			ImGui::PushItemWidth(172);
+			ImGui::SameLine(160);
+			ImGui::PushItemWidth(86);
 			if(ImGui::SliderFloat("Attenuation", &_state.attenuation, 0.0f, 1.0f)){
 				_state.attenuation = std::min(1.0f, std::max(0.0f, _state.attenuation));
 				glUseProgram(_blurringScreen.programId());

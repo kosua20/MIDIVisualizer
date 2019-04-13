@@ -8,7 +8,7 @@
 
 
 #define MIDIVIZ_VERSION_MAJOR 3
-#define MIDIVIZ_VERSION_MINOR 2
+#define MIDIVIZ_VERSION_MINOR 3
 
 
 	
@@ -68,6 +68,7 @@ public:
 	bool showBlur;
 	bool showBlurNotes;
 	bool lockParticleColor;
+	bool showNotes;
 	
 	void load(const std::string & path);
 	
