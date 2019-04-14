@@ -66,6 +66,12 @@ void State::save(const std::string & path){
 	configFile << attenuation << std::endl;
 	configFile << showNotes << std::endl;
 	
+	configFile << background.linesColor[0] << " " << background.linesColor[1] << " " << background.linesColor[2] << std::endl;
+	configFile << background.textColor[0] << " " << background.textColor[1] << " " << background.textColor[2] << std::endl;
+	configFile << background.keysColor[0] << " " << background.keysColor[1] << " " << background.keysColor[2] << std::endl;
+	configFile << minorColor[0] << " " << minorColor[1] << " " << minorColor[2] << std::endl;
+	configFile << flashColor[0] << " " << flashColor[1] << " " << flashColor[2] << std::endl;
+	configFile << flashSize << std::endl;
 	configFile.close();
 }
 
@@ -129,9 +135,16 @@ void State::load(const std::string & path){
 	}
 	
 	// MIDIVIZ_VERSION_MAJOR == 3, MIDIVIZ_VERSION_MINOR == 3
-	// Added attenuation factor.
+	minorColor = 0.8f*baseColor;
+	flashColor = baseColor;
 	if(majVersion >= 3  && minVersion >= 3){
 		configFile >> showNotes ;
+		configFile >> background.linesColor[0] >> background.linesColor[1] >> background.linesColor[2] ;
+		configFile >> background.textColor[0] >> background.textColor[1] >> background.textColor[2] ;
+		configFile >> background.keysColor[0] >> background.keysColor[1] >> background.keysColor[2] ;
+		configFile >> minorColor[0] >> minorColor[1] >> minorColor[2] ;
+		configFile >> flashColor[0] >> flashColor[1] >> flashColor[2] ;
+		configFile >> flashSize;
 	}
 	
 	configFile.close();
@@ -139,7 +152,12 @@ void State::load(const std::string & path){
 
 void State::reset(){
 	baseColor = 1.35f*glm::vec3(0.57f,0.19f,0.98f);
+	minorColor = 0.8f*baseColor;
+	flashColor = baseColor;
 	background.color = glm::vec3(0.0f, 0.0f, 0.0f) ;
+	background.linesColor = glm::vec3(1.0f, 1.0f, 1.0f);
+	background.textColor = glm::vec3(1.0f, 1.0f, 1.0f);
+	background.keysColor = glm::vec3(0.0f, 0.0f, 0.0f);
 	particles.color = baseColor;
 	
 	scale = 0.5f ;
@@ -150,6 +168,7 @@ void State::reset(){
 	showBlurNotes = false ;
 	lockParticleColor = true ;
 	showNotes = true;
+	flashSize = 1.0f;
 	
 	background.minorsWidth = 0.8f;
 	background.hLines = true;

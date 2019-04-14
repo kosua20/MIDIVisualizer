@@ -20,9 +20,9 @@ public:
 	void updatesActiveNotes(double time);
 	
 	/// Draw function
-	void draw(float time, glm::vec2 invScreenSize, const glm::vec3 & baseColor, bool prepass);
+	void draw(float time, glm::vec2 invScreenSize, const glm::vec3 & baseColor, const glm::vec3 & minorColor, bool prepass);
 	
-	void drawFlashes(float time, glm::vec2 invScreenSize, const glm::vec3 & baseColor);
+	void drawFlashes(float time, glm::vec2 invScreenSize, const glm::vec3 & baseColor, float userScale);
 	
 	void drawParticles(const float time, const glm::vec2 & invScreenSize, const glm::vec3 & particlesColor, const float particlesScale, const std::vector<GLuint> &lookTextures, const int particlesCount, bool prepass);
 	

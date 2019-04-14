@@ -13,6 +13,9 @@ uniform bool useVLines = true;
 uniform bool useKeys = true;
 uniform float minorsWidth = 1.0;
 uniform sampler2D screenTexture;
+uniform vec3 textColor = vec3(1.0);
+uniform vec3 linesColor = vec3(1.0);
+uniform vec3 keysColor = vec3(0.0);
 
 const bool isMinor[88] = bool[](true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false);
 const float octaveLinesPositions[8] = float[](2.0/52.0, 9.0/52.0, 16.0/52.0, 23.0/52.0, 30.0/52.0, 37.0/52.0, 44.0/52.0, 51.0/52.0);
@@ -78,14 +81,13 @@ float printNumber(float num, vec2 position, vec2 uv, vec2 scale){
 
 void main(){
 	
-	float intensity = 0.0;
 	
 	// Keys
 	if(useKeys && gl_FragCoord.y < bottomLimit/inverseScreenSize.y){
 		
 		
 			// White keys, and separators.
-			intensity = int(abs(fract(In.uv.x*52.0)) >= 2.0 * 52.0 * inverseScreenSize.x);
+			float intensity = int(abs(fract(In.uv.x*52.0)) >= 2.0 * 52.0 * inverseScreenSize.x);
 		
 			// Upper keyboard.
 			if(gl_FragCoord.y > 0.10/inverseScreenSize.y){
@@ -98,18 +100,16 @@ void main(){
 					intensity = step(marginSize, abs(fract(In.uv.x*52.0+0.5)*2.0-1.0));
 				}
 			}
-			fragColor = vec3(intensity);
+			fragColor = mix(keysColor, vec3(1.0), intensity);
 			// Done.
 			return;
-		
-		
-		
 	}
 	
+	vec3 bgColor = vec3(0.0);
 	// Octaves lines.
 	for(int i = 0; i < 8; i++){
 		float lineIntensity = useVLines ? (0.7 * step(abs(In.uv.x - octaveLinesPositions[i]),inverseScreenSize.x)) : 0.0;
-		intensity = max(intensity, lineIntensity);
+		bgColor = mix(bgColor, linesColor, lineIntensity);
 	}
 	
 	vec2 scale = 1.5*vec2(64.0,50.0*inverseScreenSize.x/inverseScreenSize.y);
@@ -123,18 +123,18 @@ void main(){
 		// Compute position of the measure currentMesure+i.
 		vec2 position = vec2(0.005,bottomLimit + (secondsPerMeasure*(currentMesure+i) - time)*mainSpeed*0.5);
 		
-		// Compute intensity for the number display, and for the horizontal line.
+		// Compute color for the number display, and for the horizontal line.
 		float numberIntensity = useDigits ? printNumber(currentMesure + i,position, In.uv, scale) : 0.0;
+		bgColor = mix(bgColor, textColor, numberIntensity);
 		float lineIntensity = useHLines ? (0.25*(step(abs(In.uv.y - position.y - 0.5 / scale.y), inverseScreenSize.y))) : 0.0;
-		
-		intensity = max(intensity, max(numberIntensity, lineIntensity));
+		bgColor = mix(bgColor, linesColor, lineIntensity);
 	}
 	
-	if(intensity == 0.0){
+	if(all(equal(bgColor, vec3(0.0)))){
 		// Transparent background.
 		discard;
 	}
 	
-	fragColor = vec3(intensity);
+	fragColor = bgColor;
 	
 }

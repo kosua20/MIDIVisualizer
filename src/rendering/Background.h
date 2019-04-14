@@ -17,6 +17,8 @@ public:
 	void setScaleAndMinorWidth(const float scale, const float width);
 	
 	void setDisplay(const bool digits, const bool horiz, const bool vert, const bool keys);
+	
+	void setColors(const glm::vec3 & linesColor, const glm::vec3 & textColor, const glm::vec3 & keysColor);
 };
 
 #endif

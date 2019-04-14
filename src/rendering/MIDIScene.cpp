@@ -279,7 +279,7 @@ void MIDIScene::drawParticles(const float time, const glm::vec2 & invScreenSize,
 }
 
 
-void MIDIScene::draw(float time, glm::vec2 invScreenSize, const glm::vec3 & baseColor, bool prepass){
+void MIDIScene::draw(float time, glm::vec2 invScreenSize, const glm::vec3 & baseColor, const glm::vec3 & minorColor, bool prepass){
 	
 	glUseProgram(_programId);
 	
@@ -287,12 +287,15 @@ void MIDIScene::draw(float time, glm::vec2 invScreenSize, const glm::vec3 & base
 	GLuint screenId = glGetUniformLocation(_programId, "inverseScreenSize");
 	GLuint timeId = glGetUniformLocation(_programId, "time");
 	GLuint colorId = glGetUniformLocation(_programId, "baseColor");
+	GLuint colorMinId = glGetUniformLocation(_programId, "minorColor");
 	glUniform2fv(screenId,1, &(invScreenSize[0]));
 	glUniform1f(timeId,time);
 	if(prepass){
 		glUniform3f(colorId, 0.6f*baseColor[0], 0.6f*baseColor[1], 0.6f*baseColor[2]);
+		glUniform3f(colorMinId, 0.6f*minorColor[0], 0.6f*minorColor[1], 0.6f*minorColor[2]);
 	} else {
 		glUniform3fv(colorId, 1, &(baseColor[0]));
+		glUniform3fv(colorMinId, 1, &(minorColor[0]));
 	}
 	
 	
@@ -305,7 +308,7 @@ void MIDIScene::draw(float time, glm::vec2 invScreenSize, const glm::vec3 & base
 	
 }
 
-void MIDIScene::drawFlashes(float time, glm::vec2 invScreenSize, const glm::vec3 & baseColor){
+void MIDIScene::drawFlashes(float time, glm::vec2 invScreenSize, const glm::vec3 & baseColor, float userScale){
 	
 	// Need alpha blending.
 	glEnable(GL_BLEND);
@@ -323,10 +326,11 @@ void MIDIScene::drawFlashes(float time, glm::vec2 invScreenSize, const glm::vec3
 	GLuint screenId1 = glGetUniformLocation(_programFlashesId, "inverseScreenSize");
 	GLuint timeId1 = glGetUniformLocation(_programFlashesId, "time");
 	GLuint colorId = glGetUniformLocation(_programFlashesId, "baseColor");
+	GLuint scaleId = glGetUniformLocation(_programFlashesId, "userScale");
 	glUniform2fv(screenId1,1, &(invScreenSize[0]));
 	glUniform1f(timeId1,time);
 	glUniform3fv(colorId, 1, &(baseColor[0]));
-	
+	glUniform1f(scaleId,userScale);
 	// Flash texture.
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, _texFlash);

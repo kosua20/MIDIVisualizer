@@ -60,6 +60,8 @@ void Renderer::init(int width, int height){
 void Renderer::setColorAndScale(const glm::vec3 & baseColor, const float scale){
 	_state.scale = scale;
 	_state.baseColor = baseColor;
+	_state.minorColor = baseColor;
+	_state.flashColor = baseColor;
 	_state.particles.color = _state.baseColor;
 }
 
@@ -71,11 +73,6 @@ void Renderer::loadFile(const std::string & midiFilePath){
 	// Init objects.
 	_scene = std::make_shared<MIDIScene>(midiFilePath);
 	_background = std::make_shared<Background>(_scene->midiFile().tracks[0].secondsPerMeasure);
-//	_scene->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
-//	_scene->setParticlesParameters(_state.particles.speed, _state.particles.expansion);
-//
-//	_background->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
-//	_background->setDisplay(_state.background.digits, _state.background.hLines, _state.background.vLines, _state.background.keys);
 	
 	applyAllSettings();
 }
@@ -138,7 +135,7 @@ void Renderer::draw(const float currentTime){
 		}
 		if(_state.showBlurNotes){
 			// Draw the notes.
-			_scene->draw(_timer, invSizeB, _state.baseColor, true);
+			_scene->draw(_timer, invSizeB, _state.baseColor, _state.minorColor, true);
 		}
 		
 		_particlesFramebuffer->unbind();
@@ -172,12 +169,12 @@ void Renderer::draw(const float currentTime){
 	_background->draw(_timer, invSizeFb);
 	// Draw the notes.
 	if(_state.showNotes){
-		_scene->draw(_timer, invSizeFb, _state.baseColor, false);
+		_scene->draw(_timer, invSizeFb, _state.baseColor, _state.minorColor, false);
 	}
 	
 	if(_state.showFlashes){
 		// Draw the flashes.
-		_scene->drawFlashes(_timer, invSize, _state.baseColor);
+		_scene->drawFlashes(_timer, invSize, _state.flashColor, _state.flashSize);
 	}
 	_finalFramebuffer->unbind();
 	
@@ -248,16 +245,15 @@ void Renderer::drawGUI(const float currentTime){
 		
 		
 		bool colNotesEdit = ImGui::ColorEdit3("Notes", &_state.baseColor[0], ImGuiColorEditFlags_NoInputs); ImGui::SameLine(80);
-		bool colPartsEdit = ImGui::ColorEdit3("Effects", &_state.particles.color[0], ImGuiColorEditFlags_NoInputs);
-		ImGui::SameLine(160);
+		bool colMinorsEdit = ImGui::ColorEdit3("Minors", &_state.minorColor[0], ImGuiColorEditFlags_NoInputs); ImGui::SameLine(160);
+		bool colPartsEdit = ImGui::ColorEdit3("Effects", &_state.particles.color[0], ImGuiColorEditFlags_NoInputs); ImGui::SameLine(240);
+		bool colFlashesEdit = ImGui::ColorEdit3("Flashes", &_state.flashColor[0], ImGuiColorEditFlags_NoInputs);
+		
 		if(ImGui::Checkbox("Lock colors", &_state.lockParticleColor)){
 			// If we enable the lock, make sure the colors are synched.
 			colNotesEdit = true;
 		}
-		
-		ImGui::Checkbox("Particles", &_state.showParticles); ImGui::SameLine(160);
-		ImGui::Checkbox("Flashes", &_state.showFlashes);
-		ImGui::Checkbox("Notes", &_state.showNotes); ImGui::SameLine(160);
+		ImGui::SameLine(160);
 		ImGui::Checkbox("Blur", &_state.showBlur);
 		if(_state.showBlur) {
 			ImGui::Checkbox("Blur notes", &_state.showBlurNotes);
@@ -272,6 +268,15 @@ void Renderer::drawGUI(const float currentTime){
 			}
 			ImGui::PopItemWidth();
 		}
+		
+		ImGui::Checkbox("Notes", &_state.showNotes); ImGui::SameLine(160);
+		ImGui::Checkbox("Particles", &_state.showParticles);
+		ImGui::Checkbox("Flashes", &_state.showFlashes); ImGui::SameLine(160);
+		ImGui::PushItemWidth(86);
+		ImGui::SliderFloat("Flash size", &_state.flashSize, 0.1f, 3.0f);
+		ImGui::PopItemWidth();
+		
+		
 		
 		bool smw1 = false;
 		
@@ -289,18 +294,28 @@ void Renderer::drawGUI(const float currentTime){
 				glUniform3fv(id1, 1, &_state.background.color[0]);
 				glUseProgram(0);
 			}
-			ImGui::SameLine(120);
-			ImGui::PushItemWidth(80);
-			smw1 = ImGui::InputFloat("Minor keys size", &_state.background.minorsWidth, 0.1f, 1.0f, "%.2f");
-			ImGui::PopItemWidth();
+			ImGui::SameLine(80);
+			bool cbg0 = ImGui::ColorEdit3("Lines##Background", &_state.background.linesColor[0], ImGuiColorEditFlags_NoInputs);
+			ImGui::SameLine(160);
+			bool cbg1 = ImGui::ColorEdit3("Text##Background", &_state.background.textColor[0], ImGuiColorEditFlags_NoInputs);
+			ImGui::SameLine(240);
+			bool cbg2 = ImGui::ColorEdit3("Keys##Background", &_state.background.keysColor[0], ImGuiColorEditFlags_NoInputs);
+			
+			
 			bool m2 = ImGui::Checkbox("Horizontal lines", &_state.background.hLines);  ImGui::SameLine(160);
 			bool m3 = ImGui::Checkbox("Vertical lines", &_state.background.vLines);
 			bool m4 = ImGui::Checkbox("Keyboard", &_state.background.keys); ImGui::SameLine(160);
 			bool m1 = ImGui::Checkbox("Digits", &_state.background.digits);
-			
+			ImGui::PushItemWidth(145);
+			smw1 = ImGui::InputFloat("Minor keys size", &_state.background.minorsWidth, 0.1f, 1.0f, "%.2f");
+			ImGui::PopItemWidth();
 			
 			if(m1 || m2 || m3 || m4){
 				_background->setDisplay(_state.background.digits, _state.background.hLines, _state.background.vLines, _state.background.keys);
+			}
+			
+			if(cbg0 || cbg1 || cbg2){
+				_background->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
 			}
 		}
 		
@@ -413,12 +428,16 @@ void Renderer::drawGUI(const float currentTime){
 		}
 		
 		// Keep the colors in sync if needed.
-		if(_state.lockParticleColor){
-			if(colNotesEdit){
-				_state.particles.color = _state.baseColor;
-			} else if(colPartsEdit){
-				_state.baseColor = _state.particles.color;
+		if(_state.lockParticleColor && (colNotesEdit || colPartsEdit || colMinorsEdit || colFlashesEdit)){
+			glm::vec3 refColor = _state.baseColor;
+			if(colPartsEdit){
+				refColor = _state.particles.color;
+			} else if(colMinorsEdit){
+				refColor = _state.minorColor;
+			} else if(colFlashesEdit){
+				refColor = _state.flashColor;
 			}
+			_state.baseColor = _state.particles.color = _state.minorColor = _state.flashColor = refColor;
 		}
 		
 		
@@ -507,6 +526,7 @@ void Renderer::applyAllSettings(){
 	_background->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
 	_scene->setParticlesParameters(_state.particles.speed, _state.particles.expansion);
 	_background->setDisplay(_state.background.digits, _state.background.hLines, _state.background.vLines, _state.background.keys);
+	_background->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
 	
 	// Background color.
 	glClearColor(_state.background.color[0],_state.background.color[1],_state.background.color[2], 1.0f);

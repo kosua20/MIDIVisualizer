@@ -40,6 +40,9 @@ class State {
 public:
 	struct BackgroundState {
 		glm::vec3 color;
+		glm::vec3 linesColor;
+		glm::vec3 textColor;
+		glm::vec3 keysColor;
 		float minorsWidth;
 		bool hLines;
 		bool vLines;
@@ -61,8 +64,11 @@ public:
 	ParticlesState particles;
 	Quality::Level quality;
 	glm::vec3 baseColor;
+	glm::vec3 minorColor;
+	glm::vec3 flashColor;
 	float scale;
 	float attenuation;
+	float flashSize;
 	bool showParticles;
 	bool showFlashes;
 	bool showBlur;
