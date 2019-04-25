@@ -149,7 +149,7 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 	glUseProgram(_programParticulesId);
 	for(int i = 0; i < PARTICLES_TEXTURE_COUNT; ++i){
 		glActiveTexture(GL_TEXTURE1 + i);
-		const std::string nameStr = "lookParticles[" + std::to_string(i) + "]";
+		const std::string nameStr = "lookParticles" + std::to_string(i);
 		GLuint texUniID2 = glGetUniformLocation(_programParticulesId, nameStr.c_str());
 		glUniform1i(texUniID2, 1 + i);
 	}
