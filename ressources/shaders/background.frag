@@ -47,7 +47,9 @@ float printDigit(int digit, vec2 uv){
 
 
 float printNumber(float num, vec2 position, vec2 uv, vec2 scale){
-	
+	if(num < -0.1){
+		return 0.0f;
+	}
 	if(position.y > 1.0 || position.y < 0.0){
 		return 0.0;
 	}
