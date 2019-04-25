@@ -18,6 +18,8 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write/stb_image_write.h>
 
+#define TIMER_INITIAL_SHIFT (1.0f)
+
 Renderer::Renderer(){ }
 
 Renderer::~Renderer(){}
@@ -67,7 +69,7 @@ void Renderer::setColorAndScale(const glm::vec3 & baseColor, const float scale){
 
 void Renderer::loadFile(const std::string & midiFilePath){
 	// Player.
-	_timer = 0.0;
+	_timer = -TIMER_INITIAL_SHIFT;
 	_shouldPlay = false;
 
 	// Init objects.
@@ -200,8 +202,8 @@ void Renderer::drawGUI(const float currentTime){
 		}
 		ImGui::SameLine();
 		if(ImGui::Button("Restart (r)")){
-			_timer = 0;
-			_timerStart = currentTime;
+			_timer = -TIMER_INITIAL_SHIFT;
+			_timerStart = currentTime + (_shouldPlay ? TIMER_INITIAL_SHIFT : 0.0f);
 		}
 		
 		ImGui::SameLine();
@@ -472,7 +474,7 @@ void Renderer::drawGUI(const float currentTime){
 void Renderer::renderFile(const std::string & outputDirPath, const float frameRate){
 	_showGUI = false;
 	// Reset.
-	_timer = 0;
+	_timer = -TIMER_INITIAL_SHIFT;
 	_timerStart = 0;
 	// Start playing.
 	_shouldPlay = true;
@@ -481,7 +483,7 @@ void Renderer::renderFile(const std::string & outputDirPath, const float frameRa
 	GLubyte * data = new GLubyte[_finalFramebuffer->_width * _finalFramebuffer->_height * 3];
 	
 	// Generate and save frames.
-	int framesCount = std::ceil((_scene->duration()+10.0f) * frameRate);
+	int framesCount = std::ceil((_scene->duration()+10.0f+TIMER_INITIAL_SHIFT) * frameRate);
 	int targetSize = std::to_string(framesCount).size();
 	
 	// Start by clearing up the blur and particles buffers.
@@ -513,7 +515,7 @@ void Renderer::renderFile(const std::string & outputDirPath, const float frameRa
 	
 	_showGUI = true;
 	_shouldPlay = false;
-	_timer = 0;
+	_timer = -TIMER_INITIAL_SHIFT;
 	_exportPath = "";
 }
 
@@ -583,8 +585,8 @@ void Renderer::keyPressed(int key, int action){
 			_shouldPlay = !_shouldPlay;
 			_timerStart = glfwGetTime() - _timer;
 		} else if (key == GLFW_KEY_R){
-			_timer = 0;
-			_timerStart = glfwGetTime();
+			_timer = -TIMER_INITIAL_SHIFT;
+			_timerStart = glfwGetTime() + (_shouldPlay ? TIMER_INITIAL_SHIFT : 0.0f);
 		} else if (key == GLFW_KEY_I){
 			_showGUI = !_showGUI;
 		} else if (key == GLFW_KEY_D){
