@@ -5,7 +5,7 @@
 #include "MIDITrack.h"
 
 struct ActiveNoteInfos {
-	float start = 0.0f;
+	float start = 1000000.0f;
 	float duration = 0.0f;
 	bool enabled = false;
 };
