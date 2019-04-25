@@ -69,9 +69,9 @@ void ResourcesManager::loadResources(){
 	}
 	
 	{
-		unsigned int imwidth1 = 2;
-		unsigned int imheight1 = 2;
-		unsigned char blankTexture[] = { 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255};
+		unsigned int imwidth1 = 4;
+		unsigned int imheight1 = 4;
+		unsigned char blankTexture[] = { 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255};
 		textureLibrary["blank"] = loadTexture(blankTexture, imwidth1, imheight1, false);
 	}
 }
