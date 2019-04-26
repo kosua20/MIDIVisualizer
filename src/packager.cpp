@@ -14,8 +14,8 @@ void printHelp(){
 
 int main( int argc, char** argv) {
 	
-	const std::string resourcesDir = "ressources/";
-	const std::string outputDir = "src/ressources/";
+	const std::string resourcesDir = "resources/";
+	const std::string outputDir = "src/resources/";
 	
 	std::vector<std::string> imagesToLoad = { "flash", "font", "particles"};
 	std::vector<std::string> shadersToLoad = { "background", "flashes", "notes", "particles", "particlesblur", "screenquad"};
@@ -27,8 +27,8 @@ int main( int argc, char** argv) {
 		return 1;
 	}
 	
-	headerFile << "#ifndef DATA_RESSOURCES_H" << std::endl
-			   << "#define DATA_RESSOURCES_H" << std::endl << std::endl
+	headerFile << "#ifndef DATA_RESOURCES_H" << std::endl
+			   << "#define DATA_RESOURCES_H" << std::endl << std::endl
 			   << "#include <string>" << std::endl
 			   << "#include <map>" << std::endl
 			   << "#include <vector>" << std::endl << std::endl

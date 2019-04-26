@@ -184,7 +184,7 @@ int main( int argc, char** argv) {
 	ImGui::DestroyContext();
 	// Remove the window.
 	glfwDestroyWindow(window);
-	// Clean other ressources
+	// Clean other resources
 	renderer.clean();
 	// Close GL context and any other GLFW resources.
 	glfwTerminate();

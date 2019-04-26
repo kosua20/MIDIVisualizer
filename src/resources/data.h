@@ -1,5 +1,5 @@
-#ifndef DATA_RESSOURCES_H
-#define DATA_RESSOURCES_H
+#ifndef DATA_RESOURCES_H
+#define DATA_RESOURCES_H
 
 #include <string>
 #include <map>

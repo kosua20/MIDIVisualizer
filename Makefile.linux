@@ -63,7 +63,7 @@ run:
 # Package the images as raw arrays and write them in the source directory.
 package: dirs $(TOOLNAME)
 	@./$(BUILDDIR)/$(TOOLNAME)
-	@echo "You can now compile $(EXECNAME) with the udpated data."
+	@echo "You can now compile $(EXECNAME) with the updated data."
 
 #Create the build directory and its subdirectories
 dirs:
