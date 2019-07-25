@@ -4,13 +4,13 @@ CXX = g++
 #Include directories (for headers): standard include dirs in /usr and /usr/local, and our helper directory.
 INCLUDEDIR = -I/usr/include/ -I/usr/local/include/ -Isrc/helpers/ -Isrc/libs/ 
 #Library directory (just in case)
-LIBDIR = -L/usr/local/lib
+LIBDIR = -L/usr/local/lib -L/usr/lib/
 #Libraries needed: OpenGL and glfw3.  glfw3 require X11, Xi, and so on...
-LIBS = -lglfw3 -lnfd -lGL -lX11 -lXi -lXrandr -lXxf86vm -lXinerama -lXcursor -lrt -lm -pthread -ldl
+LIBS = -lglfw3 -lnfd -lGL -lX11 -lXi -lXrandr -lXxf86vm -lXinerama -lXcursor -lrt -lm -pthread -ldl `pkg-config --libs gtk+-3.0`
 
 
 #Compiler flags: C++11 standard, and display 'all' warnings.
-CXXFLAGS = -std=c++11 -Wall -O3
+CXXFLAGS = -std=c++11 -Wall -O3 `pkg-config --cflags gtk+-3.0`
 
 #Build directory
 BUILDDIR = build
