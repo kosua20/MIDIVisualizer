@@ -81,7 +81,7 @@ void ScreenQuad::draw(float time, glm::vec2 invScreenSize){
 	glBindVertexArray(_vao);
 	// Draw!
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
-	glDrawElements(GL_TRIANGLES, _count, GL_UNSIGNED_INT, (void*)0);
+	glDrawElements(GL_TRIANGLES, GLsizei(_count), GL_UNSIGNED_INT, (void*)0);
 	
 	glBindVertexArray(0);
 	glUseProgram(0);

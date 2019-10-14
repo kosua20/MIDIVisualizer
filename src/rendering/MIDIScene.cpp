@@ -34,17 +34,17 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 	_duration = 0.0;
 	for(auto& note : notesM){
 		data.push_back(float(note.note));
-		data.push_back(note.start);
-		data.push_back(note.duration);
-		data.push_back(0.0);
+		data.push_back(float(note.start));
+		data.push_back(float(note.duration));
+		data.push_back(0.0f);
 		_duration = std::max(_duration, note.start + note.duration);
 	}
 	auto notesm = _midiFile.tracks[0].getNotes(minorNotes);
 	for(auto& note : notesm){
 		data.push_back(float(note.note));
-		data.push_back(note.start);
-		data.push_back(note.duration);
-		data.push_back(1.0);
+		data.push_back(float(note.start));
+		data.push_back(float(note.duration));
+		data.push_back(1.0f);
 		_duration = std::max(_duration, note.start + note.duration);
 	}
 	_notesCount = notesM.size() + notesm.size();
@@ -158,7 +158,7 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 	// Pass texture size to shader.
 	const glm::vec2 tsize = ResourcesManager::getTextureSizeFor("particles");
 	GLuint texSizeID = glGetUniformLocation(_programParticulesId, "inverseTextureSize");
-	glUniform2f(texSizeID,1.0/float(tsize[0]), 1.0/float(tsize[1]));
+	glUniform2f(texSizeID, 1.0f/float(tsize[0]), 1.0f/float(tsize[1]));
 	glUseProgram(0);
 	
 	// Prepare actives notes array.
@@ -190,9 +190,9 @@ void MIDIScene::updatesActiveNotes(double time){
 	// Update the particle systems lifetimes.
 	for(auto & particle : _particles){
 		// Give a bit of a head start to the animation.
-		particle.elapsed = (time - particle.start + 0.25) / particle.duration;
+		particle.elapsed = (float(time) - particle.start + 0.25f) / particle.duration;
 		// Disable old particles.
-		if(time >= particle.start + particle.duration){
+		if(float(time) >= particle.start + particle.duration){
 			particle.note = -1;
 			particle.duration = particle.start = particle.elapsed = 0.0f;
 		}
@@ -209,7 +209,7 @@ void MIDIScene::updatesActiveNotes(double time){
 			for(auto & particle : _particles){
 				if(particle.note < 0){
 					// Update with new note parameter.
-					particle.duration = (std::max)(note.duration*2.0, note.duration + 1.2);
+					particle.duration = (std::max)(note.duration*2.0f, note.duration + 1.2f);
 					particle.start = note.start;
 					particle.note = i;
 					particle.elapsed = 0.0f;
@@ -267,7 +267,7 @@ void MIDIScene::drawParticles(const float time, const glm::vec2 & invScreenSize,
 			glUniform1i(globalShiftId, particle.note);
 			glUniform1f(timeId, particle.elapsed);
 			glUniform1f(durationId, particle.duration);
-			glDrawElementsInstanced(GL_TRIANGLES, _primitiveCount, GL_UNSIGNED_INT, (void*)0, particlesCount);
+			glDrawElementsInstanced(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0, particlesCount);
 		}
 	}
 	
@@ -301,7 +301,7 @@ void MIDIScene::draw(float time, glm::vec2 invScreenSize, const glm::vec3 & base
 	
 	// Draw the geometry.
 	glBindVertexArray(_vao);
-	glDrawElementsInstanced(GL_TRIANGLES, _primitiveCount, GL_UNSIGNED_INT, (void*)0, _notesCount);
+	glDrawElementsInstanced(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0, GLsizei(_notesCount));
 
 	glBindVertexArray(0);
 	glUseProgram(0);
@@ -337,7 +337,7 @@ void MIDIScene::drawFlashes(float time, glm::vec2 invScreenSize, const glm::vec3
 	
 	// Draw the geometry.
 	glBindVertexArray(_vaoFlashes);
-	glDrawElementsInstanced(GL_TRIANGLES, _primitiveCount, GL_UNSIGNED_INT, (void*)0, 88);
+	glDrawElementsInstanced(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0, 88);
 	
 	glBindVertexArray(0);
 	glUseProgram(0);

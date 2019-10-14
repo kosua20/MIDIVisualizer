@@ -6,7 +6,7 @@
 #include "Keyboard.h"
 
 Keyboard::Keyboard(glm::vec3 & eye, glm::vec3 & center, glm::vec3 & up, glm::vec3 & right) : _eye(eye), _center(center), _up(up), _right(right) {
-	_speed = 1.2;
+	_speed = 1.2f;
 	_angularSpeed = 75.0f;
 	reset();
 } 

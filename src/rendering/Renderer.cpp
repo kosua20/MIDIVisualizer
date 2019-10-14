@@ -4,7 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui/imgui.h>
 #include <iostream>
-#include <nfd/nfd.h>
+#include <nfd.h>
 #include <stdio.h>
 #include <vector>
 
@@ -41,13 +41,13 @@ void Renderer::init(int width, int height) {
 
   // Setup framebuffers.
   _particlesFramebuffer = std::shared_ptr<Framebuffer>(
-      new Framebuffer(_camera._screenSize[0], _camera._screenSize[1], GL_RGBA,
+      new Framebuffer(int(_camera._screenSize[0]), int(_camera._screenSize[1]), GL_RGBA,
                       GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
   _blurFramebuffer = std::shared_ptr<Framebuffer>(
-      new Framebuffer(_camera._screenSize[0], _camera._screenSize[1], GL_RGBA,
+      new Framebuffer(int(_camera._screenSize[0]), int(_camera._screenSize[1]), GL_RGBA,
                       GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
   _finalFramebuffer = std::shared_ptr<Framebuffer>(
-      new Framebuffer(_camera._screenSize[0], _camera._screenSize[1], GL_RGB,
+      new Framebuffer(int(_camera._screenSize[0]), int(_camera._screenSize[1]), GL_RGB,
                       GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
 
   _blurringScreen.init(
@@ -98,7 +98,7 @@ void Renderer::draw(const float currentTime) {
       if (ImGui::BeginPopupModal("Exporting...", NULL,
                                  ImGuiWindowFlags_AlwaysAutoResize)) {
         const int framesCount =
-            std::ceil((_scene->duration() + 10.0f) * _exportFramerate);
+           int(std::ceil((_scene->duration() + 10.0) * float(_exportFramerate)));
         ImGui::Text("Scene duration: %ds. (+10s. buffer).",
                     int(std::round(_scene->duration())));
         ImGui::Text("Framerate: %d fps.", _exportFramerate);
@@ -117,7 +117,7 @@ void Renderer::draw(const float currentTime) {
     } else {
       // After the popup animation, start the real export.
       _performExport = 0;
-      renderFile(_exportPath, _exportFramerate);
+      renderFile(_exportPath, float(_exportFramerate));
     }
   }
 
@@ -194,7 +194,7 @@ void Renderer::draw(const float currentTime) {
   }
   _finalFramebuffer->unbind();
 
-  glViewport(0, 0, _camera._screenSize[0], _camera._screenSize[1]);
+  glViewport(0, 0, GLsizei(_camera._screenSize[0]), GLsizei(_camera._screenSize[1]));
   _finalScreen.draw(_timer, invSize);
 
   if (_showGUI) {
@@ -251,7 +251,7 @@ void Renderer::drawGUI(const float currentTime) {
     ImGui::PushItemWidth(80);
     if (ImGui::Combo("Quality", (int *)(&_state.quality),
                      "Half\0Low\0Medium\0High\0Double\0\0")) {
-      resize(_camera._screenSize[0], _camera._screenSize[1]);
+      resize(int(_camera._screenSize[0]), int(_camera._screenSize[1]));
     }
     ImGui::PopItemWidth();
     ImGui::PushItemWidth(100);
@@ -409,7 +409,7 @@ void Renderer::drawGUI(const float currentTime) {
             NFD_PathSet_Free(&outPaths);
             // Keep filling until we have four texture IDs.
             int id = 0;
-            const int initCount = _state.particles.texs.size();
+            const int initCount = int(_state.particles.texs.size());
             while (_state.particles.texs.size() < PARTICLES_TEXTURE_COUNT) {
               _state.particles.texs.push_back(_state.particles.texs[id]);
               id = (id + 1) % initCount;
@@ -531,11 +531,11 @@ void Renderer::renderFile(const std::string &outputDirPath,
       new GLubyte[_finalFramebuffer->_width * _finalFramebuffer->_height * 3];
   // Generate and save frames.
   int framesCount =
-      std::ceil((_scene->duration() + 10.0f + TIMER_INITIAL_SHIFT) * frameRate);
-  int targetSize = std::to_string(framesCount).size();
+      int(std::ceil((_scene->duration() + 10.0f + TIMER_INITIAL_SHIFT) * frameRate));
+  int targetSize = int(std::to_string(framesCount).size());
 
   // Start by clearing up the blur and particles buffers.
-  resize(_camera._screenSize[0], _camera._screenSize[1]);
+  resize(int(_camera._screenSize[0]), int(_camera._screenSize[1]));
 
   std::cout << "[EXPORT]: Will export " << framesCount << " frames to \""
             << outputDirPath << "\"." << std::endl;
@@ -586,7 +586,7 @@ void Renderer::renderFile(const std::string &outputDirPath,
     // stbi_write_png(outputFilePath.c_str(), _finalFramebuffer->_width,
     // _finalFramebuffer->_height, 0, data,  3*_finalFramebuffer->_width);
     // a
-    _timer += (1.0 / frameRate);
+    _timer += (1.0f / frameRate);
   }
   std::cout << std::endl;
   std::cout << "[EXPORT]: Done." << std::endl;
@@ -631,7 +631,7 @@ void Renderer::applyAllSettings() {
   glUseProgram(0);
 
   // Resize the framebuffers.
-  resize(_camera._screenSize[0], _camera._screenSize[1]);
+  resize(int(_camera._screenSize[0]), int(_camera._screenSize[1]));
 
   // All other parameters are directly used at render.
 }
@@ -668,10 +668,10 @@ void Renderer::keyPressed(int key, int action) {
   if (action == GLFW_PRESS) {
     if (key == GLFW_KEY_P) {
       _shouldPlay = !_shouldPlay;
-      _timerStart = glfwGetTime() - _timer;
+      _timerStart = float(glfwGetTime()) - _timer;
     } else if (key == GLFW_KEY_R) {
       _timer = -TIMER_INITIAL_SHIFT;
-      _timerStart = glfwGetTime() + (_shouldPlay ? TIMER_INITIAL_SHIFT : 0.0f);
+      _timerStart = float(glfwGetTime()) + (_shouldPlay ? TIMER_INITIAL_SHIFT : 0.0f);
     } else if (key == GLFW_KEY_I) {
       _showGUI = !_showGUI;
     } else if (key == GLFW_KEY_D) {

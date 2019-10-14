@@ -72,7 +72,7 @@ void Framebuffer::resize(int width, int height){
 }
 
 void Framebuffer::resize(glm::vec2 size){
-	resize(size[0],size[1]);
+	resize(int(size[0]),int(size[1]));
 }
 
 void Framebuffer::clean(){

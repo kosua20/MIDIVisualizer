@@ -115,11 +115,11 @@ MIDIFile::MIDIFile(const std::string & filePath){
 		}
 		
 		int forcedTempo = 500000;
-		int forcedSignature = 4.0/4.0;
+		int forcedSignature = int(4.0/4.0);
 
 		if(tid < _tracksCount){
 			forcedTempo = tracks[tid].getTempo();
-			forcedSignature = tracks[tid].getSignature();
+			forcedSignature = int(tracks[tid].getSignature());
 		} else {
 			//std::cout << "[Warning]: Track should contain a tempo. Using default fallback." << std::endl;
 		}	
@@ -175,8 +175,8 @@ void MIDIFile::getNotesActive(std::vector<ActiveNoteInfos> & actives, double tim
 		auto& note = tracks[track].notes[i];
 		if(note.start <= time && note.start+note.duration >= time){
 			actives[note.note].enabled = true;
-			actives[note.note].duration = note.duration;
-			actives[note.note].start = note.start;
+			actives[note.note].duration = float(note.duration);
+			actives[note.note].start = float(note.start);
 		}
 		
 	}

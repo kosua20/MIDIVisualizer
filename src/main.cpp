@@ -2,7 +2,7 @@
 #include <GLFW/glfw3.h> // to set up the OpenGL context and manage window lifecycle and inputs
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw_gl3.h>
-#include <nfd/nfd.h>
+#include <nfd.h>
 #include <stdio.h>
 #include <iostream>
 
@@ -168,7 +168,7 @@ int main( int argc, char** argv) {
 		ImGui_ImplGlfwGL3_NewFrame();
 		
 		// Update the content of the window.
-		renderer.draw(glfwGetTime());
+		renderer.draw(float(glfwGetTime()));
 		
 		// Interface rendering.
 		ImGui::Render();

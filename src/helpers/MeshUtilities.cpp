@@ -135,7 +135,7 @@ void loadObj(const std::string & filename, mesh_t & mesh, LoadMode mode){
 			}
 			
 			//Indices (simply a vector of increasing integers).
-			mesh.indices.push_back(i);
+			mesh.indices.push_back(int(i));
 		}
 
 	} else if (mode == Indexed){
@@ -210,7 +210,7 @@ void centerAndUnitMesh(mesh_t & mesh){
 		maxi = abs(mesh.positions[i].y) > maxi ? abs(mesh.positions[i].y) : maxi;
 		maxi = abs(mesh.positions[i].z) > maxi ? abs(mesh.positions[i].z) : maxi;
 	}
-	maxi = maxi == 0.0 ? 1.0 : maxi;
+	maxi = maxi == 0.0f ? 1.0f : maxi;
 	
 	// Scale the mesh.
 	for(int i = 0; i < mesh.positions.size(); i++){

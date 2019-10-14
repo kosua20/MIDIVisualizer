@@ -17,7 +17,7 @@ Background::Background(double secondsPerMeasure){
 	// Load additional data.
 	glUseProgram(_programId);
 	GLuint sigID = glGetUniformLocation(_programId, "secondsPerMeasure");
-	glUniform1f(sigID, secondsPerMeasure);
+	glUniform1f(sigID, float(secondsPerMeasure));
 	glUseProgram(0);
 	
 }
