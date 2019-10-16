@@ -36,6 +36,12 @@ include_directories(src/libs/)
 add_executable(Packager ${PackagerSources})
 
 
+# Target for packaging data in source files.
+add_custom_target(Packaging
+	COMMAND $<TARGET_FILE_DIR:Packager>/$<TARGET_FILE_NAME:Packager> ${PROJECT_SOURCE_DIR}
+    DEPENDS Packager)
+
+
 # MIDIVisualizer
 project(MIDIVisualizer)
 
@@ -114,3 +120,4 @@ include_directories(src/helpers/)
 
 add_executable(MIDIVisualizer ${LibSources} ${Sources} ${Shaders})
 target_link_libraries(MIDIVisualizer nfd glfw ${GLFW_LIBRARIES} ${OPENGL_gl_LIBRARY})
+add_dependencies(MIDIVisualizer Packaging)

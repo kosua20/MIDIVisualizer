@@ -7,15 +7,21 @@
 void printHelp(){
 	std::cout << "---- Infos ---- MIDIVisualizer Packager --------" << std::endl
 	<< "Generate header and source files for resources images and shaders." << std::endl
-	<< "Usage: run it from the root directory of the project." << std::endl
+	<< "Usage: packager path/to/repo/root/dir/" << std::endl
 	<< "--------------------------------------------" << std::endl;
 
 }
 
 int main( int argc, char** argv) {
 	
-	const std::string resourcesDir = "resources/";
-	const std::string outputDir = "src/resources/";
+	if (argc < 2) {
+		printHelp();
+		return 0;
+	}
+	const std::string baseDir(argv[1]);
+
+	const std::string resourcesDir = baseDir + "/resources/";
+	const std::string outputDir = baseDir + "/src/resources/";
 	
 	std::vector<std::string> imagesToLoad = { "flash", "font", "particles"};
 	std::vector<std::string> shadersToLoad = { "background", "flashes", "notes", "particles", "particlesblur", "screenquad"};
