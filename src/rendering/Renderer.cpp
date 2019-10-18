@@ -685,8 +685,8 @@ void Renderer::keyPressed(int key, int action) {
   }
 }
 
-
 void Renderer::reset() {
 	_timer = -_state.prerollTime;
 	_timerStart = float(glfwGetTime()) + (_shouldPlay ? _state.prerollTime : 0.0f);
+	_scene->resetParticles();
 }

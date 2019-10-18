@@ -13,6 +13,8 @@
 
 #include "State.h"
 
+#define DEBUG_SPEED (1.0f)
+
 class Renderer {
 
 public:

@@ -221,6 +221,13 @@ void MIDIScene::updatesActiveNotes(double time){
 	_previousTime = time;
 }
 
+void MIDIScene::resetParticles() {
+	for (auto & particle : _particles) {
+		particle.note = -1;
+		particle.duration = particle.start = particle.elapsed = 0.0f;
+	}
+}
+
 void MIDIScene::drawParticles(const float time, const glm::vec2 & invScreenSize, const glm::vec3 & particlesColor, const float particlesScale, const std::vector<GLuint> &lookTextures, const int particlesCount, bool prepass){
 
 	// Need alpha blending.

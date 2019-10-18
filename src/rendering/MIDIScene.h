@@ -37,6 +37,8 @@ public:
 	
 	double duration(){ return _duration; };
 	
+	void resetParticles();
+
 private:
 	
 	GLuint _programId;
