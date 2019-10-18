@@ -14,8 +14,6 @@
 
 #include <lodepng/lodepng.h>
 
-#define TIMER_INITIAL_SHIFT (1.0f)
-
 Renderer::Renderer() {}
 
 Renderer::~Renderer() {}
@@ -74,7 +72,7 @@ void Renderer::setColorAndScale(const glm::vec3 &baseColor, const float scale) {
 
 void Renderer::loadFile(const std::string &midiFilePath) {
   // Player.
-  _timer = -TIMER_INITIAL_SHIFT;
+  _timer = -_state.prerollTime;
   _shouldPlay = false;
 
   // Init objects.
@@ -213,8 +211,7 @@ void Renderer::drawGUI(const float currentTime) {
     }
     ImGui::SameLine();
     if (ImGui::Button("Restart (r)")) {
-      _timer = -TIMER_INITIAL_SHIFT;
-      _timerStart = currentTime + (_shouldPlay ? TIMER_INITIAL_SHIFT : 0.0f);
+		reset();
     }
 
     ImGui::SameLine();
@@ -247,6 +244,13 @@ void Renderer::drawGUI(const float currentTime) {
         loadFile(std::string(outPath));
       }
     }
+
+	ImGui::PushItemWidth(100);
+	ImGui::SameLine(160);
+	if (ImGui::InputFloat("Preroll", &_state.prerollTime, 0.1f, 1.0f)) {
+		reset();
+	}
+	ImGui::PopItemWidth();
 
     ImGui::PushItemWidth(80);
     if (ImGui::Combo("Quality", (int *)(&_state.quality),
@@ -522,7 +526,7 @@ void Renderer::renderFile(const std::string &outputDirPath,
                           const float frameRate) {
   _showGUI = false;
   // Reset.
-  _timer = -TIMER_INITIAL_SHIFT;
+  _timer = -_state.prerollTime;
   _timerStart = 0;
   // Start playing.
   _shouldPlay = true;
@@ -531,7 +535,7 @@ void Renderer::renderFile(const std::string &outputDirPath,
       new GLubyte[_finalFramebuffer->_width * _finalFramebuffer->_height * 3];
   // Generate and save frames.
   int framesCount =
-      int(std::ceil((_scene->duration() + 10.0f + TIMER_INITIAL_SHIFT) * frameRate));
+      int(std::ceil((_scene->duration() + 10.0f + _state.prerollTime) * frameRate));
   int targetSize = int(std::to_string(framesCount).size());
 
   // Start by clearing up the blur and particles buffers.
@@ -593,7 +597,7 @@ void Renderer::renderFile(const std::string &outputDirPath,
 
   _showGUI = true;
   _shouldPlay = false;
-  _timer = -TIMER_INITIAL_SHIFT;
+  _timer = -_state.prerollTime;
   _exportPath = "";
 }
 
@@ -633,6 +637,8 @@ void Renderer::applyAllSettings() {
   // Resize the framebuffers.
   resize(int(_camera._screenSize[0]), int(_camera._screenSize[1]));
 
+  // Finally, restore the track at the beginning.
+  reset();
   // All other parameters are directly used at render.
 }
 
@@ -670,12 +676,17 @@ void Renderer::keyPressed(int key, int action) {
       _shouldPlay = !_shouldPlay;
       _timerStart = float(glfwGetTime()) - _timer;
     } else if (key == GLFW_KEY_R) {
-      _timer = -TIMER_INITIAL_SHIFT;
-      _timerStart = float(glfwGetTime()) + (_shouldPlay ? TIMER_INITIAL_SHIFT : 0.0f);
+		reset();
     } else if (key == GLFW_KEY_I) {
       _showGUI = !_showGUI;
     } else if (key == GLFW_KEY_D) {
       _showDebug = !_showDebug;
     }
   }
+}
+
+
+void Renderer::reset() {
+	_timer = -_state.prerollTime;
+	_timerStart = float(glfwGetTime()) + (_shouldPlay ? _state.prerollTime : 0.0f);
 }

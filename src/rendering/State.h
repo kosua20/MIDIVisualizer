@@ -8,7 +8,7 @@
 
 
 #define MIDIVIZ_VERSION_MAJOR 3
-#define MIDIVIZ_VERSION_MINOR 4
+#define MIDIVIZ_VERSION_MINOR 5
 
 
 	
@@ -69,6 +69,7 @@ public:
 	float scale;
 	float attenuation;
 	float flashSize;
+	float prerollTime;
 	bool showParticles;
 	bool showFlashes;
 	bool showBlur;

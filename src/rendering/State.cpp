@@ -72,6 +72,7 @@ void State::save(const std::string & path){
 	configFile << minorColor[0] << " " << minorColor[1] << " " << minorColor[2] << std::endl;
 	configFile << flashColor[0] << " " << flashColor[1] << " " << flashColor[2] << std::endl;
 	configFile << flashSize << std::endl;
+	configFile << prerollTime << std::endl;
 	configFile.close();
 }
 
@@ -146,6 +147,11 @@ void State::load(const std::string & path){
 		configFile >> flashColor[0] >> flashColor[1] >> flashColor[2] ;
 		configFile >> flashSize;
 	}
+
+	// MIDIVIZ_VERSION_MAJOR == 3, MIDIVIZ_VERSION_MINOR == 5
+	if (majVersion >= 3 && minVersion >= 5) {
+		configFile >> prerollTime;
+	}
 	
 	configFile.close();
 }
@@ -185,5 +191,5 @@ void State::reset(){
 	particles.texs = std::vector<GLuint>(PARTICLES_TEXTURE_COUNT, blankID);
 	
 	quality = Quality::MEDIUM;
-	
+	prerollTime = 1.0f;
 }

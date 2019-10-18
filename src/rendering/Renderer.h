@@ -49,6 +49,8 @@ private:
 	
 	void renderFile(const std::string & outputDirPath, const float frameRate);
 	
+	void reset();
+
 	State _state;
 	int _exportFramerate;
 	float _timer;
