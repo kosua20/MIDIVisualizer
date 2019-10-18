@@ -50,6 +50,8 @@ void main(){
 	particleUV = (particleUV+0.5)*vec2(1.0,-1.0)*inverseTextureSize;
 	// Avoid wrapping.
 	particleUV.x = clamp(particleUV.x,0.0,1.0);
+	// We want to skip reading from the very beginning of the trajectories because they are identical.
+	// particleUV.x = 0.95 * particleUV.x + 0.05;
 	// Read corresponding trajectory to get particle current position.
 	vec3 position = texture(textureParticles, particleUV).xyz;
 	// Center position (from [0,1] to [-0.5,0.5] on x axis.
@@ -63,10 +65,10 @@ void main(){
 	// Scale shift with time (expansion effect).
 	shift = shift*time*expansionFactor;
 	// and with altitude of the particle (ditto).
-	shift.x *= pow(shift.y,0.3);
+	shift.x *= max(0.5, pow(shift.y,0.3));
 	
 	// Combine global shift (due to note id) and local shift (based on read position).
-	vec2 globalShift = vec2(-1.0 + (shifts[globalId] * 2.0 + 1.0) / notesCount,-0.58);
+	vec2 globalShift = vec2(-1.0 + (shifts[globalId] * 2.0 + 1.0) / notesCount,-0.52);
 	vec2 localShift = 0.003 * scale * v + shift * duration * vec2(1.0,0.5);
 	vec2 screenScaling = vec2(1.0,inverseScreenSize.y/inverseScreenSize.x);
 	vec2 finalPos = globalShift + screenScaling * localShift;
