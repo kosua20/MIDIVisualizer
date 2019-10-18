@@ -674,7 +674,7 @@ void Renderer::keyPressed(int key, int action) {
   if (action == GLFW_PRESS) {
     if (key == GLFW_KEY_P) {
       _shouldPlay = !_shouldPlay;
-      _timerStart = float(glfwGetTime()) - _timer;
+      _timerStart = DEBUG_SPEED*float(glfwGetTime()) - _timer;
     } else if (key == GLFW_KEY_R) {
 		reset();
     } else if (key == GLFW_KEY_I) {
@@ -687,6 +687,6 @@ void Renderer::keyPressed(int key, int action) {
 
 void Renderer::reset() {
 	_timer = -_state.prerollTime;
-	_timerStart = float(glfwGetTime()) + (_shouldPlay ? _state.prerollTime : 0.0f);
+	_timerStart = DEBUG_SPEED*float(glfwGetTime()) + (_shouldPlay ? _state.prerollTime : 0.0f);
 	_scene->resetParticles();
 }

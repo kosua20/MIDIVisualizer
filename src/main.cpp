@@ -168,7 +168,7 @@ int main( int argc, char** argv) {
 		ImGui_ImplGlfwGL3_NewFrame();
 		
 		// Update the content of the window.
-		renderer.draw(float(glfwGetTime()));
+		renderer.draw(DEBUG_SPEED*float(glfwGetTime()));
 		
 		// Interface rendering.
 		ImGui::Render();
