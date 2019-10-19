@@ -2,6 +2,7 @@
 #define ProgramUtilities_h
 
 #include <gl3w/gl3w.h>
+#include <glm/glm.hpp>
 #include <string>
 #include <vector>
 
@@ -34,6 +35,10 @@ GLuint loadTexture(const std::string& path, bool sRGB);
 //GLuint loadTexture(const std::string& path, const GLuint program, const GLuint textureSlot, const std::string& uniformName, bool sRGB = false);
 
 GLuint loadTexture( unsigned char* image, unsigned imwidth, unsigned imheight, unsigned int channels, bool sRGB);
+
+GLuint loadTextureArray(const std::vector<std::string>& paths, bool sRGB, int & layers);
+
+GLuint loadTextureArray(const std::vector<unsigned char*>& images, const std::vector<glm::ivec2> & sizes, unsigned int channels, bool sRGB);
 
 // Cubemap texture.
 //GLuint loadTextureCubeMap(const std::string& pathBase, bool sRGB);
