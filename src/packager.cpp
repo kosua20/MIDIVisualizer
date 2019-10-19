@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <algorithm>
 #include <lodepng/lodepng.h>
 
 void printHelp(){
@@ -10,6 +11,19 @@ void printHelp(){
 	<< "Usage: packager path/to/repo/root/dir/" << std::endl
 	<< "--------------------------------------------" << std::endl;
 
+}
+
+void flipImage(std::vector<unsigned char> & image, const int width, const int height) {
+	// Compute the number of components per pixel.
+	int components = int(image.size()) / (width * height);
+	// The width in bytes.
+	int widthInBytes = width * components;
+	int halfHeight = height / 2;
+
+	// For each line of the first half, we swap it with the mirroring line, starting from the end of the image.
+	for (int h = 0; h < halfHeight; h++) {
+		std::swap_ranges(image.begin() + h * widthInBytes, image.begin() + (h + 1) * widthInBytes, image.begin() + (height - h - 1) * widthInBytes);
+	}
 }
 
 int main( int argc, char** argv) {
@@ -54,7 +68,8 @@ int main( int argc, char** argv) {
 			std::cerr << "Unable to load the image at path " << imagePath << "." << std::endl;
 			continue;
 		}
-		
+		flipImage(image, imwidth, imheight);
+
 		// Definition in the header.
 		headerFile << "extern  unsigned char " << imageName << "_image[" << (imwidth*imheight*4) << "];" << std::endl;
 		

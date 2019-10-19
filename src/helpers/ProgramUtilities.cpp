@@ -5,6 +5,7 @@
 #include <sstream>
 #include <vector>
 #include <algorithm>
+#include <glm/glm.hpp>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image/stb_image.h>
 
@@ -173,48 +174,17 @@ GLuint createGLProgramFromStrings(const std::string & vertexContent, const std::
 	return id;
 }
 
-void flipImage(std::vector<unsigned char> & image, const int width, const int height){
-	// Compute the number of components per pixel.
-	int components = int(image.size()) / (width * height);
-	// The width in bytes.
-	int widthInBytes = width * components;
-	int halfHeight = height/2;
-
-	// For each line of the first half, we swap it with the mirroring line, starting from the end of the image.
-	for(int h=0; h < halfHeight; h++){
-		std::swap_ranges(image.begin() + h * widthInBytes, image.begin() + (h+1) * widthInBytes , image.begin() + (height - h - 1) * widthInBytes);
-	}
-}
-
-void flipImage(unsigned char* & image, const int width, const int height) {
-	// Compute the number of components per pixel.
-	int components = 4;// image.size() / (width * height);
-	// The width in bytes.
-	int widthInBytes = width * components;
-	int halfHeight = height / 2;
-
-	// For each line of the first half, we swap it with the mirroring line, starting from the end of the image.
-	for (int h = 0; h < halfHeight; h++) {
-		std::swap_ranges(image + h * widthInBytes, image + (h + 1) * widthInBytes, image + (height - h - 1) * widthInBytes);
-	}
-}
-
-
 GLuint loadTexture(const std::string& path, bool sRGB){
 
-	
-	
 	// Load and upload the texture.
 	int imwidth, imheight, nChans;
-	
+	stbi_set_flip_vertically_on_load(true);
 	unsigned char * image = stbi_load(path.c_str(), &imwidth, &imheight, &nChans, 4);
-	
-	//unsigned error = lodepng::decode(image, imwidth, imheight, path);
 	if(image == NULL){
 		std::cerr << "Unable to load the texture at path " << path << "." << std::endl;
 		return 0;
 	}
-
+	stbi_set_flip_vertically_on_load(false);
 	GLuint textureId = loadTexture(image, imwidth, imheight, sRGB);
 	stbi_image_free(image);
 	return textureId;
@@ -222,7 +192,6 @@ GLuint loadTexture(const std::string& path, bool sRGB){
 
 GLuint loadTexture( unsigned char* image, unsigned imwidth, unsigned imheight, bool sRGB){
 	
-	flipImage(image,imwidth, imheight);
 	GLuint textureId;
 	glGenTextures(1, &textureId);
 	glBindTexture(GL_TEXTURE_2D, textureId);
