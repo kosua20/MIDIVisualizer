@@ -50,28 +50,28 @@ void ResourcesManager::loadResources(){
 		unsigned int imwidth;
 		unsigned int imheight;
 		auto fontTexture = ResourcesManager::getDataForImage("font", imwidth, imheight);
-		textureLibrary["font"] = loadTexture(fontTexture, imwidth, imheight, false);
+		textureLibrary["font"] = loadTexture(fontTexture, imwidth, imheight, 4, false);
 	}
 	
 	{
 		unsigned int imwidth;
 		unsigned int imheight;
 		auto flashTexture = ResourcesManager::getDataForImage("flash", imwidth, imheight);
-		textureLibrary["flash"] = loadTexture(flashTexture, imwidth, imheight, false);
+		textureLibrary["flash"] = loadTexture(flashTexture, imwidth, imheight, 4, false);
 	}
 	
 	{
 		unsigned int imwidth1;
 		unsigned int imheight1;
 		auto particlesTexture = ResourcesManager::getDataForImage("particles", imwidth1, imheight1);
-		textureLibrary["particles"] = loadTexture(particlesTexture, imwidth1, imheight1, false);
+		textureLibrary["particles"] = loadTexture(particlesTexture, imwidth1, imheight1, 4, false);
 	}
 	
 	{
 		unsigned int imwidth1 = 4;
 		unsigned int imheight1 = 4;
 		unsigned char blankTexture[] = { 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255};
-		textureLibrary["blank"] = loadTexture(blankTexture, imwidth1, imheight1, false);
+		textureLibrary["blank"] = loadTexture(blankTexture, imwidth1, imheight1, 4, false);
 	}
 }
 

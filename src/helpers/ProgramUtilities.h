@@ -25,11 +25,6 @@ GLuint createGLProgram(const std::string & vertexPath, const std::string & fragm
 
 GLuint createGLProgramFromStrings(const std::string & vertexContent, const std::string & fragmentContent, const std::string & geometryContent = "");
 
-/// Flip an image vertically (line by line).
-void flipImage(std::vector<unsigned char> & image, const int width, const int height);
-
-void flipImage(unsigned char* & image, const int width, const int height);
-
 // Texture loading.
 
 // 2D texture.
@@ -38,7 +33,7 @@ GLuint loadTexture(const std::string& path, bool sRGB);
 
 //GLuint loadTexture(const std::string& path, const GLuint program, const GLuint textureSlot, const std::string& uniformName, bool sRGB = false);
 
-GLuint loadTexture( unsigned char* image, unsigned imwidth, unsigned imheight, bool sRGB);
+GLuint loadTexture( unsigned char* image, unsigned imwidth, unsigned imheight, unsigned int channels, bool sRGB);
 
 // Cubemap texture.
 //GLuint loadTextureCubeMap(const std::string& pathBase, bool sRGB);
