@@ -73,6 +73,13 @@ void ResourcesManager::loadResources(){
 		unsigned char blankTexture[] = { 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255};
 		textureLibrary["blank"] = loadTexture(blankTexture, imwidth1, imheight1, 4, false);
 	}
+
+	{
+		unsigned int imwidth1 = 4;
+		unsigned int imheight1 = 4;
+		unsigned char blankTexture[] = { 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 };
+		textureLibrary["blankarray"] = loadTextureArray({ blankTexture }, { glm::ivec2(imwidth1, imheight1) }, 1, false);
+	}
 }
 
 GLuint ResourcesManager::getTextureFor(const std::string & fileName){
