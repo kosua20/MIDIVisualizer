@@ -187,8 +187,9 @@ void State::reset(){
 	particles.scale = 1.0f;
 	particles.count = 256;
 	
-	const GLuint blankID = ResourcesManager::getTextureFor("blank");
-	particles.texs = std::vector<GLuint>(PARTICLES_TEXTURE_COUNT, blankID);
+	const GLuint blankID = ResourcesManager::getTextureFor("blankarray");
+	particles.tex = blankID;
+	particles.texCount = 1;
 	
 	quality = Quality::MEDIUM;
 	prerollTime = 1.0f;

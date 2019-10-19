@@ -53,9 +53,10 @@ public:
 	
 	struct ParticlesState {
 		glm::vec3 color ;
-		std::vector<GLuint> texs;
+		GLuint tex;
+		int texCount;
 		float speed;
-		float expansion ;
+		float expansion;
 		float scale;
 		int count;
 	};
