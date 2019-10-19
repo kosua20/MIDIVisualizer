@@ -5,7 +5,6 @@
 #include "../midi/MIDIFile.h"
 
 
-#define PARTICLES_TEXTURE_COUNT 4
 
 class MIDIScene {
 
@@ -24,7 +23,7 @@ public:
 	
 	void drawFlashes(float time, glm::vec2 invScreenSize, const glm::vec3 & baseColor, float userScale);
 	
-	void drawParticles(const float time, const glm::vec2 & invScreenSize, const glm::vec3 & particlesColor, const float particlesScale, const std::vector<GLuint> &lookTextures, const int particlesCount, bool prepass);
+	void drawParticles(const float time, const glm::vec2 & invScreenSize, const glm::vec3 & particlesColor, const float particlesScale, const GLuint lookTexture, const int texCount, const int particlesCount, bool prepass);
 	
 	/// Clean function
 	void clean();

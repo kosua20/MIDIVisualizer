@@ -10,6 +10,7 @@ uniform sampler2D textureParticles;
 uniform vec2 inverseTextureSize;
 uniform int globalId;
 uniform float duration;
+uniform int texCount;
 
 uniform float expansionFactor = 1.0;
 uniform float speedScaling = 0.2;
@@ -31,7 +32,7 @@ float rand(vec2 co){
 
 
 void main(){
-	Out.id = float(gl_InstanceID % 4);
+	Out.id = float(gl_InstanceID % texCount);
 	Out.uv = v + 0.5;
 	// Fade color based on time.
 	Out.color = vec4(baseColor, 1.0-time*time);
