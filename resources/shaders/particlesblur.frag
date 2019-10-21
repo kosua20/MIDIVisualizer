@@ -6,28 +6,27 @@ in INTERFACE {
 
 uniform sampler2D screenTexture;
 uniform vec2 inverseScreenSize;
-uniform vec3 backgroundColor = vec3(0.0, 0.0, 0.0);
 uniform float attenuationFactor = 0.99;
 
-out vec3 fragColor;
+out vec4 fragColor;
 
 
 void main(){
 	
 	// We have to unroll the box blur loop manually.
 	// 5x5 blur, using a sparse sample grid.
-	vec3 color = texture(screenTexture, In.uv).rgb;
+	vec4 color = texture(screenTexture, In.uv);
 	
-	color += textureOffset(screenTexture, In.uv, 2*ivec2(-2,-2)).rgb;
-	color += textureOffset(screenTexture, In.uv, 2*ivec2(-2,2)).rgb;
-	color += textureOffset(screenTexture, In.uv, 2*ivec2(-1,0)).rgb;
-	color += textureOffset(screenTexture, In.uv, 2*ivec2(0,-1)).rgb;
-	color += textureOffset(screenTexture, In.uv, 2*ivec2(0,1)).rgb;
-	color += textureOffset(screenTexture, In.uv, 2*ivec2(1,0)).rgb;
-	color += textureOffset(screenTexture, In.uv, 2*ivec2(2,-2)).rgb;
-	color += textureOffset(screenTexture, In.uv, 2*ivec2(2,2)).rgb;
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(-2,-2));
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(-2, 2));
+	color += textureOffset(screenTexture, In.uv, 2*ivec2(-1, 0));
+	color += textureOffset(screenTexture, In.uv, 2*ivec2( 0,-1));
+	color += textureOffset(screenTexture, In.uv, 2*ivec2( 0, 1));
+	color += textureOffset(screenTexture, In.uv, 2*ivec2( 1, 0));
+	color += textureOffset(screenTexture, In.uv, 2*ivec2( 2,-2));
+	color += textureOffset(screenTexture, In.uv, 2*ivec2( 2, 2));
 	
 	// Include decay for fade out.
-	fragColor = mix(backgroundColor, color/9.0, attenuationFactor);
+	fragColor = mix(vec4(0.0), color/9.0, attenuationFactor);
 	
 }

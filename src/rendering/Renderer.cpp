@@ -30,8 +30,9 @@ void Renderer::init(int width, int height) {
 	glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CCW);
 	glCullFace(GL_BACK);
-	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH_TEST); 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendEquation(GL_FUNC_ADD);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -141,7 +142,13 @@ void Renderer::draw(const float currentTime) {
 	glViewport(0, 0, _finalFramebuffer->_width, _finalFramebuffer->_height);
 	
 	// Final pass (directly on screen).
+	// Background color.
+	glClearColor(_state.background.color[0], _state.background.color[1], _state.background.color[2], 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
+
+	// Background texture.
+	// TODO
+
 	// Draw the blurred particles.
 	if (_state.showBlur) {
 		drawBlur(invSizeFb);
@@ -207,7 +214,9 @@ void Renderer::blurPrepass() {
 }
 
 void Renderer::drawBlur(const glm::vec2 & invSize ) {
+	glEnable(GL_BLEND);
 	_blurryScreen.draw(_timer);
+	glDisable(GL_BLEND);
 }
 
 void Renderer::drawParticles(const glm::vec2 & invSize) {
@@ -341,22 +350,8 @@ void Renderer::drawGUI(const float currentTime) {
 
 		if (ImGui::CollapsingHeader("Background##HEADER",
 			ImGuiTreeNodeFlags_DefaultOpen)) {
-			if (ImGui::ColorEdit3("Color##Background", &_state.background.color[0],
-				ImGuiColorEditFlags_NoInputs)) {
-				glClearColor(_state.background.color[0], _state.background.color[1],
-					_state.background.color[2], 1.0f);
-				_particlesFramebuffer->bind();
-				glClear(GL_COLOR_BUFFER_BIT);
-				_particlesFramebuffer->unbind();
-				_blurFramebuffer->bind();
-				glClear(GL_COLOR_BUFFER_BIT);
-				_blurFramebuffer->unbind();
-				glUseProgram(_blurringScreen.programId());
-				GLuint id1 = glGetUniformLocation(_blurringScreen.programId(),
-					"backgroundColor");
-				glUniform3fv(id1, 1, &_state.background.color[0]);
-				glUseProgram(0);
-			}
+			ImGui::ColorEdit3("Color##Background", &_state.background.color[0],
+				ImGuiColorEditFlags_NoInputs);
 			ImGui::SameLine(80);
 			bool cbg0 = ImGui::ColorEdit3("Lines##Background",
 				&_state.background.linesColor[0],
@@ -640,9 +635,8 @@ void Renderer::applyAllSettings() {
 		_state.background.textColor,
 		_state.background.keysColor);
 
-	// Background color.
-	glClearColor(_state.background.color[0], _state.background.color[1],
-		_state.background.color[2], 1.0f);
+	// Reset buffers.
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	_particlesFramebuffer->bind();
 	glClear(GL_COLOR_BUFFER_BIT);
 	_particlesFramebuffer->unbind();
@@ -650,9 +644,6 @@ void Renderer::applyAllSettings() {
 	glClear(GL_COLOR_BUFFER_BIT);
 	_blurFramebuffer->unbind();
 	glUseProgram(_blurringScreen.programId());
-	GLuint id1 =
-		glGetUniformLocation(_blurringScreen.programId(), "backgroundColor");
-	glUniform3fv(id1, 1, &_state.background.color[0]);
 	GLuint id2 =
 		glGetUniformLocation(_blurringScreen.programId(), "attenuationFactor");
 	glUniform1f(id2, _state.attenuation);

@@ -7,11 +7,11 @@ in INTERFACE {
 uniform sampler2D screenTexture;
 uniform vec2 inverseScreenSize;
 
-out vec3 fragColor;
+out vec4 fragColor;
 
 
 void main(){
 	
-	fragColor = texture(screenTexture,In.uv).rgb;
+	fragColor = texture(screenTexture,In.uv);
 	
 }
