@@ -45,6 +45,20 @@ public:
 
 private:
 	
+	void blurPrepass();
+
+	void drawBlur(const glm::vec2 & invSize);
+
+	void drawParticles(const glm::vec2 & invSize);
+
+	void drawBackground(const glm::vec2 & invSize);
+
+	void drawKeyboard(const glm::vec2 & invSize);
+
+	void drawNotes(const glm::vec2 & invSize);
+
+	void drawFlashes(const glm::vec2 & invSize);
+
 	void drawGUI(const float currentTime);
 	
 	void applyAllSettings();

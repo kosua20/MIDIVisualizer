@@ -128,78 +128,108 @@ void Renderer::draw(const float currentTime) {
 	// Update active notes listing (for particles).
 	_scene->updatesActiveNotes(_timer);
 
-	const glm::vec2 invSize = 1.0f / _camera._screenSize;
-
-	if (_state.showBlur) {
-		const glm::vec2 invSizeB = 1.0f / glm::vec2(_particlesFramebuffer->_width,
-			_particlesFramebuffer->_height);
-		// Bind particles buffer.
-		_particlesFramebuffer->bind();
-		// Set viewport.
-		glViewport(0, 0, _particlesFramebuffer->_width,
-			_particlesFramebuffer->_height);
-		// glClear(GL_COLOR_BUFFER_BIT);
-		// Draw blurred particles from previous frames.
-		_blurryScreen.draw(_timer, invSizeB);
-		if (_state.showParticles) {
-			// Draw the new particles.
-			_scene->drawParticles(_timer, invSizeB, _state.particles.color,
-				_state.particles.scale, _state.particles.tex, _state.particles.texCount,
-				_state.particles.count, true);
-		}
-		if (_state.showBlurNotes) {
-			// Draw the notes.
-			_scene->draw(_timer, invSizeB, _state.baseColor, _state.minorColor, true);
-		}
-
-		_particlesFramebuffer->unbind();
-
-		// Bind blur framebuffer.
-		_blurFramebuffer->bind();
-		glViewport(0, 0, _blurFramebuffer->_width, _blurFramebuffer->_height);
-		// Perform box blur on result from particles pass.
-		_blurringScreen.draw(_timer, invSize);
-		_blurFramebuffer->unbind();
-	}
-
 	const glm::vec2 invSizeFb = glm::vec2(1.0f / _finalFramebuffer->_width,
 		1.0f / _finalFramebuffer->_height);
 
+	// Blur rendering.
+	if (_state.showBlur) {
+		blurPrepass();
+	}
+	
 	// Set viewport
 	_finalFramebuffer->bind();
 	glViewport(0, 0, _finalFramebuffer->_width, _finalFramebuffer->_height);
-
+	
 	// Final pass (directly on screen).
 	glClear(GL_COLOR_BUFFER_BIT);
 	// Draw the blurred particles.
 	if (_state.showBlur) {
-		_blurryScreen.draw(_timer, invSize);
+		drawBlur(invSizeFb);
 	}
 	// Draw the particles.
 	if (_state.showParticles) {
-		_scene->drawParticles(_timer, invSize, _state.particles.color,
-			_state.particles.scale, _state.particles.tex, _state.particles.texCount,
-			_state.particles.count, false);
+		drawParticles(invSizeFb);
 	}
 	// Draw the keys, grid, and measure numbers.
-	_background->draw(_timer, invSizeFb);
+	drawBackground(invSizeFb);
+
+	if (_state.background.keys) {
+		drawKeyboard(invSizeFb);
+	}
 	// Draw the notes.
 	if (_state.showNotes) {
-		_scene->draw(_timer, invSizeFb, _state.baseColor, _state.minorColor, false);
+		drawNotes(invSizeFb);
 	}
 
 	if (_state.showFlashes) {
 		// Draw the flashes.
-		_scene->drawFlashes(_timer, invSize, _state.flashColor, _state.flashSize);
+		drawFlashes(invSizeFb);
 	}
 	_finalFramebuffer->unbind();
 
 	glViewport(0, 0, GLsizei(_camera._screenSize[0]), GLsizei(_camera._screenSize[1]));
-	_finalScreen.draw(_timer, invSize);
+	_finalScreen.draw(_timer, {});
 
 	if (_showGUI) {
 		drawGUI(currentTime);
 	}
+}
+
+void Renderer::blurPrepass() {
+	const glm::vec2 invSizeB = 1.0f / glm::vec2(_particlesFramebuffer->_width, _particlesFramebuffer->_height);
+	// Bind particles buffer.
+	_particlesFramebuffer->bind();
+	// Set viewport.
+	glViewport(0, 0, _particlesFramebuffer->_width,
+		_particlesFramebuffer->_height);
+	// Draw blurred particles from previous frames.
+	_blurryScreen.draw(_timer);
+	if (_state.showParticles) {
+		// Draw the new particles.
+		_scene->drawParticles(_timer, invSizeB, _state.particles.color,
+			_state.particles.scale, _state.particles.tex, _state.particles.texCount,
+			_state.particles.count, true);
+	}
+	if (_state.showBlurNotes) {
+		// Draw the notes.
+		_scene->draw(_timer, invSizeB, _state.baseColor, _state.minorColor, true);
+	}
+
+	_particlesFramebuffer->unbind();
+
+	// Bind blur framebuffer.
+	_blurFramebuffer->bind();
+	glViewport(0, 0, _blurFramebuffer->_width, _blurFramebuffer->_height);
+	// Perform box blur on result from particles pass.
+	_blurringScreen.draw(_timer);
+	_blurFramebuffer->unbind();
+
+}
+
+void Renderer::drawBlur(const glm::vec2 & invSize ) {
+	_blurryScreen.draw(_timer);
+}
+
+void Renderer::drawParticles(const glm::vec2 & invSize) {
+	_scene->drawParticles(_timer, invSize, _state.particles.color,
+		_state.particles.scale, _state.particles.tex, _state.particles.texCount,
+		_state.particles.count, false);
+}
+
+void Renderer::drawBackground(const glm::vec2 & invSize) {
+	_background->draw(_timer, invSize);
+}
+
+void Renderer::drawKeyboard(const glm::vec2 & invSize) {
+	_scene->drawKeyboard(_timer, invSize, _state.background.keysColor);
+}
+
+void Renderer::drawNotes(const glm::vec2 & invSize) {
+	_scene->draw(_timer, invSize, _state.baseColor, _state.minorColor, false);
+}
+
+void Renderer::drawFlashes(const glm::vec2 & invSize) {
+	_scene->drawFlashes(_timer, invSize, _state.flashColor, _state.flashSize);
 }
 
 void Renderer::drawGUI(const float currentTime) {
@@ -355,7 +385,7 @@ void Renderer::drawGUI(const float currentTime) {
 			if (m1 || m2 || m3 || m4) {
 				_background->setDisplay(
 					_state.background.digits, _state.background.hLines,
-					_state.background.vLines, _state.background.keys);
+					_state.background.vLines);
 			}
 
 			if (cbg0 || cbg1 || cbg2) {
@@ -605,7 +635,7 @@ void Renderer::applyAllSettings() {
 	_scene->setParticlesParameters(_state.particles.speed,
 		_state.particles.expansion);
 	_background->setDisplay(_state.background.digits, _state.background.hLines,
-		_state.background.vLines, _state.background.keys);
+		_state.background.vLines);
 	_background->setColors(_state.background.linesColor,
 		_state.background.textColor,
 		_state.background.keysColor);
