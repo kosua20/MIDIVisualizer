@@ -47,12 +47,12 @@ int main( int argc, char** argv) {
 		return 1;
 	}
 	
-	headerFile << "#ifndef DATA_RESOURCES_H" << std::endl
-			   << "#define DATA_RESOURCES_H" << std::endl << std::endl
-			   << "#include <string>" << std::endl
-			   << "#include <map>" << std::endl
-			   << "#include <vector>" << std::endl << std::endl
-			   << "extern const std::map<std::string, std::string> shaders;" << std::endl << std::endl;
+	headerFile << "#ifndef DATA_RESOURCES_H" << "\n"
+			   << "#define DATA_RESOURCES_H" << "\n" << "\n"
+			   << "#include <string>" << "\n"
+			   << "#include <map>" << "\n"
+			   << "#include <vector>" << "\n" << "\n"
+			   << "extern const std::map<std::string, std::string> shaders;" << "\n" << "\n";
 	
 	
 	// Each image has its own cpp + a line in the header file.
@@ -71,17 +71,17 @@ int main( int argc, char** argv) {
 		flipImage(image, imwidth, imheight);
 
 		// Definition in the header.
-		headerFile << "extern  unsigned char " << imageName << "_image[" << (imwidth*imheight*4) << "];" << std::endl;
+		headerFile << "extern  unsigned char " << imageName << "_image[" << (imwidth*imheight*4) << "];" << "\n";
 		
 		// Write the values in the cpp file
 		std::ofstream outputFile(outputPath);
 		if(outputFile.is_open()){
-			outputFile << "#include \"data.h\"" << std::endl;
+			outputFile << "#include \"data.h\"" << "\n";
 			outputFile << "unsigned char " << imageName << "_image[] = { ";
 			for(size_t pid = 0; pid < image.size(); ++pid){
 				outputFile << (pid == 0 ? "" : ", ") << int(image[pid]);
 			}
-			outputFile << "};" << std::endl;
+			outputFile << "};" << "\n";
 			outputFile.close();
 		} else {
 			std::cerr << "Unable to open handle to source file for " << imageName << "." << std::endl;
@@ -97,7 +97,7 @@ int main( int argc, char** argv) {
 		std::cerr << "Unable to open handle to shaders output file." << std::endl;
 		return 1;
 	}
-	shadersOutput << "#include \"data.h\"" << std::endl
+	shadersOutput << "#include \"data.h\"" << "\n"
 				<< "const std::map<std::string, std::string> shaders = {\n";
 	
 	for(size_t sid = 0; sid < shadersToLoad.size(); ++sid){
@@ -119,7 +119,7 @@ int main( int argc, char** argv) {
 			}
 			shadersOutput << buffLine << "\\n ";
 		}
-		shadersOutput << "\"}, " << std::endl;
+		shadersOutput << "\"}, " << "\n";
 		
 		// Fragment shader content.
 		shadersOutput << "{ \"" << shaderName << "_" << "frag" << "\", \"";
@@ -129,11 +129,11 @@ int main( int argc, char** argv) {
 			}
 			shadersOutput << buffLine << "\\n ";
 		}
-		shadersOutput << "\"}" << (sid == shadersToLoad.size()-1 ? "" : "," ) << std::endl;
+		shadersOutput << "\"}" << (sid == shadersToLoad.size()-1 ? "" : "," ) << "\n";
 		
 	}
 	
-	shadersOutput << "};" << std::endl;
+	shadersOutput << "};" << "\n";
 	shadersOutput.close();
 	return 0;
 }
