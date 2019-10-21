@@ -19,7 +19,7 @@ Background::Background(double secondsPerMeasure){
 	GLuint sigID = glGetUniformLocation(_programId, "secondsPerMeasure");
 	glUniform1f(sigID, float(secondsPerMeasure));
 	glUseProgram(0);
-	
+
 }
 
 void Background::setScaleAndMinorWidth(const float scale, const float width){
@@ -31,12 +31,11 @@ void Background::setScaleAndMinorWidth(const float scale, const float width){
 	glUseProgram(0);
 }
 
-void Background::setDisplay(const bool digits, const bool horiz, const bool vert, const bool keys){
+void Background::setDisplay(const bool digits, const bool horiz, const bool vert){
 	glUseProgram(_programId);
 	GLuint id1 = glGetUniformLocation(_programId, "useDigits"); glUniform1i(id1, digits);
 	GLuint id2 = glGetUniformLocation(_programId, "useHLines"); glUniform1i(id2, horiz);
 	GLuint id3 = glGetUniformLocation(_programId, "useVLines"); glUniform1i(id3, vert);
-	GLuint id4 = glGetUniformLocation(_programId, "useKeys"); glUniform1i(id4, keys);
 	glUseProgram(0);
 }
 

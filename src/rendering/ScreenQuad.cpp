@@ -60,6 +60,27 @@ void ScreenQuad::init(GLuint textureId, const std::string & fragShader){
 	
 }
 
+void ScreenQuad::draw(float time) {
+
+	// Select the program (and shaders).
+	glUseProgram(_programId);
+
+	GLuint timeID = glGetUniformLocation(_programId, "time");
+	glUniform1f(timeID, time);
+
+	// Active screen texture.
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, _textureId);
+
+	// Select the geometry.
+	glBindVertexArray(_vao);
+	// Draw!
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
+	glDrawElements(GL_TRIANGLES, GLsizei(_count), GL_UNSIGNED_INT, (void*)0);
+
+	glBindVertexArray(0);
+	glUseProgram(0);
+}
 
 void ScreenQuad::draw(float time, glm::vec2 invScreenSize){
 	
@@ -70,21 +91,7 @@ void ScreenQuad::draw(float time, glm::vec2 invScreenSize){
 	GLuint screenId = glGetUniformLocation(_programId, "inverseScreenSize");
 	glUniform2fv(screenId, 1, &(invScreenSize[0]));
 	
-	GLuint timeID = glGetUniformLocation(_programId, "time");
-	glUniform1f(timeID, time);
-	
-	// Active screen texture.
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, _textureId);
-	
-	// Select the geometry.
-	glBindVertexArray(_vao);
-	// Draw!
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
-	glDrawElements(GL_TRIANGLES, GLsizei(_count), GL_UNSIGNED_INT, (void*)0);
-	
-	glBindVertexArray(0);
-	glUseProgram(0);
+	draw(time);
 }
 
 

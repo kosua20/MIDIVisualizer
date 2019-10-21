@@ -19,6 +19,8 @@ public:
 	/// Draw function
 	void draw(float time, glm::vec2 invScreenSize);
 
+	void draw(float time);
+
 	/// Clean function
 	void clean();
 	
