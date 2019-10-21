@@ -38,7 +38,7 @@ int main( int argc, char** argv) {
 	const std::string outputDir = baseDir + "/src/resources/";
 	
 	std::vector<std::string> imagesToLoad = { "flash", "font", "particles"};
-	std::vector<std::string> shadersToLoad = { "background", "flashes", "notes", "particles", "particlesblur", "screenquad"};
+	std::vector<std::string> shadersToLoad = { "background", "flashes", "notes", "particles", "particlesblur", "screenquad", "keys"};
 	
 	// Header file.
 	std::ofstream headerFile(outputDir + "data.h");

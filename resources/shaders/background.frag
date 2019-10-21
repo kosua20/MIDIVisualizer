@@ -10,7 +10,6 @@ uniform vec2 inverseScreenSize;
 uniform bool useDigits = true;
 uniform bool useHLines = true;
 uniform bool useVLines = true;
-uniform bool useKeys = true;
 uniform float minorsWidth = 1.0;
 uniform sampler2D screenTexture;
 uniform vec3 textColor = vec3(1.0);
@@ -82,30 +81,6 @@ float printNumber(float num, vec2 position, vec2 uv, vec2 scale){
 
 
 void main(){
-	
-	
-	// Keys
-	if(useKeys && gl_FragCoord.y < bottomLimit/inverseScreenSize.y){
-		
-		
-			// White keys, and separators.
-			float intensity = int(abs(fract(In.uv.x*52.0)) >= 2.0 * 52.0 * inverseScreenSize.x);
-		
-			// Upper keyboard.
-			if(gl_FragCoord.y > 0.10/inverseScreenSize.y){
-				// Handle black keys.
-				int index = int(floor(In.uv.x*52.0+0.5))-1;
-			
-				if(index > 0 && isMinor[index]){
-					// If the minor keys are not thinner, preserve a 1 px margin on each side.
-					float marginSize = minorsWidth != 1.0 ? minorsWidth : 1.0 - (2.0*52.0*inverseScreenSize.x);
-					intensity = step(marginSize, abs(fract(In.uv.x*52.0+0.5)*2.0-1.0));
-				}
-			}
-			fragColor = mix(keysColor, vec3(1.0), intensity);
-			// Done.
-			return;
-	}
 	
 	vec3 bgColor = vec3(0.0);
 	// Octaves lines.
