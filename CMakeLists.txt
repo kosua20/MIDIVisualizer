@@ -69,6 +69,7 @@ set(LibSources
 	"src/libs/lodepng/lodepng.h"
 	"src/libs/lodepng/lodepng.cpp"
 	"src/libs/stb_image/stb_image.h"
+	"src/libs/stb_image/stb_image_resize.h"
 	"src/libs/stb_image_write/stb_image_write.h" 
 	${GlmSources}
 )
@@ -120,4 +121,4 @@ include_directories(src/helpers/)
 
 add_executable(MIDIVisualizer ${LibSources} ${Sources} ${Shaders})
 target_link_libraries(MIDIVisualizer nfd glfw ${GLFW_LIBRARIES} ${OPENGL_gl_LIBRARY})
-add_dependencies(MIDIVisualizer Packaging)
+#add_dependencies(MIDIVisualizer Packaging)
