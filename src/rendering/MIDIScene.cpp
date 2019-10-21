@@ -362,7 +362,7 @@ void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const g
 	
 }
 
-void MIDIScene::drawKeyboard(float time, const glm::vec2 & invScreenSize, const glm::vec3 & keyColor) {
+void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::vec3 & keyColor) {
 	glUseProgram(_programKeysId);
 
 	// Uniforms setup.

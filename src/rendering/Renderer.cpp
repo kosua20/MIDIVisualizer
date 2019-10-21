@@ -213,7 +213,7 @@ void Renderer::blurPrepass() {
 
 }
 
-void Renderer::drawBlur(const glm::vec2 & invSize ) {
+void Renderer::drawBlur(const glm::vec2 &  ) {
 	glEnable(GL_BLEND);
 	_blurryScreen.draw(_timer);
 	glDisable(GL_BLEND);
@@ -603,12 +603,10 @@ void Renderer::renderFile(const std::string &outputDirPath,
 			_finalFramebuffer->_height, LCT_RGB, 8);
 
 		/*if there's an error, display it*/
-		if (error)
+		if (error) {
 			printf("error %u: %s\n", error, lodepng_error_text(error));
+		}
 
-		// stbi_write_png(outputFilePath.c_str(), _finalFramebuffer->_width,
-		// _finalFramebuffer->_height, 0, data,  3*_finalFramebuffer->_width);
-		// a
 		_timer += (1.0f / frameRate);
 	}
 	std::cout << std::endl;
