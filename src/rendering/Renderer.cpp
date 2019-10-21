@@ -304,17 +304,19 @@ void Renderer::drawGUI(const float currentTime) {
 		const bool smw0 = ImGui::InputFloat("Scale", &_state.scale, 0.01f, 0.1f);
 		ImGui::PopItemWidth();
 
+		ImGui::PushItemWidth(25);
 		bool colNotesEdit = ImGui::ColorEdit3("Notes", &_state.baseColor[0],
 			ImGuiColorEditFlags_NoInputs);
-		ImGui::SameLine(80);
+		ImGui::SameLine();
 		bool colMinorsEdit = ImGui::ColorEdit3("Minors", &_state.minorColor[0],
 			ImGuiColorEditFlags_NoInputs);
-		ImGui::SameLine(160);
+		ImGui::SameLine();
 		bool colPartsEdit = ImGui::ColorEdit3("Effects", &_state.particles.color[0],
 			ImGuiColorEditFlags_NoInputs);
-		ImGui::SameLine(240);
+		ImGui::SameLine();
 		bool colFlashesEdit = ImGui::ColorEdit3("Flashes", &_state.flashColor[0],
 			ImGuiColorEditFlags_NoInputs);
+		ImGui::PopItemWidth();
 
 		if (ImGui::Checkbox("Lock colors", &_state.lockParticleColor)) {
 			// If we enable the lock, make sure the colors are synched.
@@ -350,9 +352,11 @@ void Renderer::drawGUI(const float currentTime) {
 
 		if (ImGui::CollapsingHeader("Background##HEADER",
 			ImGuiTreeNodeFlags_DefaultOpen)) {
+
+			ImGui::PushItemWidth(25);
 			ImGui::ColorEdit3("Color##Background", &_state.background.color[0],
 				ImGuiColorEditFlags_NoInputs);
-			ImGui::SameLine(80);
+			ImGui::SameLine();
 			bool cbg0 = ImGui::ColorEdit3("Lines##Background",
 				&_state.background.linesColor[0],
 				ImGuiColorEditFlags_NoInputs);
@@ -360,10 +364,11 @@ void Renderer::drawGUI(const float currentTime) {
 			bool cbg1 =
 				ImGui::ColorEdit3("Text##Background", &_state.background.textColor[0],
 					ImGuiColorEditFlags_NoInputs);
-			ImGui::SameLine(240);
+			ImGui::SameLine();
 			bool cbg2 =
 				ImGui::ColorEdit3("Keys##Background", &_state.background.keysColor[0],
 					ImGuiColorEditFlags_NoInputs);
+			ImGui::PopItemWidth();
 
 			bool m2 = ImGui::Checkbox("Horizontal lines", &_state.background.hLines);
 			ImGui::SameLine(160);

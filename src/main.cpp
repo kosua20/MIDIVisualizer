@@ -1,7 +1,8 @@
 #include <gl3w/gl3w.h> // to load OpenGL extensions at runtime
 #include <GLFW/glfw3.h> // to set up the OpenGL context and manage window lifecycle and inputs
 #include <imgui/imgui.h>
-#include <imgui/imgui_impl_glfw_gl3.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
 #include <nfd.h>
 #include <stdio.h>
 #include <iostream>
@@ -157,22 +158,28 @@ int main( int argc, char** argv) {
 	
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	ImGui_ImplGlfwGL3_Init(window, false);
 	ImGui::StyleColorsDark();
 	ImGui::GetStyle().FrameRounding = 3;
-	
 	io.IniFilename = NULL;
+	
+	ImGui_ImplGlfw_InitForOpenGL(window, false);
+	ImGui_ImplOpenGL3_Init("#version 330");
+
 	
 	// Start the display/interaction loop.
 	while (!glfwWindowShouldClose(window)) {
-		ImGui_ImplGlfwGL3_NewFrame();
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
 		
 		// Update the content of the window.
 		renderer.draw(DEBUG_SPEED*float(glfwGetTime()));
 		
 		// Interface rendering.
 		ImGui::Render();
-		ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
 		//Display the result fo the current rendering loop.
 		glfwSwapBuffers(window);
 		// Update events (inputs,...).
@@ -180,7 +187,8 @@ int main( int argc, char** argv) {
 		
 	}
 	
-	ImGui_ImplGlfwGL3_Shutdown();
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 	// Remove the window.
 	glfwDestroyWindow(window);
