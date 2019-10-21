@@ -157,6 +157,19 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 	glUniform2f(texSizeID, 1.0f/float(tsize[0]), 1.0f/float(tsize[1]));
 	glUseProgram(0);
 	
+	// Keyboard setup.
+	_programKeysId = createGLProgramFromStrings(ResourcesManager::getStringForShader("keys_vert"), ResourcesManager::getStringForShader("keys_frag"));
+	glGenVertexArrays(1, &_vaoKeyboard);
+	glBindVertexArray(_vaoKeyboard);
+	// The first attribute will be the vertices positions.
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+	glVertexAttribDivisor(0, 0);
+	// We load the indices data
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
+	glBindVertexArray(0);
+
 	// Prepare actives notes array.
 	_actives = std::vector<int>(88, 0);
 	_previousTime = 0.0;
@@ -170,6 +183,9 @@ void MIDIScene::setScaleAndMinorWidth(const float scale, const float minorWidth)
 	glUniform1f(speedID, scale);
 	GLuint widthId = glGetUniformLocation(_programId, "minorsWidth");
 	glUniform1f(widthId, minorWidth);
+	glUseProgram(_programKeysId);
+	GLuint widthId1 = glGetUniformLocation(_programKeysId, "minorsWidth");
+	glUniform1f(widthId1, minorWidth);
 	glUseProgram(0);
 }
 
@@ -224,7 +240,7 @@ void MIDIScene::resetParticles() {
 	}
 }
 
-void MIDIScene::drawParticles(const float time, const glm::vec2 & invScreenSize, const glm::vec3 & particlesColor, const float particlesScale, const GLuint lookTexture, const int texCount, const int particlesCount, bool prepass){
+void MIDIScene::drawParticles(float time, const glm::vec2 & invScreenSize, const glm::vec3 & particlesColor, const float particlesScale, const GLuint lookTexture, const int texCount, const int particlesCount, bool prepass){
 
 	// Need alpha blending.
 	glEnable(GL_BLEND);
@@ -280,8 +296,7 @@ void MIDIScene::drawParticles(const float time, const glm::vec2 & invScreenSize,
 
 }
 
-
-void MIDIScene::draw(float time, glm::vec2 invScreenSize, const glm::vec3 & baseColor, const glm::vec3 & minorColor, bool prepass){
+void MIDIScene::draw(float time, const glm::vec2 & invScreenSize, const glm::vec3 & baseColor, const glm::vec3 & minorColor, bool prepass){
 	
 	glUseProgram(_programId);
 	
@@ -310,7 +325,7 @@ void MIDIScene::draw(float time, glm::vec2 invScreenSize, const glm::vec3 & base
 	
 }
 
-void MIDIScene::drawFlashes(float time, glm::vec2 invScreenSize, const glm::vec3 & baseColor, float userScale){
+void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const glm::vec3 & baseColor, float userScale){
 	
 	// Need alpha blending.
 	glEnable(GL_BLEND);
@@ -347,7 +362,23 @@ void MIDIScene::drawFlashes(float time, glm::vec2 invScreenSize, const glm::vec3
 	
 }
 
+void MIDIScene::drawKeyboard(float time, const glm::vec2 & invScreenSize, const glm::vec3 & keyColor) {
+	glUseProgram(_programKeysId);
 
+	// Uniforms setup.
+	GLuint screenId1 = glGetUniformLocation(_programKeysId, "inverseScreenSize");
+	GLuint colorId = glGetUniformLocation(_programKeysId, "keysColor");
+	glUniform2fv(screenId1, 1, &(invScreenSize[0]));
+	glUniform3fv(colorId, 1, &(keyColor[0]));
+	
+
+	// Draw the geometry.
+	glBindVertexArray(_vaoKeyboard);
+	glDrawElements(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0);
+
+	glBindVertexArray(0);
+	glUseProgram(0);
+}
 
 void MIDIScene::clean(){
 	glDeleteVertexArrays(1, &_vao);

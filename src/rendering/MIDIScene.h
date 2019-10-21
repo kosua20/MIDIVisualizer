@@ -19,12 +19,14 @@ public:
 	void updatesActiveNotes(double time);
 	
 	/// Draw function
-	void draw(float time, glm::vec2 invScreenSize, const glm::vec3 & baseColor, const glm::vec3 & minorColor, bool prepass);
+	void draw(float time, const glm::vec2 & invScreenSize, const glm::vec3 & baseColor, const glm::vec3 & minorColor, bool prepass);
 	
-	void drawFlashes(float time, glm::vec2 invScreenSize, const glm::vec3 & baseColor, float userScale);
+	void drawFlashes(float time, const glm::vec2 & invScreenSize, const glm::vec3 & baseColor, float userScale);
 	
-	void drawParticles(const float time, const glm::vec2 & invScreenSize, const glm::vec3 & particlesColor, const float particlesScale, const GLuint lookTexture, const int texCount, const int particlesCount, bool prepass);
+	void drawParticles(float time, const glm::vec2 & invScreenSize, const glm::vec3 & particlesColor, const float particlesScale, const GLuint lookTexture, const int texCount, const int particlesCount, bool prepass);
 	
+	void drawKeyboard(float time, const glm::vec2 & invScreenSize, const glm::vec3 & keyColor);
+
 	/// Clean function
 	void clean();
 
@@ -43,6 +45,7 @@ private:
 	GLuint _programId;
 	GLuint _programFlashesId;
 	GLuint _programParticulesId;
+	GLuint _programKeysId;
 	
 	GLuint _vao;
 	GLuint _ebo;
@@ -53,7 +56,8 @@ private:
 	
 	GLuint _vaoParticles;
 	GLuint _texParticles;
-	//GLuint _lookParticles;
+
+	GLuint _vaoKeyboard;
 	
 	size_t _primitiveCount;
 	size_t _notesCount;
