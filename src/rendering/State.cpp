@@ -72,7 +72,10 @@ void State::save(const std::string & path){
 	configFile << minorColor[0] << " " << minorColor[1] << " " << minorColor[2] << std::endl;
 	configFile << flashColor[0] << " " << flashColor[1] << " " << flashColor[2] << std::endl;
 	configFile << flashSize << std::endl;
+
 	configFile << prerollTime << std::endl;
+	configFile << showScore << std::endl;
+
 	configFile.close();
 }
 
@@ -139,7 +142,7 @@ void State::load(const std::string & path){
 	minorColor = 0.8f*baseColor;
 	flashColor = baseColor;
 	if(majVersion >= 3  && minVersion >= 3){
-		configFile >> showNotes ;
+		configFile >> showNotes;
 		configFile >> background.linesColor[0] >> background.linesColor[1] >> background.linesColor[2] ;
 		configFile >> background.textColor[0] >> background.textColor[1] >> background.textColor[2] ;
 		configFile >> background.keysColor[0] >> background.keysColor[1] >> background.keysColor[2] ;
@@ -151,6 +154,7 @@ void State::load(const std::string & path){
 	// MIDIVIZ_VERSION_MAJOR == 3, MIDIVIZ_VERSION_MINOR == 5
 	if (majVersion >= 3 && minVersion >= 5) {
 		configFile >> prerollTime;
+		configFile >> showScore;
 	}
 	
 	configFile.close();
@@ -174,6 +178,7 @@ void State::reset(){
 	showBlurNotes = false ;
 	lockParticleColor = true ;
 	showNotes = true;
+	showScore = true;
 	flashSize = 1.0f;
 	
 	background.minorsWidth = 0.8f;

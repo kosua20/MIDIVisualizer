@@ -77,6 +77,7 @@ public:
 	bool showBlurNotes;
 	bool lockParticleColor;
 	bool showNotes;
+	bool showScore;
 	
 	void load(const std::string & path);
 	
