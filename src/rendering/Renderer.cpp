@@ -60,6 +60,41 @@ void Renderer::init(int width, int height) {
 
 	_state.reset();
 
+	// Create the layers.
+	//_layers[Layer::BGCOLOR].type = Layer::BGCOLOR;
+	//_layers[Layer::BGCOLOR].name = "Background color";
+	//_layers[Layer::BGCOLOR].toggle = &_state.showBackground;
+
+	_layers[Layer::BLUR].type = Layer::BLUR;
+	_layers[Layer::BLUR].name = "Blur effect";
+	_layers[Layer::BLUR].draw = &Renderer::drawBlur;
+	_layers[Layer::BLUR].toggle = &_state.showBlur;
+
+	_layers[Layer::ANNOTATIONS].type = Layer::ANNOTATIONS;
+	_layers[Layer::ANNOTATIONS].name = "Score";
+	_layers[Layer::ANNOTATIONS].draw = &Renderer::drawBackground;
+	_layers[Layer::ANNOTATIONS].toggle = &_state.showScore;
+
+	_layers[Layer::KEYBOARD].type = Layer::KEYBOARD;
+	_layers[Layer::KEYBOARD].name = "Keyboard";
+	_layers[Layer::KEYBOARD].draw = &Renderer::drawKeyboard;
+	_layers[Layer::KEYBOARD].toggle = &_state.background.keys;
+
+	_layers[Layer::PARTICLES].type = Layer::PARTICLES;
+	_layers[Layer::PARTICLES].name = "Particles";
+	_layers[Layer::PARTICLES].draw = &Renderer::drawParticles;
+	_layers[Layer::PARTICLES].toggle = &_state.showParticles;
+
+	_layers[Layer::NOTES].type = Layer::NOTES;
+	_layers[Layer::NOTES].name = "Notes";
+	_layers[Layer::NOTES].draw = &Renderer::drawNotes;
+	_layers[Layer::NOTES].toggle = &_state.showNotes;
+
+	_layers[Layer::FLASHES].type = Layer::FLASHES;
+	_layers[Layer::FLASHES].name = "Flashes";
+	_layers[Layer::FLASHES].draw = &Renderer::drawFlashes;
+	_layers[Layer::FLASHES].toggle = &_state.showFlashes;
+
 	// Check setup errors.
 	checkGLError();
 }
@@ -150,28 +185,12 @@ void Renderer::draw(const float currentTime) {
 	// TODO
 
 	// Draw the blurred particles.
-	if (_state.showBlur) {
-		drawBlur(invSizeFb);
+	for (int i = 0; i < _layers.size(); ++i) {
+		if (_layers[i].draw && *(_layers[i].toggle)) {
+			(this->*_layers[i].draw)(invSizeFb);
+		}
 	}
-	// Draw the particles.
-	if (_state.showParticles) {
-		drawParticles(invSizeFb);
-	}
-	// Draw the keys, grid, and measure numbers.
-	drawBackground(invSizeFb);
-
-	if (_state.background.keys) {
-		drawKeyboard(invSizeFb);
-	}
-	// Draw the notes.
-	if (_state.showNotes) {
-		drawNotes(invSizeFb);
-	}
-
-	if (_state.showFlashes) {
-		// Draw the flashes.
-		drawFlashes(invSizeFb);
-	}
+	
 	_finalFramebuffer->unbind();
 
 	glViewport(0, 0, GLsizei(_camera._screenSize[0]), GLsizei(_camera._screenSize[1]));
@@ -246,6 +265,7 @@ void Renderer::drawGUI(const float currentTime) {
 
 	if (ImGui::Begin("Settings", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
 
+
 		if (ImGui::Button(_shouldPlay ? "Pause (p)" : "Play (p)")) {
 			_shouldPlay = !_shouldPlay;
 			_timerStart = currentTime - _timer;
@@ -286,46 +306,184 @@ void Renderer::drawGUI(const float currentTime) {
 			}
 		}
 
-		ImGui::PushItemWidth(100);
 		ImGui::SameLine(160);
-		if (ImGui::InputFloat("Preroll", &_state.prerollTime, 0.1f, 1.0f)) {
-			reset();
-		}
-		ImGui::PopItemWidth();
-
 		ImGui::PushItemWidth(80);
 		if (ImGui::Combo("Quality", (int *)(&_state.quality),
 			"Half\0Low\0Medium\0High\0Double\0\0")) {
 			resize(int(_camera._screenSize[0]), int(_camera._screenSize[1]));
 		}
 		ImGui::PopItemWidth();
-		ImGui::PushItemWidth(100);
-		ImGui::SameLine(160);
-		const bool smw0 = ImGui::InputFloat("Scale", &_state.scale, 0.01f, 0.1f);
-		ImGui::PopItemWidth();
 
+		ImGui::PushItemWidth(100);
+		const bool smw0 = ImGui::InputFloat("Scale", &_state.scale, 0.01f, 0.1f);
+		ImGui::SameLine(160);
+		if (ImGui::InputFloat("Preroll", &_state.prerollTime, 0.1f, 1.0f)) {
+			reset();
+		}
+		ImGui::PopItemWidth();
+		if (ImGui::Button("Show layers...")) {
+			_showLayers = true;
+		}
 		ImGui::PushItemWidth(25);
 		bool colNotesEdit = ImGui::ColorEdit3("Notes", &_state.baseColor[0],
 			ImGuiColorEditFlags_NoInputs);
 		ImGui::SameLine();
 		bool colMinorsEdit = ImGui::ColorEdit3("Minors", &_state.minorColor[0],
 			ImGuiColorEditFlags_NoInputs);
-		ImGui::SameLine();
-		bool colPartsEdit = ImGui::ColorEdit3("Effects", &_state.particles.color[0],
-			ImGuiColorEditFlags_NoInputs);
-		ImGui::SameLine();
-		bool colFlashesEdit = ImGui::ColorEdit3("Flashes", &_state.flashColor[0],
-			ImGuiColorEditFlags_NoInputs);
 		ImGui::PopItemWidth();
-
-		if (ImGui::Checkbox("Lock colors", &_state.lockParticleColor)) {
+		ImGui::SameLine();
+		
+		if (ImGui::Checkbox("Sync effect colors", &_state.lockParticleColor)) {
 			// If we enable the lock, make sure the colors are synched.
 			colNotesEdit = true;
 		}
-		ImGui::SameLine(160);
-		ImGui::Checkbox("Blur", &_state.showBlur);
-		if (_state.showBlur) {
-			ImGui::Checkbox("Blur notes", &_state.showBlurNotes);
+
+		bool colFlashesEdit = false;
+		if (_state.showFlashes && ImGui::CollapsingHeader("Flashes##HEADER")) {
+			ImGui::PushItemWidth(25);
+			colFlashesEdit = ImGui::ColorEdit3("Color##Flashes", &_state.flashColor[0],
+				ImGuiColorEditFlags_NoInputs);
+			ImGui::PopItemWidth();
+			ImGui::SameLine(160);
+			ImGui::PushItemWidth(86);
+			ImGui::SliderFloat("Flash size", &_state.flashSize, 0.1f, 3.0f);
+			ImGui::PopItemWidth();
+		}
+
+		bool colPartsEdit = false;
+		if (_state.showParticles && ImGui::CollapsingHeader("Particles##HEADER")) {
+
+			ImGui::PushID("ParticlesSettings");
+			ImGui::PushItemWidth(25);
+			colPartsEdit = ImGui::ColorEdit3("Color##Particles", &_state.particles.color[0],
+				ImGuiColorEditFlags_NoInputs);
+			ImGui::PopItemWidth();
+			ImGui::SameLine(160);
+
+			ImGui::PushItemWidth(86);
+			if (ImGui::InputFloat("Size", &_state.particles.scale, 1.0f, 10.0f)) {
+				_state.particles.scale = std::max(1.0f, _state.particles.scale);
+			}
+			ImGui::PushItemWidth(160);
+			
+			if (ImGui::SliderInt("Count", &_state.particles.count, 1, 512)) {
+				_state.particles.count =
+					std::min(std::max(_state.particles.count, 1), 512);
+			}
+			ImGui::PopItemWidth();
+
+			const bool mp0 =
+				ImGui::InputFloat("Speed", &_state.particles.speed, 0.001f, 1.0f);
+			ImGui::SameLine(160);
+			const bool mp1 = ImGui::InputFloat(
+				"Expansion", &_state.particles.expansion, 0.1f, 5.0f);
+
+			ImGui::PopItemWidth();
+
+			if (mp1 || mp0) {
+				_scene->setParticlesParameters(_state.particles.speed,
+					_state.particles.expansion);
+			}
+
+
+			if (ImGui::Button("Load images...")) {
+				// Read arguments.
+				nfdpathset_t outPaths;
+				nfdresult_t result = NFD_OpenDialogMultiple("png;jpg,jpeg;", NULL, &outPaths);
+
+				if (result == NFD_OKAY) {
+					std::vector<std::string> paths;
+					for (size_t i = 0; i < NFD_PathSet_GetCount(&outPaths); ++i) {
+						nfdchar_t *outPath = NFD_PathSet_GetPath(&outPaths, i);
+						const std::string imageFilePath = std::string(outPath);
+						paths.push_back(imageFilePath);
+					}
+					_state.particles.tex = loadTextureArray(paths, false, _state.particles.texCount);
+					NFD_PathSet_Free(&outPaths);
+					if (_state.particles.scale <= 9.0f) {
+						_state.particles.scale = 10.0f;
+					}
+				}
+			}
+			ImGui::SameLine();
+			ImGui::TextDisabled("(?)");
+			if (ImGui::IsItemHovered()) {
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted(
+					"You can select multiple images (PNG or JPEG). They should be "
+					"square and greyscale, where black is transparent, white opaque.");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+
+			ImGui::SameLine(160);
+			if (ImGui::Button("Clear##TextureParticles")) {
+				// Use a white square particle appearance by default.
+				const GLuint blankID = ResourcesManager::getTextureFor("blankarray");
+				_state.particles.tex = blankID;
+				_state.particles.texCount = 1;
+				_state.particles.scale = 1.0f;
+			}
+
+			ImGui::PopID();
+
+		}
+
+		bool smw1 = false;
+		if (_state.background.keys && ImGui::CollapsingHeader("Keyboard##HEADER")) {
+
+			ImGui::PushItemWidth(25);
+			bool cbg2 = ImGui::ColorEdit3("Color##Keys", &_state.background.keysColor[0],
+				ImGuiColorEditFlags_NoInputs);
+			ImGui::PopItemWidth();
+			ImGui::SameLine(160);
+			ImGui::PushItemWidth(86);
+			smw1 = ImGui::SliderFloat("Minor size", &_state.background.minorsWidth,
+				0.1f, 1.0f, "%.2f");
+			ImGui::PopItemWidth();
+
+			if (cbg2) {
+				_background->setColors(_state.background.linesColor,
+					_state.background.textColor,
+					_state.background.keysColor);
+			}
+		}
+
+		if (_state.showScore && ImGui::CollapsingHeader("Score##HEADER")) {
+
+			ImGui::PushItemWidth(25);
+			bool cbg0 = ImGui::ColorEdit3("Lines##Background",
+				&_state.background.linesColor[0],
+				ImGuiColorEditFlags_NoInputs);
+			ImGui::SameLine();
+			bool cbg1 =
+				ImGui::ColorEdit3("Text##Background", &_state.background.textColor[0],
+					ImGuiColorEditFlags_NoInputs);
+			ImGui::PopItemWidth();
+			ImGui::SameLine(160);
+			bool m1 = ImGui::Checkbox("Digits", &_state.background.digits);
+
+			bool m2 = ImGui::Checkbox("Horizontal lines", &_state.background.hLines);
+			ImGui::SameLine(160);
+			bool m3 = ImGui::Checkbox("Vertical lines", &_state.background.vLines);
+			
+			
+			if (m1 || m2 || m3) {
+				_background->setDisplay(
+					_state.background.digits, _state.background.hLines,
+					_state.background.vLines);
+			}
+
+			if (cbg0 || cbg1) {
+				_background->setColors(_state.background.linesColor,
+					_state.background.textColor,
+					_state.background.keysColor);
+			}
+		}
+
+		if (_state.showBlur && ImGui::CollapsingHeader("Blur##HEADER")) {
+			ImGui::Checkbox("Blur the notes", &_state.showBlurNotes);
 			ImGui::SameLine(160);
 			ImGui::PushItemWidth(86);
 			if (ImGui::SliderFloat("Attenuation", &_state.attenuation, 0.0f, 1.0f)) {
@@ -339,131 +497,14 @@ void Renderer::drawGUI(const float currentTime) {
 			ImGui::PopItemWidth();
 		}
 
-		ImGui::Checkbox("Notes", &_state.showNotes);
-		ImGui::SameLine(160);
-		ImGui::Checkbox("Particles", &_state.showParticles);
-		ImGui::Checkbox("Flashes", &_state.showFlashes);
-		ImGui::SameLine(160);
-		ImGui::PushItemWidth(86);
-		ImGui::SliderFloat("Flash size", &_state.flashSize, 0.1f, 3.0f);
-		ImGui::PopItemWidth();
-
-		bool smw1 = false;
-
-		if (ImGui::CollapsingHeader("Background##HEADER",
-			ImGuiTreeNodeFlags_DefaultOpen)) {
+		if (ImGui::CollapsingHeader("Background##HEADER")) {
 
 			ImGui::PushItemWidth(25);
 			ImGui::ColorEdit3("Color##Background", &_state.background.color[0],
 				ImGuiColorEditFlags_NoInputs);
-			ImGui::SameLine();
-			bool cbg0 = ImGui::ColorEdit3("Lines##Background",
-				&_state.background.linesColor[0],
-				ImGuiColorEditFlags_NoInputs);
-			ImGui::SameLine(160);
-			bool cbg1 =
-				ImGui::ColorEdit3("Text##Background", &_state.background.textColor[0],
-					ImGuiColorEditFlags_NoInputs);
-			ImGui::SameLine();
-			bool cbg2 =
-				ImGui::ColorEdit3("Keys##Background", &_state.background.keysColor[0],
-					ImGuiColorEditFlags_NoInputs);
-			ImGui::PopItemWidth();
-
-			bool m2 = ImGui::Checkbox("Horizontal lines", &_state.background.hLines);
-			ImGui::SameLine(160);
-			bool m3 = ImGui::Checkbox("Vertical lines", &_state.background.vLines);
-			bool m4 = ImGui::Checkbox("Keyboard", &_state.background.keys);
-			ImGui::SameLine(160);
-			bool m1 = ImGui::Checkbox("Digits", &_state.background.digits);
-			ImGui::PushItemWidth(145);
-			smw1 =
-				ImGui::InputFloat("Minor keys size", &_state.background.minorsWidth,
-					0.1f, 1.0f, "%.2f");
-			ImGui::PopItemWidth();
-
-			if (m1 || m2 || m3 || m4) {
-				_background->setDisplay(
-					_state.background.digits, _state.background.hLines,
-					_state.background.vLines);
-			}
-
-			if (cbg0 || cbg1 || cbg2) {
-				_background->setColors(_state.background.linesColor,
-					_state.background.textColor,
-					_state.background.keysColor);
-			}
+			// TODO: interface for texture
 		}
-
-		if (_state.showParticles) {
-			if (ImGui::CollapsingHeader("Particles##HEADER")) {
-
-				ImGui::PushID("ParticlesSettings");
-
-				ImGui::PushItemWidth(100);
-				if (ImGui::SliderInt("Count", &_state.particles.count, 1, 512)) {
-					_state.particles.count =
-						std::min(std::max(_state.particles.count, 1), 512);
-				}
-				ImGui::SameLine(160);
-				if (ImGui::InputFloat("Size", &_state.particles.scale, 1.0f, 10.0f)) {
-					_state.particles.scale = std::max(1.0f, _state.particles.scale);
-				}
-
-				const bool mp0 =
-					ImGui::InputFloat("Speed", &_state.particles.speed, 0.001f, 1.0f);
-				ImGui::SameLine(160);
-				const bool mp1 = ImGui::InputFloat(
-					"Expansion", &_state.particles.expansion, 0.1f, 5.0f);
-				if (mp1 || mp0) {
-					_scene->setParticlesParameters(_state.particles.speed,
-						_state.particles.expansion);
-				}
-
-				if (ImGui::Button("Default image")) {
-					// Use a white square particle appearance by default.
-					const GLuint blankID = ResourcesManager::getTextureFor("blankarray");
-					_state.particles.tex = blankID;
-					_state.particles.texCount = 1;
-					_state.particles.scale = 1.0f;
-				}
-				ImGui::SameLine(160);
-				if (ImGui::Button("Load images...")) {
-					// Read arguments.
-					nfdpathset_t outPaths;
-					nfdresult_t result = NFD_OpenDialogMultiple("png;jpg,jpeg;", NULL, &outPaths);
-
-					if (result == NFD_OKAY) {
-						std::vector<std::string> paths;
-						for (size_t i = 0; i < NFD_PathSet_GetCount(&outPaths); ++i) {
-							nfdchar_t *outPath = NFD_PathSet_GetPath(&outPaths, i);
-							const std::string imageFilePath = std::string(outPath);
-							paths.push_back(imageFilePath);
-						}
-						_state.particles.tex = loadTextureArray(paths, false, _state.particles.texCount);
-						NFD_PathSet_Free(&outPaths);
-						if (_state.particles.scale <= 9.0f) {
-							_state.particles.scale = 10.0f;
-						}
-					}
-				}
-				ImGui::SameLine();
-				ImGui::TextDisabled("(?)");
-				if (ImGui::IsItemHovered()) {
-					ImGui::BeginTooltip();
-					ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-					ImGui::TextUnformatted(
-						"You can select multiple images (PNG or JPEG). They should be "
-						"square and greyscale, where black is transparent, white opaque.");
-					ImGui::PopTextWrapPos();
-					ImGui::EndTooltip();
-				}
-
-				ImGui::PopID();
-				ImGui::PopItemWidth();
-			}
-		}
-
+		
 		ImGui::Separator();
 
 		if (ImGui::Button("Save config...")) {
@@ -532,6 +573,9 @@ void Renderer::drawGUI(const float currentTime) {
 		ImGui::InputInt("Rate", &_exportFramerate);
 		ImGui::PopItemWidth();
 
+		
+		
+
 		if (_showDebug) {
 			ImGui::Separator();
 			ImGui::Text("Debug: ");
@@ -543,6 +587,49 @@ void Renderer::drawGUI(const float currentTime) {
 				_scene->midiFile().printTracks();
 			}
 		}
+	}
+	ImGui::End();
+
+	if (_showLayers) {
+		showLayers();
+	}
+}
+
+void Renderer::showLayers() {
+	if (ImGui::Begin("Layers", &_showLayers)) {
+		for (int i = 0; i < _layers.size(); ++i) {
+			auto & layer = _layers[i];
+			if (layer.type == Layer::BGCOLOR) {
+				continue;
+			}
+			ImGui::Separator();
+			ImGui::PushID(i);
+			ImGui::BeginGroup();
+			if (layer.toggle) {
+				ImGui::Checkbox("##LayerCheckbox", layer.toggle);
+				ImGui::SameLine(20);
+			}
+
+			ImGui::Text(layer.name.c_str());
+			ImGui::EndGroup();
+			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+			{
+				ImGui::Text(layer.name.c_str());
+				ImGui::SetDragDropPayload("REORDER_LAYER", &i, sizeof(int));
+				ImGui::EndDragDropSource();
+			}
+			if (ImGui::BeginDragDropTarget())
+			{
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("REORDER_LAYER"))
+				{
+					int iPayload = *(const int*)payload->Data;
+					std::swap(_layers[i], _layers[iPayload]);
+				}
+				ImGui::EndDragDropTarget();
+			}
+			ImGui::PopID();
+		}
+		ImGui::Separator();
 	}
 	ImGui::End();
 }

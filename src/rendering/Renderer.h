@@ -4,6 +4,7 @@
 #include <gl3w/gl3w.h>
 #include <glm/glm.hpp>
 #include <memory>
+#include <array>
 
 #include "Framebuffer.h"
 #include "camera/Camera.h"
@@ -45,6 +46,20 @@ public:
 
 private:
 	
+
+	struct Layer {
+		
+		enum Type : unsigned int {
+			BGCOLOR = 0, BGTEXTURE, BLUR, ANNOTATIONS, KEYBOARD, PARTICLES, NOTES, FLASHES
+		};
+
+		Type type = BGCOLOR;
+		std::string name = "None";
+		void (Renderer::*draw)(const glm::vec2 &) = nullptr;
+		bool * toggle = nullptr;
+
+	};
+
 	void blurPrepass();
 
 	void drawBlur(const glm::vec2 & invSize);
@@ -61,6 +76,8 @@ private:
 
 	void drawGUI(const float currentTime);
 	
+	void showLayers();
+
 	void applyAllSettings();
 	
 	void renderFile(const std::string & outputDirPath, const float frameRate);
@@ -68,6 +85,8 @@ private:
 	void reset();
 
 	State _state;
+	std::array<Layer, 8> _layers;
+
 	int _exportFramerate;
 	float _timer;
 	float _timerStart;
@@ -89,7 +108,7 @@ private:
 	ScreenQuad _blurryScreen;
 	ScreenQuad _finalScreen;
 	std::shared_ptr<Background> _background;
-	
+	bool _showLayers = false;
 };
 
 #endif
