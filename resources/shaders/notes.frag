@@ -13,7 +13,7 @@ uniform vec2 inverseScreenSize;
 #define cornerRadius 0.01
 #define bottomLimit 0.25
 
-out vec3 fragColor;
+out vec4 fragColor;
 
 
 void main(){
@@ -31,10 +31,10 @@ void main(){
 	}
 	
 	// Fragment color.
-	fragColor = mix(baseColor, minorColor, In.isMinor);
+	fragColor.rgb = mix(baseColor, minorColor, In.isMinor);
 	
 	if(	radiusPosition > 0.8){
-		fragColor *= 1.05;
+		fragColor.rgb *= 1.05;
 	}
-	
+	fragColor.a = 1.0;
 }
