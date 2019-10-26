@@ -184,10 +184,14 @@ void Renderer::draw(const float currentTime) {
 	// Background texture.
 	// TODO
 
-	// Draw the blurred particles.
-	for (int i = 0; i < _layers.size(); ++i) {
-		if (_layers[i].draw && *(_layers[i].toggle)) {
-			(this->*_layers[i].draw)(invSizeFb);
+	// Draw the layers in order.
+	for (int i = 0; i < _state.layersMap.size(); ++i) {
+		const int layerId = _state.layersMap[i];
+		if (layerId >= _layers.size()) {
+			continue;
+		}
+		if (_layers[layerId].draw && *(_layers[layerId].toggle)) {
+			(this->*_layers[layerId].draw)(invSizeFb);
 		}
 	}
 	
@@ -279,7 +283,8 @@ void Renderer::drawGUI(const float currentTime) {
 		if (ImGui::Button("Hide (i)")) {
 			_showGUI = false;
 		}
-		ImGui::SameLine();
+		// Use the info button to enforce max window width while autoresizing.
+		ImGui::SameLine(300);
 		ImGui::TextDisabled("(?)");
 		if (ImGui::IsItemHovered()) {
 			ImGui::BeginTooltip();
@@ -307,7 +312,7 @@ void Renderer::drawGUI(const float currentTime) {
 		}
 
 		ImGui::SameLine(160);
-		ImGui::PushItemWidth(80);
+		ImGui::PushItemWidth(100);
 		if (ImGui::Combo("Quality", (int *)(&_state.quality),
 			"Half\0Low\0Medium\0High\0Double\0\0")) {
 			resize(int(_camera._screenSize[0]), int(_camera._screenSize[1]));
@@ -364,7 +369,7 @@ void Renderer::drawGUI(const float currentTime) {
 			if (ImGui::InputFloat("Size", &_state.particles.scale, 1.0f, 10.0f)) {
 				_state.particles.scale = std::max(1.0f, _state.particles.scale);
 			}
-			ImGui::PushItemWidth(160);
+			ImGui::PushItemWidth(150);
 			
 			if (ImGui::SliderInt("Count", &_state.particles.count, 1, 512)) {
 				_state.particles.count =
@@ -418,7 +423,7 @@ void Renderer::drawGUI(const float currentTime) {
 			}
 
 			ImGui::SameLine(160);
-			if (ImGui::Button("Clear##TextureParticles")) {
+			if (ImGui::Button("Clear images##TextureParticles")) {
 				// Use a white square particle appearance by default.
 				const GLuint blankID = ResourcesManager::getTextureFor("blankarray");
 				_state.particles.tex = blankID;
@@ -486,7 +491,7 @@ void Renderer::drawGUI(const float currentTime) {
 			ImGui::Checkbox("Blur the notes", &_state.showBlurNotes);
 			ImGui::SameLine(160);
 			ImGui::PushItemWidth(86);
-			if (ImGui::SliderFloat("Attenuation", &_state.attenuation, 0.0f, 1.0f)) {
+			if (ImGui::SliderFloat("Fading", &_state.attenuation, 0.0f, 1.0f)) {
 				_state.attenuation = std::min(1.0f, std::max(0.0f, _state.attenuation));
 				glUseProgram(_blurringScreen.programId());
 				const GLuint id1 = glGetUniformLocation(_blurringScreen.programId(),
@@ -573,8 +578,6 @@ void Renderer::drawGUI(const float currentTime) {
 		ImGui::InputInt("Rate", &_exportFramerate);
 		ImGui::PopItemWidth();
 
-		
-		
 
 		if (_showDebug) {
 			ImGui::Separator();
@@ -596,19 +599,22 @@ void Renderer::drawGUI(const float currentTime) {
 }
 
 void Renderer::showLayers() {
+	ImGui::SetNextWindowSize(ImVec2(200.0f, 0.0f));
 	if (ImGui::Begin("Layers", &_showLayers)) {
-		for (int i = 0; i < _layers.size(); ++i) {
-			auto & layer = _layers[i];
+		for (int i = _state.layersMap.size()-1; i >= 0; --i) {
+			const int layerId = _state.layersMap[i];
+			if (layerId >= _layers.size()) {
+				continue;
+			}
+			auto & layer = _layers[layerId];
 			if (layer.type == Layer::BGCOLOR) {
 				continue;
 			}
 			ImGui::Separator();
-			ImGui::PushID(i);
+			ImGui::PushID(layerId);
 			ImGui::BeginGroup();
-			if (layer.toggle) {
-				ImGui::Checkbox("##LayerCheckbox", layer.toggle);
-				ImGui::SameLine(20);
-			}
+			ImGui::Checkbox("##LayerCheckbox", layer.toggle);
+			ImGui::SameLine(25);
 
 			ImGui::Text(layer.name.c_str());
 			ImGui::EndGroup();
@@ -623,7 +629,13 @@ void Renderer::showLayers() {
 				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("REORDER_LAYER"))
 				{
 					int iPayload = *(const int*)payload->Data;
-					std::swap(_layers[i], _layers[iPayload]);
+					int newId = _state.layersMap[iPayload];
+					// Instead of just swapping, we shift all intermediate indices.
+					const int ddlt = (iPayload <= i ? 1 : -1);
+					for (int lid = iPayload; lid != i; lid += ddlt) {
+						_state.layersMap[lid] = _state.layersMap[lid + ddlt];
+					}
+					_state.layersMap[i] = newId;
 				}
 				ImGui::EndDragDropTarget();
 			}
