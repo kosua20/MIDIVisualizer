@@ -4,6 +4,7 @@
 #include "../helpers/ResourcesManager.h"
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 // Quality names.
 const std::map<std::string, Quality::Level> Quality::names = {
@@ -34,9 +35,13 @@ Quality::Quality(const Quality::Level & alevel, const float partRes, const float
 
 
 void State::save(const std::string & path){
-	std::ofstream configFile(path);
+	std::string outputPath = path;
+	if (path.size() > 4 && path.substr(path.size() - 4, 4) != ".ini") {
+		outputPath += ".ini";
+	}
+	std::ofstream configFile(outputPath);
 	if(!configFile.is_open()){
-		std::cerr << "Unable to save state to file at path " << path << std::endl;
+		std::cerr << "Unable to save state to file at path " << outputPath << std::endl;
 		return;
 	}
 	configFile << MIDIVIZ_VERSION_MAJOR << " " << MIDIVIZ_VERSION_MINOR << std::endl;
@@ -75,6 +80,11 @@ void State::save(const std::string & path){
 
 	configFile << prerollTime << std::endl;
 	configFile << showScore << std::endl;
+
+	for (int i = 0; i < layersMap.size(); ++i) {
+		configFile << layersMap[i] << (i != (layersMap.size() - 1) ? " " : "");
+	}
+	configFile << std::endl;
 
 	configFile.close();
 }
@@ -155,6 +165,17 @@ void State::load(const std::string & path){
 	if (majVersion >= 3 && minVersion >= 5) {
 		configFile >> prerollTime;
 		configFile >> showScore;
+		std::string layersList;
+		// Get the next line.
+		// Skip newline.
+		std::getline(configFile, layersList);
+		std::getline(configFile, layersList);
+		std::stringstream sstr(layersList);
+		int id = 0;
+		while (!sstr.eof() && id < layersMap.size()) {
+			sstr >> layersMap[id];
+			++id;
+		}
 	}
 	
 	configFile.close();
@@ -198,4 +219,8 @@ void State::reset(){
 	
 	quality = Quality::MEDIUM;
 	prerollTime = 1.0f;
+
+	for (int i = 0; i < layersMap.size(); ++i) {
+		layersMap[i] = i;
+	}
 }

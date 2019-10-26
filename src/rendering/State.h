@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 #include <map>
-
+#include <array>
 
 #define MIDIVIZ_VERSION_MAJOR 3
 #define MIDIVIZ_VERSION_MINOR 5
@@ -79,6 +79,8 @@ public:
 	bool showNotes;
 	bool showScore;
 	
+	std::array<int, 16> layersMap;
+
 	void load(const std::string & path);
 	
 	void save(const std::string & path);
