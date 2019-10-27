@@ -231,6 +231,16 @@ void Renderer::blurPrepass() {
 
 void Renderer::drawBackgroundImage(const glm::vec2 &) {
 	// Use background.tex and background.imageAlpha
+	// Early exit if no texture or transparent.
+	if(_state.background.tex == 0 || _state.background.imageAlpha < 1.0f/255.0f) {
+		return;
+	}
+	glEnable(GL_BLEND);
+	glUseProgram(_backgroundTexture.programId());
+	glUniform1f(glGetUniformLocation(_backgroundTexture.programId(), "textureAlpha"), _state.background.imageAlpha);
+	glUniform1i(glGetUniformLocation(_backgroundTexture.programId(), "behindKeyboard"), _state.background.imageBehindKeyboard);
+	_backgroundTexture.draw(_state.background.tex, _timer);
+	glDisable(GL_BLEND);
 }
 
 void Renderer::drawBlur(const glm::vec2 &) {
@@ -481,7 +491,7 @@ void Renderer::drawGUI(const float currentTime) {
 				nfdresult_t result = NFD_OpenDialog("jpg,jpeg;png", NULL, &outPath);
 				if (result == NFD_OKAY) {
 					glDeleteTextures(1, &_state.background.tex);
-					_state.background.tex = loadTexture(std::string(outPath), false);
+					_state.background.tex = loadTexture(std::string(outPath), 4, false);
 					_state.background.image = true;
 					// Ensure minimal visibility.
 					if (_state.background.imageAlpha < 0.1f) {
@@ -495,6 +505,8 @@ void Renderer::drawGUI(const float currentTime) {
 				glDeleteTextures(1, &_state.background.tex);
 				_state.background.tex = 0;
 			}
+			ImGui::Checkbox("Cover under keyboard", &_state.background.imageBehindKeyboard);
+
 		}
 		ImGui::Separator();
 
