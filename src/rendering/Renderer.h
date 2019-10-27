@@ -62,11 +62,13 @@ private:
 
 	void blurPrepass();
 
+	void drawBackgroundImage(const glm::vec2 & invSize);
+
 	void drawBlur(const glm::vec2 & invSize);
 
 	void drawParticles(const glm::vec2 & invSize);
 
-	void drawBackground(const glm::vec2 & invSize);
+	void drawScore(const glm::vec2 & invSize);
 
 	void drawKeyboard(const glm::vec2 & invSize);
 
