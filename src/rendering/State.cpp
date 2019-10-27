@@ -86,6 +86,9 @@ void State::save(const std::string & path){
 	}
 	configFile << std::endl;
 
+	configFile << background.image << std::endl;
+	configFile << background.imageAlpha << std::endl;
+
 	configFile.close();
 }
 
@@ -176,6 +179,8 @@ void State::load(const std::string & path){
 			sstr >> layersMap[id];
 			++id;
 		}
+		configFile >> background.image;
+		configFile >> background.imageAlpha;
 	}
 	
 	configFile.close();
@@ -207,12 +212,14 @@ void State::reset(){
 	background.vLines = true ;
 	background.digits = true ;
 	background.keys = true ;
-	
+	background.image = false;
+	background.imageAlpha = 1.0f;
+	background.tex = 0;
+
 	particles.speed = 0.2f;
 	particles.expansion = 1.0f;
 	particles.scale = 1.0f;
 	particles.count = 256;
-	
 	const GLuint blankID = ResourcesManager::getTextureFor("blankarray");
 	particles.tex = blankID;
 	particles.texCount = 1;

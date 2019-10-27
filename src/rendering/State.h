@@ -48,6 +48,9 @@ public:
 		bool vLines;
 		bool digits;
 		bool keys;
+		bool image;
+		float imageAlpha;
+		GLuint tex;
 	};
 	
 	
