@@ -88,7 +88,7 @@ void State::save(const std::string & path){
 
 	configFile << background.image << std::endl;
 	configFile << background.imageAlpha << std::endl;
-
+	configFile << background.imageBehindKeyboard << std::endl;
 	configFile.close();
 }
 
@@ -181,6 +181,7 @@ void State::load(const std::string & path){
 		}
 		configFile >> background.image;
 		configFile >> background.imageAlpha;
+		configFile >> background.imageBehindKeyboard;
 	}
 	
 	configFile.close();
@@ -215,6 +216,7 @@ void State::reset(){
 	background.image = false;
 	background.imageAlpha = 1.0f;
 	background.tex = 0;
+	background.imageBehindKeyboard = false;
 
 	particles.speed = 0.2f;
 	particles.expansion = 1.0f;

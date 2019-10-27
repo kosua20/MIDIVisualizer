@@ -49,6 +49,7 @@ public:
 		bool digits;
 		bool keys;
 		bool image;
+		bool imageBehindKeyboard;
 		float imageAlpha;
 		GLuint tex;
 	};
