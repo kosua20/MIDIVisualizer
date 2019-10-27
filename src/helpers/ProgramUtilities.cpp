@@ -176,18 +176,18 @@ GLuint createGLProgramFromStrings(const std::string & vertexContent, const std::
 	return id;
 }
 
-GLuint loadTexture(const std::string& path, bool sRGB){
+GLuint loadTexture(const std::string& path, unsigned int channels, bool sRGB){
 
 	// Load and upload the texture.
 	int imwidth, imheight, nChans;
 	stbi_set_flip_vertically_on_load(true);
-	unsigned char * image = stbi_load(path.c_str(), &imwidth, &imheight, &nChans, 1);
+	unsigned char * image = stbi_load(path.c_str(), &imwidth, &imheight, &nChans, channels);
 	if(image == NULL){
 		std::cerr << "Unable to load the texture at path " << path << "." << std::endl;
 		return 0;
 	}
 	stbi_set_flip_vertically_on_load(false);
-	GLuint textureId = loadTexture(image, imwidth, imheight, 1, sRGB);
+	GLuint textureId = loadTexture(image, imwidth, imheight, channels, sRGB);
 	stbi_image_free(image);
 	return textureId;
 }

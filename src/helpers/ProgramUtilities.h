@@ -30,7 +30,7 @@ GLuint createGLProgramFromStrings(const std::string & vertexContent, const std::
 
 // 2D texture.
 
-GLuint loadTexture(const std::string& path, bool sRGB);
+GLuint loadTexture(const std::string& path, unsigned int channels, bool sRGB);
 
 //GLuint loadTexture(const std::string& path, const GLuint program, const GLuint textureSlot, const std::string& uniformName, bool sRGB = false);
 
