@@ -311,14 +311,17 @@ void Renderer::drawGUI(const float currentTime) {
 			}
 		}
 
+
+		if (ImGui::Button("Show layers...")) {
+			_showLayers = true;
+		}
 		ImGui::SameLine(160);
 		ImGui::PushItemWidth(100);
 		if (ImGui::Combo("Quality", (int *)(&_state.quality),
 			"Half\0Low\0Medium\0High\0Double\0\0")) {
 			resize(int(_camera._screenSize[0]), int(_camera._screenSize[1]));
 		}
-		ImGui::PopItemWidth();
-
+		
 		ImGui::PushItemWidth(100);
 		const bool smw0 = ImGui::InputFloat("Scale", &_state.scale, 0.01f, 0.1f);
 		ImGui::SameLine(160);
@@ -326,9 +329,7 @@ void Renderer::drawGUI(const float currentTime) {
 			reset();
 		}
 		ImGui::PopItemWidth();
-		if (ImGui::Button("Show layers...")) {
-			_showLayers = true;
-		}
+
 		ImGui::PushItemWidth(25);
 		bool colNotesEdit = ImGui::ColorEdit3("Notes", &_state.baseColor[0],
 			ImGuiColorEditFlags_NoInputs);
@@ -599,8 +600,10 @@ void Renderer::drawGUI(const float currentTime) {
 }
 
 void Renderer::showLayers() {
-	ImGui::SetNextWindowSize(ImVec2(200.0f, 0.0f));
+	const ImVec2 & screenSize = ImGui::GetIO().DisplaySize; 
+	ImGui::SetNextWindowPos(ImVec2(screenSize.x * 0.5f, screenSize.y * 0.5f), ImGuiCond_Once, ImVec2(0.5f, 0.5f));
 	if (ImGui::Begin("Layers", &_showLayers)) {
+		ImGui::TextDisabled("You can drag and drop layers to reorder them.");
 		for (int i = _state.layersMap.size()-1; i >= 0; --i) {
 			const int layerId = _state.layersMap[i];
 			if (layerId >= _layers.size()) {
@@ -612,12 +615,11 @@ void Renderer::showLayers() {
 			}
 			ImGui::Separator();
 			ImGui::PushID(layerId);
-			ImGui::BeginGroup();
+			
 			ImGui::Checkbox("##LayerCheckbox", layer.toggle);
-			ImGui::SameLine(25);
-
-			ImGui::Text(layer.name.c_str());
-			ImGui::EndGroup();
+			ImGui::SameLine();
+			ImGui::Selectable(layer.name.c_str());
+			
 			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
 			{
 				ImGui::Text(layer.name.c_str());
