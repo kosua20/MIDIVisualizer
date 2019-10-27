@@ -107,9 +107,10 @@ private:
 
 	std::shared_ptr<MIDIScene> _scene;
 	ScreenQuad _blurringScreen;
-	ScreenQuad _blurryScreen;
-	ScreenQuad _finalScreen;
-	std::shared_ptr<Background> _background;
+	//ScreenQuad _blurryScreen;
+	ScreenQuad _passthrough;
+	ScreenQuad _backgroundTexture;
+	std::shared_ptr<Background> _score;
 	bool _showLayers = false;
 };
 

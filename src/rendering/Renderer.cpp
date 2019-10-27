@@ -50,12 +50,9 @@ void Renderer::init(int width, int height) {
 		new Framebuffer(int(_camera._screenSize[0]), int(_camera._screenSize[1]), GL_RGB,
 			GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
 
-	_blurringScreen.init(_particlesFramebuffer->textureId(),
-		ResourcesManager::getStringForShader("particlesblur_frag"));
-	_blurryScreen.init(_blurFramebuffer->textureId(),
-		ResourcesManager::getStringForShader("screenquad_frag"));
-	_finalScreen.init(_finalFramebuffer->textureId(),
-		ResourcesManager::getStringForShader("screenquad_frag"));
+	_backgroundTexture.init("backgroundtexture_frag", "backgroundtexture_vert");
+	_blurringScreen.init(_particlesFramebuffer->textureId(), "particlesblur_frag");
+	_passthrough.init("screenquad_frag");
 
 	_state.reset();
 
@@ -118,7 +115,7 @@ void Renderer::loadFile(const std::string &midiFilePath) {
 
 	// Init objects.
 	_scene = std::make_shared<MIDIScene>(midiFilePath);
-	_background = std::make_shared<Background>(_scene->midiFile().tracks[0].secondsPerMeasure);
+	_score = std::make_shared<Background>(_scene->midiFile().tracks[0].secondsPerMeasure);
 
 	applyAllSettings();
 }
@@ -197,7 +194,7 @@ void Renderer::draw(const float currentTime) {
 	_finalFramebuffer->unbind();
 
 	glViewport(0, 0, GLsizei(_camera._screenSize[0]), GLsizei(_camera._screenSize[1]));
-	_finalScreen.draw(_timer, {});
+	_passthrough.draw(_finalFramebuffer->textureId(), _timer);
 
 	if (_showGUI) {
 		drawGUI(currentTime);
@@ -211,7 +208,7 @@ void Renderer::blurPrepass() {
 	// Set viewport.
 	glViewport(0, 0, _particlesFramebuffer->_width, _particlesFramebuffer->_height);
 	// Draw blurred particles from previous frames.
-	_blurryScreen.draw(_timer);
+	_passthrough.draw(_blurFramebuffer->textureId(), _timer);
 	if (_state.showParticles) {
 		// Draw the new particles.
 		_scene->drawParticles(_timer, invSizeB, _state.particles.color, _state.particles.scale, _state.particles.tex, _state.particles.texCount, _state.particles.count, true);
@@ -238,7 +235,7 @@ void Renderer::drawBackgroundImage(const glm::vec2 &) {
 
 void Renderer::drawBlur(const glm::vec2 &) {
 	glEnable(GL_BLEND);
-	_blurryScreen.draw(_timer);
+	_passthrough.draw(_blurFramebuffer->textureId(), _timer);
 	glDisable(GL_BLEND);
 }
 
@@ -247,7 +244,7 @@ void Renderer::drawParticles(const glm::vec2 & invSize) {
 }
 
 void Renderer::drawScore(const glm::vec2 & invSize) {
-	_background->draw(_timer, invSize);
+	_score->draw(_timer, invSize);
 }
 
 void Renderer::drawKeyboard(const glm::vec2 & invSize) {
@@ -429,7 +426,7 @@ void Renderer::drawGUI(const float currentTime) {
 			ImGui::PopItemWidth();
 
 			if (cbg2) {
-				_background->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
+				_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
 			}
 		}
 
@@ -446,11 +443,11 @@ void Renderer::drawGUI(const float currentTime) {
 			const bool m3 = ImGui::Checkbox("Vertical lines", &_state.background.vLines);
 
 			if (m1 || m2 || m3) {
-				_background->setDisplay(_state.background.digits, _state.background.hLines, _state.background.vLines);
+				_score->setDisplay(_state.background.digits, _state.background.hLines, _state.background.vLines);
 			}
 
 			if (cbg0 || cbg1) {
-				_background->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
+				_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
 			}
 		}
 
@@ -477,7 +474,7 @@ void Renderer::drawGUI(const float currentTime) {
 			if (ImGui::SliderFloat("Image opacity", &_state.background.imageAlpha, 0.0f, 1.0f)) {
 				_state.background.imageAlpha = std::min(std::max(_state.background.imageAlpha, 0.0f), 1.0f);
 			}
-
+			
 			if (ImGui::Button("Load image...##Background")){
 				// Read arguments.
 				nfdchar_t *outPath = NULL;
@@ -529,7 +526,7 @@ void Renderer::drawGUI(const float currentTime) {
 			_state.scale = std::max(_state.scale, 0.01f);
 			_state.background.minorsWidth = std::min(std::max(_state.background.minorsWidth, 0.1f), 1.0f);
 			_scene->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
-			_background->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
+			_score->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
 		}
 
 		// Keep the colors in sync if needed.
@@ -700,10 +697,10 @@ void Renderer::applyAllSettings() {
 
 	// One-shot parameters.
 	_scene->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
-	_background->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
+	_score->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
 	_scene->setParticlesParameters(_state.particles.speed, _state.particles.expansion);
-	_background->setDisplay(_state.background.digits, _state.background.hLines, _state.background.vLines);
-	_background->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
+	_score->setDisplay(_state.background.digits, _state.background.hLines, _state.background.vLines);
+	_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
 
 	// Reset buffers.
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -730,9 +727,10 @@ void Renderer::clean() {
 
 	// Clean objects.
 	_scene->clean();
-	_background->clean();
+	_score->clean();
 	_blurringScreen.clean();
-	_blurryScreen.clean();
+	_passthrough.clean();
+	_backgroundTexture.clean();
 	_particlesFramebuffer->clean();
 	_blurFramebuffer->clean();
 	_finalFramebuffer->clean();
