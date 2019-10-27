@@ -115,7 +115,7 @@ void Renderer::loadFile(const std::string &midiFilePath) {
 
 	// Init objects.
 	_scene = std::make_shared<MIDIScene>(midiFilePath);
-	_score = std::make_shared<Background>(_scene->midiFile().tracks[0].secondsPerMeasure);
+	_score = std::make_shared<Score>(_scene->midiFile().tracks[0].secondsPerMeasure);
 
 	applyAllSettings();
 }
@@ -215,7 +215,7 @@ void Renderer::blurPrepass() {
 	}
 	if (_state.showBlurNotes) {
 		// Draw the notes.
-		_scene->draw(_timer, invSizeB, _state.baseColor, _state.minorColor, true);
+		_scene->drawNotes(_timer, invSizeB, _state.baseColor, _state.minorColor, true);
 	}
 
 	_particlesFramebuffer->unbind();
@@ -262,7 +262,7 @@ void Renderer::drawKeyboard(const glm::vec2 & invSize) {
 }
 
 void Renderer::drawNotes(const glm::vec2 & invSize) {
-	_scene->draw(_timer, invSize, _state.baseColor, _state.minorColor, false);
+	_scene->drawNotes(_timer, invSize, _state.baseColor, _state.minorColor, false);
 }
 
 void Renderer::drawFlashes(const glm::vec2 & invSize) {
@@ -505,7 +505,7 @@ void Renderer::drawGUI(const float currentTime) {
 				glDeleteTextures(1, &_state.background.tex);
 				_state.background.tex = 0;
 			}
-			ImGui::Checkbox("Cover under keyboard", &_state.background.imageBehindKeyboard);
+			ImGui::Checkbox("Image extends under keyboard", &_state.background.imageBehindKeyboard);
 
 		}
 		ImGui::Separator();

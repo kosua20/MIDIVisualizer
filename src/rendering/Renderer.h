@@ -10,7 +10,7 @@
 #include "camera/Camera.h"
 #include "MIDIScene.h"
 #include "ScreenQuad.h"
-#include "Background.h"
+#include "Score.h"
 
 #include "State.h"
 
@@ -107,10 +107,9 @@ private:
 
 	std::shared_ptr<MIDIScene> _scene;
 	ScreenQuad _blurringScreen;
-	//ScreenQuad _blurryScreen;
 	ScreenQuad _passthrough;
 	ScreenQuad _backgroundTexture;
-	std::shared_ptr<Background> _score;
+	std::shared_ptr<Score> _score;
 	bool _showLayers = false;
 };
 

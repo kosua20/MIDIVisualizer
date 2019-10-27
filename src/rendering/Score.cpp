@@ -5,9 +5,9 @@
 #include "../helpers/ProgramUtilities.h"
 #include "../helpers/ResourcesManager.h"
 
-#include "Background.h"
+#include "Score.h"
 
-Background::Background(double secondsPerMeasure){
+Score::Score(double secondsPerMeasure){
 	
 	// Load font atlas.
 	GLuint textureId = ResourcesManager::getTextureFor("font");
@@ -22,7 +22,7 @@ Background::Background(double secondsPerMeasure){
 
 }
 
-void Background::setScaleAndMinorWidth(const float scale, const float width){
+void Score::setScaleAndMinorWidth(const float scale, const float width){
 	glUseProgram(_programId);
 	GLuint speedID = glGetUniformLocation(_programId, "mainSpeed");
 	glUniform1f(speedID, scale);
@@ -31,7 +31,7 @@ void Background::setScaleAndMinorWidth(const float scale, const float width){
 	glUseProgram(0);
 }
 
-void Background::setDisplay(const bool digits, const bool horiz, const bool vert){
+void Score::setDisplay(const bool digits, const bool horiz, const bool vert){
 	glUseProgram(_programId);
 	GLuint id1 = glGetUniformLocation(_programId, "useDigits"); glUniform1i(id1, digits);
 	GLuint id2 = glGetUniformLocation(_programId, "useHLines"); glUniform1i(id2, horiz);
@@ -39,7 +39,7 @@ void Background::setDisplay(const bool digits, const bool horiz, const bool vert
 	glUseProgram(0);
 }
 
-void Background::setColors(const glm::vec3 & linesColor, const glm::vec3 & textColor, const glm::vec3 & keysColor){
+void Score::setColors(const glm::vec3 & linesColor, const glm::vec3 & textColor, const glm::vec3 & keysColor){
 	glUseProgram(_programId);
 	GLuint id1 = glGetUniformLocation(_programId, "linesColor"); glUniform3fv(id1, 1, &linesColor[0]);
 	GLuint id2 = glGetUniformLocation(_programId, "textColor"); glUniform3fv(id2, 1, &textColor[0]);

@@ -15,11 +15,10 @@ public:
 	/// Init function
 	MIDIScene(const std::string & midiFilePath);
 	
-	
 	void updatesActiveNotes(double time);
 	
 	/// Draw function
-	void draw(float time, const glm::vec2 & invScreenSize, const glm::vec3 & baseColor, const glm::vec3 & minorColor, bool prepass);
+	void drawNotes(float time, const glm::vec2 & invScreenSize, const glm::vec3 & baseColor, const glm::vec3 & minorColor, bool prepass);
 	
 	void drawFlashes(float time, const glm::vec2 & invScreenSize, const glm::vec3 & baseColor, float userScale);
 	

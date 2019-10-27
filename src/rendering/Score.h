@@ -1,5 +1,5 @@
-#ifndef Background_h
-#define Background_h
+#ifndef Score_h
+#define Score_h
 #include <GLFW/glfw3.h>
 #include <gl3w/gl3w.h>
 #include <glm/glm.hpp>
@@ -7,12 +7,12 @@
 #include "ScreenQuad.h"
 
 
-class Background : public ScreenQuad {
+class Score : public ScreenQuad {
 
 public:
 
 	/// Init function with measure time.
-	Background(double secondsPerMeasure);
+	Score(double secondsPerMeasure);
 	
 	void setScaleAndMinorWidth(const float scale, const float width);
 	

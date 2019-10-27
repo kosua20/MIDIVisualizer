@@ -294,7 +294,7 @@ void MIDIScene::drawParticles(float time, const glm::vec2 & invScreenSize, const
 
 }
 
-void MIDIScene::draw(float time, const glm::vec2 & invScreenSize, const glm::vec3 & baseColor, const glm::vec3 & minorColor, bool prepass){
+void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const glm::vec3 & baseColor, const glm::vec3 & minorColor, bool prepass){
 	
 	glUseProgram(_programId);
 	
