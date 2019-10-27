@@ -14,12 +14,18 @@ public:
 	~ScreenQuad();
 
 	/// Init function
-	void init(GLuint textureId, const std::string & fragShader);
+	void init(GLuint textureId, const std::string & fragName);
+
+	void init(const std::string & fragName, const std::string & vertName = "screenquad_vert");
 
 	/// Draw function
 	void draw(float time, glm::vec2 invScreenSize);
 
 	void draw(float time);
+
+	void draw(GLuint textureId, float time, glm::vec2 invScreenSize);
+
+	void draw(GLuint textureId, float time);
 
 	/// Clean function
 	void clean();
