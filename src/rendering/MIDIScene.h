@@ -3,7 +3,7 @@
 #include <gl3w/gl3w.h>
 #include <glm/glm.hpp>
 #include "../midi/MIDIFile.h"
-
+#include "State.h"
 
 
 class MIDIScene {
@@ -23,7 +23,7 @@ public:
 	
 	void drawFlashes(float time, const glm::vec2 & invScreenSize, const glm::vec3 & baseColor, float userScale);
 	
-	void drawParticles(float time, const glm::vec2 & invScreenSize, const glm::vec3 & particlesColor, const float particlesScale, const GLuint lookTexture, const int texCount, const int particlesCount, bool prepass);
+	void drawParticles(float time, const glm::vec2 & invScreenSize, const State::ParticlesState & state, bool prepass);
 	
 	void drawKeyboard(float time, const glm::vec2 & invScreenSize, const glm::vec3 & keyColor);
 

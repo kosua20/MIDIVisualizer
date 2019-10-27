@@ -211,7 +211,7 @@ void Renderer::blurPrepass() {
 	_passthrough.draw(_blurFramebuffer->textureId(), _timer);
 	if (_state.showParticles) {
 		// Draw the new particles.
-		_scene->drawParticles(_timer, invSizeB, _state.particles.color, _state.particles.scale, _state.particles.tex, _state.particles.texCount, _state.particles.count, true);
+		_scene->drawParticles(_timer, invSizeB, _state.particles, true);
 	}
 	if (_state.showBlurNotes) {
 		// Draw the notes.
@@ -240,7 +240,7 @@ void Renderer::drawBlur(const glm::vec2 &) {
 }
 
 void Renderer::drawParticles(const glm::vec2 & invSize) {
-	_scene->drawParticles(_timer, invSize, _state.particles.color, _state.particles.scale, _state.particles.tex, _state.particles.texCount, _state.particles.count, false);
+	_scene->drawParticles(_timer, invSize, _state.particles, false);
 }
 
 void Renderer::drawScore(const glm::vec2 & invSize) {

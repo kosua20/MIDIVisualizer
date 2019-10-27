@@ -240,11 +240,9 @@ void MIDIScene::resetParticles() {
 	}
 }
 
-void MIDIScene::drawParticles(float time, const glm::vec2 & invScreenSize, const glm::vec3 & particlesColor, const float particlesScale, const GLuint lookTexture, const int texCount, const int particlesCount, bool prepass){
+void MIDIScene::drawParticles(float time, const glm::vec2 & invScreenSize, const State::ParticlesState & state, bool prepass){
 
-	// Need alpha blending.
 	glEnable(GL_BLEND);
-
 	glUseProgram(_programParticulesId);
 	
 	// Common uniforms values.
@@ -261,21 +259,22 @@ void MIDIScene::drawParticles(float time, const glm::vec2 & invScreenSize, const
 	GLuint colorId = glGetUniformLocation(_programParticulesId, "baseColor");
 	
 	// Prepass : bigger, darker particles.
+	const glm::vec3 & pcol = state.color;
 	if(prepass){
-		glUniform1f(scaleId, particlesScale*2.0f);
-		glUniform3f(colorId,0.6f*particlesColor[0], 0.6f*particlesColor[1], 0.6f*particlesColor[2]);
+		glUniform1f(scaleId, state.scale*2.0f);
+		glUniform3f(colorId, 0.6f*pcol[0], 0.6f*pcol[1], 0.6f*pcol[2]);
 	} else {
-		glUniform1f(scaleId, particlesScale);
-		glUniform3f(colorId,1.6f*particlesColor[0], 1.6f*particlesColor[1], 1.6f*particlesColor[2]);
+		glUniform1f(scaleId, state.scale);
+		glUniform3f(colorId, 1.6f*pcol[0], 1.6f*pcol[1], 1.6f*pcol[2]);
 	}
 	
 	// Particles trajectories texture.
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, _texParticles);
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D_ARRAY, lookTexture);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, state.tex);
 	GLuint texCountId = glGetUniformLocation(_programParticulesId, "texCount");
-	glUniform1i(texCountId, texCount);
+	glUniform1i(texCountId, state.texCount);
 
 	// Select the geometry.
 	glBindVertexArray(_vaoParticles);
@@ -285,10 +284,9 @@ void MIDIScene::drawParticles(float time, const glm::vec2 & invScreenSize, const
 			glUniform1i(globalShiftId, particle.note);
 			glUniform1f(timeId, particle.elapsed);
 			glUniform1f(durationId, particle.duration);
-			glDrawElementsInstanced(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0, particlesCount);
+			glDrawElementsInstanced(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0, state.count);
 		}
 	}
-	
 	
 	glBindVertexArray(0);
 	glUseProgram(0);
