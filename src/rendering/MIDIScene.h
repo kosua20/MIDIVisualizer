@@ -18,13 +18,13 @@ public:
 	void updatesActiveNotes(double time);
 	
 	/// Draw function
-	void drawNotes(float time, const glm::vec2 & invScreenSize, const glm::vec3 & baseColor, const glm::vec3 & minorColor, bool prepass);
+	void drawNotes(float time, const glm::vec2 & invScreenSize, const glm::vec3 & majorColor, const glm::vec3 & minorColor, bool prepass);
 	
 	void drawFlashes(float time, const glm::vec2 & invScreenSize, const glm::vec3 & baseColor, float userScale);
 	
 	void drawParticles(float time, const glm::vec2 & invScreenSize, const State::ParticlesState & state, bool prepass);
 	
-	void drawKeyboard(float time, const glm::vec2 & invScreenSize, const glm::vec3 & keyColor);
+	void drawKeyboard(float time, const glm::vec2 & invScreenSize, const glm::vec3 & keyColor, const glm::vec3 & majorColor, const glm::vec3 & minorColor, bool highlightKeys);
 
 	/// Clean function
 	void clean();
@@ -57,6 +57,7 @@ private:
 	GLuint _texParticles;
 
 	GLuint _vaoKeyboard;
+	GLuint _uboKeyboard;
 	
 	size_t _primitiveCount;
 	size_t _notesCount;

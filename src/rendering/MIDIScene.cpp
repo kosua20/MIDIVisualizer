@@ -67,8 +67,14 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 	_flagsBufferId = 0;
 	glGenBuffers(1, &_flagsBufferId);
 	glBindBuffer(GL_ARRAY_BUFFER, _flagsBufferId);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLint) * 88, NULL, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(int) * 88, NULL, GL_DYNAMIC_DRAW);
 	
+	_uboKeyboard = 0;
+	glGenBuffers(1, &_uboKeyboard);
+	glBindBuffer(GL_UNIFORM_BUFFER, _uboKeyboard);
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(int)*88, NULL, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
 	
 	// Programs.
 	
@@ -169,6 +175,8 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 	// We load the indices data
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
 	glBindVertexArray(0);
+	const GLuint uboLoc = glGetUniformBlockIndex(_programKeysId, "ActiveNotes");
+	glUniformBlockBinding(_programKeysId, uboLoc, 0);
 
 	// Prepare actives notes array.
 	_actives = std::vector<int>(88, 0);
@@ -294,7 +302,7 @@ void MIDIScene::drawParticles(float time, const glm::vec2 & invScreenSize, const
 
 }
 
-void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const glm::vec3 & baseColor, const glm::vec3 & minorColor, bool prepass){
+void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const glm::vec3 & majorColor, const glm::vec3 & minorColor, bool prepass){
 	
 	glUseProgram(_programId);
 	
@@ -306,10 +314,10 @@ void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const glm
 	glUniform2fv(screenId,1, &(invScreenSize[0]));
 	glUniform1f(timeId,time);
 	if(prepass){
-		glUniform3f(colorId, 0.6f*baseColor[0], 0.6f*baseColor[1], 0.6f*baseColor[2]);
+		glUniform3f(colorId, 0.6f*majorColor[0], 0.6f*majorColor[1], 0.6f*majorColor[2]);
 		glUniform3f(colorMinId, 0.6f*minorColor[0], 0.6f*minorColor[1], 0.6f*minorColor[2]);
 	} else {
-		glUniform3fv(colorId, 1, &(baseColor[0]));
+		glUniform3fv(colorId, 1, &(majorColor[0]));
 		glUniform3fv(colorMinId, 1, &(minorColor[0]));
 	}
 	
@@ -328,12 +336,9 @@ void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const g
 	// Need alpha blending.
 	glEnable(GL_BLEND);
 	
-	// Get notes actives at exactly the current time.
-	
-	
 	// Update the flags buffer accordingly.
 	glBindBuffer(GL_ARRAY_BUFFER, _flagsBufferId);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, _actives.size()*sizeof(GLint) ,&(_actives[0]));
+	glBufferSubData(GL_ARRAY_BUFFER, 0, _actives.size()*sizeof(int) ,&(_actives[0]));
 	
 	glUseProgram(_programFlashesId);
 	
@@ -360,15 +365,28 @@ void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const g
 	
 }
 
-void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::vec3 & keyColor) {
+void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::vec3 & keyColor, const glm::vec3 & majorColor, const glm::vec3 & minorColor, bool highlightKeys) {
+	// Upload active keys data.
+	glBindBuffer(GL_UNIFORM_BUFFER, _uboKeyboard);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, _actives.size() * sizeof(int), &(_actives[0]));
+	//glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
 	glUseProgram(_programKeysId);
 
 	// Uniforms setup.
-	GLuint screenId1 = glGetUniformLocation(_programKeysId, "inverseScreenSize");
-	GLuint colorId = glGetUniformLocation(_programKeysId, "keysColor");
+	const GLuint screenId1 = glGetUniformLocation(_programKeysId, "inverseScreenSize");
+	const GLuint colorId = glGetUniformLocation(_programKeysId, "keysColor");
+	const GLuint majorId = glGetUniformLocation(_programKeysId, "majorColor");
+	const GLuint minorId = glGetUniformLocation(_programKeysId, "minorColor");
+	const GLuint highId = glGetUniformLocation(_programKeysId, "highlightKeys");
 	glUniform2fv(screenId1, 1, &(invScreenSize[0]));
 	glUniform3fv(colorId, 1, &(keyColor[0]));
-	
+	glUniform3fv(majorId, 1, &(majorColor[0]));
+	glUniform3fv(minorId, 1, &(minorColor[0]));
+	glUniform1i(highId, int(highlightKeys));
+
+	glBindBuffer(GL_UNIFORM_BUFFER, _uboKeyboard);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 0, _uboKeyboard);
 
 	// Draw the geometry.
 	glBindVertexArray(_vaoKeyboard);
@@ -382,8 +400,6 @@ void MIDIScene::clean(){
 	glDeleteVertexArrays(1, &_vao);
 	glDeleteVertexArrays(1, &_vaoFlashes);
 	glDeleteVertexArrays(1, &_vaoParticles);
-	//glDeleteTextures(1, &_texFlash);
-	//glDeleteTextures(1, &_texParticles);
 	glDeleteProgram(_programId);
 	glDeleteProgram(_programFlashesId);
 	glDeleteProgram(_programParticulesId);
