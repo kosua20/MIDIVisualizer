@@ -258,7 +258,7 @@ void Renderer::drawScore(const glm::vec2 & invSize) {
 }
 
 void Renderer::drawKeyboard(const glm::vec2 & invSize) {
-	_scene->drawKeyboard(_timer, invSize, _state.background.keysColor);
+	_scene->drawKeyboard(_timer, invSize, _state.background.keysColor, _state.baseColor, _state.minorColor, _state.highlightKeys);
 }
 
 void Renderer::drawNotes(const glm::vec2 & invSize) {
@@ -284,8 +284,8 @@ void Renderer::drawGUI(const float currentTime) {
 		if (ImGui::Button("Hide (i)")) {
 			_showGUI = false;
 		}
-		// Use the info button to enforce max window width while autoresizing.
-		ImGui::SameLine(300);
+		
+		ImGui::SameLine(320);
 		ImGui::TextDisabled("(?)");
 		if (ImGui::IsItemHovered()) {
 			ImGui::BeginTooltip();
@@ -308,6 +308,12 @@ void Renderer::drawGUI(const float currentTime) {
 				loadFile(std::string(outPath));
 			}
 		}
+		ImGui::SameLine(160);
+		ImGui::PushItemWidth(100);
+		if (ImGui::InputFloat("Preroll", &_state.prerollTime, 0.1f, 1.0f)) {
+			reset();
+		}
+		ImGui::PopItemWidth();
 
 		if (ImGui::Button("Show layers...")) {
 			_showLayers = true;
@@ -318,12 +324,10 @@ void Renderer::drawGUI(const float currentTime) {
 			resize(int(_camera._screenSize[0]), int(_camera._screenSize[1]));
 		}
 
-		ImGui::PushItemWidth(100);
 		const bool smw0 = ImGui::InputFloat("Scale", &_state.scale, 0.01f, 0.1f);
 		ImGui::SameLine(160);
-		if (ImGui::InputFloat("Preroll", &_state.prerollTime, 0.1f, 1.0f)) {
-			reset();
-		}
+		bool smw1 = ImGui::SliderFloat("Minor size", &_state.background.minorsWidth, 0.1f, 1.0f, "%.2f");
+		
 		ImGui::PopItemWidth();
 
 		ImGui::PushItemWidth(25);
@@ -335,7 +339,7 @@ void Renderer::drawGUI(const float currentTime) {
 		ImGui::PopItemWidth();
 		ImGui::SameLine();
 
-		if (ImGui::Checkbox("Sync effect colors", &_state.lockParticleColor)) {
+		if (ImGui::Checkbox("Sync colors", &_state.lockParticleColor)) {
 			// If we enable the lock, make sure the colors are synched.
 			colNotesEdit = true;
 		}
@@ -346,7 +350,7 @@ void Renderer::drawGUI(const float currentTime) {
 			colFlashesEdit = ImGui::ColorEdit3("Color##Flashes", &_state.flashColor[0],	ImGuiColorEditFlags_NoInputs);
 			ImGui::PopItemWidth();
 			ImGui::SameLine(160);
-			ImGui::PushItemWidth(86);
+			ImGui::PushItemWidth(100);
 			ImGui::SliderFloat("Flash size", &_state.flashSize, 0.1f, 3.0f);
 			ImGui::PopItemWidth();
 		}
@@ -360,7 +364,7 @@ void Renderer::drawGUI(const float currentTime) {
 			ImGui::PopItemWidth();
 			ImGui::SameLine(160);
 
-			ImGui::PushItemWidth(86);
+			ImGui::PushItemWidth(100);
 			if (ImGui::InputFloat("Size", &_state.particles.scale, 1.0f, 10.0f)) {
 				_state.particles.scale = std::max(1.0f, _state.particles.scale);
 			}
@@ -425,15 +429,13 @@ void Renderer::drawGUI(const float currentTime) {
 			ImGui::PopID();
 		}
 
-		bool smw1 = false;
+		
 		if (_state.background.keys && ImGui::CollapsingHeader("Keyboard##HEADER")) {
 			ImGui::PushItemWidth(25);
 			const bool cbg2 = ImGui::ColorEdit3("Color##Keys", &_state.background.keysColor[0], ImGuiColorEditFlags_NoInputs);
 			ImGui::PopItemWidth();
 			ImGui::SameLine(160);
-			ImGui::PushItemWidth(86);
-			smw1 = ImGui::SliderFloat("Minor size", &_state.background.minorsWidth, 0.1f, 1.0f, "%.2f");
-			ImGui::PopItemWidth();
+			ImGui::Checkbox("Highlight keys", &_state.highlightKeys);
 
 			if (cbg2) {
 				_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
@@ -464,7 +466,7 @@ void Renderer::drawGUI(const float currentTime) {
 		if (_state.showBlur && ImGui::CollapsingHeader("Blur##HEADER")) {
 			ImGui::Checkbox("Blur the notes", &_state.showBlurNotes);
 			ImGui::SameLine(160);
-			ImGui::PushItemWidth(86);
+			ImGui::PushItemWidth(100);
 			if (ImGui::SliderFloat("Fading", &_state.attenuation, 0.0f, 1.0f)) {
 				_state.attenuation = std::min(1.0f, std::max(0.0f, _state.attenuation));
 				glUseProgram(_blurringScreen.programId());
@@ -481,10 +483,11 @@ void Renderer::drawGUI(const float currentTime) {
 				ImGuiColorEditFlags_NoInputs);
 			ImGui::PopItemWidth();
 			ImGui::SameLine(160);
-			if (ImGui::SliderFloat("Image opacity", &_state.background.imageAlpha, 0.0f, 1.0f)) {
+			ImGui::PushItemWidth(100);
+			if (ImGui::SliderFloat("Opacity##Background", &_state.background.imageAlpha, 0.0f, 1.0f)) {
 				_state.background.imageAlpha = std::min(std::max(_state.background.imageAlpha, 0.0f), 1.0f);
 			}
-			
+			ImGui::PopItemWidth();
 			if (ImGui::Button("Load image...##Background")){
 				// Read arguments.
 				nfdchar_t *outPath = NULL;
