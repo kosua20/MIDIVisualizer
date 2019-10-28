@@ -89,6 +89,7 @@ void State::save(const std::string & path){
 	configFile << background.image << std::endl;
 	configFile << background.imageAlpha << std::endl;
 	configFile << background.imageBehindKeyboard << std::endl;
+	configFile << highlightKeys << std::endl;
 	configFile.close();
 }
 
@@ -179,9 +180,14 @@ void State::load(const std::string & path){
 			sstr >> layersMap[id];
 			++id;
 		}
+	}
+
+	// MIDIVIZ_VERSION_MAJOR == 4, MIDIVIZ_VERSION_MINOR == 0
+	if (majVersion >= 4 && minVersion >= 0) {
 		configFile >> background.image;
 		configFile >> background.imageAlpha;
 		configFile >> background.imageBehindKeyboard;
+		configFile >> highlightKeys;
 	}
 	
 	configFile.close();
@@ -228,6 +234,7 @@ void State::reset(){
 	
 	quality = Quality::MEDIUM;
 	prerollTime = 1.0f;
+	highlightKeys = true;
 
 	for (int i = 0; i < layersMap.size(); ++i) {
 		layersMap[i] = i;

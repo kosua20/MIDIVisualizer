@@ -7,8 +7,8 @@
 #include <map>
 #include <array>
 
-#define MIDIVIZ_VERSION_MAJOR 3
-#define MIDIVIZ_VERSION_MINOR 5
+#define MIDIVIZ_VERSION_MAJOR 4
+#define MIDIVIZ_VERSION_MINOR 0
 
 
 	
@@ -82,6 +82,7 @@ public:
 	bool lockParticleColor;
 	bool showNotes;
 	bool showScore;
+	bool highlightKeys;
 	
 	std::array<int, 16> layersMap;
 
