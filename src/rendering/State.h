@@ -8,7 +8,7 @@
 #include <array>
 
 #define MIDIVIZ_VERSION_MAJOR 4
-#define MIDIVIZ_VERSION_MINOR 0
+#define MIDIVIZ_VERSION_MINOR 1
 
 
 	
