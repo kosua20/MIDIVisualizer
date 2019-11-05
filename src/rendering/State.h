@@ -47,7 +47,6 @@ public:
 		bool hLines;
 		bool vLines;
 		bool digits;
-		bool keys;
 		bool image;
 		bool imageBehindKeyboard;
 		float imageAlpha;
@@ -64,9 +63,17 @@ public:
 		float scale;
 		int count;
 	};
+
+	struct KeyboardState {
+		glm::vec3 majorColor;
+		glm::vec3 minorColor;
+		bool highlightKeys;
+		bool customKeyColors;
+	};
 	
 	BackgroundState background;
 	ParticlesState particles;
+	KeyboardState keyboard;
 	Quality::Level quality;
 	glm::vec3 baseColor;
 	glm::vec3 minorColor;
@@ -82,8 +89,8 @@ public:
 	bool lockParticleColor;
 	bool showNotes;
 	bool showScore;
-	bool highlightKeys;
-	
+	bool showKeyboard;
+
 	std::array<int, 16> layersMap;
 
 	void load(const std::string & path);

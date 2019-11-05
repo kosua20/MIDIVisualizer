@@ -230,7 +230,7 @@ GLuint loadTextureArray(const std::vector<std::string>& paths, bool sRGB, int & 
 	layers = int(images.size());
 	GLuint textureId = loadTextureArray(images, sizes, 1, sRGB);
 	// Free images data.
-	for (int i = 0; i < images.size(); ++i) {
+	for (int i = 0; i < int(images.size()); ++i) {
 		stbi_image_free(images[i]);
 	}
 	return textureId;
@@ -239,7 +239,7 @@ GLuint loadTextureArray(const std::vector<std::string>& paths, bool sRGB, int & 
 GLuint loadTextureArray(const std::vector<unsigned char*>& images, const std::vector<glm::ivec2>& sizes, unsigned int channels, bool sRGB){
 	// Cmopute max size.
 	glm::ivec2 maxSize(0);
-	for (int i = 0; i < images.size(); ++i) {
+	for (int i = 0; i < int(images.size()); ++i) {
 		maxSize = glm::max(maxSize, sizes[i]);
 	}
 	const GLenum format = channels == 1 ? GL_RED : (channels == 3 ? GL_RGB : GL_RGBA);
@@ -251,7 +251,7 @@ GLuint loadTextureArray(const std::vector<unsigned char*>& images, const std::ve
 	// Allocate.
 	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, typedFormat, maxSize[0], maxSize[1], GLsizei(images.size()), 0, format, GL_UNSIGNED_BYTE, nullptr);
 	// Upload each layer, resizing it first.
-	for (int i = 0; i < images.size(); ++i) {
+	for (int i = 0; i < int(images.size()); ++i) {
 		unsigned char * resizedImage = images[i];
 		const bool resize = sizes[i][0] != maxSize[0] || sizes[i][1] != maxSize[1];
 		if (resize) {

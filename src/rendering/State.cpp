@@ -61,7 +61,7 @@ void State::save(const std::string & path){
 	configFile << background.hLines << std::endl;
 	configFile << background.vLines << std::endl;
 	configFile << background.digits << std::endl;
-	configFile << background.keys << std::endl;
+	configFile << showKeyboard << std::endl;
 	
 	configFile << particles.speed << std::endl;
 	configFile << particles.expansion << std::endl;
@@ -89,7 +89,11 @@ void State::save(const std::string & path){
 	configFile << background.image << std::endl;
 	configFile << background.imageAlpha << std::endl;
 	configFile << background.imageBehindKeyboard << std::endl;
-	configFile << highlightKeys << std::endl;
+	configFile << keyboard.highlightKeys << std::endl;
+	configFile << keyboard.customKeyColors << std::endl;
+	configFile << keyboard.majorColor[0] << " " << keyboard.majorColor[1] << " " << keyboard.majorColor[2] << std::endl;
+	configFile << keyboard.minorColor[0] << " " << keyboard.minorColor[1] << " " << keyboard.minorColor[2] << std::endl;
+
 	configFile.close();
 }
 
@@ -128,7 +132,7 @@ void State::load(const std::string & path){
 		configFile >> background.hLines ;
 		configFile >> background.vLines ;
 		configFile >> background.digits ;
-		configFile >> background.keys ;
+		configFile >> showKeyboard ;
 	
 		configFile >> particles.speed ;
 		configFile >> particles.expansion ;
@@ -187,7 +191,14 @@ void State::load(const std::string & path){
 		configFile >> background.image;
 		configFile >> background.imageAlpha;
 		configFile >> background.imageBehindKeyboard;
-		configFile >> highlightKeys;
+		configFile >> keyboard.highlightKeys;
+	}
+
+	// MIDIVIZ_VERSION_MAJOR == 4, MIDIVIZ_VERSION_MINOR == 1
+	if (majVersion >= 4 && minVersion >= 1) {
+		configFile >> keyboard.customKeyColors;
+		configFile >> keyboard.majorColor[0] >> keyboard.majorColor[1] >> keyboard.majorColor[2];
+		configFile >> keyboard.minorColor[0] >> keyboard.minorColor[1] >> keyboard.minorColor[2];
 	}
 	
 	configFile.close();
@@ -212,13 +223,13 @@ void State::reset(){
 	lockParticleColor = true ;
 	showNotes = true;
 	showScore = true;
+	showKeyboard = true;
 	flashSize = 1.0f;
 	
 	background.minorsWidth = 0.8f;
 	background.hLines = true;
 	background.vLines = true ;
 	background.digits = true ;
-	background.keys = true ;
 	background.image = false;
 	background.imageAlpha = 1.0f;
 	background.tex = 0;
@@ -234,7 +245,10 @@ void State::reset(){
 	
 	quality = Quality::MEDIUM;
 	prerollTime = 1.0f;
-	highlightKeys = true;
+	keyboard.highlightKeys = true;
+	keyboard.customKeyColors = false;
+	keyboard.majorColor = baseColor;
+	keyboard.minorColor = minorColor;
 
 	for (int i = 0; i < layersMap.size(); ++i) {
 		layersMap[i] = i;

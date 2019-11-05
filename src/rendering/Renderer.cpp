@@ -79,7 +79,7 @@ void Renderer::init(int width, int height) {
 	_layers[Layer::KEYBOARD].type = Layer::KEYBOARD;
 	_layers[Layer::KEYBOARD].name = "Keyboard";
 	_layers[Layer::KEYBOARD].draw = &Renderer::drawKeyboard;
-	_layers[Layer::KEYBOARD].toggle = &_state.background.keys;
+	_layers[Layer::KEYBOARD].toggle = &_state.showKeyboard;
 
 	_layers[Layer::PARTICLES].type = Layer::PARTICLES;
 	_layers[Layer::PARTICLES].name = "Particles";
@@ -258,7 +258,9 @@ void Renderer::drawScore(const glm::vec2 & invSize) {
 }
 
 void Renderer::drawKeyboard(const glm::vec2 & invSize) {
-	_scene->drawKeyboard(_timer, invSize, _state.background.keysColor, _state.baseColor, _state.minorColor, _state.highlightKeys);
+	const glm::vec3 & majColor = _state.keyboard.customKeyColors ? _state.keyboard.majorColor : _state.baseColor;
+	const glm::vec3 & minColor = _state.keyboard.customKeyColors ? _state.keyboard.minorColor : _state.minorColor;
+	_scene->drawKeyboard(_timer, invSize, _state.background.keysColor, majColor, minColor, _state.keyboard.highlightKeys);
 }
 
 void Renderer::drawNotes(const glm::vec2 & invSize) {
@@ -429,17 +431,28 @@ void Renderer::drawGUI(const float currentTime) {
 			ImGui::PopID();
 		}
 
-		
-		if (_state.background.keys && ImGui::CollapsingHeader("Keyboard##HEADER")) {
+		bool colLitMajEdit = false;
+		bool colLitMinEdit = false;
+		if (_state.showKeyboard && ImGui::CollapsingHeader("Keyboard##HEADER")) {
 			ImGui::PushItemWidth(25);
-			const bool cbg2 = ImGui::ColorEdit3("Color##Keys", &_state.background.keysColor[0], ImGuiColorEditFlags_NoInputs);
-			ImGui::PopItemWidth();
-			ImGui::SameLine(160);
-			ImGui::Checkbox("Highlight keys", &_state.highlightKeys);
-
-			if (cbg2) {
+			if (ImGui::ColorEdit3("Color##Keys", &_state.background.keysColor[0], ImGuiColorEditFlags_NoInputs)) {
 				_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
 			}
+			ImGui::PopItemWidth();
+			ImGui::SameLine(160);
+			ImGui::Checkbox("Highlight keys", &_state.keyboard.highlightKeys);
+			if (_state.keyboard.highlightKeys) {
+				ImGui::Checkbox("Custom colors", &_state.keyboard.customKeyColors);
+				if (_state.keyboard.customKeyColors) {
+					ImGui::SameLine(160);
+					ImGui::PushItemWidth(25);
+					colLitMajEdit = ImGui::ColorEdit3("Major##KeysHighlight", &_state.keyboard.majorColor[0], ImGuiColorEditFlags_NoInputs);
+					ImGui::SameLine(240);
+					colLitMinEdit = ImGui::ColorEdit3("Minor##KeysHighlight", &_state.keyboard.minorColor[0], ImGuiColorEditFlags_NoInputs);
+					ImGui::PopItemWidth();
+				}
+			}
+			
 		}
 
 		if (_state.showScore && ImGui::CollapsingHeader("Score##HEADER")) {
@@ -545,7 +558,7 @@ void Renderer::drawGUI(const float currentTime) {
 		}
 
 		// Keep the colors in sync if needed.
-		if (_state.lockParticleColor && (colNotesEdit || colPartsEdit || colMinorsEdit || colFlashesEdit)) {
+		if (_state.lockParticleColor && (colNotesEdit || colPartsEdit || colMinorsEdit || colFlashesEdit || colLitMajEdit || colLitMinEdit)) {
 			glm::vec3 refColor = _state.baseColor;
 			if (colPartsEdit) {
 				refColor = _state.particles.color;
@@ -556,7 +569,13 @@ void Renderer::drawGUI(const float currentTime) {
 			else if (colFlashesEdit) {
 				refColor = _state.flashColor;
 			}
-			_state.baseColor = _state.particles.color = _state.minorColor = _state.flashColor = refColor;
+			else if (colLitMajEdit) {
+				refColor = _state.keyboard.majorColor;
+			}
+			else if (colLitMinEdit) {
+				refColor = _state.keyboard.minorColor;
+			}
+			_state.baseColor = _state.particles.color = _state.minorColor = _state.flashColor = _state.keyboard.majorColor = _state.keyboard.minorColor = refColor;
 		}
 
 		ImGui::Separator();
