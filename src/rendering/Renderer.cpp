@@ -431,8 +431,6 @@ void Renderer::drawGUI(const float currentTime) {
 			ImGui::PopID();
 		}
 
-		bool colLitMajEdit = false;
-		bool colLitMinEdit = false;
 		if (_state.showKeyboard && ImGui::CollapsingHeader("Keyboard##HEADER")) {
 			ImGui::PushItemWidth(25);
 			if (ImGui::ColorEdit3("Color##Keys", &_state.background.keysColor[0], ImGuiColorEditFlags_NoInputs)) {
@@ -446,9 +444,9 @@ void Renderer::drawGUI(const float currentTime) {
 				if (_state.keyboard.customKeyColors) {
 					ImGui::SameLine(160);
 					ImGui::PushItemWidth(25);
-					colLitMajEdit = ImGui::ColorEdit3("Major##KeysHighlight", &_state.keyboard.majorColor[0], ImGuiColorEditFlags_NoInputs);
+					ImGui::ColorEdit3("Major##KeysHighlight", &_state.keyboard.majorColor[0], ImGuiColorEditFlags_NoInputs);
 					ImGui::SameLine(240);
-					colLitMinEdit = ImGui::ColorEdit3("Minor##KeysHighlight", &_state.keyboard.minorColor[0], ImGuiColorEditFlags_NoInputs);
+					ImGui::ColorEdit3("Minor##KeysHighlight", &_state.keyboard.minorColor[0], ImGuiColorEditFlags_NoInputs);
 					ImGui::PopItemWidth();
 				}
 			}
@@ -558,7 +556,7 @@ void Renderer::drawGUI(const float currentTime) {
 		}
 
 		// Keep the colors in sync if needed.
-		if (_state.lockParticleColor && (colNotesEdit || colPartsEdit || colMinorsEdit || colFlashesEdit || colLitMajEdit || colLitMinEdit)) {
+		if (_state.lockParticleColor && (colNotesEdit || colPartsEdit || colMinorsEdit || colFlashesEdit)) {
 			glm::vec3 refColor = _state.baseColor;
 			if (colPartsEdit) {
 				refColor = _state.particles.color;
@@ -569,13 +567,7 @@ void Renderer::drawGUI(const float currentTime) {
 			else if (colFlashesEdit) {
 				refColor = _state.flashColor;
 			}
-			else if (colLitMajEdit) {
-				refColor = _state.keyboard.majorColor;
-			}
-			else if (colLitMinEdit) {
-				refColor = _state.keyboard.minorColor;
-			}
-			_state.baseColor = _state.particles.color = _state.minorColor = _state.flashColor = _state.keyboard.majorColor = _state.keyboard.minorColor = refColor;
+			_state.baseColor = _state.particles.color = _state.minorColor = _state.flashColor = refColor;
 		}
 
 		ImGui::Separator();
@@ -635,7 +627,7 @@ void Renderer::showLayers() {
 
 			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
 			{
-				ImGui::Text(layer.name.c_str());
+				ImGui::Text("%s", layer.name.c_str());
 				ImGui::SetDragDropPayload("REORDER_LAYER", &i, sizeof(int));
 				ImGui::EndDragDropSource();
 			}
