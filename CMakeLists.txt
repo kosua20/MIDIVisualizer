@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
+project(MIDIVisualizer)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_BUILD_TYPE "Release")
 if(MSVC)
@@ -23,9 +24,7 @@ find_package(OpenGL REQUIRED)
 
 ## Projects
 
-
 # Helper packager
-project(Packager)
 
 set(PackagerSources 
 	"src/libs/lodepng/lodepng.h" 
@@ -43,7 +42,6 @@ add_custom_target(Packaging
 
 
 # MIDIVisualizer
-project(MIDIVisualizer)
 
 file(GLOB GlmSources 
 	"src/libs/glm/*.hpp" 
@@ -111,12 +109,11 @@ set(Sources
 	"src/resources/font_image.cpp"
 	"src/resources/particles_image.cpp"
 	"src/resources/shaders.cpp"
-	"src/main.cpp"
-)
+	"src/main.cpp")
 
 file(GLOB Shaders "resources/shaders/*.vert" "resources/shaders/*.frag")
 
-source_group(TREE ${PROJECT_SOURCE_DIR}/src FILES ${Sources} ${LibSources} )
+source_group(TREE ${PROJECT_SOURCE_DIR}/src FILES ${Sources} ${LibSources})
 source_group(TREE ${PROJECT_SOURCE_DIR}/resources FILES ${Shaders})
 
 include_directories(src/libs/)
@@ -124,4 +121,4 @@ include_directories(src/helpers/)
 
 add_executable(MIDIVisualizer ${LibSources} ${Sources} ${Shaders})
 target_link_libraries(MIDIVisualizer nfd glfw ${GLFW_LIBRARIES} ${OPENGL_gl_LIBRARY})
-#add_dependencies(MIDIVisualizer Packaging)
+add_dependencies(MIDIVisualizer Packaging)
