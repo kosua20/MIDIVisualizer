@@ -14,13 +14,12 @@ Binaries for macOS and Windows are available in the [Releases tab](https://githu
 
 ## Compilation
 
-Visual Studio and Xcode/Makefile projects are provided for Windows and macOS respectively. Please note that the Linux Makefile should be up-to-date, but has not been tested recently.
+The project is configured using Cmake.
 
-With make, you can build the main *midiviz* executable with `make midiviz`.
-The images and shaders are packed in the executable directly (files in `src/ressources`). The images source files can be regenerated using the *midiviz-packager* (code in `packager.cpp`) ; to build it and generate the image source files, run `make package`.
-
-You will need the [GLFW3 library](http://www.glfw.org) and the [Native File Dialog library](https://github.com/mlabbe/nativefiledialog). Library binaries are provided for Windows and macOS. 
-
+    mkdir build && cd build
+    cmake ..
+    
+Depending on the target you chose in Cmake, you will get either a Visual Studio solution, an Xcode workspace or a set of Makefiles. You can build the main executable using the `MIDIVisualizer`sub-project/target. If you update the images or shaders in the `resources` directory, you will have to repackage them with the executable, by building the `Packaging` sub-project/target. MIDIVisualizer depends on the [GLFW3 library](http://www.glfw.org) and the [Native File Dialog library](https://github.com/mlabbe/nativefiledialog), both are included in the repository and built along with the main executable.
 
 ## Command-line use
 ### macOS and Linux
