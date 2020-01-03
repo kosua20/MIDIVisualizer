@@ -13,6 +13,9 @@
 
 #pragma once
 
+// Enforce the use of gl3w for OpenGL endpoints.
+#define IMGUI_IMPL_OPENGL_LOADER_GL3W
+
 //---- Define assertion handler. Defaults to calling assert().
 //#define IM_ASSERT(_EXPR)  MyAssert(_EXPR)
 //#define IM_ASSERT(_EXPR)  ((void)(_EXPR))     // Disable asserts
