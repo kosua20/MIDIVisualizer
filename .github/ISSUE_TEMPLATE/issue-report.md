@@ -1,6 +1,6 @@
 ---
-name: Issue report
-about: Create a report to help me improve MIDIVisualizer
+name: Bug report
+about: If you encounter an issue with MIDIVisualizer
 title: ''
 labels: ''
 assignees: ''
