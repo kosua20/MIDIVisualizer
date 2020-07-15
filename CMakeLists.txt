@@ -82,6 +82,8 @@ set(Sources
 	"src/helpers/ProgramUtilities.h"
 	"src/helpers/ResourcesManager.cpp"
 	"src/helpers/ResourcesManager.h"
+	"src/helpers/Recorder.cpp"
+	"src/helpers/Recorder.h"
 	"src/midi/MIDIFile.cpp"
 	"src/midi/MIDIFile.h"
 	"src/midi/MIDITrack.cpp"
