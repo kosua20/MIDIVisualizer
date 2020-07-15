@@ -19,7 +19,8 @@ uniform bool highlightKeys;
 const bool isMinor[52] = bool[](true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, false);
 const int majorIds[52] = int[](0, 2, 3, 5, 7, 8, 10, 12, 14, 15, 17, 19, 20, 22, 24, 26, 27, 29, 31, 32, 34, 36, 38, 39, 41, 43, 44, 46, 48, 50, 51, 53, 55, 56, 58, 60, 62, 63, 65, 67, 68, 70, 72, 74, 75, 77, 79, 80, 82, 84, 86, 87);
 const int minorIds[52] = int[](1, 0, 4, 6, 0, 9, 11, 13, 0, 16, 18, 0, 21, 23, 25, 0, 28, 30, 0, 33, 35, 37, 0, 40, 42, 0, 45, 47, 49, 0, 52, 54, 0, 57, 59, 61, 0, 64, 66, 0, 69, 71, 73, 0, 76, 78, 0, 81, 83, 85, 0, 0);
-out vec3 fragColor;
+
+out vec4 fragColor;
 
 
 bool isIdActive(int id){
@@ -55,6 +56,6 @@ void main(){
 		}
 	}
 	
-	fragColor = mix(frontColor, backColor, intensity);
-	
+	fragColor.rgb = mix(frontColor, backColor, intensity);
+	fragColor.a = 1.0;
 }

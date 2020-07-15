@@ -165,16 +165,14 @@ int main( int argc, char** argv) {
 	ImGui_ImplGlfw_InitForOpenGL(window, false);
 	ImGui_ImplOpenGL3_Init("#version 330");
 
-	
 	// Start the display/interaction loop.
 	while (!glfwWindowShouldClose(window)) {
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		
 		// Update the content of the window.
-		renderer.draw(DEBUG_SPEED*float(glfwGetTime()));
+		renderer.draw(DEBUG_SPEED*float(glfwGetTime()), false);
 		
 		// Interface rendering.
 		ImGui::Render();

@@ -23,7 +23,8 @@ void Renderer::init(int width, int height) {
 	_showDebug = false;
 	_exportFramerate = 60;
 	_performExport = 0;
-
+	_exportNoBackground = false;
+	
 	ResourcesManager::loadResources();
 
 	// GL options
@@ -47,7 +48,7 @@ void Renderer::init(int width, int height) {
 		new Framebuffer(int(_camera._screenSize[0]), int(_camera._screenSize[1]), GL_RGBA,
 			GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
 	_finalFramebuffer = std::shared_ptr<Framebuffer>(
-		new Framebuffer(int(_camera._screenSize[0]), int(_camera._screenSize[1]), GL_RGB,
+		new Framebuffer(int(_camera._screenSize[0]), int(_camera._screenSize[1]), GL_RGBA,
 			GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
 
 	_backgroundTexture.init("backgroundtexture_frag", "backgroundtexture_vert");
@@ -120,7 +121,7 @@ void Renderer::loadFile(const std::string &midiFilePath) {
 	applyAllSettings();
 }
 
-void Renderer::draw(const float currentTime) {
+void Renderer::draw(const float currentTime, bool transparentBG) {
 
 	if (_performExport > 0) {
 		// Let a bit of time at ImGui to display the modal message.
@@ -177,7 +178,12 @@ void Renderer::draw(const float currentTime) {
 
 	// Final pass (directly on screen).
 	// Background color.
-	glClearColor(_state.background.color[0], _state.background.color[1], _state.background.color[2], 1.0f);
+	if(transparentBG){
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	} else {
+		glClearColor(_state.background.color[0], _state.background.color[1], _state.background.color[2], 1.0f);
+	}
+
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	// Draw the layers in order.
@@ -584,6 +590,7 @@ void Renderer::drawGUI(const float currentTime) {
 		ImGui::PushItemWidth(100);
 		ImGui::InputInt("Rate", &_exportFramerate);
 		ImGui::PopItemWidth();
+		ImGui::Checkbox("Transparent background", &_exportNoBackground);
 
 		if (_showDebug) {
 			ImGui::Separator();
@@ -662,7 +669,7 @@ void Renderer::renderFile(const std::string &outputDirPath,
 	// Start playing.
 	_shouldPlay = true;
 	// Image writing setup.
-	GLubyte *data = new GLubyte[_finalFramebuffer->_width * _finalFramebuffer->_height * 3];
+	GLubyte *data = new GLubyte[_finalFramebuffer->_width * _finalFramebuffer->_height * 4];
 	// Generate and save frames.
 	int framesCount = int(std::ceil((_scene->duration() + 10.0f + _state.prerollTime) * frameRate));
 	int targetSize = int(std::to_string(framesCount).size());
@@ -674,12 +681,12 @@ void Renderer::renderFile(const std::string &outputDirPath,
 	for (size_t fid = 0; fid < framesCount; ++fid) {
 		std::cout << "\r[EXPORT]: Processing frame " << (fid + 1) << "/" << framesCount << "." << std::flush;
 		// Render.
-		draw(_timer);
+		draw(_timer, _exportNoBackground);
 		glFinish();
 		glFlush();
 		// Readback.
 		_finalFramebuffer->bind();
-		glReadPixels(0, 0, (GLsizei)_finalFramebuffer->_width, (GLsizei)_finalFramebuffer->_height, GL_RGB, GL_UNSIGNED_BYTE, &data[0]);
+		glReadPixels(0, 0, (GLsizei)_finalFramebuffer->_width, (GLsizei)_finalFramebuffer->_height, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]);
 		_finalFramebuffer->unbind();
 		// Write to disk.
 		std::string intString = std::to_string(fid);
@@ -690,19 +697,19 @@ void Renderer::renderFile(const std::string &outputDirPath,
 
 		int width = _finalFramebuffer->_width;
 		int height = _finalFramebuffer->_height;
-		char rgb[3];
+		char rgb[4];
 
 		for (int y = 0; y < height / 2; ++y) {
 			for (int x = 0; x < width; ++x) {
-				int top = (x + y * width) * 3;
-				int bottom = (x + (height - y - 1) * width) * 3;
+				int top = (x + y * width) * 4;
+				int bottom = (x + (height - y - 1) * width) * 4;
 
 				memcpy(rgb, data + top, sizeof(rgb));
 				memcpy(data + top, data + bottom, sizeof(rgb));
 				memcpy(data + bottom, rgb, sizeof(rgb));
 			}
 		}
-		unsigned error = lodepng_encode_file( outputFilePath.c_str(), data, _finalFramebuffer->_width, _finalFramebuffer->_height, LCT_RGB, 8);
+		unsigned error = lodepng_encode_file( outputFilePath.c_str(), data, _finalFramebuffer->_width, _finalFramebuffer->_height, LCT_RGBA, 8);
 		if (error) {
 			printf("error %u: %s\n", error, lodepng_error_text(error));
 		}

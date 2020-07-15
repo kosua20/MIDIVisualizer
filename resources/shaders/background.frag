@@ -20,7 +20,7 @@ const float octaveLinesPositions[8] = float[](2.0/52.0, 9.0/52.0, 16.0/52.0, 23.
 uniform float mainSpeed;
 #define bottomLimit 0.25
 
-out vec3 fragColor;
+out vec4 fragColor;
 
 
 float printDigit(int digit, vec2 uv){
@@ -80,11 +80,11 @@ float printNumber(float num, vec2 position, vec2 uv, vec2 scale){
 
 void main(){
 	
-	vec3 bgColor = vec3(0.0);
+	vec4 bgColor = vec4(0.0);
 	// Octaves lines.
 	for(int i = 0; i < 8; i++){
 		float lineIntensity = useVLines ? (0.7 * step(abs(In.uv.x - octaveLinesPositions[i]),inverseScreenSize.x)) : 0.0;
-		bgColor = mix(bgColor, linesColor, lineIntensity);
+		bgColor = mix(bgColor, vec4(linesColor, 1.0), lineIntensity);
 	}
 	
 	vec2 scale = 1.5*vec2(64.0,50.0*inverseScreenSize.x/inverseScreenSize.y);
@@ -100,12 +100,12 @@ void main(){
 		
 		// Compute color for the number display, and for the horizontal line.
 		float numberIntensity = useDigits ? printNumber(currentMesure + i,position, In.uv, scale) : 0.0;
-		bgColor = mix(bgColor, textColor, numberIntensity);
+		bgColor = mix(bgColor, vec4(textColor, 1.0), numberIntensity);
 		float lineIntensity = useHLines ? (0.25*(step(abs(In.uv.y - position.y - 0.5 / scale.y), inverseScreenSize.y))) : 0.0;
-		bgColor = mix(bgColor, linesColor, lineIntensity);
+		bgColor = mix(bgColor, vec4(linesColor, 1.0), lineIntensity);
 	}
 	
-	if(all(equal(bgColor, vec3(0.0)))){
+	if(all(equal(bgColor.xyz, vec3(0.0)))){
 		// Transparent background.
 		discard;
 	}

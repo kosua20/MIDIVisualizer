@@ -14,5 +14,4 @@ out vec4 fragColor;
 void main(){
 	fragColor = texture(screenTexture, In.uv);
 	fragColor.a *= textureAlpha;
-	
 }

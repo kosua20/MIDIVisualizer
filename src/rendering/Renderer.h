@@ -32,7 +32,7 @@ public:
 	void loadFile(const std::string & midiFilePath);
 	
 	/// Draw function
-	void draw(const float currentTime);
+	void draw(const float currentTime, bool transparentBG);
 	
 	/// Clean function
 	void clean();
@@ -98,6 +98,7 @@ private:
 
 	int _performExport;
 	std::string _exportPath;
+	bool _exportNoBackground;
 	
 	Camera _camera;
 	
