@@ -12,7 +12,6 @@
 #include <algorithm>
 #include <fstream>
 
-#include <lodepng/lodepng.h>
 
 Renderer::Renderer() {}
 
@@ -21,9 +20,6 @@ Renderer::~Renderer() {}
 void Renderer::init(int width, int height) {
 	_showGUI = true;
 	_showDebug = false;
-	_exportFramerate = 60;
-	_performExport = 0;
-	_exportNoBackground = false;
 	
 	ResourcesManager::loadResources();
 
@@ -121,46 +117,55 @@ void Renderer::loadFile(const std::string &midiFilePath) {
 	applyAllSettings();
 }
 
-void Renderer::draw(const float currentTime, bool transparentBG) {
+SystemAction Renderer::draw(float currentTime) {
 
-	if (_performExport > 0) {
-		// Let a bit of time at ImGui to display the modal message.
-		if (_performExport < 10) {
-			// Spawn the popup on first frame.
-			if (_performExport == 1) {
-				ImGui::OpenPopup("Exporting...");
-			}
-			// Pop up details.
-			if (ImGui::BeginPopupModal("Exporting...", NULL,
-				ImGuiWindowFlags_AlwaysAutoResize)) {
-				const int framesCount =
-					int(std::ceil((_scene->duration() + 10.0) * float(_exportFramerate)));
-				ImGui::Text("Scene duration: %ds. (+10s. buffer).",
-					int(std::round(_scene->duration())));
-				ImGui::Text("Framerate: %d fps.", _exportFramerate);
-				ImGui::Text("Destination directory: %s", _exportPath.c_str());
-				ImGui::Text("Exporting %d frames at resolution %dx%d...", framesCount,
-					_finalFramebuffer->_width, _finalFramebuffer->_height);
-				ImGui::TextDisabled("For more info and real-time progress, please look "
-					"at the console log.");
+	if(_recorder.isRecording()){
+		_timer = _recorder.currentTime();
 
-				ImGui::EndPopup();
-			}
-			// Next "frame".
-			_performExport += 1;
-			return;
+		drawScene(_recorder.isTransparent());
 
+		_recorder.record(_finalFramebuffer);
+		_recorder.drawProgress();
+
+		// Determine which system action to take.
+		SystemAction action = SystemAction::NONE;
+		// Look at the frame ID.
+		if(_recorder.currentFrame() < 2){
+			action = SystemAction::FIX_SIZE;
+		} else if(_recorder.currentFrame() >= _recorder.framesCount()){
+			action = SystemAction::FREE_SIZE;
+			_timer = 0.0f;
+			_timerStart = 0.0f;
+			_shouldPlay = false;
+			resize(int(_camera._screenSize[0]), int(_camera._screenSize[1]));
 		}
-		else {
-			// After the popup animation, start the real export.
-			_performExport = 0;
-			renderFile(_exportPath, float(_exportFramerate));
-		}
+		// Make sure the backbuffer is updated, this is nicer.
+		glViewport(0, 0, GLsizei(_camera._screenSize[0]), GLsizei(_camera._screenSize[1]));
+		_passthrough.draw(_finalFramebuffer->textureId(), _timer);
+		return action;
 	}
+
+	// -- Default mode --
 
 	// Compute the time elapsed since last frame, or keep the same value if
 	// playback is disabled.
 	_timer = _shouldPlay ? (currentTime - _timerStart) : _timer;
+
+	// Render scene and blit, with GUI on top if needed.
+	drawScene(false);
+
+	glViewport(0, 0, GLsizei(_camera._screenSize[0]), GLsizei(_camera._screenSize[1]));
+	_passthrough.draw(_finalFramebuffer->textureId(), _timer);
+
+	SystemAction action = SystemAction::NONE;
+	if (_showGUI) {
+		action = drawGUI(currentTime);
+	}
+
+	return action;
+}
+
+void Renderer::drawScene(bool transparentBG){
 
 	// Update active notes listing (for particles).
 	_scene->updatesActiveNotes(_timer);
@@ -198,13 +203,6 @@ void Renderer::draw(const float currentTime, bool transparentBG) {
 	}
 
 	_finalFramebuffer->unbind();
-
-	glViewport(0, 0, GLsizei(_camera._screenSize[0]), GLsizei(_camera._screenSize[1]));
-	_passthrough.draw(_finalFramebuffer->textureId(), _timer);
-
-	if (_showGUI) {
-		drawGUI(currentTime);
-	}
 }
 
 void Renderer::blurPrepass() {
@@ -277,8 +275,10 @@ void Renderer::drawFlashes(const glm::vec2 & invSize) {
 	_scene->drawFlashes(_timer, invSize, _state.flashColor, _state.flashSize);
 }
 
-void Renderer::drawGUI(const float currentTime) {
-	
+SystemAction Renderer::drawGUI(const float currentTime) {
+
+	SystemAction action = SystemAction::NONE;
+
 	if (ImGui::Begin("Settings", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
 		if (ImGui::Button(_shouldPlay ? "Pause (p)" : "Play (p)")) {
 			_shouldPlay = !_shouldPlay;
@@ -304,6 +304,10 @@ void Renderer::drawGUI(const float currentTime) {
 			ImGui::TextUnformatted("github.com/kosua20/MIDIVisualizer");
 			ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();
+		}
+
+		if(ImGui::Button("Toggle fullscreen")){
+			action = SystemAction::FULLSCREEN;
 		}
 
 		ImGui::Separator();
@@ -577,20 +581,27 @@ void Renderer::drawGUI(const float currentTime) {
 		}
 
 		ImGui::Separator();
-		if (ImGui::Button("Render offline...")) {
-			// Read arguments.
-			nfdchar_t *outPath = NULL;
-			nfdresult_t result = NFD_PickFolder(NULL, &outPath);
-			if (result == NFD_OKAY) {
-				_exportPath = std::string(outPath);
-				_performExport = int(!_exportPath.empty());
-			}
+
+		if(_recorder.drawGUI()){
+			// We need to provide some information for the recorder to start.
+			_recorder.start(_state.prerollTime, _scene->duration());
+			const glm::vec2 backSize = _camera._screenSize;
+			// Start by clearing up all buffers.
+			const auto &currentQuality = Quality::availables.at(_state.quality);
+			const glm::vec2 finalSize = glm::vec2(_recorder.requiredSize()) / currentQuality.finalResolution;
+			resize(int(finalSize[0]), int(finalSize[1]));
+			// To get a nice background display of the result, we need to restore the camera screen size for the final viewport.
+			_camera.screen(int(backSize[0]), int(backSize[1]));
+			// Reset buffers.
+			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+			_particlesFramebuffer->bind();
+			glClear(GL_COLOR_BUFFER_BIT);
+			_blurFramebuffer->bind();
+			glClear(GL_COLOR_BUFFER_BIT);
+			_finalFramebuffer->bind();
+			glClear(GL_COLOR_BUFFER_BIT);
+			_finalFramebuffer->unbind();
 		}
-		ImGui::SameLine(160);
-		ImGui::PushItemWidth(100);
-		ImGui::InputInt("Rate", &_exportFramerate);
-		ImGui::PopItemWidth();
-		ImGui::Checkbox("Transparent background", &_exportNoBackground);
 
 		if (_showDebug) {
 			ImGui::Separator();
@@ -598,6 +609,7 @@ void Renderer::drawGUI(const float currentTime) {
 			ImGui::SameLine();
 			ImGui::TextDisabled("(press D to hide)");
 			ImGui::Text("%.1f FPS / %.1f ms", ImGui::GetIO().Framerate, ImGui::GetIO().DeltaTime * 1000.0f);
+			ImGui::Text("Final framebuffer size: %dx%d, screen size: %dx%d", _finalFramebuffer->_width, _finalFramebuffer->_height, int(_camera._screenSize[0]), int(_camera._screenSize[1]));
 			if (ImGui::Button("Print MIDI content to console")) {
 				_scene->midiFile().printTracks();
 			}
@@ -608,6 +620,8 @@ void Renderer::drawGUI(const float currentTime) {
 	if (_showLayers) {
 		showLayers();
 	}
+
+	return action;
 }
 
 void Renderer::showLayers() {
@@ -660,71 +674,6 @@ void Renderer::showLayers() {
 	ImGui::End();
 }
 
-void Renderer::renderFile(const std::string &outputDirPath,
-	const float frameRate) {
-	_showGUI = false;
-	// Reset.
-	_timer = -_state.prerollTime;
-	_timerStart = 0;
-	// Start playing.
-	_shouldPlay = true;
-	// Image writing setup.
-	GLubyte *data = new GLubyte[_finalFramebuffer->_width * _finalFramebuffer->_height * 4];
-	// Generate and save frames.
-	int framesCount = int(std::ceil((_scene->duration() + 10.0f + _state.prerollTime) * frameRate));
-	int targetSize = int(std::to_string(framesCount).size());
-
-	// Start by clearing up the blur and particles buffers.
-	resize(int(_camera._screenSize[0]), int(_camera._screenSize[1]));
-
-	std::cout << "[EXPORT]: Will export " << framesCount << " frames to \"" << outputDirPath << "\"." << std::endl;
-	for (size_t fid = 0; fid < framesCount; ++fid) {
-		std::cout << "\r[EXPORT]: Processing frame " << (fid + 1) << "/" << framesCount << "." << std::flush;
-		// Render.
-		draw(_timer, _exportNoBackground);
-		glFinish();
-		glFlush();
-		// Readback.
-		_finalFramebuffer->bind();
-		glReadPixels(0, 0, (GLsizei)_finalFramebuffer->_width, (GLsizei)_finalFramebuffer->_height, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]);
-		_finalFramebuffer->unbind();
-		// Write to disk.
-		std::string intString = std::to_string(fid);
-		while (intString.size() < targetSize) {
-			intString = "0" + intString;
-		}
-		const std::string outputFilePath = outputDirPath + "/output_" + intString + ".png";
-
-		int width = _finalFramebuffer->_width;
-		int height = _finalFramebuffer->_height;
-		char rgb[4];
-
-		for (int y = 0; y < height / 2; ++y) {
-			for (int x = 0; x < width; ++x) {
-				int top = (x + y * width) * 4;
-				int bottom = (x + (height - y - 1) * width) * 4;
-
-				memcpy(rgb, data + top, sizeof(rgb));
-				memcpy(data + top, data + bottom, sizeof(rgb));
-				memcpy(data + bottom, rgb, sizeof(rgb));
-			}
-		}
-		unsigned error = lodepng_encode_file( outputFilePath.c_str(), data, _finalFramebuffer->_width, _finalFramebuffer->_height, LCT_RGBA, 8);
-		if (error) {
-			printf("error %u: %s\n", error, lodepng_error_text(error));
-		}
-
-		_timer += (1.0f / frameRate);
-	}
-	std::cout << std::endl;
-	std::cout << "[EXPORT]: Done." << std::endl;
-
-	_showGUI = true;
-	_shouldPlay = false;
-	_timer = -_state.prerollTime;
-	_exportPath = "";
-}
-
 void Renderer::applyAllSettings() {
 	// Apply all modifications.
 
@@ -771,8 +720,6 @@ void Renderer::clean() {
 
 void Renderer::resize(int width, int height) {
 
-	// Update the size of the viewport.
-	glViewport(0, 0, width, height);
 	// Update the projection matrix.
 	_camera.screen(width, height);
 	// Resize the framebuffers.
@@ -780,6 +727,7 @@ void Renderer::resize(int width, int height) {
 	_particlesFramebuffer->resize(currentQuality.particlesResolution * _camera._screenSize);
 	_blurFramebuffer->resize(currentQuality.blurResolution * _camera._screenSize);
 	_finalFramebuffer->resize(currentQuality.finalResolution * _camera._screenSize);
+	_recorder.setSize(glm::ivec2(_finalFramebuffer->_width, _finalFramebuffer->_height));
 }
 
 void Renderer::keyPressed(int key, int action) {

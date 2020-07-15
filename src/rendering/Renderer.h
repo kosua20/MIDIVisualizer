@@ -12,6 +12,8 @@
 #include "ScreenQuad.h"
 #include "Score.h"
 
+#include "../helpers/Recorder.h"
+
 #include "State.h"
 
 #define DEBUG_SPEED (1.0f)
@@ -36,7 +38,7 @@ public:
 	void loadFile(const std::string & midiFilePath);
 	
 	/// Draw function
-	void draw(const float currentTime, bool transparentBG);
+	SystemAction draw(const float currentTime);
 	
 	/// Clean function
 	void clean();
@@ -80,29 +82,27 @@ private:
 
 	void drawFlashes(const glm::vec2 & invSize);
 
-	void drawGUI(const float currentTime);
-	
+	SystemAction drawGUI(const float currentTime);
+
+	void drawScene(bool transparentBG);
+
 	void showLayers();
 
 	void applyAllSettings();
-	
-	void renderFile(const std::string & outputDirPath, const float frameRate);
 	
 	void reset();
 
 	State _state;
 	std::array<Layer, 8> _layers;
 
-	int _exportFramerate;
+
 	float _timer;
 	float _timerStart;
 	bool _shouldPlay;
 	bool _showGUI;
 	bool _showDebug;
 
-	int _performExport;
-	std::string _exportPath;
-	bool _exportNoBackground;
+	Recorder _recorder;
 	
 	Camera _camera;
 	
