@@ -51,6 +51,44 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
 	ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
 }
 
+/// Perform system window action.
+
+void performAction(SystemAction action, GLFWwindow * window, glm::ivec4 & frame){
+	switch (action) {
+		case SystemAction::FULLSCREEN: {
+			// Are we currently fullscreen?
+			const bool fullscreen = glfwGetWindowMonitor(window) != nullptr;
+			if(fullscreen) {
+				// Restore the window position and size.
+				glfwSetWindowMonitor(window, nullptr, frame[0], frame[1], frame[2], frame[3], 0);
+				// Check the window position and size (if we are on a screen smaller than the initial size).
+				glfwGetWindowPos(window, &frame[0], &frame[1]);
+				glfwGetWindowSize(window, &frame[2], &frame[3]);
+			} else {
+				// Backup the window current frame.
+				glfwGetWindowPos(window, &frame[0], &frame[1]);
+				glfwGetWindowSize(window, &frame[2], &frame[3]);
+				// Move to fullscreen on the primary monitor.
+				GLFWmonitor * monitor	= glfwGetPrimaryMonitor();
+				const GLFWvidmode * mode = glfwGetVideoMode(monitor);
+				glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+			}
+
+			// On some hardware, V-sync options can be lost.
+			glfwSwapInterval(1);
+			break;
+		}
+		case SystemAction::FIX_SIZE:
+			glfwSetWindowAttrib(window, GLFW_RESIZABLE, GLFW_FALSE);
+			break;
+		case SystemAction::FREE_SIZE:
+			glfwSetWindowAttrib(window, GLFW_RESIZABLE, GLFW_TRUE);
+			break;
+		default:
+			break;
+	}
+}
+
 /// The main function
 
 int main( int argc, char** argv) {
@@ -165,6 +203,11 @@ int main( int argc, char** argv) {
 	ImGui_ImplGlfw_InitForOpenGL(window, false);
 	ImGui_ImplOpenGL3_Init("#version 330");
 
+
+	glm::ivec4 frame(0.0f);
+	glfwGetWindowPos(window, &frame[0], &frame[1]);
+	glfwGetWindowSize(window, &frame[2], &frame[3]);
+
 	// Start the display/interaction loop.
 	while (!glfwWindowShouldClose(window)) {
 		ImGui_ImplOpenGL3_NewFrame();
@@ -172,8 +215,11 @@ int main( int argc, char** argv) {
 		ImGui::NewFrame();
 
 		// Update the content of the window.
-		renderer.draw(DEBUG_SPEED*float(glfwGetTime()), false);
-		
+		SystemAction action = renderer.draw(DEBUG_SPEED*float(glfwGetTime()));
+
+		// Perform system window action if required.
+		performAction(action, window, frame);
+
 		// Interface rendering.
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

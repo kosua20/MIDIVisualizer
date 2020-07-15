@@ -16,6 +16,10 @@
 
 #define DEBUG_SPEED (1.0f)
 
+enum class SystemAction {
+	NONE, FIX_SIZE, FREE_SIZE, FULLSCREEN
+};
+
 class Renderer {
 
 public:
