@@ -123,7 +123,7 @@ bool Recorder::drawGUI(){
 	}
 	ImGui::SameLine(COLUMN_SIZE);
 	ImGui::PushItemWidth(100);
-	ImGui::InputInt("Rate", &_exportFramerate);
+	ImGui::InputInt("Framerate", &_exportFramerate);
 
 	// Dropdown list.
 	if(ImGui::BeginCombo("Format", _formats[int(_outFormat)].name.c_str())){
@@ -148,7 +148,7 @@ bool Recorder::drawGUI(){
 	if(_outFormat == Format::PNG){
 		ImGui::Checkbox("Transparent bg.", &_exportNoBackground);
 	} else {
-		ImGui::InputInt("Bitrate (Mbps)", &_bitRate);
+		ImGui::InputInt("Rate (Mbps)", &_bitRate);
 	}
 	ImGui::PopItemWidth();
 
