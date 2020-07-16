@@ -1,7 +1,6 @@
 #ifndef Recorder_h
 #define Recorder_h
 
-
 #include <gl3w/gl3w.h>
 #include "../rendering/Framebuffer.h"
 #include <string>
@@ -39,18 +38,34 @@ public:
 
 private:
 
-	float _currentTime = 0.0f;
+	enum class Format : int {
+		PNG = 0, MPEG2 = 1, MPEG4 = 2
+	};
+
+	bool initVideo(const std::string & path, Format format);
+
+	bool addFrameToVideo(GLubyte * data);
+	
+	void endVideo();
+	struct CodecOpts {
+		std::string name;
+		std::string ext;
+		Recorder::Format format;
+	};
+	
+	std::vector<CodecOpts> _formats;
+	std::vector<GLubyte> _buffer;
+	std::string _exportPath;
+	glm::ivec2 _size {0, 0};
 	size_t _framesCount = 0;
 	size_t _currentFrame = 0;
-
-	std::string _exportPath;
-	int _exportFramerate = 60;
-	bool _exportNoBackground = false;
-	std::vector<GLubyte> _buffer;
-
-	// Extra info for display.
-	glm::ivec2 _size {0, 0};
+	Format _outFormat = Format::PNG;
 	float _sceneDuration = 0.0f;
+	float _currentTime = 0.0f;
+	int _exportFramerate = 60;
+	int _bitRate = 40;
+	bool _exportNoBackground = false;
+
 };
 
 #endif
