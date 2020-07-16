@@ -137,7 +137,6 @@ SystemAction Renderer::draw(float currentTime) {
 			_timer = 0.0f;
 			_timerStart = 0.0f;
 			_shouldPlay = false;
-			resize(int(_camera._screenSize[0]), int(_camera._screenSize[1]));
 		}
 		// Make sure the backbuffer is updated, this is nicer.
 		glViewport(0, 0, GLsizei(_camera._screenSize[0]), GLsizei(_camera._screenSize[1]));
@@ -292,8 +291,12 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		if (ImGui::Button("Hide (i)")) {
 			_showGUI = false;
 		}
-		
-		ImGui::SameLine(320);
+		ImGui::SameLine();
+		if(ImGui::Button("Fullscreen")){
+			action = SystemAction::FULLSCREEN;
+		}
+
+		ImGui::SameLine(340);
 		ImGui::TextDisabled("(?)");
 		if (ImGui::IsItemHovered()) {
 			ImGui::BeginTooltip();
@@ -306,9 +309,6 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			ImGui::EndTooltip();
 		}
 
-		if(ImGui::Button("Toggle fullscreen")){
-			action = SystemAction::FULLSCREEN;
-		}
 
 		ImGui::Separator();
 
@@ -320,7 +320,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 				loadFile(std::string(outPath));
 			}
 		}
-		ImGui::SameLine(160);
+		ImGui::SameLine(COLUMN_SIZE);
 		ImGui::PushItemWidth(100);
 		if (ImGui::InputFloat("Preroll", &_state.prerollTime, 0.1f, 1.0f)) {
 			reset();
@@ -330,14 +330,14 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		if (ImGui::Button("Show layers...")) {
 			_showLayers = true;
 		}
-		ImGui::SameLine(160);
+		ImGui::SameLine(COLUMN_SIZE);
 		ImGui::PushItemWidth(100);
 		if (ImGui::Combo("Quality", (int *)(&_state.quality), "Half\0Low\0Medium\0High\0Double\0\0")) {
 			resize(int(_camera._screenSize[0]), int(_camera._screenSize[1]));
 		}
 
 		const bool smw0 = ImGui::InputFloat("Scale", &_state.scale, 0.01f, 0.1f);
-		ImGui::SameLine(160);
+		ImGui::SameLine(COLUMN_SIZE);
 		bool smw1 = ImGui::SliderFloat("Minor size", &_state.background.minorsWidth, 0.1f, 1.0f, "%.2f");
 		
 		ImGui::PopItemWidth();
@@ -349,8 +349,8 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		bool colMinorsEdit = ImGui::ColorEdit3("Minors", &_state.minorColor[0],
 			ImGuiColorEditFlags_NoInputs);
 		ImGui::PopItemWidth();
-		ImGui::SameLine();
 
+		ImGui::SameLine(COLUMN_SIZE);
 		if (ImGui::Checkbox("Sync colors", &_state.lockParticleColor)) {
 			// If we enable the lock, make sure the colors are synched.
 			colNotesEdit = true;
@@ -361,7 +361,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			ImGui::PushItemWidth(25);
 			colFlashesEdit = ImGui::ColorEdit3("Color##Flashes", &_state.flashColor[0],	ImGuiColorEditFlags_NoInputs);
 			ImGui::PopItemWidth();
-			ImGui::SameLine(160);
+			ImGui::SameLine(COLUMN_SIZE);
 			ImGui::PushItemWidth(100);
 			ImGui::SliderFloat("Flash size", &_state.flashSize, 0.1f, 3.0f);
 			ImGui::PopItemWidth();
@@ -374,21 +374,21 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			ImGui::PushItemWidth(25);
 			colPartsEdit = ImGui::ColorEdit3("Color##Particles", &_state.particles.color[0], ImGuiColorEditFlags_NoInputs);
 			ImGui::PopItemWidth();
-			ImGui::SameLine(160);
+			ImGui::SameLine(COLUMN_SIZE);
 
 			ImGui::PushItemWidth(100);
 			if (ImGui::InputFloat("Size", &_state.particles.scale, 1.0f, 10.0f)) {
 				_state.particles.scale = std::max(1.0f, _state.particles.scale);
 			}
-			ImGui::PushItemWidth(150);
 
+			ImGui::PushItemWidth(COLUMN_SIZE-10);
 			if (ImGui::SliderInt("Count", &_state.particles.count, 1, 512)) {
 				_state.particles.count = std::min(std::max(_state.particles.count, 1), 512);
 			}
 			ImGui::PopItemWidth();
 
 			const bool mp0 = ImGui::InputFloat("Speed", &_state.particles.speed, 0.001f, 1.0f);
-			ImGui::SameLine(160);
+			ImGui::SameLine(COLUMN_SIZE);
 			const bool mp1 = ImGui::InputFloat(	"Expansion", &_state.particles.expansion, 0.1f, 5.0f);
 			ImGui::PopItemWidth();
 
@@ -428,7 +428,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 				ImGui::EndTooltip();
 			}
 
-			ImGui::SameLine(160);
+			ImGui::SameLine(COLUMN_SIZE);
 			if (ImGui::Button("Clear images##TextureParticles")) {
 				if (_state.particles.tex != ResourcesManager::getTextureFor("blankarray")) {
 					glDeleteTextures(1, &_state.particles.tex);
@@ -447,15 +447,15 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 				_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
 			}
 			ImGui::PopItemWidth();
-			ImGui::SameLine(160);
+			ImGui::SameLine(COLUMN_SIZE);
 			ImGui::Checkbox("Highlight keys", &_state.keyboard.highlightKeys);
 			if (_state.keyboard.highlightKeys) {
 				ImGui::Checkbox("Custom colors", &_state.keyboard.customKeyColors);
 				if (_state.keyboard.customKeyColors) {
-					ImGui::SameLine(160);
+					ImGui::SameLine(COLUMN_SIZE);
 					ImGui::PushItemWidth(25);
 					ImGui::ColorEdit3("Major##KeysHighlight", &_state.keyboard.majorColor[0], ImGuiColorEditFlags_NoInputs);
-					ImGui::SameLine(240);
+					ImGui::SameLine(COLUMN_SIZE+80);
 					ImGui::ColorEdit3("Minor##KeysHighlight", &_state.keyboard.minorColor[0], ImGuiColorEditFlags_NoInputs);
 					ImGui::PopItemWidth();
 				}
@@ -469,10 +469,10 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			ImGui::SameLine();
 			const bool cbg1 = ImGui::ColorEdit3("Text##Background", &_state.background.textColor[0], ImGuiColorEditFlags_NoInputs);
 			ImGui::PopItemWidth();
-			ImGui::SameLine(160);
+			ImGui::SameLine(COLUMN_SIZE);
 			const bool m1 = ImGui::Checkbox("Digits", &_state.background.digits);
 			const bool m2 = ImGui::Checkbox("Horizontal lines", &_state.background.hLines);
-			ImGui::SameLine(160);
+			ImGui::SameLine(COLUMN_SIZE);
 			const bool m3 = ImGui::Checkbox("Vertical lines", &_state.background.vLines);
 
 			if (m1 || m2 || m3) {
@@ -486,7 +486,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 
 		if (_state.showBlur && ImGui::CollapsingHeader("Blur##HEADER")) {
 			ImGui::Checkbox("Blur the notes", &_state.showBlurNotes);
-			ImGui::SameLine(160);
+			ImGui::SameLine(COLUMN_SIZE);
 			ImGui::PushItemWidth(100);
 			if (ImGui::SliderFloat("Fading", &_state.attenuation, 0.0f, 1.0f)) {
 				_state.attenuation = std::min(1.0f, std::max(0.0f, _state.attenuation));
@@ -503,7 +503,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			ImGui::ColorEdit3("Color##Background", &_state.background.color[0],
 				ImGuiColorEditFlags_NoInputs);
 			ImGui::PopItemWidth();
-			ImGui::SameLine(160);
+			ImGui::SameLine(COLUMN_SIZE);
 			ImGui::PushItemWidth(100);
 			if (ImGui::SliderFloat("Opacity##Background", &_state.background.imageAlpha, 0.0f, 1.0f)) {
 				_state.background.imageAlpha = std::min(std::max(_state.background.imageAlpha, 0.0f), 1.0f);
@@ -523,7 +523,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 					}
 				}
 			}
-			ImGui::SameLine(160);
+			ImGui::SameLine(COLUMN_SIZE);
 			if (ImGui::Button("Clear image##Background")) {
 				_state.background.image = false;
 				glDeleteTextures(1, &_state.background.tex);

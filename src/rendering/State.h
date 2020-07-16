@@ -10,7 +10,7 @@
 #define MIDIVIZ_VERSION_MAJOR 4
 #define MIDIVIZ_VERSION_MINOR 1
 
-
+#define COLUMN_SIZE 170
 	
 struct Quality {
 	enum Level : int {
