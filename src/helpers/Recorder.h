@@ -6,6 +6,14 @@
 #include <string>
 #include <vector>
 
+// Forward declare FFmpeg objects in all cases.
+struct AVFormatContext;
+struct AVCodec;
+struct AVCodecContext;
+struct AVStream;
+struct AVFrame;
+struct SwsContext;
+
 class Recorder {
 
 public:
@@ -19,7 +27,7 @@ public:
 	bool drawGUI();
 
 	void start(float preroll, float duration);
-	
+
 	bool drawProgress();
 	
 	bool isRecording() const;
@@ -47,6 +55,9 @@ private:
 	bool addFrameToVideo(GLubyte * data);
 	
 	void endVideo();
+
+	bool flush();
+
 	struct CodecOpts {
 		std::string name;
 		std::string ext;
@@ -65,6 +76,14 @@ private:
 	int _exportFramerate = 60;
 	int _bitRate = 40;
 	bool _exportNoBackground = false;
+
+	// Video context ptrs if available.
+	AVFormatContext * _formatCtx = nullptr;
+	AVCodec * _codec = nullptr;
+	AVCodecContext * _codecCtx = nullptr;
+	AVStream * _stream = nullptr;
+	AVFrame * _frame = nullptr;
+	SwsContext * _swsContext = nullptr;
 
 };
 
