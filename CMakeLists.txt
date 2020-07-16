@@ -31,9 +31,8 @@ set(PackagerSources
 	"src/libs/lodepng/lodepng.cpp" 
 	"src/packager.cpp" )
 
-include_directories(src/libs/)
 add_executable(Packager ${PackagerSources})
-
+target_include_directories(Packager PRIVATE src/libs/)
 
 # Target for packaging data in source files.
 add_custom_target(Packaging
@@ -118,9 +117,8 @@ file(GLOB Shaders "resources/shaders/*.vert" "resources/shaders/*.frag")
 source_group(TREE ${PROJECT_SOURCE_DIR}/src FILES ${Sources} ${LibSources})
 source_group(TREE ${PROJECT_SOURCE_DIR}/resources FILES ${Shaders})
 
-include_directories(src/libs/)
-include_directories(src/helpers/)
-
 add_executable(MIDIVisualizer ${LibSources} ${Sources} ${Shaders})
-target_link_libraries(MIDIVisualizer nfd glfw ${GLFW_LIBRARIES} ${OPENGL_gl_LIBRARY})
+
+target_include_directories(MIDIVisualizer PRIVATE src/libs/ src/helpers/)
+target_link_libraries(MIDIVisualizer PRIVATE nfd glfw ${GLFW_LIBRARIES} ${OPENGL_gl_LIBRARY})
 add_dependencies(MIDIVisualizer Packaging)
