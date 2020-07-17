@@ -33,9 +33,9 @@ public:
 	/// Init function
 	void init(int width, int height);
 	
-	void setColorAndScale(const glm::vec3 & baseColor, const float scale);
-	
 	void loadFile(const std::string & midiFilePath);
+
+	void setState(const State & state);
 	
 	/// Draw function
 	SystemAction draw(const float currentTime);

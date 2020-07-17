@@ -51,8 +51,6 @@ void Renderer::init(int width, int height) {
 	_blurringScreen.init(_particlesFramebuffer->textureId(), "particlesblur_frag");
 	_passthrough.init("screenquad_frag");
 
-	_state.reset();
-
 	// Create the layers.
 	//_layers[Layer::BGCOLOR].type = Layer::BGCOLOR;
 	//_layers[Layer::BGCOLOR].name = "Background color";
@@ -61,48 +59,42 @@ void Renderer::init(int width, int height) {
 	_layers[Layer::BGTEXTURE].type = Layer::BGTEXTURE;
 	_layers[Layer::BGTEXTURE].name = "Background image";
 	_layers[Layer::BGTEXTURE].draw = &Renderer::drawBackgroundImage;
-	_layers[Layer::BGTEXTURE].toggle = &_state.background.image;
 
 	_layers[Layer::BLUR].type = Layer::BLUR;
 	_layers[Layer::BLUR].name = "Blur effect";
 	_layers[Layer::BLUR].draw = &Renderer::drawBlur;
-	_layers[Layer::BLUR].toggle = &_state.showBlur;
 
 	_layers[Layer::ANNOTATIONS].type = Layer::ANNOTATIONS;
 	_layers[Layer::ANNOTATIONS].name = "Score";
 	_layers[Layer::ANNOTATIONS].draw = &Renderer::drawScore;
-	_layers[Layer::ANNOTATIONS].toggle = &_state.showScore;
 
 	_layers[Layer::KEYBOARD].type = Layer::KEYBOARD;
 	_layers[Layer::KEYBOARD].name = "Keyboard";
 	_layers[Layer::KEYBOARD].draw = &Renderer::drawKeyboard;
-	_layers[Layer::KEYBOARD].toggle = &_state.showKeyboard;
 
 	_layers[Layer::PARTICLES].type = Layer::PARTICLES;
 	_layers[Layer::PARTICLES].name = "Particles";
 	_layers[Layer::PARTICLES].draw = &Renderer::drawParticles;
-	_layers[Layer::PARTICLES].toggle = &_state.showParticles;
 
 	_layers[Layer::NOTES].type = Layer::NOTES;
 	_layers[Layer::NOTES].name = "Notes";
 	_layers[Layer::NOTES].draw = &Renderer::drawNotes;
-	_layers[Layer::NOTES].toggle = &_state.showNotes;
 
 	_layers[Layer::FLASHES].type = Layer::FLASHES;
 	_layers[Layer::FLASHES].name = "Flashes";
 	_layers[Layer::FLASHES].draw = &Renderer::drawFlashes;
+
+	// Register state.
+	_layers[Layer::BGTEXTURE].toggle = &_state.background.image;
+	_layers[Layer::BLUR].toggle = &_state.showBlur;
+	_layers[Layer::ANNOTATIONS].toggle = &_state.showScore;
+	_layers[Layer::KEYBOARD].toggle = &_state.showKeyboard;
+	_layers[Layer::PARTICLES].toggle = &_state.showParticles;
+	_layers[Layer::NOTES].toggle = &_state.showNotes;
 	_layers[Layer::FLASHES].toggle = &_state.showFlashes;
 
 	// Check setup errors.
 	checkGLError();
-}
-
-void Renderer::setColorAndScale(const glm::vec3 &baseColor, const float scale) {
-	_state.scale = scale;
-	_state.baseColor = baseColor;
-	_state.minorColor = baseColor;
-	_state.flashColor = baseColor;
-	_state.particles.color = _state.baseColor;
 }
 
 void Renderer::loadFile(const std::string &midiFilePath) {
@@ -549,7 +541,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			nfdresult_t result = NFD_OpenDialog("ini", NULL, &outPath);
 			if (result == NFD_OKAY) {
 				_state.load(std::string(outPath));
-				applyAllSettings();
+				setState(_state);
 			}
 		}
 		ImGui::SameLine();
@@ -753,4 +745,19 @@ void Renderer::reset() {
 	_timer = -_state.prerollTime;
 	_timerStart = DEBUG_SPEED * float(glfwGetTime()) + (_shouldPlay ? _state.prerollTime : 0.0f);
 	_scene->resetParticles();
+}
+
+void Renderer::setState(const State & state){
+	_state = state;
+
+	// Update toggles.
+	_layers[Layer::BGTEXTURE].toggle = &_state.background.image;
+	_layers[Layer::BLUR].toggle = &_state.showBlur;
+	_layers[Layer::ANNOTATIONS].toggle = &_state.showScore;
+	_layers[Layer::KEYBOARD].toggle = &_state.showKeyboard;
+	_layers[Layer::PARTICLES].toggle = &_state.showParticles;
+	_layers[Layer::NOTES].toggle = &_state.showNotes;
+	_layers[Layer::FLASHES].toggle = &_state.showFlashes;
+
+	applyAllSettings();
 }
