@@ -20,14 +20,34 @@ void printHelp(){
 	size_t alignSize = 0;
 	const std::string opts = State::helpText(alignSize);
 
+	const std::vector<std::pair<std::string, std::string>> genOpts = {
+		{"midi", "path to a MIDI file to load"},
+		{"config", "path to a configuration INI file"},
+		{"size", "dimensions of the window (--size W H)"},
+	};
+
+	const std::vector<std::pair<std::string, std::string>> expOpts = {
+		{"export", "path to the output video (or directory for PNG)"},
+		{"format", "output format (values: PNG, MPEG2, MPEG4)"},
+		{"framerate", "number of frames per second to export (integer)"},
+		{"bitrate", "target video bitrate in Mb (integer)"},
+		{"png-alpha", "use transparent PNG background (1 or 0 to enabled/disable)"},
+		{"no-window", "do not display the window (1 or 0 to enabled/disable)"},
+	};
+
 	std::cout << "---- Infos ---- MIDIVisualizer v" << MIDIVIZ_VERSION_MAJOR << "." << MIDIVIZ_VERSION_MINOR << " --------" << std::endl
 	<< "Visually display a midi file in realtime." << std::endl
-	<< std::endl << "* General options: " << std::endl
-	<< "--" << "midi" << std::string(alignSize - 4, ' ') << "path to a MIDI file to load" << std::endl
-	<< "--" << "config" << std::string(alignSize - 6, ' ') << "path to a configuration INI file" << std::endl
-	<< "--" << "size" << std::string(alignSize - 4, ' ') << "dimensions of the window (--size W H)" << std::endl
-	//<< std::endl << "* Export options: TO BE ADDED" << std::endl
-	<< std::endl << "* Configuration options: (will override config file)" << std::endl
+	<< std::endl << "* General options: " << std::endl;
+	for(const auto & opt : genOpts){
+		const std::string pad(std::max(int(alignSize) - int(opt.first.size()), 0), ' ');
+		std::cout << "--" << opt.first << pad << opt.second << std::endl;
+	}
+	std::cout << std::endl << "* Export options: " << std::endl;
+	for(const auto & opt : expOpts){
+		const std::string pad(std::max(int(alignSize) - int(opt.first.size()), 0), ' ');
+		std::cout << "--" << opt.first << pad << opt.second << std::endl;
+	}
+	std::cout << std::endl << "* Configuration options: (will override config file)" << std::endl
 	<< opts << std::endl
 	<< "--------------------------------------------" << std::endl;
 
@@ -197,8 +217,6 @@ int main( int argc, char** argv) {
 	// Callbacks.
 	glfwSetFramebufferSizeCallback(window, resize_callback);	// Resizing the window
 	glfwSetKeyCallback(window,key_callback);					// Pressing a key
-	//glfwSetMouseButtonCallback(window,mouse_button_callback);	// Clicking the mouse buttons
-	//glfwSetCursorPosCallback(window,cursor_pos_callback);		// Moving the cursor
 	glfwSetScrollCallback(window,scroll_callback);				// Scrolling
 	glfwSetCharCallback(window, ImGui_ImplGlfw_CharCallback);
 	glfwSwapInterval(1);
@@ -216,10 +234,27 @@ int main( int argc, char** argv) {
 	ImGui_ImplGlfw_InitForOpenGL(window, false);
 	ImGui_ImplOpenGL3_Init("#version 330");
 
-
 	glm::ivec4 frame(0.0f);
 	glfwGetWindowPos(window, &frame[0], &frame[1]);
 	glfwGetWindowSize(window, &frame[2], &frame[3]);
+
+	const bool directRecord = args.count("export") > 0;
+	if(directRecord){
+		const int framerate = args.count("framerate") > 0 ? Configuration::parseInt(args["framerate"][0]) : 60;
+		const int bitrate = args.count("bitrate") > 0 ? Configuration::parseInt(args["bitrate"][0]) : 40;
+		const bool pngAlpha = args.count("png-alpha") > 0 ? Configuration::parseBool(args["png-alpha"][0]) : false;
+		const std::string exportPath = args["export"][0];
+		Recorder::Format format = Recorder::Format::PNG;
+		if(args.count("format") > 0){
+			const auto & formatRaw = args["format"][0];
+			if(formatRaw == "MPEG2"){
+				format = Recorder::Format::MPEG2;
+			} else if(formatRaw == "MPEG4"){
+				format = Recorder::Format::MPEG4;
+			}
+		}
+		renderer.startDirectRecording(exportPath, format, framerate, bitrate, pngAlpha, glm::vec2(isw, ish));
+	}
 
 	// Start the display/interaction loop.
 	while (!glfwWindowShouldClose(window)) {
