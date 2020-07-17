@@ -38,6 +38,7 @@ void printHelp(){
 
 	std::cout << "---- Infos ---- MIDIVisualizer v" << MIDIVIZ_VERSION_MAJOR << "." << MIDIVIZ_VERSION_MINOR << " --------" << std::endl
 	<< "Visually display a midi file in real time." << std::endl
+	<< "Created by Simon Rodriguez (https://github.com/kosua20/MIDIVisualizer)" << std::endl
 	<< std::endl << "* General options: " << std::endl;
 	for(const auto & opt : genOpts){
 		const std::string pad(std::max(int(alignSize) - int(opt.first.size()), 0), ' ');
@@ -49,8 +50,7 @@ void printHelp(){
 		std::cout << "--" << opt.first << pad << opt.second << std::endl;
 	}
 	std::cout << std::endl << "* Configuration options: (will override config file)" << std::endl
-	<< opts << std::endl
-	<< std::endl;
+	<< opts << std::endl;
 
 }
 
