@@ -332,7 +332,7 @@ bool Recorder::initVideo(const std::string & path, Format format){
 	}
 
 	// Debug log.
-	 av_dump_format(_formatCtx, 0, path.c_str(), 1);
+	//av_dump_format(_formatCtx, 0, path.c_str(), 1);
 	return true;
 #else
 	return false;

@@ -13,15 +13,14 @@
 #include <fstream>
 
 
-Renderer::Renderer() {}
+Renderer::Renderer() {
+}
 
 Renderer::~Renderer() {}
 
 void Renderer::init(int width, int height) {
 	_showGUI = true;
 	_showDebug = false;
-	
-	ResourcesManager::loadResources();
 
 	// GL options
 	glEnable(GL_CULL_FACE);

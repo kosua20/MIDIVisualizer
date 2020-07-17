@@ -9,6 +9,7 @@
 
 #include "helpers/ProgramUtilities.h"
 #include "helpers/Configuration.h"
+#include "helpers/ResourcesManager.h"
 
 #include "rendering/Renderer.h"
 
@@ -32,24 +33,24 @@ void printHelp(){
 		{"framerate", "number of frames per second to export (integer)"},
 		{"bitrate", "target video bitrate in Mb (integer)"},
 		{"png-alpha", "use transparent PNG background (1 or 0 to enabled/disable)"},
-		{"no-window", "do not display the window (1 or 0 to enabled/disable)"},
+		{"hide-window", "do not display the window (1 or 0 to enabled/disable)"},
 	};
 
 	std::cout << "---- Infos ---- MIDIVisualizer v" << MIDIVIZ_VERSION_MAJOR << "." << MIDIVIZ_VERSION_MINOR << " --------" << std::endl
-	<< "Visually display a midi file in realtime." << std::endl
+	<< "Visually display a midi file in real time." << std::endl
 	<< std::endl << "* General options: " << std::endl;
 	for(const auto & opt : genOpts){
 		const std::string pad(std::max(int(alignSize) - int(opt.first.size()), 0), ' ');
 		std::cout << "--" << opt.first << pad << opt.second << std::endl;
 	}
-	std::cout << std::endl << "* Export options: " << std::endl;
+	std::cout << std::endl << "* Export options: (--export path is mandatory)" << std::endl;
 	for(const auto & opt : expOpts){
 		const std::string pad(std::max(int(alignSize) - int(opt.first.size()), 0), ' ');
 		std::cout << "--" << opt.first << pad << opt.second << std::endl;
 	}
 	std::cout << std::endl << "* Configuration options: (will override config file)" << std::endl
 	<< opts << std::endl
-	<< "--------------------------------------------" << std::endl;
+	<< std::endl;
 
 }
 
@@ -154,10 +155,10 @@ int main( int argc, char** argv) {
 		}
 	}
 	// Hide window if needed.
-	if(args.count("no-window") > 0 && Configuration::parseBool(args["no-window"][0])){
+	if(args.count("hide-window") > 0 && Configuration::parseBool(args["hide-window"][0])){
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 	}
-	
+
 	// Create a window with a given size. Width and height are macros as we will need them again.
 	GLFWwindow* window = glfwCreateWindow(isw, ish,"MIDI Visualizer", NULL, NULL);
 	if (!window) {
@@ -194,7 +195,9 @@ int main( int argc, char** argv) {
 			return 10;
 		}
 	}
-	
+
+	// Setup resources.
+	ResourcesManager::loadResources();
 	// Create the renderer.
 	Renderer renderer;
 	renderer.init(isw, ish);
