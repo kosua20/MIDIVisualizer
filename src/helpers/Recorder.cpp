@@ -217,6 +217,14 @@ void Recorder::setSize(const glm::ivec2 & size){
 	_size = size;
 }
 
+void Recorder::setParameters(const std::string & path, Format format, int framerate, int bitrate, bool skipBackground){
+	_exportPath = path;
+	_outFormat = format;
+	_exportFramerate = framerate;
+	_bitRate = bitrate;
+	_exportNoBackground = skipBackground;
+}
+
 bool Recorder::initVideo(const std::string & path, Format format){
 #ifdef MIDIVIZ_SUPPORT_VIDEO
 	if(format == Format::PNG){

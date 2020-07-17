@@ -18,6 +18,10 @@ class Recorder {
 
 public:
 
+	enum class Format : int {
+		PNG = 0, MPEG2 = 1, MPEG4 = 2
+	};
+
 	Recorder();
 
 	~Recorder();
@@ -44,11 +48,9 @@ public:
 
 	void setSize(const glm::ivec2 & size);
 
-private:
+	void setParameters(const std::string & path, Format format, int framerate, int bitrate, bool skipBackground);
 
-	enum class Format : int {
-		PNG = 0, MPEG2 = 1, MPEG4 = 2
-	};
+private:
 
 	bool initVideo(const std::string & path, Format format);
 
