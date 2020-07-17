@@ -112,6 +112,8 @@ void performAction(SystemAction action, GLFWwindow * window, glm::ivec4 & frame)
 		case SystemAction::FREE_SIZE:
 			glfwSetWindowAttrib(window, GLFW_RESIZABLE, GLFW_TRUE);
 			break;
+		case SystemAction::QUIT:
+			glfwSetWindowShouldClose(window, GLFW_TRUE);
 		default:
 			break;
 	}
@@ -151,6 +153,11 @@ int main( int argc, char** argv) {
 			ish = Configuration::parseInt(vals[1]);
 		}
 	}
+	// Hide window if needed.
+	if(args.count("no-window") > 0 && Configuration::parseBool(args["no-window"][0])){
+		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+	}
+	
 	// Create a window with a given size. Width and height are macros as we will need them again.
 	GLFWwindow* window = glfwCreateWindow(isw, ish,"MIDI Visualizer", NULL, NULL);
 	if (!window) {

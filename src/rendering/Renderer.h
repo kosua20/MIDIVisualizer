@@ -19,7 +19,7 @@
 #define DEBUG_SPEED (1.0f)
 
 enum class SystemAction {
-	NONE, FIX_SIZE, FREE_SIZE, FULLSCREEN
+	NONE, FIX_SIZE, FREE_SIZE, FULLSCREEN, QUIT
 };
 
 class Renderer {
@@ -120,6 +120,7 @@ private:
 	ScreenQuad _backgroundTexture;
 	std::shared_ptr<Score> _score;
 	bool _showLayers = false;
+	bool _exitAfterRecording = false;
 };
 
 #endif

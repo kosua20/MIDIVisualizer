@@ -125,7 +125,7 @@ SystemAction Renderer::draw(float currentTime) {
 		if(_recorder.currentFrame() < 2){
 			action = SystemAction::FIX_SIZE;
 		} else if(_recorder.currentFrame() >= _recorder.framesCount()){
-			action = SystemAction::FREE_SIZE;
+			action = _exitAfterRecording ? SystemAction::QUIT : SystemAction::FREE_SIZE;
 			_timer = 0.0f;
 			_timerStart = 0.0f;
 			_shouldPlay = false;
@@ -749,6 +749,7 @@ void Renderer::startDirectRecording(const std::string & path, Recorder::Format f
 	_recorder.setParameters(path, format, framerate, bitrate, skipBackground);
 	_recorder.setSize(size);
 	startRecording();
+	_exitAfterRecording = true;
 }
 
 void Renderer::startRecording(){
