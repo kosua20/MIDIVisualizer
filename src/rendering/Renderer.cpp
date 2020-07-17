@@ -575,24 +575,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		ImGui::Separator();
 
 		if(_recorder.drawGUI()){
-			// We need to provide some information for the recorder to start.
-			_recorder.start(_state.prerollTime, _scene->duration());
-			const glm::vec2 backSize = _camera._screenSize;
-			// Start by clearing up all buffers.
-			const auto &currentQuality = Quality::availables.at(_state.quality);
-			const glm::vec2 finalSize = glm::vec2(_recorder.requiredSize()) / currentQuality.finalResolution;
-			resize(int(finalSize[0]), int(finalSize[1]));
-			// To get a nice background display of the result, we need to restore the camera screen size for the final viewport.
-			_camera.screen(int(backSize[0]), int(backSize[1]));
-			// Reset buffers.
-			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-			_particlesFramebuffer->bind();
-			glClear(GL_COLOR_BUFFER_BIT);
-			_blurFramebuffer->bind();
-			glClear(GL_COLOR_BUFFER_BIT);
-			_finalFramebuffer->bind();
-			glClear(GL_COLOR_BUFFER_BIT);
-			_finalFramebuffer->unbind();
+			startRecording();
 		}
 
 		if (_showDebug) {
@@ -760,4 +743,31 @@ void Renderer::setState(const State & state){
 	_layers[Layer::FLASHES].toggle = &_state.showFlashes;
 
 	applyAllSettings();
+}
+
+void Renderer::startDirectRecording(const std::string & path, Recorder::Format format, int framerate, int bitrate, bool skipBackground, const glm::vec2 & size){
+	_recorder.setParameters(path, format, framerate, bitrate, skipBackground);
+	_recorder.setSize(size);
+	startRecording();
+}
+
+void Renderer::startRecording(){
+	// We need to provide some information for the recorder to start.
+	_recorder.start(_state.prerollTime, _scene->duration());
+	const glm::vec2 backSize = _camera._screenSize;
+	// Start by clearing up all buffers.
+	const auto &currentQuality = Quality::availables.at(_state.quality);
+	const glm::vec2 finalSize = glm::vec2(_recorder.requiredSize()) / currentQuality.finalResolution;
+	resize(int(finalSize[0]), int(finalSize[1]));
+	// To get a nice background display of the result, we need to restore the camera screen size for the final viewport.
+	_camera.screen(int(backSize[0]), int(backSize[1]));
+	// Reset buffers.
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	_particlesFramebuffer->bind();
+	glClear(GL_COLOR_BUFFER_BIT);
+	_blurFramebuffer->bind();
+	glClear(GL_COLOR_BUFFER_BIT);
+	_finalFramebuffer->bind();
+	glClear(GL_COLOR_BUFFER_BIT);
+	_finalFramebuffer->unbind();
 }
