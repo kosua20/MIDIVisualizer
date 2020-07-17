@@ -1,5 +1,8 @@
 #ifndef State_h
 #define State_h
+
+#include "../helpers/Configuration.h"
+
 #include <gl3w/gl3w.h>
 #include <glm/glm.hpp>
 #include <vector>
@@ -7,8 +10,8 @@
 #include <map>
 #include <array>
 
-#define MIDIVIZ_VERSION_MAJOR 4
-#define MIDIVIZ_VERSION_MINOR 1
+#define MIDIVIZ_VERSION_MAJOR 5
+#define MIDIVIZ_VERSION_MINOR 0
 
 #define COLUMN_SIZE 170
 	
@@ -39,49 +42,49 @@ struct Quality {
 class State {
 public:
 	struct BackgroundState {
-		glm::vec3 color;
-		glm::vec3 linesColor;
-		glm::vec3 textColor;
-		glm::vec3 keysColor;
-		float minorsWidth;
-		bool hLines;
-		bool vLines;
-		bool digits;
-		bool image;
-		bool imageBehindKeyboard;
-		float imageAlpha;
+		glm::vec3 color; ///< Background color.
+		glm::vec3 linesColor; ///< Score lines color.
+		glm::vec3 textColor; ///< Score text color.
+		glm::vec3 keysColor; ///< Black keys color.
+		float minorsWidth; ///< Minor keys and notes width.
+		bool hLines; ///< Show horizontal score lines.
+		bool vLines; ///< Show vertical score lines.
+		bool digits; ///< Show score text.
+		bool image; ///< Use background image.
+		bool imageBehindKeyboard; ///< Should image pass behind keyboard.
+		float imageAlpha; ///< Background alpha.
 		GLuint tex;
 	};
 	
 	
 	struct ParticlesState {
-		glm::vec3 color ;
+		glm::vec3 color ; ///< Particles color.
 		GLuint tex;
 		int texCount;
-		float speed;
-		float expansion;
-		float scale;
-		int count;
+		float speed; ///< Particles speed.
+		float expansion; ///< Expansion factor.
+		float scale; ///< Particles scale.
+		int count; ///< Number of particles.
 	};
 
 	struct KeyboardState {
-		glm::vec3 majorColor;
-		glm::vec3 minorColor;
-		bool highlightKeys;
-		bool customKeyColors;
+		glm::vec3 majorColor; ///< Major key pressed color.
+		glm::vec3 minorColor; ///< Minor key pressed color.
+		bool highlightKeys; ///< Highlight pressed keys.
+		bool customKeyColors; ///< Use the custom colors above instead of the color of the notes.
 	};
 	
 	BackgroundState background;
 	ParticlesState particles;
 	KeyboardState keyboard;
 	Quality::Level quality;
-	glm::vec3 baseColor;
-	glm::vec3 minorColor;
-	glm::vec3 flashColor;
-	float scale;
-	float attenuation;
-	float flashSize;
-	float prerollTime;
+	glm::vec3 baseColor; ///< Major notes color.
+	glm::vec3 minorColor; ///< Minor notes color.
+	glm::vec3 flashColor; ///< Flashes color.
+	float scale; ///< Display vertical scale.
+	float attenuation; ///< Blur attenuation.
+	float flashSize; ///< Size of flashes.
+	float prerollTime; ///< Preroll time.
 	bool showParticles;
 	bool showFlashes;
 	bool showBlur;
@@ -91,14 +94,51 @@ public:
 	bool showScore;
 	bool showKeyboard;
 
-	std::array<int, 16> layersMap;
+	std::array<int, 16> layersMap; ///< Location of each layer.
+
+	State();
 
 	void load(const std::string & path);
-	
+
+	void load(const Arguments & configArgs);
+
 	void save(const std::string & path);
 	
 	void reset();
-	
+
+	static std::string helpText(size_t & alignSize);
+
+private:
+
+	static void defineOptions();
+
+	void updateOptions();
+
+	// Legacy loading.
+	void load(std::istream & configFile, int majVersion, int minVersion);
+
+	struct OptionInfos {
+
+		enum class Type {
+			BOOLEAN, INTEGER, FLOAT, COLOR, OTHER
+		};
+
+		std::string description;
+		std::string values;
+		Type type;
+		std::array<float, 2> range;
+
+		OptionInfos();
+
+		OptionInfos(const std::string & adesc, Type atype, const std::array<float, 2> & arange = {0.0f, 0.0f});
+	};
+
+	static std::map<std::string, OptionInfos> _sharedInfos;
+	std::map<std::string, bool*> _boolInfos;
+	std::map<std::string, int*> _intInfos;
+	std::map<std::string, float*> _floatInfos;
+	std::map<std::string, glm::vec3*> _vecInfos;
+
 };
 
 
