@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include "helpers/ProgramUtilities.h"
+#include "helpers/Configuration.h"
 
 #include "rendering/Renderer.h"
 
@@ -16,15 +17,22 @@
 
 
 void printHelp(){
+	size_t alignSize = 0;
+	const std::string opts = State::helpText(alignSize);
+
 	std::cout << "---- Infos ---- MIDIVisualizer v" << MIDIVIZ_VERSION_MAJOR << "." << MIDIVIZ_VERSION_MINOR << " --------" << std::endl
 	<< "Visually display a midi file in realtime." << std::endl
-	<< "Usage: midiviz path/to/file.mid [s] [r g b]" << std::endl
-	<< "\t(where s is a scaling factor and r,g,b are float color components in [0,1])" << std::endl
-	<< "Keys:\tp\tplay/pause" << std::endl
-	<< "\tr\treset" << std::endl
+	<< std::endl << "* General options: " << std::endl
+	<< "--" << "midi" << std::string(alignSize - 4, ' ') << "path to a MIDI file to load" << std::endl
+	<< "--" << "config" << std::string(alignSize - 6, ' ') << "path to a configuration INI file" << std::endl
+	<< "--" << "size" << std::string(alignSize - 4, ' ') << "dimensions of the window (--size W H)" << std::endl
+	//<< std::endl << "* Export options: TO BE ADDED" << std::endl
+	<< std::endl << "* Configuration options: (will override config file)" << std::endl
+	<< opts << std::endl
 	<< "--------------------------------------------" << std::endl;
 
 }
+
 /// Callbacks
 
 void resize_callback(GLFWwindow* window, int width, int height){
@@ -92,12 +100,16 @@ void performAction(SystemAction action, GLFWwindow * window, glm::ivec4 & frame)
 /// The main function
 
 int main( int argc, char** argv) {
-	
-	if(argc > 3 && argc != 5 && argc != 6){
-		std::cerr << "[ERROR]: wrong number of arguments" << std::endl;
-		return 1;
+
+	// Parse arguments.
+	bool showHelp = false;
+	Arguments args = Configuration::parseArguments(std::vector<std::string>(argv, argv+argc), showHelp);
+
+	if(showHelp){
+		printHelp();
+		return 0;
 	}
-	
+
 	// Initialize glfw, which will create and setup an OpenGL context.
 	if (!glfwInit()) {
 		std::cerr << "[ERROR]: could not start GLFW3" << std::endl;
@@ -110,8 +122,17 @@ int main( int argc, char** argv) {
 	glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+	int isw = INITIAL_SIZE_WIDTH;
+	int ish = INITIAL_SIZE_HEIGHT;
+	if(args.count("size") > 0){
+		const auto & vals = args["size"];
+		if(vals.size() >= 2){
+			isw = Configuration::parseInt(vals[0]);
+			ish = Configuration::parseInt(vals[1]);
+		}
+	}
 	// Create a window with a given size. Width and height are macros as we will need them again.
-	GLFWwindow* window = glfwCreateWindow(INITIAL_SIZE_WIDTH, INITIAL_SIZE_HEIGHT,"MIDI Visualizer", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(isw, ish,"MIDI Visualizer", NULL, NULL);
 	if (!window) {
 		std::cerr << "[ERROR]: could not open window with GLFW3" << std::endl;
 		glfwTerminate();
@@ -129,10 +150,12 @@ int main( int argc, char** argv) {
 		std::cerr << "OpenGL 3.2 not supported\n" << std::endl;
 		return -1;
 	}
-	
-	// Read arguments.
+
 	std::string midiFilePath;
-	if(argc<2){
+	// Check if a path is given in argument.
+	if(args.count("midi") > 0){
+		midiFilePath = args["midi"][0];
+	} else {
 		// We are in direct-to-gui mode.
 		nfdchar_t *outPath = NULL;
 		nfdresult_t result = NFD_OpenDialog( NULL, NULL, &outPath );
@@ -143,31 +166,12 @@ int main( int argc, char** argv) {
 		} else {
 			return 10;
 		}
-	} else {
-		// We are in command-line mode.
-		printHelp();
-		midiFilePath = std::string(argv[1]);
-	}
-	glm::vec3 baseColor = 1.35f*glm::vec3(0.57f,0.19f,0.98f);
-	float scale = 0.5;
-	if(argc == 3 || argc == 6 ){
-		scale = std::stof(argv[2]);
-	}
-	if(argc == 5){
-		baseColor[0] = std::stof(argv[2]);
-		baseColor[1] = std::stof(argv[3]);
-		baseColor[2] = std::stof(argv[4]);
-	} else if(argc == 6){
-		baseColor[0] = std::stof(argv[3]);
-		baseColor[1] = std::stof(argv[4]);
-		baseColor[2] = std::stof(argv[5]);
 	}
 	
 	// Create the renderer.
 	Renderer renderer;
-	renderer.init(INITIAL_SIZE_WIDTH,INITIAL_SIZE_HEIGHT);
-	renderer.setColorAndScale(baseColor, scale);
-	
+	renderer.init(isw, ish);
+
 	try {
 		// Load midi file, graphics setup.
 		renderer.loadFile(midiFilePath);
@@ -178,6 +182,15 @@ int main( int argc, char** argv) {
 		glfwTerminate();
 		return 3;
 	}
+
+	// Apply custom state.
+	State state;
+	if(args.count("config") > 0){
+		state.load(args.at("config")[0]);
+	}
+	// Apply any extra display argument on top of the (optional) config.
+	state.load(args);
+	renderer.setState(state);
 	
 	// Define utility pointer for callbacks (can be obtained back from inside the callbacks).
 	glfwSetWindowUserPointer(window, &renderer);
