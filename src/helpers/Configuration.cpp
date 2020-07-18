@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <stdio.h>
+#include <algorithm>
 
 std::string trim(const std::string & str, const std::string & del) {
 	const size_t firstNotDel = str.find_first_not_of(del);
@@ -102,7 +103,7 @@ float Configuration::parseFloat(const std::string & str){
 
 glm::vec3 Configuration::parseVec3(const std::vector<std::string> & strs){
 	glm::vec3 vec(0.0f);
-	for(size_t i = 0; i < std::min(size_t(3), strs.size()); ++i){
+	for(size_t i = 0; i < (std::min)(size_t(3), strs.size()); ++i){
 		vec[i] = parseFloat(strs[i]);
 	}
 	return vec;

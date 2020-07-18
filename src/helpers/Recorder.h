@@ -5,6 +5,7 @@
 #include "../rendering/Framebuffer.h"
 #include <string>
 #include <vector>
+#include <memory>
 
 // Forward declare FFmpeg objects in all cases.
 struct AVFormatContext;
@@ -32,7 +33,7 @@ public:
 
 	void start(float preroll, float duration);
 
-	bool drawProgress();
+	void drawProgress();
 	
 	bool isRecording() const;
 

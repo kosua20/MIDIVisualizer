@@ -172,7 +172,7 @@ void Recorder::start(float preroll, float duration){
 	}
 }
 
-bool Recorder::drawProgress(){
+void Recorder::drawProgress(){
 	if(_currentFrame == 1){
 		ImGui::OpenPopup("Exporting...");
 	}
