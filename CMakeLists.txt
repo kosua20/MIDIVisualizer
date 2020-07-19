@@ -7,7 +7,7 @@ set(CMAKE_BUILD_TYPE "Release")
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
-# Need to look for local FindFFmpeg.cmake script, as none are provided by default.
+# Need to look for local FindFFMPEG.cmake script, as none are provided by default.
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/libs")
 
 
@@ -27,7 +27,7 @@ add_subdirectory(libs/nfd/)
 find_package(OpenGL REQUIRED)
 
 # Add FFMPEG if available
-find_package(FFmpeg COMPONENTS AVCODEC AVFORMAT AVUTIL SWSCALE)
+find_package(FFMPEG)
 
 ## Projects
 
