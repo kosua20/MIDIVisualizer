@@ -10,3 +10,4 @@ x64/
 *.xcodeproj
 *.xcuserstate
 */xcuserdata/*
+dependencies/
