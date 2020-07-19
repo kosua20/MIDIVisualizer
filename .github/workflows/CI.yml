@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            cmake-opts: 
+          - os: windows-latest
+            cmake-opts: -A x64
+          - os: macOS-latest
+            cmake-opts:
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Dependencies
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: sudo apt-get update -y && sudo apt-get install -yq xorg-dev libgtk-3-dev
+
+      - name: Configure
+        shell: bash
+        working-directory: ${{runner.workspace}}
+        run: |
+          cmake -E make_directory ${{runner.workspace}}/build
+          cmake -S $GITHUB_WORKSPACE -B build/ -DCMAKE_BUILD_TYPE=Release ${{matrix.cmake-opts}}
+
+      - name: Build
+        working-directory: ${{runner.workspace}}
+        shell: bash
+        run: cmake --build build/ --config Release
+
+
+
+
+
