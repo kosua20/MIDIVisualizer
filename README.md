@@ -1,5 +1,7 @@
 # MIDI Visualizer
 
+![CI](https://github.com/kosua20/MIDIVisualizer/workflows/CI/badge.svg?branch=master)
+
 A small MIDI visualizer, written in C++/OpenGL. 
 
 ![Result image](result1.png)  
