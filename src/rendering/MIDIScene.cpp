@@ -258,8 +258,7 @@ void MIDIScene::drawParticles(float time, const glm::vec2 & invScreenSize, const
 	GLuint timeId = glGetUniformLocation(_programParticulesId, "time");
 	GLuint durationId = glGetUniformLocation(_programParticulesId, "duration");
 	glUniform2fv(screenId,1, &(invScreenSize[0]));
-	glUniform1f(timeId,time);
-	glUniform1f(timeId,0.0);//wut?
+	glUniform1f(timeId,0.0);
 
 	// Variable uniforms.
 	GLuint globalShiftId = glGetUniformLocation(_programParticulesId, "globalId");
