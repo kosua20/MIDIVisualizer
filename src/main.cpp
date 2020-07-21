@@ -1,17 +1,18 @@
 #include <gl3w/gl3w.h> // to load OpenGL extensions at runtime
 #include <GLFW/glfw3.h> // to set up the OpenGL context and manage window lifecycle and inputs
-#include <imgui/imgui.h>
-#include <imgui/imgui_impl_glfw.h>
-#include <imgui/imgui_impl_opengl3.h>
-#include <nfd.h>
-#include <stdio.h>
-#include <iostream>
-
 #include "helpers/ProgramUtilities.h"
 #include "helpers/Configuration.h"
 #include "helpers/ResourcesManager.h"
 
 #include "rendering/Renderer.h"
+
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
+
+#include <nfd.h>
+#include <iostream>
+#include <algorithm>
 
 #define INITIAL_SIZE_WIDTH 1280
 #define INITIAL_SIZE_HEIGHT 600
@@ -246,14 +247,17 @@ int main( int argc, char** argv) {
 	glfwSetKeyCallback(window,key_callback);					// Pressing a key
 	glfwSetScrollCallback(window,scroll_callback);				// Scrolling
 	glfwSetCharCallback(window, ImGui_ImplGlfw_CharCallback);
-	glfwSetWindowContentScaleCallback(window, rescale_callback);
+	//glfwSetWindowContentScaleCallback(window, rescale_callback);
 	glfwSwapInterval(1);
+
 	// On HiDPI screens, we might have to initially resize the framebuffers size.
+	glm::ivec4 frame(0);
+	glfwGetWindowPos(window, &frame[0], &frame[1]);
+	glfwGetWindowSize(window, &frame[2], &frame[3]);
 	int width, height;
 	glfwGetFramebufferSize(window, &width, &height);
-	glm::vec2 scale(1.0f);
-	glfwGetWindowContentScale(window, &scale[0], &scale[1]);
-	renderer.resizeAndRescale(width, height, scale[0]);
+	const float scale = float(width) / float((std::max)(frame[2], 1));
+	renderer.resizeAndRescale(width, height, scale);
 	
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -264,9 +268,7 @@ int main( int argc, char** argv) {
 	ImGui_ImplGlfw_InitForOpenGL(window, false);
 	ImGui_ImplOpenGL3_Init("#version 330");
 
-	glm::ivec4 frame(0);
-	glfwGetWindowPos(window, &frame[0], &frame[1]);
-	glfwGetWindowSize(window, &frame[2], &frame[3]);
+
 
 	const bool directRecord = args.count("export") > 0;
 	if(directRecord){
