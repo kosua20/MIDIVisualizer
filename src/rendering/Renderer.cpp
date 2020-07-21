@@ -95,20 +95,31 @@ Renderer::Renderer(int winW, int winH, bool fullscreen) {
 
 	// Check setup errors.
 	checkGLError();
+
+	_score.reset(new Score(2.0f));
+	_scene.reset(new MIDIScene());
 }
 
 Renderer::~Renderer() {}
 
-void Renderer::loadFile(const std::string &midiFilePath) {
+bool Renderer::loadFile(const std::string &midiFilePath) {
+	std::shared_ptr<MIDIScene> scene(nullptr);
+	
+	try {
+		scene = std::make_shared<MIDIScene>(midiFilePath);
+	} catch(...){
+		// Failed to load.
+		return false;
+	}
 	// Player.
 	_timer = -_state.prerollTime;
 	_shouldPlay = false;
 
 	// Init objects.
-	_scene = std::make_shared<MIDIScene>(midiFilePath);
+	_scene = scene;
 	_score = std::make_shared<Score>(_scene->midiFile().tracks[0].secondsPerMeasure);
-
 	applyAllSettings();
+	return true;
 }
 
 SystemAction Renderer::draw(float currentTime) {

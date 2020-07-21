@@ -10,10 +10,11 @@ class MIDIScene {
 
 public:
 
-	~MIDIScene();
+	MIDIScene();
 
-	/// Init function
 	MIDIScene(const std::string & midiFilePath);
+	
+	~MIDIScene();
 	
 	void updatesActiveNotes(double time);
 	
@@ -40,6 +41,8 @@ public:
 	void resetParticles();
 
 private:
+
+	void renderSetup(const std::vector<float> & data);
 	
 	GLuint _programId;
 	GLuint _programFlashesId;

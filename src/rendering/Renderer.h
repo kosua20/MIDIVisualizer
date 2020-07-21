@@ -38,7 +38,7 @@ public:
 
 	~Renderer();
 	
-	void loadFile(const std::string & midiFilePath);
+	bool loadFile(const std::string & midiFilePath);
 
 	void setState(const State & state);
 	

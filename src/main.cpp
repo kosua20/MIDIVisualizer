@@ -221,13 +221,11 @@ int main( int argc, char** argv) {
 	// Create the renderer.
 	Renderer renderer(isw, ish, fullscreen);
 
-	try {
-		// Load midi file, graphics setup.
-		renderer.loadFile(midiFilePath);
-	} catch (...) {
+	// Load midi file, graphics setup.
+	if(!renderer.loadFile(midiFilePath)){
 		// File not found, probably (error message handled locally).
-		glfwDestroyWindow(window);
 		renderer.clean();
+		glfwDestroyWindow(window);
 		glfwTerminate();
 		return 3;
 	}
@@ -318,10 +316,10 @@ int main( int argc, char** argv) {
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
+	renderer.clean();
 	// Remove the window.
 	glfwDestroyWindow(window);
 	// Clean other resources
-	renderer.clean();
 	// Close GL context and any other GLFW resources.
 	glfwTerminate();
 	return 0;

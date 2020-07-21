@@ -14,11 +14,11 @@ class MIDIFile {
 	
 private:
 	
-	uint16_t _tracksCount;
-	MIDIType format;
-	uint16_t unitsPerFrame;
-	float framesPerSeconds;
-	uint16_t unitsPerQuarterNote;
+	uint16_t _tracksCount = 0;
+	MIDIType format = MIDIType::singleTrack;
+	uint16_t unitsPerFrame = 1;
+	float framesPerSeconds = 1;
+	uint16_t unitsPerQuarterNote = 1;
 	
 public:
 	

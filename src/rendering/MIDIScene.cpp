@@ -17,6 +17,13 @@
 
 MIDIScene::~MIDIScene(){}
 
+MIDIScene::MIDIScene(){
+	_notesCount = 0;
+	_duration = 0.0f;
+	std::vector<float> data(4, 0.0f);
+	renderSetup(data);
+}
+
 MIDIScene::MIDIScene(const std::string & midiFilePath){
 	
 	// MIDI processing.
@@ -24,10 +31,6 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 	
 	
 	// Load geometry and notes shared data.
-	std::vector<float> vertices = {-0.5,-0.5, 0.5, -0.5, 0.5,0.5, -0.5, 0.5};
-	std::vector<unsigned int> indices = {0, 1, 3, 3, 1, 2};
-	_primitiveCount = indices.size();
-	
 	std::vector<float> data;
 	auto notesM = _midiFile.tracks[0].getNotes(majorNotes);
 	
@@ -49,38 +52,47 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 	}
 	_notesCount = notesM.size() + notesm.size();
 	std::cout << "[INFO]: Final track duration " << _duration << " sec." << std::endl;
-	
+
+	// Upload to the GPU.
+	renderSetup(data);
+}
+
+void MIDIScene::renderSetup(const std::vector<float> & data){
+
+	std::vector<float> vertices = {-0.5,-0.5, 0.5, -0.5, 0.5,0.5, -0.5, 0.5};
+	std::vector<unsigned int> indices = {0, 1, 3, 3, 1, 2};
+	_primitiveCount = indices.size();
 	// Create an array buffer to host the geometry data.
 	GLuint vbo = 0;
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	// Upload the data to the Array buffer.
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * vertices.size() * 2, &(vertices[0]), GL_STATIC_DRAW);
-	
+
 	// Notes buffer.
 	GLuint dataBufferId0 = 0;
 	glGenBuffers(1, &dataBufferId0);
 	glBindBuffer(GL_ARRAY_BUFFER, dataBufferId0);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * data.size(), &(data[0]), GL_STATIC_DRAW);
-	
+
 	// Enabled notes buffer (empty for now).
 	_flagsBufferId = 0;
 	glGenBuffers(1, &_flagsBufferId);
 	glBindBuffer(GL_ARRAY_BUFFER, _flagsBufferId);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(int) * 88, NULL, GL_DYNAMIC_DRAW);
-	
+
 	_uboKeyboard = 0;
 	glGenBuffers(1, &_uboKeyboard);
 	glBindBuffer(GL_UNIFORM_BUFFER, _uboKeyboard);
 	glBufferData(GL_UNIFORM_BUFFER, sizeof(int)*88, NULL, GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-	
+
 	// Programs.
-	
+
 	// Notes shaders.
 	_programId = createGLProgramFromStrings(ResourcesManager::getStringForShader("notes_vert"), ResourcesManager::getStringForShader("notes_frag"));
-	
+
 	// Generate a vertex array (useful when we add other attributes to the geometry).
 	_vao = 0;
 	glGenVertexArrays (1, &_vao);
@@ -90,13 +102,13 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
 	glVertexAttribDivisor(0, 0);
-	
+
 	// The second attribute will be the notes data.
 	glEnableVertexAttribArray(1);
 	glBindBuffer(GL_ARRAY_BUFFER, dataBufferId0);
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, NULL);
 	glVertexAttribDivisor(1, 1);
-	
+
 	// We load the indices data
 	glGenBuffers(1, &_ebo);
  	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
@@ -104,10 +116,10 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 
 	glBindVertexArray(0);
 	checkGLError();
-	
+
 	// Flashes shaders.
 	_programFlashesId = createGLProgramFromStrings(ResourcesManager::getStringForShader("flashes_vert"), ResourcesManager::getStringForShader("flashes_frag"));
-	
+
 	glGenVertexArrays (1, &_vaoFlashes);
 	glBindVertexArray(_vaoFlashes);
 	// The first attribute will be the vertices positions.
@@ -122,7 +134,7 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 	glVertexAttribDivisor(1, 1);
 	// We load the indices data
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
-	
+
 	// Flash texture loading.
 	_texFlash = ResourcesManager::getTextureFor("flash");
 	glUseProgram(_programFlashesId);
@@ -130,12 +142,12 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 	GLuint texUniID = glGetUniformLocation(_programFlashesId, "textureFlash");
 	glUniform1i(texUniID, 0);
 	glUseProgram(0);
-	
-	
+
+
 	// Particles program.
-	
+
 	_programParticulesId = createGLProgramFromStrings(ResourcesManager::getStringForShader("particles_vert"), ResourcesManager::getStringForShader("particles_frag"));
-	
+
 	glGenVertexArrays (1, &_vaoParticles);
 	glBindVertexArray(_vaoParticles);
 	// The first attribute will be the vertices positions.
@@ -144,25 +156,25 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
 	glVertexAttribDivisor(0, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
-	
+
 	// Particles trajectories texture loading.
 	_texParticles = ResourcesManager::getTextureFor("particles");
 	glUseProgram(_programParticulesId);
 	glActiveTexture(GL_TEXTURE0);
 	GLuint texUniID1 = glGetUniformLocation(_programParticulesId, "textureParticles");
 	glUniform1i(texUniID1, 0);
-	
+
 	glUseProgram(_programParticulesId);
 	glActiveTexture(GL_TEXTURE1);
 	GLuint texUniID2 = glGetUniformLocation(_programParticulesId, "lookParticles");
 	glUniform1i(texUniID2, 1);
-	
+
 	// Pass texture size to shader.
 	const glm::vec2 tsize = ResourcesManager::getTextureSizeFor("particles");
 	GLuint texSizeID = glGetUniformLocation(_programParticulesId, "inverseTextureSize");
 	glUniform2f(texSizeID, 1.0f/float(tsize[0]), 1.0f/float(tsize[1]));
 	glUseProgram(0);
-	
+
 	// Keyboard setup.
 	_programKeysId = createGLProgramFromStrings(ResourcesManager::getStringForShader("keys_vert"), ResourcesManager::getStringForShader("keys_frag"));
 	glGenVertexArrays(1, &_vaoKeyboard);

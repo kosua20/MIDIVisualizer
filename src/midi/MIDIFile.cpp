@@ -170,6 +170,9 @@ void MIDIFile::getNotesActive(std::vector<ActiveNoteInfos> & actives, double tim
 	for(int i = 0; i < int(actives.size()); ++i){
 		 actives[i].enabled = false;
 	}
+	if(track >= tracks.size()){
+		return;
+	}
 	size_t count = tracks[track].notes.size();
 	for(size_t i = 0; i < count;++i){
 		auto& note = tracks[track].notes[i];
