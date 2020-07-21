@@ -293,8 +293,8 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		}
 		if(ImGui::BeginPopup("Display options")){
 			if(ImGui::Checkbox("Fullscreen", &_fullscreen)){
-			action = SystemAction::FULLSCREEN;
-		}
+				action = SystemAction::FULLSCREEN;
+			}
 			if(!_fullscreen){
 				ImGui::PushItemWidth(100);
 				ImGui::InputInt2("Window size", &_windowSize[0]);
@@ -788,13 +788,27 @@ void Renderer::startDirectRecording(const std::string & path, Recorder::Format f
 void Renderer::startRecording(){
 	// We need to provide some information for the recorder to start.
 	_recorder.start(_state.prerollTime, _scene->duration());
-	const glm::vec2 backSize = _camera._screenSize;
+
 	// Start by clearing up all buffers.
+	// We need:
+	// - the rendering res (taking into account quality and screen scaling) to be equal to requiredSize().
+	// - the camera screen size and scale to remain the same afterwards (and during for a nice background display).
+	// We can do this by leveraging the fact that camera parameters are not used during render.
+	// We can thus:
+	// - backup the camera parameters
+	// - trigger a buffers size update at the target resolution
+	// - restore thecamera parameters.
+	// All that will be left is to trigger a size update at the end of the recording.
+
+	const glm::ivec2 backSize = _camera.screenSize();
+	const float backScale = _camera.scale();
+
 	const auto &currentQuality = Quality::availables.at(_state.quality);
 	const glm::vec2 finalSize = glm::vec2(_recorder.requiredSize()) / currentQuality.finalResolution;
-	resize(int(finalSize[0]), int(finalSize[1]));
-	// To get a nice background display of the result, we need to restore the camera screen size for the final viewport.
-	_camera.screen(int(backSize[0]), int(backSize[1]));
+	resizeAndRescale(int(finalSize[0]), int(finalSize[1]), 1.0f);
+
+	_camera.screen(backSize[0], backSize[1], backScale);
+
 	// Reset buffers.
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	_particlesFramebuffer->bind();
