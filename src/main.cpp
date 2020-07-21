@@ -25,6 +25,7 @@ void printHelp(){
 		{"midi", "path to a MIDI file to load"},
 		{"config", "path to a configuration INI file"},
 		{"size", "dimensions of the window (--size W H)"},
+		{"fullscreen", "start in fullscreen (1 or 0 to enabled/disable)"},
 	};
 
 	const std::vector<std::pair<std::string, std::string>> expOpts = {
@@ -154,6 +155,13 @@ int main( int argc, char** argv) {
 			ish = Configuration::parseInt(vals[1]);
 		}
 	}
+
+	// Fullscreen at launch.
+	bool fullscreen = false;
+	if(args.count("fullscreen") > 0 && Configuration::parseBool(args["fullscreen"][0])){
+		fullscreen = true;
+	}
+
 	// Hide window if needed.
 	if(args.count("hide-window") > 0 && Configuration::parseBool(args["hide-window"][0])){
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
@@ -199,8 +207,7 @@ int main( int argc, char** argv) {
 	// Setup resources.
 	ResourcesManager::loadResources();
 	// Create the renderer.
-	Renderer renderer;
-	renderer.init(isw, ish);
+	Renderer renderer(isw, ish, fullscreen);
 
 	try {
 		// Load midi file, graphics setup.
@@ -264,6 +271,10 @@ int main( int argc, char** argv) {
 			}
 		}
 		renderer.startDirectRecording(exportPath, format, framerate, bitrate, pngAlpha, glm::vec2(isw, ish));
+	}
+
+	if(fullscreen){
+		performAction(SystemAction::FULLSCREEN, window, frame);
 	}
 
 	// Start the display/interaction loop.

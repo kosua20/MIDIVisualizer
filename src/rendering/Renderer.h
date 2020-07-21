@@ -26,12 +26,9 @@ class Renderer {
 
 public:
 
-	Renderer();
+	Renderer(int winW, int winH, bool fullscreen);
 
 	~Renderer();
-	
-	/// Init function
-	void init(int width, int height);
 	
 	void loadFile(const std::string & midiFilePath);
 
@@ -119,8 +116,11 @@ private:
 	ScreenQuad _passthrough;
 	ScreenQuad _backgroundTexture;
 	std::shared_ptr<Score> _score;
+
+	glm::ivec2 _windowSize;
 	bool _showLayers = false;
 	bool _exitAfterRecording = false;
+	bool _fullscreen = false;
 };
 
 #endif

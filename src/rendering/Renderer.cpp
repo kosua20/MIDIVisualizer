@@ -13,14 +13,14 @@
 #include <fstream>
 
 
-Renderer::Renderer() {
-}
 
-Renderer::~Renderer() {}
 
-void Renderer::init(int width, int height) {
+Renderer::Renderer(int winW, int winH, bool fullscreen) {
 	_showGUI = true;
 	_showDebug = false;
+
+	_fullscreen = fullscreen;
+	_windowSize = glm::ivec2(winW, winH);
 
 	// GL options
 	glEnable(GL_CULL_FACE);
@@ -32,19 +32,16 @@ void Renderer::init(int width, int height) {
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	// Setup projection matrix.
-	_camera.screen(width, height);
 
-	// Setup framebuffers.
-	_particlesFramebuffer = std::shared_ptr<Framebuffer>(
-		new Framebuffer(int(_camera._screenSize[0]), int(_camera._screenSize[1]), GL_RGBA,
-			GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
-	_blurFramebuffer = std::shared_ptr<Framebuffer>(
-		new Framebuffer(int(_camera._screenSize[0]), int(_camera._screenSize[1]), GL_RGBA,
-			GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
-	_finalFramebuffer = std::shared_ptr<Framebuffer>(
-		new Framebuffer(int(_camera._screenSize[0]), int(_camera._screenSize[1]), GL_RGBA,
-			GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
+	_camera.screen(winW, winH, 1.0f);
+	// Setup framebuffers, size does not really matter as we expect.
+	const glm::ivec2 renderSize = _camera.renderSize();
+	_particlesFramebuffer = std::shared_ptr<Framebuffer>(new Framebuffer(renderSize[0], renderSize[1],
+		GL_RGBA, GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
+	_blurFramebuffer = std::shared_ptr<Framebuffer>(new Framebuffer(renderSize[0], renderSize[1],
+		GL_RGBA, GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
+	_finalFramebuffer = std::shared_ptr<Framebuffer>(new Framebuffer(renderSize[0], renderSize[1],
+		GL_RGBA, GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
 
 	_backgroundTexture.init("backgroundtexture_frag", "backgroundtexture_vert");
 	_blurringScreen.init(_particlesFramebuffer->textureId(), "particlesblur_frag");
@@ -96,6 +93,8 @@ void Renderer::init(int width, int height) {
 	checkGLError();
 }
 
+Renderer::~Renderer() {}
+
 void Renderer::loadFile(const std::string &midiFilePath) {
 	// Player.
 	_timer = -_state.prerollTime;
@@ -130,7 +129,7 @@ SystemAction Renderer::draw(float currentTime) {
 			_shouldPlay = false;
 		}
 		// Make sure the backbuffer is updated, this is nicer.
-		glViewport(0, 0, GLsizei(_camera._screenSize[0]), GLsizei(_camera._screenSize[1]));
+		glViewport(0, 0, GLsizei(_camera.screenSize()[0]), GLsizei(_camera.screenSize()[1]));
 		_passthrough.draw(_finalFramebuffer->textureId(), _timer);
 		return action;
 	}
@@ -144,7 +143,7 @@ SystemAction Renderer::draw(float currentTime) {
 	// Render scene and blit, with GUI on top if needed.
 	drawScene(false);
 
-	glViewport(0, 0, GLsizei(_camera._screenSize[0]), GLsizei(_camera._screenSize[1]));
+	glViewport(0, 0, GLsizei(_camera.screenSize()[0]), GLsizei(_camera.screenSize()[1]));
 	_passthrough.draw(_finalFramebuffer->textureId(), _timer);
 
 	SystemAction action = SystemAction::NONE;
@@ -583,7 +582,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			ImGui::SameLine();
 			ImGui::TextDisabled("(press D to hide)");
 			ImGui::Text("%.1f FPS / %.1f ms", ImGui::GetIO().Framerate, ImGui::GetIO().DeltaTime * 1000.0f);
-			ImGui::Text("Final framebuffer size: %dx%d, screen size: %dx%d", _finalFramebuffer->_width, _finalFramebuffer->_height, int(_camera._screenSize[0]), int(_camera._screenSize[1]));
+			ImGui::Text("Final framebuffer size: %dx%d, screen size: %dx%d", _finalFramebuffer->_width, _finalFramebuffer->_height, _camera.screenSize()[0], _camera.screenSize()[1]);
 			if (ImGui::Button("Print MIDI content to console")) {
 				_scene->midiFile().printTracks();
 			}
