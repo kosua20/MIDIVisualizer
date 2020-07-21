@@ -67,8 +67,21 @@ jobs:
         working-directory: ${{runner.workspace}}
         shell: bash
         run: cmake --build build/ --config Release
-        
-      - name: Package
+      
+      - name: Package-ubuntu
+        if: startsWith(matrix.os, 'ubuntu')
+        working-directory: ${{runner.workspace}}
+        shell: bash
+        run: sh $GITHUB_WORKSPACE/libs/package-ubuntu.sh ${{runner.workspace}}/${{matrix.artifact_name}} $GITHUB_WORKSPACE ${{runner.workspace}}/release.zip
+
+      - name: Package-macos
+        if: startsWith(matrix.os, 'macOS')
+        working-directory: ${{runner.workspace}}
+        shell: bash
+        run: sh $GITHUB_WORKSPACE/libs/package-macos.sh ${{runner.workspace}}/${{matrix.artifact_name}} $GITHUB_WORKSPACE ${{runner.workspace}}/release.zip
+
+      - name: Package-windows
+        if: startsWith(matrix.os, 'windows')
         working-directory: ${{runner.workspace}}
         shell: bash
         run: zip -j release.zip ${{matrix.artifact_name}}
