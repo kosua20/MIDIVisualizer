@@ -140,3 +140,8 @@ if(FFMPEG_FOUND)
 	target_link_libraries(MIDIVisualizer PRIVATE ${FFMPEG_LIBRARIES})
 	target_compile_definitions(MIDIVisualizer PRIVATE ${FFMPEG_DEFINITIONS})
 endif()
+
+# On Windows, the icon is directly included in the executable.
+if(WIN32)
+	target_sources(MIDIVisualizer PRIVATE resources/icon/MIDIVisualizer.rc)
+endif()
