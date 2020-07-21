@@ -62,6 +62,12 @@ void resize_callback(GLFWwindow* window, int width, int height){
 	renderer->resize(width, height);
 }
 
+void rescale_callback(GLFWwindow* window, float xscale, float yscale){
+	Renderer *renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
+	// Assume only one of the two for now.
+	renderer->rescale(xscale);
+}
+
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
 	
 	// Handle quitting
@@ -242,11 +248,14 @@ int main( int argc, char** argv) {
 	glfwSetKeyCallback(window,key_callback);					// Pressing a key
 	glfwSetScrollCallback(window,scroll_callback);				// Scrolling
 	glfwSetCharCallback(window, ImGui_ImplGlfw_CharCallback);
+	glfwSetWindowContentScaleCallback(window, rescale_callback);
 	glfwSwapInterval(1);
 	// On HiDPI screens, we might have to initially resize the framebuffers size.
 	int width, height;
 	glfwGetFramebufferSize(window, &width, &height);
-	renderer.resize(width, height);
+	glm::vec2 scale(1.0f);
+	glfwGetWindowContentScale(window, &scale[0], &scale[1]);
+	renderer.resizeAndRescale(width, height, scale[0]);
 	
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;

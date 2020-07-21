@@ -131,6 +131,7 @@ SystemAction Renderer::draw(float currentTime) {
 			_timer = 0.0f;
 			_timerStart = 0.0f;
 			_shouldPlay = false;
+			updateSizes();
 		}
 		// Make sure the backbuffer is updated, this is nicer.
 		glViewport(0, 0, GLsizei(_camera.screenSize()[0]), GLsizei(_camera.screenSize()[1]));
@@ -345,7 +346,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		ImGui::SameLine(COLUMN_SIZE);
 		ImGui::PushItemWidth(100);
 		if (ImGui::Combo("Quality", (int *)(&_state.quality), "Half\0Low\0Medium\0High\0Double\0\0")) {
-			resize(int(_camera._screenSize[0]), int(_camera._screenSize[1]));
+			updateSizes();
 		}
 
 		const bool smw0 = ImGui::InputFloat("Scale", &_state.scale, 0.01f, 0.1f);
@@ -693,7 +694,7 @@ void Renderer::applyAllSettings() {
 	glUseProgram(0);
 
 	// Resize the framebuffers.
-	resize(int(_camera._screenSize[0]), int(_camera._screenSize[1]));
+	updateSizes();
 
 	// Finally, restore the track at the beginning.
 	reset();
@@ -713,15 +714,27 @@ void Renderer::clean() {
 	_finalFramebuffer->clean();
 }
 
-void Renderer::resize(int width, int height) {
+void Renderer::rescale(float scale){
+	resizeAndRescale(_camera.screenSize()[0], _camera.screenSize()[1], scale);
+}
 
+void Renderer::resize(int width, int height) {
+	resizeAndRescale(width, height, _camera.scale());
+}
+
+void Renderer::resizeAndRescale(int width, int height, float scale) {
 	// Update the projection matrix.
-	_camera.screen(width, height);
+	_camera.screen(width, height, scale);
+	updateSizes();
+}
+
+void Renderer::updateSizes(){
 	// Resize the framebuffers.
 	const auto &currentQuality = Quality::availables.at(_state.quality);
-	_particlesFramebuffer->resize(currentQuality.particlesResolution * _camera._screenSize);
-	_blurFramebuffer->resize(currentQuality.blurResolution * _camera._screenSize);
-	_finalFramebuffer->resize(currentQuality.finalResolution * _camera._screenSize);
+	const glm::vec2 baseRes(_camera.renderSize());
+	_particlesFramebuffer->resize(currentQuality.particlesResolution * baseRes);
+	_blurFramebuffer->resize(currentQuality.blurResolution * baseRes);
+	_finalFramebuffer->resize(currentQuality.finalResolution * baseRes);
 	_recorder.setSize(glm::ivec2(_finalFramebuffer->_width, _finalFramebuffer->_height));
 }
 

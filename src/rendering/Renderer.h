@@ -51,6 +51,11 @@ public:
 	/// Handle screen resizing
 	void resize(int width, int height);
 
+	/// Handle window content density.
+	void rescale(float scale);
+
+	void resizeAndRescale(int width, int height, float scale);
+
 	/// Handle keyboard inputs
 	void keyPressed(int key, int action);
 
@@ -100,6 +105,8 @@ private:
 	void reset();
 
 	void startRecording();
+
+	void updateSizes();
 
 	State _state;
 	std::array<Layer, 8> _layers;
