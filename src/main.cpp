@@ -264,7 +264,7 @@ int main( int argc, char** argv) {
 	ImGui_ImplGlfw_InitForOpenGL(window, false);
 	ImGui_ImplOpenGL3_Init("#version 330");
 
-	glm::ivec4 frame(0.0f);
+	glm::ivec4 frame(0);
 	glfwGetWindowPos(window, &frame[0], &frame[1]);
 	glfwGetWindowSize(window, &frame[2], &frame[3]);
 

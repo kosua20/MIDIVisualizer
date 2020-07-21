@@ -16,7 +16,7 @@
 
 SystemAction::SystemAction(SystemAction::Type act) {
 	type = act;
-	data = glm::ivec4(0.0);
+	data = glm::ivec4(0);
 }
 
 Renderer::Renderer(int winW, int winH, bool fullscreen) {
@@ -798,7 +798,7 @@ void Renderer::startDirectRecording(const std::string & path, Recorder::Format f
 
 void Renderer::startRecording(){
 	// We need to provide some information for the recorder to start.
-	_recorder.start(_state.prerollTime, _scene->duration());
+	_recorder.start(_state.prerollTime, float(_scene->duration()));
 
 	// Start by clearing up all buffers.
 	// We need:

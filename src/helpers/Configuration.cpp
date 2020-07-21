@@ -104,7 +104,7 @@ float Configuration::parseFloat(const std::string & str){
 glm::vec3 Configuration::parseVec3(const std::vector<std::string> & strs){
 	glm::vec3 vec(0.0f);
 	for(size_t i = 0; i < (std::min)(size_t(3), strs.size()); ++i){
-		vec[i] = parseFloat(strs[i]);
+		vec[int(i)] = parseFloat(strs[i]);
 	}
 	return vec;
 }

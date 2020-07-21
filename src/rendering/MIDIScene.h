@@ -13,7 +13,7 @@ public:
 	MIDIScene();
 
 	MIDIScene(const std::string & midiFilePath);
-	
+
 	~MIDIScene();
 	
 	void updatesActiveNotes(double time);
