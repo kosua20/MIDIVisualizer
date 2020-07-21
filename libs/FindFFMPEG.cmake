@@ -31,8 +31,8 @@
 include(FindPackageHandleStandardArgs)
 
 # The default components were taken from a survey over other FindFFMPEG.cmake files
-if (NOT FFmpeg_FIND_COMPONENTS)
-  set(FFmpeg_FIND_COMPONENTS AVCODEC AVFORMAT AVUTIL)
+if (NOT FFMPEG_FIND_COMPONENTS)
+  set(FFMPEG_FIND_COMPONENTS AVCODEC AVFORMAT AVUTIL SWSCALE)
 endif ()
 
 #
@@ -106,7 +106,7 @@ if (NOT FFMPEG_LIBRARIES)
   find_component(POSTPROC libpostproc postproc libpostproc/postprocess.h)
 
   # Check if the required components were found and add their stuff to the FFMPEG_* vars.
-  foreach (_component ${FFmpeg_FIND_COMPONENTS})
+  foreach (_component ${FFMPEG_FIND_COMPONENTS})
     if (${_component}_FOUND)
       # message(STATUS "Required component ${_component} present.")
       set(FFMPEG_LIBRARIES   ${FFMPEG_LIBRARIES}   ${${_component}_LIBRARIES})
@@ -123,9 +123,9 @@ if (NOT FFMPEG_LIBRARIES)
   endif ()
 
   # cache the vars.
-  set(FFMPEG_INCLUDE_DIRS ${FFMPEG_INCLUDE_DIRS} CACHE STRING "The FFmpeg include directories." FORCE)
-  set(FFMPEG_LIBRARIES    ${FFMPEG_LIBRARIES}    CACHE STRING "The FFmpeg libraries." FORCE)
-  set(FFMPEG_DEFINITIONS  ${FFMPEG_DEFINITIONS}  CACHE STRING "The FFmpeg cflags." FORCE)
+  set(FFMPEG_INCLUDE_DIRS ${FFMPEG_INCLUDE_DIRS} CACHE STRING "The FFMPEG include directories." FORCE)
+  set(FFMPEG_LIBRARIES    ${FFMPEG_LIBRARIES}    CACHE STRING "The FFMPEG libraries." FORCE)
+  set(FFMPEG_DEFINITIONS  ${FFMPEG_DEFINITIONS}  CACHE STRING "The FFMPEG cflags." FORCE)
 
   mark_as_advanced(FFMPEG_INCLUDE_DIRS
                    FFMPEG_LIBRARIES
@@ -139,10 +139,10 @@ foreach (_component AVCODEC AVDEVICE AVFORMAT AVUTIL POSTPROCESS SWSCALE)
 endforeach ()
 
 # Compile the list of required vars
-set(_FFmpeg_REQUIRED_VARS FFMPEG_LIBRARIES FFMPEG_INCLUDE_DIRS)
-foreach (_component ${FFmpeg_FIND_COMPONENTS})
-  list(APPEND _FFmpeg_REQUIRED_VARS ${_component}_LIBRARIES ${_component}_INCLUDE_DIRS)
+set(_FFMPEG_REQUIRED_VARS FFMPEG_LIBRARIES FFMPEG_INCLUDE_DIRS)
+foreach (_component ${FFMPEG_FIND_COMPONENTS})
+  list(APPEND _FFMPEG_REQUIRED_VARS ${_component}_LIBRARIES ${_component}_INCLUDE_DIRS)
 endforeach ()
 
 # Give a nice error message if some of the required vars are missing.
-find_package_handle_standard_args(FFmpeg DEFAULT_MSG ${_FFmpeg_REQUIRED_VARS})
+find_package_handle_standard_args(FFMPEG DEFAULT_MSG ${_FFMPEG_REQUIRED_VARS})
