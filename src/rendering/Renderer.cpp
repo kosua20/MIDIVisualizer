@@ -14,6 +14,10 @@
 
 
 
+SystemAction::SystemAction(SystemAction::Type act) {
+	type = act;
+	data = glm::ivec4(0.0);
+}
 
 Renderer::Renderer(int winW, int winH, bool fullscreen) {
 	_showGUI = true;
@@ -282,8 +286,26 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			_showGUI = false;
 		}
 		ImGui::SameLine();
-		if(ImGui::Button("Fullscreen")){
+		if(ImGui::Button("Display")){
+			ImGui::OpenPopup("Display options");
+
+		}
+		if(ImGui::BeginPopup("Display options")){
+			if(ImGui::Checkbox("Fullscreen", &_fullscreen)){
 			action = SystemAction::FULLSCREEN;
+		}
+			if(!_fullscreen){
+				ImGui::PushItemWidth(100);
+				ImGui::InputInt2("Window size", &_windowSize[0]);
+				ImGui::PopItemWidth();
+				ImGui::SameLine();
+				if(ImGui::Button("Resize")){
+					action = SystemAction::RESIZE;
+					action.data[0] = _windowSize[0];
+					action.data[1] = _windowSize[1];
+				}
+			}
+			ImGui::EndPopup();
 		}
 
 		ImGui::SameLine(340);

@@ -84,7 +84,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
 /// Perform system window action.
 
 void performAction(SystemAction action, GLFWwindow * window, glm::ivec4 & frame){
-	switch (action) {
+	switch (action.type) {
 		case SystemAction::FULLSCREEN: {
 			// Are we currently fullscreen?
 			const bool fullscreen = glfwGetWindowMonitor(window) != nullptr;
@@ -108,6 +108,12 @@ void performAction(SystemAction action, GLFWwindow * window, glm::ivec4 & frame)
 			glfwSwapInterval(1);
 			break;
 		}
+		case SystemAction::RESIZE:
+			glfwSetWindowSize(window, action.data[0], action.data[1]);
+			// Check the window position and size (if we are on a screen smaller than the target size).
+			glfwGetWindowPos(window, &frame[0], &frame[1]);
+			glfwGetWindowSize(window, &frame[2], &frame[3]);
+			break;
 		case SystemAction::FIX_SIZE:
 			glfwSetWindowAttrib(window, GLFW_RESIZABLE, GLFW_FALSE);
 			break;

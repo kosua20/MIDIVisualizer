@@ -18,9 +18,17 @@
 
 #define DEBUG_SPEED (1.0f)
 
-enum class SystemAction {
-	NONE, FIX_SIZE, FREE_SIZE, FULLSCREEN, QUIT
+struct SystemAction {
+	enum Type {
+		NONE, FIX_SIZE, FREE_SIZE, FULLSCREEN, QUIT, RESIZE
+	};
+
+	Type type;
+	glm::ivec4 data;
+
+	SystemAction(Type action);
 };
+
 
 class Renderer {
 
