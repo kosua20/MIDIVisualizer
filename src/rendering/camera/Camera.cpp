@@ -19,6 +19,7 @@ void Camera::reset(){
 	_right = glm::vec3(1.0,0.0,0.0);
 	_view = glm::lookAt(_eye, _center, _up);
 	_keyboard.reset();
+	_scale = 1.0f;
 }
 
 void Camera::update(float elapsedTime){
@@ -46,8 +47,8 @@ void Camera::mouse(MouseMode mode, float x, float y){
 		_keyboard.endLeftMouse();
 	} else {
 		// We normalize the x and y values to the [-1, 1] range.
-		float xPosition =  fmax(fmin(1.0f,2.0f * x / _screenSize[0] - 1.0f),-1.0f);
-		float yPosition =  fmax(fmin(1.0f,2.0f * y / _screenSize[1] - 1.0f),-1.0f);
+		float xPosition =  fmax(fmin(1.0f,2.0f * x / float(_screenSize[0]) - 1.0f),-1.0f);
+		float yPosition =  fmax(fmin(1.0f,2.0f * y / float(_screenSize[1]) - 1.0f),-1.0f);
 		
 		if(mode == MouseMode::Start) {
 			_keyboard.startLeftMouse(xPosition,yPosition);
@@ -58,13 +59,14 @@ void Camera::mouse(MouseMode mode, float x, float y){
 }
 
 
-void Camera::screen(int width, int height){
-	_screenSize[0] = float(width > 0 ? width : 1);
-	_screenSize[1] = float(height > 0 ? height : 1);
-	// The render resolution is 900 pixels high, with the same aspect ratio as the display resolution
-	_renderSize = (900.0f/_screenSize[1]) * _screenSize;
+void Camera::screen(int width, int height, float scaling){
+	_screenSize[0] = (width > 0 ? width : 1);
+	_screenSize[1] = (height > 0 ? height : 1);
+	_scale = scaling;
+
+	_renderSize = glm::ivec2(glm::round(glm::vec2(_screenSize) / _scale));
 	// Perspective projection.
-	_projection = glm::perspective(45.0f, _renderSize[0] / _renderSize[1], 0.1f, 100.f);
+	_projection = glm::perspective(45.0f, float(_renderSize[0]) / float(_renderSize[1]), 0.1f, 100.f);
 }
 
 
