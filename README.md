@@ -28,6 +28,7 @@ You can also run the executable from the command-line, specifying a midi file an
 	--midi              path to a MIDI file to load
 	--config            path to a configuration INI file
 	--size              dimensions of the window (--size W H)
+	--fullscreen        start in fullscreen (1 or 0 to enabled/disable)
 	--help              display a detailed help of all options
 	
 ### Export options
