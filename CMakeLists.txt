@@ -98,6 +98,8 @@ set(Sources
 	"src/midi/MIDITrack.h"
 	"src/midi/MIDIUtils.cpp"
 	"src/midi/MIDIUtils.h"
+	"src/midi/MIDIBase.cpp"
+	"src/midi/MIDIBase.h"
 	"src/rendering/Score.cpp"
 	"src/rendering/Score.h"
 	"src/rendering/Framebuffer.cpp"
