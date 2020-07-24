@@ -13,7 +13,7 @@ On Windows and macOS platforms, you can now **run the application by simply doub
 Press `p` to play/pause the track, `r` to restart at the beginning of the track, and `i` to show/hide the *Settings* panel. 
 
 Binaries for Windows, macOS and Ubuntu (experimental) are available in the [Releases tab](https://github.com/kosua20/MIDIVisualizer/releases).
-See the [troubleshooting section](##troubleshooting) if you encounter any issue.
+See the [troubleshooting section](#troubleshooting) if you encounter any issue.
 
 ![Result image](result2.png) 
 
