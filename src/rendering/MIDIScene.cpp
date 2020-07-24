@@ -32,7 +32,8 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 	
 	// Load geometry and notes shared data.
 	std::vector<float> data;
-	auto notesM = _midiFile.tracks[0].getNotes(majorNotes);
+	std::vector<MIDINote> notesM;
+	_midiFile.getNotes(notesM, NoteType::MAJOR, 0);
 	
 	_duration = 0.0;
 	for(auto& note : notesM){
@@ -42,7 +43,9 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 		data.push_back(0.0f);
 		_duration = std::max(_duration, note.start + note.duration);
 	}
-	auto notesm = _midiFile.tracks[0].getNotes(minorNotes);
+
+	std::vector<MIDINote> notesm;
+	_midiFile.getNotes(notesm, NoteType::MINOR, 0);
 	for(auto& note : notesm){
 		data.push_back(float(note.note));
 		data.push_back(float(note.start));

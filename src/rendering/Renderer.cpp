@@ -117,7 +117,7 @@ bool Renderer::loadFile(const std::string &midiFilePath) {
 
 	// Init objects.
 	_scene = scene;
-	_score = std::make_shared<Score>(_scene->midiFile().tracks[0].secondsPerMeasure);
+	_score = std::make_shared<Score>(_scene->midiFile().secondsPerMeasure());
 	applyAllSettings();
 	return true;
 }
@@ -618,7 +618,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			ImGui::Text("%.1f FPS / %.1f ms", ImGui::GetIO().Framerate, ImGui::GetIO().DeltaTime * 1000.0f);
 			ImGui::Text("Final framebuffer size: %dx%d, screen size: %dx%d", _finalFramebuffer->_width, _finalFramebuffer->_height, _camera.screenSize()[0], _camera.screenSize()[1]);
 			if (ImGui::Button("Print MIDI content to console")) {
-				_scene->midiFile().printTracks();
+				_scene->midiFile().print();
 			}
 		}
 	}
