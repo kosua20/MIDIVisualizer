@@ -3,82 +3,8 @@
 #include <algorithm>
 #include "MIDITrack.h"
 
-MIDIEvent MIDITrack::readMIDIEvent(const std::vector<char> & buffer, size_t & position, size_t delta){
-	
-	uint8_t firstByte = read8(buffer, position);
-	size_t positionOffset = 1;
 
-	MIDIEventType type = static_cast<MIDIEventType>((firstByte & 0xF0) >> 4);
-	if (type == ignoreType) {
-		position += positionOffset;
-		return MIDIEvent(midiEvent, static_cast<uint8_t>(type), delta, {});
-	}
-
-	uint8_t secondByte = read8(buffer, position+1);
-	uint8_t thirdByte = read8(buffer, position+2);
-	positionOffset += 2;
-
-	if(MIDIEventTypeName.count(type) == 0){
-		thirdByte = secondByte;
-		secondByte = firstByte;
-		firstByte = _previousEventFirstByte;
-		positionOffset = 2;
-	}
-	
-	type = static_cast<MIDIEventType>((firstByte & 0xF0) >> 4);
-	short channel = firstByte & 0x0F;
-	
-	short note = short(secondByte);
-	short velocity = short(thirdByte);
-	
-	std::vector<short> data;
-	data.push_back(channel);
-	data.push_back(note);
-	data.push_back(velocity);
-	
-	_previousEventFirstByte = firstByte;
-	position += positionOffset;
-	
-	return MIDIEvent(midiEvent, static_cast<uint8_t>(type), delta, data);
-}
-
-
-MIDIEvent MIDITrack::readMetaEvent(const std::vector<char> & buffer, size_t & position, size_t delta){
-	position += 1; // We already read FF.
-	MetaEventType type = static_cast<MetaEventType>(read8(buffer, position));
-	position += 1;
-	
-	size_t length = readVarLen(buffer,position);
-	
-	std::vector<short> data;
-	for(size_t i = 0; i < length; ++i){
-		data.push_back(short(read8(buffer, position + i)));
-	}
-	
-	position = position + length;
-	
-	return MIDIEvent(metaEvent, static_cast<uint8_t>(type), delta, data);
-}
-
-
-MIDIEvent MIDITrack::readSysexEvent(const std::vector<char> & buffer, size_t & position, size_t delta){
-	uint8_t type = read8(buffer, position);
-	position += 1;
-	
-	size_t length = readVarLen(buffer,position);
-	
-	std::vector<short> data;
-	for(size_t i = 0; i < length; ++i){
-		data.push_back(short(read8(buffer, position + i)));
-	}
-	
-	position = position + length;
-	
-	return MIDIEvent(systemEvent, type, delta, data);
-}
-
-
-size_t MIDITrack::readTrack(const std::vector<char>& buffer, size_t pos, uint16_t unitsPerQuarterNote){
+size_t MIDITrack::readTrack(const std::vector<char>& buffer, size_t pos){
 	const size_t backupPos = pos;
 	
 	//Check header
@@ -90,55 +16,44 @@ size_t MIDITrack::readTrack(const std::vector<char>& buffer, size_t pos, uint16_
 	uint32_t length = read32(buffer, pos);
 	pos += 4;
 	
-	
 	if(length == 0){
 		std::cerr << "[ERROR]: Empty track." << std::endl;
 		return 3;
 	}
-	size_t count = 0;
+
 	while(pos < backupPos + 8 + length){
 		
 		size_t delta = readVarLen(buffer,pos);
-		
 		uint8_t eventMetaType = read8(buffer, pos);
 		
 		if(eventMetaType == 0xFF){
-			events.push_back(readMetaEvent(buffer,pos, delta));
-		} else if (eventMetaType == 0xF0 || eventMetaType == 0xF7){
-			events.push_back(readSysexEvent(buffer, pos, delta));
+			_events.push_back(MIDIEvent::readMetaEvent(buffer,pos, delta));
+		} else if (eventMetaType >= 0xF0 && eventMetaType <= 0xF7){
+			_events.push_back(MIDIEvent::readSysexEvent(buffer, pos, delta));
 		}  else {
-			events.push_back(readMIDIEvent(buffer, pos, delta));
+			_events.push_back(MIDIEvent::readMIDIEvent(buffer, pos, delta, _previousEventFirstByte));
 		}
-		
-		count++;
 	}
-	
-	
+
 	// Scan events for track info.
 	// Could do it while creating events, but let's separate tasks, shall we?
-	_tempo = 0x555555;
 	bool minorKey = false;
 	short keyShift = 0;
-	_timeSignature = 4.0/4.0;
-	
-	for(auto& event : events){
-		if(event.category == metaEvent){
+
+	for(auto& event : _events){
+		if(event.category == EventCategory::META){
 			if(event.type == sequenceName){
 				std::string tempName = "";
 				for(size_t i = 0; i < event.data.size(); ++i){
 					tempName += char(event.data[i]);
 				}
-				name = tempName;
+				_name = tempName;
 			} else if(event.type == instrumentName){
 				std::string tempName = "";
 				for(size_t i = 0; i < event.data.size(); ++i){
 					tempName += char(event.data[i]);
 				}
-				instrument = tempName;
-			} else if (event.type == setTempo){
-				_tempo = (event.data[0] & 0xFF) << 16 | (event.data[1] & 0xFF) << 8 | (event.data[0] & 0xFF);
-			} else if (event.type == timeSignature){
-				_timeSignature = double(event.data[0]) / double(std::pow(2,event.data[1]));
+				_instrument = tempName;
 			} else if (event.type == keySignature){
 				keyShift = event.data[0];
 				minorKey = (event.data[1] > 0);
@@ -146,159 +61,156 @@ size_t MIDITrack::readTrack(const std::vector<char>& buffer, size_t pos, uint16_
 		}
 	}
 	
-	hasTempo = _tempo != 0x555555;
-	if(!hasTempo){
-		// Assume default 120BPM tempo, just in case.
-		_tempo = 500000;
-	}
-	// micro s / delta =  (micros/qnote) / (delta/qnote) = tempo / unitsPerQuarterNote
-	_unitsPerQuarterNote = double(unitsPerQuarterNote);
-	_unitTime = double(_tempo) / _unitsPerQuarterNote;
-	
-	
-	secondsPerMeasure = computeMeasureDuration(_tempo);
-	
-	std::cout << "[INFO]: Track " << name << " (length: " << length << ", instrument: " << instrument <<", tempo: " << _tempo << ", " << (minorKey ? "minor": "major") << ", measure duration: " << secondsPerMeasure << ")." << std::endl;
+	std::cout << "[INFO]: Track " << _name << " (length: " << length << ", instrument: " << _instrument <<", " << (minorKey ? "minor": "major") << ")." << std::endl;
 	
 	return backupPos + 8 + length;
 }
 
-double MIDITrack::computeMeasureDuration(int tempo){
-	// micro s / measure = (micro s / qnote) * (clock / qnote)^-1 * (clock / beat) * (beat / measure)
-	//					 = tempo * 24^-1 * cc * time signature
-	return double(tempo) * 4.0 * _timeSignature / 1000000.0;
-}
+double MIDITrack::extractTempos(std::vector<MIDITempo> & tempos) const {
+	size_t timeInUnits = 0;
+	double signature = 4.0/4.0;
+	for(auto& event : _events){
+		timeInUnits += (event.delta);
+		if(event.category == EventCategory::META && event.type == setTempo){
+			const uint tempo = ((event.data[0] & 0xFF) << 16) | ((event.data[1] & 0xFF) << 8) | (event.data[2] & 0xFF);
+			tempos.emplace_back(timeInUnits, tempo);
 
-bool MIDITrack::containsNotes() {
-	for (auto& event : events) {
-		if (event.category == midiEvent) {
-			if (event.type == noteOn || event.type == noteOff) {
-				return true;
-			}
+		} else if(event.category == EventCategory::META && event.type == timeSignature){
+			signature = double(event.data[0]) / double(std::pow(2,event.data[1]));
+
 		}
 	}
-	return false;
+	return signature;
 }
 
-void MIDITrack::extractNotes(short lowerBound, short higherBound, bool normalize){
-	notes.clear();
-	
-	std::map<short, std::tuple<double, short, short>> currentNotes;
-	double timeInUnits = 0;
-	
+void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t unitsPerQuarterNote, uint minId, uint maxId){
+	// Scan events, focusing on the note ON/OFF events.
+	// Keep track of active notes.
+	std::map<short, std::tuple<size_t, short, short>> currentNotes;
+	size_t timeInUnits = 0;
 
-	for(auto& event : events){
-		
-		if(event.category == midiEvent){
-			timeInUnits += double(event.delta);
-			if(event.type == noteOn && event.data[2] > 0){
-				if(event.data[1]>= lowerBound && event.data[1] <= higherBound){
-					currentNotes[event.data[1] - (normalize ? lowerBound : 0)] = std::make_tuple(timeInUnits, event.data[2], event.data[0]);
-				}
-			} else if(event.type == noteOff || (event.type == noteOn && event.data[2] == 0)){
-				short noteInd = event.data[1] - (normalize ? lowerBound : 0);
-				if(currentNotes.count(noteInd) > 0){
-					
-					std::tuple<double, short, short> noteTuple = currentNotes[noteInd];
-					
-					double start = _unitTime*std::get<0>(noteTuple);
-					double duration = _unitTime * timeInUnits - start;
-					
-					MIDINote note(noteInd, start/1000000.0f, duration/1000000.0f, std::get<1>(noteTuple), std::get<2>(noteTuple));
-					notes.push_back(note);
-					currentNotes.erase(noteInd);
-				}
-			} else if(event.type == programChange || event.type == channelPressure){
-				// It seems those should be ignored.
-				timeInUnits -= double(event.delta);
-			} else {
-				const bool unknownEvent = MIDIEventTypeName.count(static_cast<MIDIEventType>(event.type)) == 0;
-				if(unknownEvent){
-					//std::cout << "Unknown midi event: " << int(event.type) << "," << double(event.delta) << std::endl;
-					timeInUnits -= double(event.delta);
-				}
-			}
-		} else if(event.category == metaEvent && event.type == setTempo){
-			_tempo = (event.data[0] & 0xFF) << 16 | (event.data[1] & 0xFF) << 8 | (event.data[0] & 0xFF);
-			_unitTime = double(_tempo) / _unitsPerQuarterNote;
-			
-			//std::cout << "[INFO]: Tempo changes detected." << double(event.delta) << std::endl;
-			secondsPerMeasure = computeMeasureDuration(_tempo);
-		} else if(event.category == metaEvent && event.type == timeSignature){
-			secondsPerMeasure /= _timeSignature;
-			_timeSignature = double(event.data[0]) / double(std::pow(2,event.data[1]));
-			secondsPerMeasure *= _timeSignature;
-			//std::cout << "[INFO]: Time signature changes detected." << double(event.delta) << std::endl;
+	for(auto& event : _events){
+		timeInUnits += (event.delta);
+		if(event.category != EventCategory::MIDI || (event.type != noteOn && event.type != noteOff)){
+			continue;
+		}
+		//Skip filtered notes.
+		if(event.data[1] < minId || event.data[1] > maxId){
+			continue;
+		}
+
+		const size_t noteInd = event.data[1] - minId;
+		bool shouldNew = event.type == noteOn && event.data[2] > 0;
+		if(currentNotes.count(noteInd) > 0){
+			// The current note is already present.
+			const auto & noteTuple = currentNotes[noteInd];
+			// Finish it.
+			const size_t start = std::get<0>(noteTuple);
+			const size_t end = timeInUnits;
+			// Create the final note with timing.
+			// Look for the start and end timestamps using the tempos and their timestamps.
+
+			const auto times = computeNoteTimings(tempos, start, end, unitsPerQuarterNote);
+
+			const short velocity = std::get<1>(noteTuple);
+			const short channel = std::get<2>(noteTuple);
+			_notes.emplace_back(noteInd, times.first, times.second - times.first, velocity, channel);
+
+			// Remove note.
+			currentNotes.erase(noteInd);
 		} else {
-			//std::cout << "Unknown event: " << double(event.delta) << std::endl;
+			shouldNew = true;
+		}
+
+		// Check if we have to start a new note.
+		if(shouldNew){
+			currentNotes[noteInd] = std::make_tuple(timeInUnits, event.data[2], event.data[0]);
 		}
 	}
-	
-	// Sort.
-	std::sort(notes.begin(), notes.end(), [](const MIDINote & note1, const MIDINote & note2) { return(note1.start < note2.start); } );
-	
-	std::cout << "[INFO]: " << notes.size() << " notes extracted and sorted." << std::endl;
 }
 
-void MIDITrack::updateMetrics(const int tempo, const double signature)
-{
-	_tempo = tempo;
-	_unitTime = double(tempo) / _unitsPerQuarterNote;
-	secondsPerMeasure = computeMeasureDuration(tempo);
+void MIDITrack::getNotes(std::vector<MIDINote> & notes, NoteType type) const {
+	notes.clear();
 
-	secondsPerMeasure /= _timeSignature;
-	_timeSignature = signature;
-	secondsPerMeasure *= _timeSignature;
-}
-
-std::vector<MIDINote> MIDITrack::getNotes(NoteType type){
-	
-	std::vector<MIDINote> selected;
-	if(type == minorNotes){
-		for(auto& note : notes){
+	if(type == NoteType::MINOR){
+		for(auto& note : _notes){
 			if(noteIsMinor[note.note]){
-				selected.push_back(note);
-				selected.back().note = noteShift[note.note];
+				notes.push_back(note);
+				notes.back().note = noteShift[note.note];
 			}
 		}
-	} else if (type == majorNotes){
-		for(auto& note : notes){
+	} else if (type == NoteType::MAJOR){
+		for(auto& note : _notes){
 			if(!noteIsMinor[note.note]){
-				selected.push_back(note);
-				selected.back().note = noteShift[note.note];
+				notes.push_back(note);
+				notes.back().note = noteShift[note.note];
 			}
 		}
 	} else {
-		for(auto& note : notes){
-			selected.push_back(note);
-			selected.back().note = noteShift[note.note];
+		for(auto& note : _notes){
+			notes.push_back(note);
+			notes.back().note = noteShift[note.note];
 		}
-	}
-	
-	return selected;
-}
-
-void MIDITrack::printNotes() const {
-	for(auto& note : notes){
-		std::cout << "Note " << note.note << "(" << note.duration << "s at "<< note.start << "s)" << " on channel " << note.channel << " with velocity " << note.velocity << "." << std::endl;
 	}
 }
 
-	
-void MIDITrack::printEvents() const {
-	for(auto& event : events){
-		if(event.category == systemEvent){
-			std::cout << "[INFO]: " << "Sysex event (" << event.delta << "): type is "<< std::hex << std::showbase << event.type << std::dec << ", length is " << event.data.size() << std::endl;
-		} else if (event.category == metaEvent){
-			std::cout << "[INFO]: " << "Meta event (" << event.delta << "): type is " << metaEventTypeName[static_cast<MetaEventType>(event.type)] << ", length is " << event.data.size() << std::endl;
-		} else if (event.category == midiEvent){
-			const bool isKnown = MIDIEventTypeName.count(static_cast<MIDIEventType>(event.type)) > 0;
-			if(isKnown){
-				std::cout << "[INFO]: " << "MIDI Event " << MIDIEventTypeName.at(static_cast<MIDIEventType>(event.type)) << " (" << event.delta << ") on channel " << event.data[0] << " with note " << event.data[1] << " and velocity " << event.data[2] << "." << std::endl;
-			} else {
-				std::cout << "[INFO]: " << "MIDI Event unknown (" << event.delta << "), data size " << event.data.size() << "." << std::endl;
-			}
-			
+void MIDITrack::getNotesActive(std::vector<ActiveNoteInfos>& actives, double time) const {
+	// Reset all notes.
+	for(int i = 0; i < int(actives.size()); ++i){
+		 actives[i].enabled = false;
+	}
+	const size_t count = _notes.size();
+	for(size_t i = 0; i < count;++i){
+		auto& note = _notes[i];
+		if(note.start <= time && note.start+note.duration >= time){
+			actives[note.note].enabled = true;
+			actives[note.note].duration = float(note.duration);
+			actives[note.note].start = float(note.start);
 		}
 	}
+}
+
+void MIDITrack::print() const {
+	std::cout << "[INFO]: * Events: " << std::endl;
+	for(auto& event : _events){
+		event.print();
+	}
+	std::cout << "[INFO]: * Notes: " << std::endl;
+	for(auto& note : _notes){
+		note.print();
+	}
+}
+
+void MIDITrack::merge(MIDITrack & other){
+	for(auto& note : other._notes){
+		_notes.push_back(note);
+	}
+	std::sort(_notes.begin(), _notes.end(), [](const MIDINote & note1, const MIDINote & note2) { return(note1.start < note2.start); } );
+}
+
+std::pair<double, double> MIDITrack::computeNoteTimings(const std::vector<MIDITempo> & tempos, size_t start,size_t end, uint16_t upqn) const {
+	double startTime;
+	double endTime;
+
+	size_t tid = 0;
+	for(; tid < tempos.size(); ++tid){
+		if((tid == tempos.size() - 1) || (tempos[tid+1].start > start)){
+			// The note started before tid+1, we should use the previous one.
+			startTime = tempos[tid].timestamp + computeUnitsDuration(tempos[tid].tempo, start - tempos[tid].start, upqn);
+			break;
+		}
+	}
+	// Start from the same one again.
+	for(; tid < tempos.size(); ++tid){
+		if((tid == tempos.size() - 1) || (tempos[tid+1].start > end)){
+			// The note ended before tid+1, we should use the previous one.
+			endTime = tempos[tid].timestamp + computeUnitsDuration(tempos[tid].tempo, end - tempos[tid].start, upqn);
+			break;
+		}
+	}
+
+	startTime /= 1000000.0;
+	endTime /= 1000000.0;
+
+	return std::make_pair(startTime, endTime);
 }
