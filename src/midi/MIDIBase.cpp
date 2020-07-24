@@ -54,6 +54,11 @@ MIDIEvent MIDIEvent::readMIDIEvent(const std::vector<char> & buffer, size_t & po
 	uint8_t secondByte = read8(buffer, position+1);
 	uint8_t thirdByte = 0;
 	positionOffset += 1;
+	if(type != programChange && type != channelPressure){
+		thirdByte = read8(buffer, position+2);
+		positionOffset += 1;
+	}
+
 	if(MIDIEventTypeName.count(type) == 0){
 		thirdByte = secondByte;
 		secondByte = firstByte;
