@@ -558,6 +558,15 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		}
 		ImGui::Separator();
 
+
+		if(ImGui::CollapsingHeader("Export")){
+			if(_recorder.drawGUI()){
+				startRecording();
+			}
+		}
+
+		ImGui::Separator();
+
 		if (ImGui::Button("Save config...")) {
 			// Read arguments.
 			nfdchar_t *savePath = NULL;
@@ -602,12 +611,6 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 				refColor = _state.flashColor;
 			}
 			_state.baseColor = _state.particles.color = _state.minorColor = _state.flashColor = refColor;
-		}
-
-		ImGui::Separator();
-
-		if(_recorder.drawGUI()){
-			startRecording();
 		}
 
 		if (_showDebug) {
@@ -808,7 +811,7 @@ void Renderer::startRecording(){
 	// We can thus:
 	// - backup the camera parameters
 	// - trigger a buffers size update at the target resolution
-	// - restore thecamera parameters.
+	// - restore the camera parameters.
 	// All that will be left is to trigger a size update at the end of the recording.
 
 	const glm::ivec2 backSize = _camera.screenSize();

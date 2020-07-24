@@ -96,7 +96,9 @@ bool Recorder::drawGUI(){
 	bool shouldStart = false;
 
 	// Pick directory/file.
-	if (ImGui::Button("Render offline...")) {
+	const std::string exportType = _outFormat == Format::PNG ? "images" : "video";
+	const std::string exportButtonName = "Export " + exportType + " to...";
+	if (ImGui::Button(exportButtonName.c_str())) {
 		// Read arguments.
 		nfdchar_t *outPath = NULL;
 
