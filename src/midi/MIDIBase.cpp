@@ -12,7 +12,7 @@ MIDITempo::MIDITempo(){
 
 }
 
-MIDITempo::MIDITempo(size_t astart, uint atempo) : start(astart), tempo(atempo) {
+MIDITempo::MIDITempo(size_t astart, unsigned int atempo) : start(astart), tempo(atempo) {
 	
 }
 

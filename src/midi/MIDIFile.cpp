@@ -168,7 +168,7 @@ void MIDIFile::populateTemposAndSignature(){
 	double currentTime = 0.0;
 	_tempos[0].timestamp = 0.0;
 	for(size_t tid = 1; tid < _tempos.size(); ++tid){
-		const uint delta = _tempos[tid].start - _tempos[tid-1].start;
+		const int delta = int(_tempos[tid].start) - int(_tempos[tid-1].start);
 		currentTime += computeUnitsDuration(_tempos[tid-1].tempo, delta, _unitsPerQuarterNote);
 		_tempos[tid].timestamp = currentTime;
 	}

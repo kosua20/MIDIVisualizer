@@ -72,7 +72,7 @@ double MIDITrack::extractTempos(std::vector<MIDITempo> & tempos) const {
 	for(auto& event : _events){
 		timeInUnits += (event.delta);
 		if(event.category == EventCategory::META && event.type == setTempo){
-			const uint tempo = ((event.data[0] & 0xFF) << 16) | ((event.data[1] & 0xFF) << 8) | (event.data[2] & 0xFF);
+			const unsigned int tempo = ((event.data[0] & 0xFF) << 16) | ((event.data[1] & 0xFF) << 8) | (event.data[2] & 0xFF);
 			tempos.emplace_back(timeInUnits, tempo);
 
 		} else if(event.category == EventCategory::META && event.type == timeSignature){
@@ -83,7 +83,7 @@ double MIDITrack::extractTempos(std::vector<MIDITempo> & tempos) const {
 	return signature;
 }
 
-void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t unitsPerQuarterNote, uint minId, uint maxId){
+void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t unitsPerQuarterNote, short minId, short maxId){
 	// Scan events, focusing on the note ON/OFF events.
 	// Keep track of active notes.
 	std::map<short, std::tuple<size_t, short, short>> currentNotes;

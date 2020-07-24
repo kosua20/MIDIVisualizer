@@ -39,12 +39,12 @@ struct MIDITempo {
 
 	MIDITempo();
 
-	MIDITempo(size_t astart, uint atempo);
+	MIDITempo(size_t astart, unsigned int atempo);
 
 	void print() const;
 
 	size_t start = 0;
-	uint tempo = 0;
+	unsigned int tempo = 0;
 	double timestamp = 0.0;
 };
 
