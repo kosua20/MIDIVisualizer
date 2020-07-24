@@ -98,9 +98,8 @@ void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t uni
 		if(event.data[1] < minId || event.data[1] > maxId){
 			continue;
 		}
-
+		// Shift note index.
 		const size_t noteInd = event.data[1] - minId;
-		bool shouldNew = event.type == noteOn && event.data[2] > 0;
 		if(currentNotes.count(noteInd) > 0){
 			// The current note is already present.
 			const auto & noteTuple = currentNotes[noteInd];
@@ -118,11 +117,10 @@ void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t uni
 
 			// Remove note.
 			currentNotes.erase(noteInd);
-		} else {
-			shouldNew = true;
 		}
 
 		// Check if we have to start a new note.
+		const bool shouldNew = event.type == noteOn && event.data[2] > 0;
 		if(shouldNew){
 			currentNotes[noteInd] = std::make_tuple(timeInUnits, event.data[2], event.data[0]);
 		}
@@ -171,11 +169,11 @@ void MIDITrack::getNotesActive(std::vector<ActiveNoteInfos>& actives, double tim
 }
 
 void MIDITrack::print() const {
-	std::cout << "[INFO]: * Events: " << std::endl;
+	std::cout << "[INFO]: * Events (" << _events.size() << "): " << std::endl;
 	for(auto& event : _events){
 		event.print();
 	}
-	std::cout << "[INFO]: * Notes: " << std::endl;
+	std::cout << "[INFO]: * Notes (" << _notes.size() << "): " << std::endl;
 	for(auto& note : _notes){
 		note.print();
 	}
