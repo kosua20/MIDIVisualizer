@@ -13,6 +13,7 @@ On Windows and macOS platforms, you can now **run the application by simply doub
 Press `p` to play/pause the track, `r` to restart at the beginning of the track, and `i` to show/hide the *Settings* panel. 
 
 Binaries for Windows, macOS and Ubuntu (experimental) are available in the [Releases tab](https://github.com/kosua20/MIDIVisualizer/releases).
+See the [troubleshooting section](##troubleshooting) if you encounter any issue.
 
 ![Result image](result2.png) 
 
@@ -50,6 +51,26 @@ If display options are given, they will override those specified in the configur
 	...
 
 ![Result image](result3.png) 
+
+## Troubleshooting
+
+### Windows
+
+- *I can't open the application as it is blocked by Safeguard.*  
+MIDIVisualizer is not generated with a Microsoft developer certificate, thus the warning. You can still run the application by allowing it in the Safeguard message panel.
+
+- *I get an error message about a missing `vcruntime140_1.dll`.*  
+This is a Windows component (part of the *Microsoft Visual C++ Redistributable for Visual Studio 2015, 2017 and 2019*) that is often updated, you should try installing the latest version from the [Microsoft support website](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads) (`vc_redistx64`).
+
+### macOS
+
+- *I can't open the application as it is considered unsafe.*  
+MIDIVisualizer is not generated with an Apple developer certificate, thus the warning. You can still run the application by doing a right-click on it and selecting 'Open', this will mark the application as 'authorized' for future use.
+
+### Ubuntu
+
+- *I can't run MIDIVisualizer by double-clicking it in the file manager.*  
+This seems to be a limitation of the Nautilus file manager, you can either double-click the companion script, or create and register a .desktop file.
 
 ## Compilation
 
