@@ -2,39 +2,43 @@
 #define MIDI_FILE_H
 
 #include "MIDIUtils.h"
+#include "MIDIBase.h"
 #include "MIDITrack.h"
 
-struct ActiveNoteInfos {
-	float start = 1000000.0f;
-	float duration = 0.0f;
-	bool enabled = false;
-};
-
 class MIDIFile {
-	
-private:
-	
-	uint16_t _tracksCount = 0;
-	MIDIType format = MIDIType::singleTrack;
-	uint16_t unitsPerFrame = 1;
-	float framesPerSeconds = 1;
-	uint16_t unitsPerQuarterNote = 1;
-	
+
 public:
 	
 	MIDIFile();
 	
 	MIDIFile(const std::string & filePath);
 	
-	~MIDIFile();
+	void print() const;
+
+	void getNotes(std::vector<MIDINote>& notes, NoteType type, size_t track) const;
 	
-	void printTracks() const;
+	void getNotesActive(std::vector<ActiveNoteInfos>& actives, double time, size_t track) const;
+
+	const double & signature() const { return _signature; }
 	
+	const double & secondsPerMeasure() const { return _secondsPerMeasure; }
+
+private:
+
+	void populateTemposAndSignature();
+
 	void mergeTracks();
-	
-	void getNotesActive(std::vector<ActiveNoteInfos>& actives, double time, size_t track);
-	
-	std::vector<MIDITrack> tracks;
+
+	MIDIType _format = MIDIType::singleTrack;
+	uint16_t _unitsPerFrame = 1;
+	float _framesPerSeconds = 1;
+	uint16_t _unitsPerQuarterNote = 1;
+	double _signature = 4.0/4.0;
+	double _secondsPerMeasure = 1.0;
+
+	std::vector<MIDITrack> _tracks;
+	std::vector<MIDITempo> _tempos;
+
 };
 
 #endif // MIDI_FILE_H

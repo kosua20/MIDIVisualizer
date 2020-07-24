@@ -13,7 +13,6 @@ WCHAR * widen(const std::string & str){
 	WCHAR *arr = new WCHAR[size];
 	MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, (LPWSTR)arr, size);
 	// Will leak on Windows.
-	/// \todo Stop leaking.
 	return arr;
 }
 
@@ -49,143 +48,153 @@ MIDIFile::MIDIFile(const std::string & filePath){
 	std::copy(std::istreambuf_iterator<char>(input),
 			  std::istreambuf_iterator<char>(),
 			  std::back_inserter(buffer));
-	
-	
+
 	// Check midi header
 	if(buffer.size() < 5 || !(buffer[0] == 'M' && buffer[1] == 'T' && buffer[2] == 'h' && buffer[3] == 'd') || read32(buffer, 4) != 6){
 		std::cerr << "[ERROR]: " << filePath << " is not a midi file." << std::endl;
 		throw "BadInput";
 	}
 	
-	format = static_cast<MIDIType>(read16(buffer, 8));
-	_tracksCount = read16(buffer, 10);
-	
-	std::cout << "[INFO]: " << _tracksCount << " tracks ";
-	std::cout << "(" << (format==tempoTrack ? "Use tempo (1)" : ( format == singleTrack ? "Single track (0)" : "Multiple songs (2)")) << ")." << std::endl;
-	
-	// Division mode.
-	uint16_t division = read16(buffer, 12);
-	bool divisionMode = getBit(division, 15);
-	
-	
-	if(divisionMode){
-		unitsPerFrame = division & 0xFF;
-		uint16_t framesPerSecondsIndicator = ((division >> 8) & 0b1100000) >> 5;
-		framesPerSeconds = (framesPerSecondsIndicator == 0 ? 24.0f : (framesPerSecondsIndicator == 1 ? 25.0f : (framesPerSecondsIndicator == 2 ? 29.97f : 30.0f)));
-		std::cout << "[INFO]: " << unitsPerFrame << " units per frame, " << framesPerSeconds << " frames per second." << std::endl;
-		
-		unitsPerQuarterNote = 0;
-		
-	} else {
-		// Remove 15th bit.
-		unitsPerQuarterNote = division ^ ( division & (0x1 << 15));
-		std::cout << "[INFO]: " << unitsPerQuarterNote << " units per quarter note ." << std::endl;
-		
-		unitsPerFrame = 0;
-		framesPerSeconds = 0.0f;
+	_format = static_cast<MIDIType>(read16(buffer, 8));
+	const uint16_t tracksCount = read16(buffer, 10);
+
+	const std::vector<std::string> formatNames = { "Single track (0)", "Tempo track (1)", "Multiple songs (2)"};
+
+	std::cout << "[INFO]: " << tracksCount << " tracks ";
+	std::cout << "(" << formatNames[int(_format)] << ")." << std::endl;
+
+	if(_format == multipleSongs){
+		std::cerr << "[ERROR]: " << "Unsupported MIDI file (type 2)." << std::endl;
+		throw "Unsupported MIDI type (2)";
 	}
-	
-	if(_tracksCount == 0){
+
+	if(tracksCount == 0){
 		std::cerr << "[ERROR]: " << "No tracks." << std::endl;
 		throw "BadInput";
 	}
-	if(format == multipleSongs){
-		std::cerr << "[ERROR]: " << "Unsupported MIDI file (type 2)." << std::endl;
-		throw "LazyDev";
-	}
-	
 
-	
+	bool shouldMerge = false;
+	if(_format == singleTrack && tracksCount > 1){
+		std::cerr << "[WARN]: " << "Too many tracks, will merge all tracks." << std::endl;
+		shouldMerge = true;
+	}
+
+	// Division mode.
+	uint16_t division = read16(buffer, 12);
+	bool divisionMode = getBit(division, 15);
+
+	if(divisionMode){
+		_unitsPerFrame = division & 0xFF;
+		const std::vector<float> fpsValues = {24.0f, 25.0f, 29.97f, 30.0f};
+
+		uint16_t fpsIndicator = ((division >> 8) & 0b1100000) >> 5;
+		fpsIndicator = (std::min)(fpsIndicator, uint16_t(int(fpsValues.size()) - 1));
+		_framesPerSeconds = fpsValues[fpsIndicator];
+		std::cout << "[INFO]: " << _unitsPerFrame << " units per frame, " << _framesPerSeconds << " frames per second." << std::endl;
+		std::cout << "[WARN]: " << " Division mode is not well supported." << std::endl;
+		_unitsPerQuarterNote = 1;
+		
+	} else {
+		// In that case the 15th bit is 0, nothing to do.
+		_unitsPerQuarterNote = division;
+		std::cout << "[INFO]: " << _unitsPerQuarterNote << " units per quarter note ." << std::endl;
+		_unitsPerFrame = 0;
+		_framesPerSeconds = 0.0f;
+	}
+
+	// Parse tracks.
 	size_t pos = 14;
-	
-	for(size_t trackId = 0; trackId < _tracksCount; ++trackId){
+	for(size_t trackId = 0; trackId < tracksCount; ++trackId){
 		std::cout << "[INFO]: " << "Reading track " << trackId << "." << std::endl;
-		tracks.emplace_back();
-		pos = tracks.back().readTrack(buffer, pos, unitsPerQuarterNote);
+		_tracks.emplace_back();
+		pos = _tracks.back().readTrack(buffer, pos);
 	}
-	if (format == singleTrack) {
-		for (auto& track : tracks) {
-			track.extractNotes(21, 108, true);
-		}
-	} else if (format == tempoTrack) {
-		// There should be at least one track specifying the tempo, and one note track.
-		int tid = 0;
-		while(tid < _tracksCount && !tracks[tid].hasTempo) {
-			++tid;
-		}
-		
-		int forcedTempo = 500000;
-		int forcedSignature = int(4.0/4.0);
 
-		if(tid < _tracksCount){
-			forcedTempo = tracks[tid].getTempo();
-			forcedSignature = int(tracks[tid].getSignature());
-		} else {
-			//std::cout << "[Warning]: Track should contain a tempo. Using default fallback." << std::endl;
-		}	
-		// Enforce the tempo.
-		for (auto& track : tracks) {
-			track.updateMetrics(forcedTempo, forcedSignature);
-			track.extractNotes(21, 108, true);
-		}
-		
+	// Extract tempos and the signature.
+	populateTemposAndSignature();
+
+	// Update seconds per measure.
+	_secondsPerMeasure = computeMeasureDuration(_tempos[0].tempo, _signature);
+
+	// Convert each track to real notes.
+	for(auto & track : _tracks){
+		track.extractNotes(_tempos, _unitsPerQuarterNote, 21, 108);
 	}
-	
-	mergeTracks();
+
+	// For now, still merge.
+	shouldMerge = true;
+	if(shouldMerge){
+		mergeTracks();
+	}
+
 	input.close();
-	
 }
 
-MIDIFile::~MIDIFile(){
-	
+void MIDIFile::print() const {
+	for(size_t tid = 0; tid < _tracks.size(); ++tid){
+		std::cout << "[INFO]: ---- Track " << tid << std::endl;
+		_tracks[tid].print();
+	}
 }
 
+void MIDIFile::populateTemposAndSignature(){
+	std::vector<MIDITempo> mixedTempos;
+	const double defaultSign = 4.0/4.0;
+	_signature = defaultSign;
 
-void MIDIFile::printTracks() const {
-	for(auto& track : tracks){
-		track.printEvents();
-		track.printNotes();
+	for (auto& track : _tracks) {
+		const double trackSign = track.extractTempos(mixedTempos);
+		if(trackSign != defaultSign){
+			_signature = trackSign;
+		}
+	}
+
+	// Merge all tempos.
+	std::map<size_t, MIDITempo> tempoChanges;
+	// Emplace default tempo, will be overwritten as soon as there is an initial tempo event.
+	tempoChanges[0] = MIDITempo(0, 500000);
+	for(const auto & tempo : mixedTempos){
+		tempoChanges[tempo.start] = tempo;
+	}
+	for(const auto & tempo : tempoChanges){
+		_tempos.push_back(tempo.second);
+	}
+	std::sort(_tempos.begin(), _tempos.end(), [](const MIDITempo& a, const MIDITempo& b){
+		return a.start < b.start;
+	});
+
+	// Compute the real time stamp of each tempo.
+	// We are guaranteed that there is an event at t = 0.
+	double currentTime = 0.0;
+	_tempos[0].timestamp = 0.0;
+	for(size_t tid = 1; tid < _tempos.size(); ++tid){
+		const uint delta = _tempos[tid].start - _tempos[tid-1].start;
+		currentTime += computeUnitsDuration(_tempos[tid-1].tempo, delta, _unitsPerQuarterNote);
+		_tempos[tid].timestamp = currentTime;
 	}
 }
 
 void MIDIFile::mergeTracks(){
 	
-	for(size_t i = 1; i < tracks.size(); ++i){
-		for(auto& event : tracks[i].events){
-			tracks[0].events.push_back(event);
-		}
-		
-		for(auto& note : tracks[i].notes){
-			tracks[0].notes.push_back(note);
-		}
+	for(size_t i = 1; i < _tracks.size(); ++i){
+		_tracks[0].merge(_tracks[i]);
 	}
-	
-	std::sort(tracks[0].notes.begin(), tracks[0].notes.end(), [](const MIDINote & note1, const MIDINote & note2) { return(note1.start < note2.start); } );
-
+	_tracks.resize(1);
 	
 }
 
-void MIDIFile::getNotesActive(std::vector<ActiveNoteInfos> & actives, double time, size_t track){
-	// Reset all notes.
-	for(int i = 0; i < int(actives.size()); ++i){
-		 actives[i].enabled = false;
-	}
-	if(track >= tracks.size()){
+void MIDIFile::getNotes(std::vector<MIDINote> & notes, NoteType type, size_t track) const {
+	if(track >= _tracks.size()){
 		return;
 	}
-	size_t count = tracks[track].notes.size();
-	for(size_t i = 0; i < count;++i){
-		auto& note = tracks[track].notes[i];
-		if(note.start <= time && note.start+note.duration >= time){
-			actives[note.note].enabled = true;
-			actives[note.note].duration = float(note.duration);
-			actives[note.note].start = float(note.start);
-		}
-		
-	}
+	_tracks[track].getNotes(notes, type);
 }
 
+void MIDIFile::getNotesActive(std::vector<ActiveNoteInfos> & actives, double time, size_t track) const {
 
+	if(track >= _tracks.size()){
+		return;
+	}
+	_tracks[track].getNotesActive(actives, time);
 
-
-
+}
