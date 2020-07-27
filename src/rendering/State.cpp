@@ -177,16 +177,17 @@ void State::updateOptions(){
 	_floatInfos["flashes-size"] = &flashSize;
 	_floatInfos["preroll"] = &prerollTime;
 	_floatInfos["bg-img-opacity"] = &background.imageAlpha;
-	_vecInfos["color-major"] = &baseColor;
 	_vecInfos["color-bg"] = &background.color;
-	_vecInfos["color-particles"] = &particles.color;
-	_vecInfos["color-keyboard-major"] = &keyboard.majorColor;
-	_vecInfos["color-keyboard-minor"] = &keyboard.minorColor;
+	_vecInfos["color-keyboard-major"] = &keyboard.majorColor[0];
+	_vecInfos["color-keyboard-minor"] = &keyboard.minorColor[0];
 	_vecInfos["color-lines"] = &background.linesColor;
 	_vecInfos["color-numbers"] = &background.textColor;
 	_vecInfos["color-keyboard"] = &background.keysColor;
-	_vecInfos["color-minor"] = &minorColor;
-	_vecInfos["color-flashes"] = &flashColor;
+
+	_vecInfos["color-major"] = &baseColors[0];
+	_vecInfos["color-particles"] = &particles.colors[0];
+	_vecInfos["color-minor"] = &minorColors[0];
+	_vecInfos["color-flashes"] = &flashColors[0];
 }
 
 
@@ -358,15 +359,21 @@ void State::load(const Arguments & configArgs){
 }
 
 void State::reset(){
-	baseColor = 1.35f*glm::vec3(0.57f,0.19f,0.98f);
-	minorColor = 0.8f*baseColor;
-	flashColor = baseColor;
+
+	for(size_t cid = 0; cid < CHANNELS_COUNT; ++cid){
+		baseColors[cid] = 1.35f * glm::vec3(0.57f,0.19f,0.98f);
+		minorColors[cid] = 0.8f * baseColors[0];
+		flashColors[cid] = baseColors[0];
+		particles.colors[cid] = baseColors[0];
+		keyboard.majorColor[cid] = baseColors[0];
+		keyboard.minorColor[cid] = minorColors[0];
+	}
+
 	background.color = glm::vec3(0.0f, 0.0f, 0.0f) ;
 	background.linesColor = glm::vec3(1.0f, 1.0f, 1.0f);
 	background.textColor = glm::vec3(1.0f, 1.0f, 1.0f);
 	background.keysColor = glm::vec3(0.0f, 0.0f, 0.0f);
-	particles.color = baseColor;
-	
+
 	scale = 0.5f ;
 	attenuation = 0.99f;
 	showParticles = true ;
@@ -400,8 +407,6 @@ void State::reset(){
 	prerollTime = 1.0f;
 	keyboard.highlightKeys = true;
 	keyboard.customKeyColors = false;
-	keyboard.majorColor = baseColor;
-	keyboard.minorColor = minorColor;
 
 	for (int i = 0; i < layersMap.size(); ++i) {
 		layersMap[i] = i;
@@ -414,9 +419,9 @@ void State::load(std::istream & configFile, int majVersion, int minVersion){
 	// This part is always valid, as it was present when the saving system was introduced.
 	// Note: we don't restore the texture IDs and scale.
 	{
-		configFile >> baseColor[0] >> baseColor[1] >> baseColor[2] ;
+		configFile >> baseColors[0][0] >> baseColors[0][1] >> baseColors[0][2] ;
 		configFile >> background.color[0] >> background.color[1] >> background.color[2] ;
-		configFile >> particles.color[0] >> particles.color[1] >> particles.color[2] ;
+		configFile >> particles.colors[0][0] >> particles.colors[0][1] >> particles.colors[0][2] ;
 
 		configFile >> scale ;
 		configFile >> showParticles ;
@@ -460,8 +465,8 @@ void State::load(std::istream & configFile, int majVersion, int minVersion){
 		configFile >> background.linesColor[0] >> background.linesColor[1] >> background.linesColor[2] ;
 		configFile >> background.textColor[0] >> background.textColor[1] >> background.textColor[2] ;
 		configFile >> background.keysColor[0] >> background.keysColor[1] >> background.keysColor[2] ;
-		configFile >> minorColor[0] >> minorColor[1] >> minorColor[2] ;
-		configFile >> flashColor[0] >> flashColor[1] >> flashColor[2] ;
+		configFile >> minorColors[0][0] >> minorColors[0][1] >> minorColors[0][2] ;
+		configFile >> flashColors[0][0] >> flashColors[0][1] >> flashColors[0][2] ;
 		configFile >> flashSize;
 	}
 
@@ -493,7 +498,17 @@ void State::load(std::istream & configFile, int majVersion, int minVersion){
 	// MIDIVIZ_VERSION_MAJOR == 4, MIDIVIZ_VERSION_MINOR == 1
 	if (majVersion > 4 || (majVersion == 4 && minVersion >= 1)) {
 		configFile >> keyboard.customKeyColors;
-		configFile >> keyboard.majorColor[0] >> keyboard.majorColor[1] >> keyboard.majorColor[2];
-		configFile >> keyboard.minorColor[0] >> keyboard.minorColor[1] >> keyboard.minorColor[2];
+		configFile >> keyboard.majorColor[0][0] >> keyboard.majorColor[0][1] >> keyboard.majorColor[0][2];
+		configFile >> keyboard.minorColor[0][0] >> keyboard.minorColor[0][1] >> keyboard.minorColor[0][2];
+	}
+
+	// Ensure synchronization of all channels colors.
+	for(size_t cid = 1; cid < baseColors.size(); ++cid){
+		baseColors[cid] = baseColors[0];
+		particles.colors[cid] = particles.colors[0];
+		minorColors[cid] = minorColors[0];
+		flashColors[cid] = flashColors[0];
+		keyboard.majorColor[cid] = keyboard.majorColor[0];
+		keyboard.minorColor[cid] = keyboard.minorColor[0];
 	}
 }

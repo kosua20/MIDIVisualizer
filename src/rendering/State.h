@@ -14,7 +14,11 @@
 #define MIDIVIZ_VERSION_MINOR 1
 
 #define COLUMN_SIZE 170
-	
+
+#define CHANNELS_COUNT 8
+
+typedef std::array<glm::vec3, CHANNELS_COUNT> ColorArray;
+
 struct Quality {
 	enum Level : int {
 		LOW_RES = 0,
@@ -58,7 +62,7 @@ public:
 	
 	
 	struct ParticlesState {
-		glm::vec3 color ; ///< Particles color.
+		ColorArray colors; ///< Particles color.
 		GLuint tex;
 		int texCount;
 		float speed; ///< Particles speed.
@@ -68,8 +72,8 @@ public:
 	};
 
 	struct KeyboardState {
-		glm::vec3 majorColor; ///< Major key pressed color.
-		glm::vec3 minorColor; ///< Minor key pressed color.
+		ColorArray majorColor; ///< Major key pressed color.
+		ColorArray minorColor; ///< Minor key pressed color.
 		bool highlightKeys; ///< Highlight pressed keys.
 		bool customKeyColors; ///< Use the custom colors above instead of the color of the notes.
 	};
@@ -78,9 +82,9 @@ public:
 	ParticlesState particles;
 	KeyboardState keyboard;
 	Quality::Level quality;
-	glm::vec3 baseColor; ///< Major notes color.
-	glm::vec3 minorColor; ///< Minor notes color.
-	glm::vec3 flashColor; ///< Flashes color.
+	ColorArray baseColors; ///< Major notes color.
+	ColorArray minorColors; ///< Minor notes color.
+	ColorArray flashColors; ///< Flashes color.
 	float scale; ///< Display vertical scale.
 	float attenuation; ///< Blur attenuation.
 	float flashSize; ///< Size of flashes.
