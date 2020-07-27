@@ -281,14 +281,9 @@ void MIDIScene::drawParticles(float time, const glm::vec2 & invScreenSize, const
 	GLuint colorId = glGetUniformLocation(_programParticulesId, "baseColor");
 	
 	// Prepass : bigger, darker particles.
-	const glm::vec3 & pcol = state.color;
-	if(prepass){
-		glUniform1f(scaleId, state.scale*2.0f);
-		glUniform3f(colorId, 0.6f*pcol[0], 0.6f*pcol[1], 0.6f*pcol[2]);
-	} else {
-		glUniform1f(scaleId, state.scale);
-		glUniform3f(colorId, 1.6f*pcol[0], 1.6f*pcol[1], 1.6f*pcol[2]);
-	}
+	GLuint colorScaleId = glGetUniformLocation(_programParticulesId, "colorScale");
+	glUniform1f(colorScaleId, prepass ? 0.6f : 1.6f);
+	glUniform1f(scaleId, state.scale * (prepass ? 2.0f : 1.0f));
 	
 	// Particles trajectories texture.
 	glActiveTexture(GL_TEXTURE0);
@@ -325,15 +320,10 @@ void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const glm
 	GLuint timeId = glGetUniformLocation(_programId, "time");
 	GLuint colorId = glGetUniformLocation(_programId, "baseColor");
 	GLuint colorMinId = glGetUniformLocation(_programId, "minorColor");
+	GLuint colorScaleId = glGetUniformLocation(_programId, "colorScale");
 	glUniform2fv(screenId,1, &(invScreenSize[0]));
 	glUniform1f(timeId,time);
-	if(prepass){
-		glUniform3f(colorId, 0.6f*majorColor[0], 0.6f*majorColor[1], 0.6f*majorColor[2]);
-		glUniform3f(colorMinId, 0.6f*minorColor[0], 0.6f*minorColor[1], 0.6f*minorColor[2]);
-	} else {
-		glUniform3fv(colorId, 1, &(majorColor[0]));
-		glUniform3fv(colorMinId, 1, &(minorColor[0]));
-	}
+	glUniform1f(colorScaleId, prepass ? 0.6f: 1.0f);
 	
 	
 	// Draw the geometry.

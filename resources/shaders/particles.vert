@@ -11,6 +11,7 @@ uniform vec2 inverseTextureSize;
 uniform int globalId;
 uniform float duration;
 uniform int texCount;
+uniform float colorScale;
 
 uniform float expansionFactor = 1.0;
 uniform float speedScaling = 0.2;
@@ -35,7 +36,7 @@ void main(){
 	Out.id = float(gl_InstanceID % texCount);
 	Out.uv = v + 0.5;
 	// Fade color based on time.
-	Out.color = vec4(baseColor, 1.0-time*time);
+	Out.color = vec4(colorScale * baseColor, 1.0-time*time);
 	
 	float localTime = speedScaling * time * duration;
 	float particlesCount = 1.0/inverseTextureSize.y;
