@@ -224,7 +224,7 @@ void Renderer::blurPrepass() {
 	}
 	if (_state.showBlurNotes) {
 		// Draw the notes.
-		_scene->drawNotes(_timer, invSizeB, _state.baseColor, _state.minorColor, true);
+		_scene->drawNotes(_timer, invSizeB, _state.baseColors, _state.minorColors, true);
 	}
 
 	_particlesFramebuffer->unbind();
@@ -267,17 +267,17 @@ void Renderer::drawScore(const glm::vec2 & invSize) {
 }
 
 void Renderer::drawKeyboard(const glm::vec2 & invSize) {
-	const glm::vec3 & majColor = _state.keyboard.customKeyColors ? _state.keyboard.majorColor : _state.baseColor;
-	const glm::vec3 & minColor = _state.keyboard.customKeyColors ? _state.keyboard.minorColor : _state.minorColor;
-	_scene->drawKeyboard(_timer, invSize, _state.background.keysColor, majColor, minColor, _state.keyboard.highlightKeys);
+	const ColorArray & majColors = _state.keyboard.customKeyColors ? _state.keyboard.majorColor : _state.baseColors;
+	const ColorArray & minColors = _state.keyboard.customKeyColors ? _state.keyboard.minorColor : _state.minorColors;
+	_scene->drawKeyboard(_timer, invSize, _state.background.keysColor, majColors, minColors, _state.keyboard.highlightKeys);
 }
 
 void Renderer::drawNotes(const glm::vec2 & invSize) {
-	_scene->drawNotes(_timer, invSize, _state.baseColor, _state.minorColor, false);
+	_scene->drawNotes(_timer, invSize, _state.baseColors, _state.minorColors, false);
 }
 
 void Renderer::drawFlashes(const glm::vec2 & invSize) {
-	_scene->drawFlashes(_timer, invSize, _state.flashColor, _state.flashSize);
+	_scene->drawFlashes(_timer, invSize, _state.flashColors, _state.flashSize);
 }
 
 SystemAction Renderer::drawGUI(const float currentTime) {

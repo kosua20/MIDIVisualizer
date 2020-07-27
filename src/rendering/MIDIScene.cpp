@@ -284,6 +284,8 @@ void MIDIScene::drawParticles(float time, const glm::vec2 & invScreenSize, const
 	GLuint colorScaleId = glGetUniformLocation(_programParticulesId, "colorScale");
 	glUniform1f(colorScaleId, prepass ? 0.6f : 1.6f);
 	glUniform1f(scaleId, state.scale * (prepass ? 2.0f : 1.0f));
+	glUniform3fv(colorId, 1, &state.colors[0][0]);
+
 	
 	// Particles trajectories texture.
 	glActiveTexture(GL_TEXTURE0);
@@ -311,7 +313,7 @@ void MIDIScene::drawParticles(float time, const glm::vec2 & invScreenSize, const
 
 }
 
-void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const glm::vec3 & majorColor, const glm::vec3 & minorColor, bool prepass){
+void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const ColorArray & majorColors, const ColorArray & minorColors, bool prepass){
 	
 	glUseProgram(_programId);
 	
@@ -324,6 +326,9 @@ void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const glm
 	glUniform2fv(screenId,1, &(invScreenSize[0]));
 	glUniform1f(timeId,time);
 	glUniform1f(colorScaleId, prepass ? 0.6f: 1.0f);
+
+	glUniform3fv(colorId, 1, &(majorColors[0][0]));
+	glUniform3fv(colorMinId, 1, &(minorColors[0][0]));
 	
 	
 	// Draw the geometry.
@@ -335,7 +340,7 @@ void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const glm
 	
 }
 
-void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const glm::vec3 & baseColor, float userScale){
+void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const ColorArray & baseColors, float userScale){
 	
 	// Need alpha blending.
 	glEnable(GL_BLEND);
@@ -353,7 +358,7 @@ void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const g
 	GLuint scaleId = glGetUniformLocation(_programFlashesId, "userScale");
 	glUniform2fv(screenId1,1, &(invScreenSize[0]));
 	glUniform1f(timeId1,time);
-	glUniform3fv(colorId, 1, &(baseColor[0]));
+	glUniform3fv(colorId, 1, &(baseColors[0][0]));
 	glUniform1f(scaleId,userScale);
 	// Flash texture.
 	glActiveTexture(GL_TEXTURE0);
@@ -369,7 +374,7 @@ void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const g
 	
 }
 
-void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::vec3 & keyColor, const glm::vec3 & majorColor, const glm::vec3 & minorColor, bool highlightKeys) {
+void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::vec3 & keyColor, const ColorArray & majorColors, const ColorArray & minorColors, bool highlightKeys) {
 	// Upload active keys data.
 	glBindBuffer(GL_UNIFORM_BUFFER, _uboKeyboard);
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, _actives.size() * sizeof(int), &(_actives[0]));
@@ -385,8 +390,8 @@ void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::
 	const GLuint highId = glGetUniformLocation(_programKeysId, "highlightKeys");
 	glUniform2fv(screenId1, 1, &(invScreenSize[0]));
 	glUniform3fv(colorId, 1, &(keyColor[0]));
-	glUniform3fv(majorId, 1, &(majorColor[0]));
-	glUniform3fv(minorId, 1, &(minorColor[0]));
+	glUniform3fv(majorId, 1, &(majorColors[0][0]));
+	glUniform3fv(minorId, 1, &(minorColors[0][0]));
 	glUniform1i(highId, int(highlightKeys));
 
 	glBindBuffer(GL_UNIFORM_BUFFER, _uboKeyboard);
