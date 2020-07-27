@@ -122,6 +122,14 @@ void State::defineOptions(){
 	_sharedInfos["quality"].values = "values: LOW_RES, LOW, MEDIUM, HIGH, HIGH_RES";
 	_sharedInfos["layers"] = {"Active layers indices, from background to foreground", OptionInfos::Type::OTHER};
 	_sharedInfos["layers"].values = "values: bg-color: 0, bg-texture: 1, blur: 2, score: 3, keyboard: 4, particles: 5, notes: 6, flashes: 7";
+
+	for(size_t cid = 1; cid < CHANNELS_COUNT; ++cid){
+		const std::string num = std::to_string(cid);
+		_sharedInfos["color-major-" + num] = {"Major notes color for channel " + num, OptionInfos::Type::COLOR};
+		_sharedInfos["color-particles-" + num] = {"Particles color for channel " + num, OptionInfos::Type::COLOR};
+		_sharedInfos["color-minor-" + num] = {"Minor notes color for channel " + num, OptionInfos::Type::COLOR};
+		_sharedInfos["color-flashes-" + num] = {"Flash effect color for channel " + num, OptionInfos::Type::COLOR};
+	}
 }
 
 std::string State::helpText(size_t & alignSize){
@@ -188,6 +196,14 @@ void State::updateOptions(){
 	_vecInfos["color-particles"] = &particles.colors[0];
 	_vecInfos["color-minor"] = &minorColors[0];
 	_vecInfos["color-flashes"] = &flashColors[0];
+
+	for(size_t cid = 1; cid < baseColors.size(); ++cid){
+		const std::string num = std::to_string(cid);
+		_vecInfos["color-major-" + num] = &baseColors[cid];
+		_vecInfos["color-particles-" + num] = &particles.colors[cid];
+		_vecInfos["color-minor-" + num] = &minorColors[cid];
+		_vecInfos["color-flashes-" + num] = &flashColors[cid];
+	}
 }
 
 
@@ -355,6 +371,12 @@ void State::load(const Arguments & configArgs){
 			*opt = Configuration::parseVec3(arg.second);
 			continue;
 		}
+	}
+
+	// Ensure synchronization of the keyboard override colors.
+	for(size_t cid = 1; cid < keyboard.majorColor.size(); ++cid){
+		keyboard.majorColor[cid] = keyboard.majorColor[0];
+		keyboard.minorColor[cid] = keyboard.minorColor[0];
 	}
 }
 
