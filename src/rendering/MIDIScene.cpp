@@ -20,7 +20,7 @@ MIDIScene::~MIDIScene(){}
 MIDIScene::MIDIScene(){
 	_notesCount = 0;
 	_duration = 0.0f;
-	std::vector<float> data(4, 0.0f);
+	std::vector<float> data(5, 0.0f);
 	renderSetup(data);
 }
 
@@ -41,6 +41,7 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 		data.push_back(float(note.start));
 		data.push_back(float(note.duration));
 		data.push_back(0.0f);
+		data.push_back(float(note.channel));
 		_duration = std::max(_duration, note.start + note.duration);
 	}
 
@@ -51,6 +52,7 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 		data.push_back(float(note.start));
 		data.push_back(float(note.duration));
 		data.push_back(1.0f);
+		data.push_back(float(note.channel));
 		_duration = std::max(_duration, note.start + note.duration);
 	}
 	_notesCount = notesM.size() + notesm.size();
@@ -109,8 +111,14 @@ void MIDIScene::renderSetup(const std::vector<float> & data){
 	// The second attribute will be the notes data.
 	glEnableVertexAttribArray(1);
 	glBindBuffer(GL_ARRAY_BUFFER, dataBufferId0);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, NULL);
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), NULL);
 	glVertexAttribDivisor(1, 1);
+
+	// The second attribute will be the notes data.
+	glEnableVertexAttribArray(2);
+	glBindBuffer(GL_ARRAY_BUFFER, dataBufferId0);
+	glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(4 * sizeof(GLfloat)));
+	glVertexAttribDivisor(2, 1);
 
 	// We load the indices data
 	glGenBuffers(1, &_ebo);

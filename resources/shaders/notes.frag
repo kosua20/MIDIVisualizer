@@ -2,9 +2,10 @@
 #define CHANNELS_COUNT 8
 
 in INTERFACE {
-	float isMinor;
 	vec2 uv;
 	vec2 noteSize;
+	float isMinor;
+	float channel;
 } In;
 
 uniform vec3 baseColor[CHANNELS_COUNT];
@@ -33,7 +34,8 @@ void main(){
 	}
 	
 	// Fragment color.
-	fragColor.rgb = colorScale * mix(baseColor[0], minorColor[0], In.isMinor);
+	int cid = int(In.channel);
+	fragColor.rgb = colorScale * mix(baseColor[cid], minorColor[cid], In.isMinor);
 	
 	if(	radiusPosition > 0.8){
 		fragColor.rgb *= 1.05;

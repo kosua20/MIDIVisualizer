@@ -2,6 +2,7 @@
 
 layout(location = 0) in vec2 v;
 layout(location = 1) in vec4 id; //note id, start, duration, is minor
+layout(location = 2) in float channel; //note id, start, duration, is minor
 
 uniform float time;
 uniform float mainSpeed;
@@ -10,9 +11,10 @@ uniform float minorsWidth = 1.0;
 #define notesCount 52.0
 
 out INTERFACE {
-	float isMinor;
 	vec2 uv;
 	vec2 noteSize;
+	float isMinor;
+	float channel;
 } Out;
 
 
@@ -32,6 +34,7 @@ void main(){
 	// Scale uv.
 	Out.uv = Out.noteSize * v;
 	Out.isMinor = id.w;
+	Out.channel = channel;
 	// Output position.
 	gl_Position = vec4(Out.noteSize * v + noteShift, 0.0 , 1.0) ;
 	
