@@ -9,11 +9,13 @@ layout(std140) uniform ActiveNotes {
 	ivec4 actives[22];
 };
 
+#define CHANNELS_COUNT 8
+
 uniform vec2 inverseScreenSize;
 uniform float minorsWidth = 1.0;
 uniform vec3 keysColor = vec3(0.0);
-uniform vec3 minorColor;
-uniform vec3 majorColor;
+uniform vec3 minorColor[CHANNELS_COUNT];
+uniform vec3 majorColor[CHANNELS_COUNT];
 uniform bool highlightKeys;
 
 const bool isMinor[52] = bool[](true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, false);
@@ -38,7 +40,7 @@ void main(){
 	
 	// If the current major key is active, the majorColor is specific.
 	int majorId = majorIds[clamp(int(In.uv.x*52.0), 0, 51)];
-	vec3 backColor = (highlightKeys && isIdActive(majorId)) ? majorColor : vec3(1.0);
+	vec3 backColor = (highlightKeys && isIdActive(majorId)) ? majorColor[0] : vec3(1.0);
 
 	vec3 frontColor = keysColor;
 	// Upper keyboard.
@@ -51,7 +53,7 @@ void main(){
 			intensity = step(marginSize, abs(fract(In.uv.x*52.0+0.5)*2.0-1.0));
 			int minorId = minorIds[minorLocalId];
 			if(highlightKeys && isIdActive(minorId)){
-				frontColor = minorColor;
+				frontColor = minorColor[0];
 			}
 		}
 	}

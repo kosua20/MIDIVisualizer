@@ -1,4 +1,5 @@
 #version 330
+#define CHANNELS_COUNT 8
 
 in INTERFACE {
 	float isMinor;
@@ -6,8 +7,8 @@ in INTERFACE {
 	vec2 noteSize;
 } In;
 
-uniform vec3 baseColor;
-uniform vec3 minorColor;
+uniform vec3 baseColor[CHANNELS_COUNT];
+uniform vec3 minorColor[CHANNELS_COUNT];
 uniform vec2 inverseScreenSize;
 uniform float colorScale;
 
@@ -32,7 +33,7 @@ void main(){
 	}
 	
 	// Fragment color.
-	fragColor.rgb = colorScale * mix(baseColor, minorColor, In.isMinor);
+	fragColor.rgb = colorScale * mix(baseColor[0], minorColor[0], In.isMinor);
 	
 	if(	radiusPosition > 0.8){
 		fragColor.rgb *= 1.05;

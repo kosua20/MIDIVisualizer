@@ -1,10 +1,11 @@
 #version 330
+#define CHANNELS_COUNT 8
 
 layout(location = 0) in vec2 v;
 
 uniform float time;
 uniform float scale;
-uniform vec3 baseColor;
+uniform vec3 baseColor[CHANNELS_COUNT];
 uniform vec2 inverseScreenSize;
 uniform sampler2D textureParticles;
 uniform vec2 inverseTextureSize;
@@ -36,7 +37,7 @@ void main(){
 	Out.id = float(gl_InstanceID % texCount);
 	Out.uv = v + 0.5;
 	// Fade color based on time.
-	Out.color = vec4(colorScale * baseColor, 1.0-time*time);
+	Out.color = vec4(colorScale * baseColor[0], 1.0-time*time);
 	
 	float localTime = speedScaling * time * duration;
 	float particlesCount = 1.0/inverseTextureSize.y;

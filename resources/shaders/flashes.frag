@@ -1,4 +1,6 @@
 #version 330
+#define CHANNELS_COUNT 8
+
 
 in INTERFACE {
 	vec2 uv;
@@ -8,7 +10,7 @@ in INTERFACE {
 
 uniform sampler2D textureFlash;
 uniform float time;
-uniform vec3 baseColor;
+uniform vec3 baseColor[CHANNELS_COUNT];
 
 #define numberSprites 8.0
 
@@ -45,7 +47,7 @@ void main(){
 	}
 	
 	// Colored sprite.
-	vec4 spriteColor = vec4(baseColor,In.on * mask);
+	vec4 spriteColor = vec4(baseColor[0], In.on * mask);
 	
 	// Circular halo effect.
 	float haloAlpha = 1.0 - smoothstep(0.07,0.5,length(In.uv));
