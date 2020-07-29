@@ -82,7 +82,8 @@ void State::defineOptions(){
 	_sharedInfos["show-flashes"] = {"Should flashes be shown", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["show-blur"] = {"Should the blur be visible", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["show-blur-notes"] = {"Should the notes be part of the blur", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["lock-colors"] = {"Should all effects use the same color", OptionInfos::Type::BOOLEAN};
+	_sharedInfos["lock-colors"] = {"Should the keys and all effects use the same color", OptionInfos::Type::BOOLEAN};
+	_sharedInfos["per-channel"] = {"Should each channel use its own key/effects colors", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["show-horiz-lines"] = {"Should horizontal score lines be showed", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["show-vert-lines"] = {"Should vertical score lines be shown", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["show-numbers"] = {"Should measure numbers be shown", OptionInfos::Type::BOOLEAN};
@@ -166,6 +167,7 @@ void State::updateOptions(){
 	_boolInfos["show-blur"] = &showBlur;
 	_boolInfos["show-blur-notes"] = &showBlurNotes;
 	_boolInfos["lock-colors"] = &lockParticleColor;
+	_boolInfos["per-channel"] = &perChannelColors;
 	_boolInfos["show-horiz-lines"] = &background.hLines;
 	_boolInfos["show-vert-lines"] = &background.vLines;
 	_boolInfos["show-numbers"] = &background.digits;
@@ -380,6 +382,17 @@ void State::load(const Arguments & configArgs){
 	}
 }
 
+void State::synchronizeChannels(){
+	for(size_t cid = 1; cid < CHANNELS_COUNT; ++cid){
+		baseColors[cid] = baseColors[0];
+		minorColors[cid] = minorColors[0];
+		flashColors[cid] = flashColors[0];
+		particles.colors[cid] = particles.colors[0];
+		keyboard.majorColor[cid] = keyboard.majorColor[0];
+		keyboard.minorColor[cid] = keyboard.minorColor[0];
+	}
+}
+
 void State::reset(){
 
 	for(size_t cid = 0; cid < CHANNELS_COUNT; ++cid){
@@ -398,11 +411,12 @@ void State::reset(){
 
 	scale = 0.5f ;
 	attenuation = 0.99f;
-	showParticles = true ;
-	showFlashes = true ;
-	showBlur = true ;
-	showBlurNotes = false ;
-	lockParticleColor = true ;
+	showParticles = true;
+	showFlashes = true;
+	showBlur = true;
+	showBlurNotes = false;
+	lockParticleColor = true;
+	perChannelColors = false;
 	showNotes = true;
 	showScore = true;
 	showKeyboard = true;
@@ -525,12 +539,5 @@ void State::load(std::istream & configFile, int majVersion, int minVersion){
 	}
 
 	// Ensure synchronization of all channels colors.
-	for(size_t cid = 1; cid < baseColors.size(); ++cid){
-		baseColors[cid] = baseColors[0];
-		particles.colors[cid] = particles.colors[0];
-		minorColors[cid] = minorColors[0];
-		flashColors[cid] = flashColors[0];
-		keyboard.majorColor[cid] = keyboard.majorColor[0];
-		keyboard.minorColor[cid] = keyboard.minorColor[0];
-	}
+	synchronizeChannels();
 }

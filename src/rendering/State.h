@@ -97,6 +97,7 @@ public:
 	bool showNotes;
 	bool showScore;
 	bool showKeyboard;
+	bool perChannelColors;
 
 	std::array<int, 16> layersMap; ///< Location of each layer.
 
@@ -109,6 +110,8 @@ public:
 	void save(const std::string & path);
 	
 	void reset();
+
+	void synchronizeChannels();
 
 	static std::string helpText(size_t & alignSize);
 
