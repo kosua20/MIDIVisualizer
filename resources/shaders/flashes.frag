@@ -4,7 +4,7 @@
 
 in INTERFACE {
 	vec2 uv;
-	float on;
+	float onChannel;
 	float id;
 } In;
 
@@ -25,10 +25,10 @@ float rand(vec2 co){
 void main(){
 	
 	// If not on, discard flash immediatly.
-	if(In.on < 0.5){
+	int cid = int(In.onChannel);
+	if(cid < 0){
 		discard;
 	}
-	
 	float mask = 0.0;
 	
 	// If up half, read from texture atlas.
@@ -47,11 +47,11 @@ void main(){
 	}
 	
 	// Colored sprite.
-	vec4 spriteColor = vec4(baseColor[0], In.on * mask);
+	vec4 spriteColor = vec4(baseColor[cid], mask);
 	
 	// Circular halo effect.
 	float haloAlpha = 1.0 - smoothstep(0.07,0.5,length(In.uv));
-	vec4 haloColor = vec4(1.0,1.0,1.0, In.on * haloAlpha * 0.92);
+	vec4 haloColor = vec4(1.0,1.0,1.0, haloAlpha * 0.92);
 	
 	// Mix the sprite color and the halo effect.
 	fragColor = mix(spriteColor, haloColor, haloColor.a);

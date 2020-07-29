@@ -1,7 +1,7 @@
 #version 330
 
 layout(location = 0) in vec2 v;
-layout(location = 1) in int isOn;
+layout(location = 1) in int onChan;
 
 uniform float time;
 uniform vec2 inverseScreenSize;
@@ -14,7 +14,7 @@ const vec2 scale = 0.9*vec2(3.5,3.0);
 
 out INTERFACE {
 	vec2 uv;
-	float on;
+	float onChannel;
 	float id;
 } Out;
 
@@ -30,7 +30,7 @@ void main(){
 	
 	// Pass infos to the fragment shader.
 	Out.uv = v;
-	Out.on = float(isOn>0);
+	Out.onChannel = float(onChan);
 	Out.id = float(gl_InstanceID);
 	
 }

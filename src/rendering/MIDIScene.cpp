@@ -141,7 +141,7 @@ void MIDIScene::renderSetup(const std::vector<float> & data){
 	// The second attribute will be the flags buffer.
 	glEnableVertexAttribArray(1);
 	glBindBuffer(GL_ARRAY_BUFFER, _flagsBufferId);
-	glVertexAttribPointer(1, 1, GL_INT, GL_FALSE, 0, NULL);
+	glVertexAttribIPointer(1, 1, GL_INT, 0, NULL);
 	glVertexAttribDivisor(1, 1);
 	// We load the indices data
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
