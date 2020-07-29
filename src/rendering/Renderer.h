@@ -108,6 +108,8 @@ private:
 
 	void updateSizes();
 
+	bool channelColorEdit(const char * name, const char * displayName, ColorArray & colors);
+
 	State _state;
 	std::array<Layer, 8> _layers;
 

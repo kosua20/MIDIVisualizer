@@ -846,3 +846,42 @@ void Renderer::startRecording(){
 	glClear(GL_COLOR_BUFFER_BIT);
 	_finalFramebuffer->unbind();
 }
+
+bool Renderer::channelColorEdit(const char * name, const char * displayName, ColorArray & colors){
+	if(!_state.perChannelColors){
+		// If locked, display color sink.
+		ImGui::PushItemWidth(25);
+		const bool inter = ImGui::ColorEdit3(name, &colors[0][0], ImGuiColorEditFlags_NoInputs);
+		ImGui::PopItemWidth();
+		if(inter){
+			// Ensure synchronization.
+			for(size_t cid = 1; cid < colors.size(); ++cid){
+				colors[cid] = colors[0];
+			}
+		}
+		return inter;
+	}
+
+	// Else, we display a drop down and a popup.
+	if(ImGui::ArrowButton(name, ImGuiDir_Down)){
+		ImGui::OpenPopup(name);
+	}
+	ImGui::SameLine(); ImGui::Text("%s", displayName);
+
+	if(ImGui::BeginPopup(name)){
+		// Do 2x4 color sinks.
+		bool edit = false;
+		ImGui::PushItemWidth(25);
+		for(size_t cid = 0; cid < colors.size(); ++cid){
+			const std::string nameC = "Channel " + std::to_string(cid);
+			edit = ImGui::ColorEdit3(nameC.c_str(), &colors[cid][0], ImGuiColorEditFlags_NoInputs) || edit;
+			if(cid % 2 == 0 && cid != colors.size()-1){
+				ImGui::SameLine();
+			}
+		}
+		ImGui::PopItemWidth();
+		ImGui::EndPopup();
+		return edit;
+	}
+	return false;
+}
