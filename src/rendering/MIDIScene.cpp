@@ -202,7 +202,7 @@ void MIDIScene::renderSetup(const std::vector<float> & data){
 	glUniformBlockBinding(_programKeysId, uboLoc, 0);
 
 	// Prepare actives notes array.
-	_actives = std::vector<int>(88, 0);
+	_actives = std::vector<int>(88, -1);
 	_previousTime = 0.0;
 	// Particle systems pool.
 	_particles = std::vector<Particles>(256);
@@ -246,7 +246,7 @@ void MIDIScene::updatesActiveNotes(double time){
 	_midiFile.getNotesActive(actives, time, 0);
 	for(int i = 0; i < 88; ++i){
 		const auto & note = actives[i];
-		_actives[i] = int(note.enabled);
+		_actives[i] = note.enabled ? note.channel : -1;
 		// Check if the note was triggered at this frame.
 		if(note.start > _previousTime && note.start <= time){
 			// Find an available particles system and update it with the note parameters.

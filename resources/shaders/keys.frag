@@ -25,8 +25,8 @@ const int minorIds[52] = int[](1, 0, 4, 6, 0, 9, 11, 13, 0, 16, 18, 0, 21, 23, 2
 out vec4 fragColor;
 
 
-bool isIdActive(int id){
-	return actives[id/4][id%4] != 0;
+int isIdActive(int id){
+	return actives[id/4][id%4];
 }
 
 void main(){
@@ -40,7 +40,8 @@ void main(){
 	
 	// If the current major key is active, the majorColor is specific.
 	int majorId = majorIds[clamp(int(In.uv.x*52.0), 0, 51)];
-	vec3 backColor = (highlightKeys && isIdActive(majorId)) ? majorColor[0] : vec3(1.0);
+	int cidMajor = isIdActive(majorId);
+	vec3 backColor = (highlightKeys && cidMajor >= 0) ? majorColor[cidMajor] : vec3(1.0);
 
 	vec3 frontColor = keysColor;
 	// Upper keyboard.
@@ -52,8 +53,9 @@ void main(){
 			float marginSize = minorsWidth != 1.0 ? minorsWidth : 1.0 - (2.0*52.0*inverseScreenSize.x);
 			intensity = step(marginSize, abs(fract(In.uv.x*52.0+0.5)*2.0-1.0));
 			int minorId = minorIds[minorLocalId];
-			if(highlightKeys && isIdActive(minorId)){
-				frontColor = minorColor[0];
+			int cidMinor = isIdActive(minorId);
+			if(highlightKeys && cidMinor >= 0){
+				frontColor = minorColor[cidMinor];
 			}
 		}
 	}
