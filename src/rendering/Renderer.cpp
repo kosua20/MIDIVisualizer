@@ -366,13 +366,9 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		
 		ImGui::PopItemWidth();
 
-		ImGui::PushItemWidth(25);
-		bool colNotesEdit = ImGui::ColorEdit3("Notes", &_state.baseColors[0][0],
-			ImGuiColorEditFlags_NoInputs);
+		bool colNotesEdit = channelColorEdit("Notes", "Notes", _state.baseColors);
 		ImGui::SameLine();
-		bool colMinorsEdit = ImGui::ColorEdit3("Minors", &_state.minorColors[0][0],
-			ImGuiColorEditFlags_NoInputs);
-		ImGui::PopItemWidth();
+		bool colMinorsEdit = channelColorEdit("Minors", "Minors", _state.minorColors);
 
 		ImGui::SameLine(COLUMN_SIZE);
 		if (ImGui::Checkbox("Sync colors", &_state.lockParticleColor)) {
@@ -380,11 +376,17 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			colNotesEdit = true;
 		}
 
+		if(ImGui::Checkbox("Per-channel colors", &_state.perChannelColors)){
+			if(!_state.perChannelColors){
+				_state.synchronizeChannels();
+			}
+		}
+
 		bool colFlashesEdit = false;
 		if (_state.showFlashes && ImGui::CollapsingHeader("Flashes##HEADER")) {
-			ImGui::PushItemWidth(25);
-			colFlashesEdit = ImGui::ColorEdit3("Color##Flashes", &_state.flashColors[0][0], ImGuiColorEditFlags_NoInputs);
-			ImGui::PopItemWidth();
+
+			colFlashesEdit = channelColorEdit("Color##Flashes", "Color", _state.flashColors);
+
 			ImGui::SameLine(COLUMN_SIZE);
 			ImGui::PushItemWidth(100);
 			ImGui::SliderFloat("Flash size", &_state.flashSize, 0.1f, 3.0f);
@@ -395,9 +397,9 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		if (_state.showParticles && ImGui::CollapsingHeader("Particles##HEADER")) {
 
 			ImGui::PushID("ParticlesSettings");
-			ImGui::PushItemWidth(25);
-			colPartsEdit = ImGui::ColorEdit3("Color##Particles", &_state.particles.colors[0][0], ImGuiColorEditFlags_NoInputs);
-			ImGui::PopItemWidth();
+
+			colPartsEdit = channelColorEdit("Color##Particles", "Color", _state.particles.colors);
+
 			ImGui::SameLine(COLUMN_SIZE);
 
 			ImGui::PushItemWidth(100);
@@ -473,25 +475,25 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			ImGui::PopItemWidth();
 			ImGui::SameLine(COLUMN_SIZE);
 			ImGui::Checkbox("Highlight keys", &_state.keyboard.highlightKeys);
+
 			if (_state.keyboard.highlightKeys) {
 				ImGui::Checkbox("Custom colors", &_state.keyboard.customKeyColors);
 				if (_state.keyboard.customKeyColors) {
+
 					ImGui::SameLine(COLUMN_SIZE);
-					ImGui::PushItemWidth(25);
-					if(ImGui::ColorEdit3("Major##KeysHighlight", &_state.keyboard.majorColor[0][0], ImGuiColorEditFlags_NoInputs)){
+					if(channelColorEdit("Major##KeysHighlight", "Major", _state.keyboard.majorColor)){
 						// Ensure synchronization of the override array.
 						for(size_t cid = 1; cid < _state.keyboard.majorColor.size(); ++cid){
 							_state.keyboard.majorColor[cid] = _state.keyboard.majorColor[0];
 						}
 					}
 					ImGui::SameLine(COLUMN_SIZE+80);
-					if(ImGui::ColorEdit3("Minor##KeysHighlight", &_state.keyboard.minorColor[0][0], ImGuiColorEditFlags_NoInputs)){
+					if(channelColorEdit("Minor##KeysHighlight", "Minor", _state.keyboard.minorColor)){
 						// Ensure synchronization of the override array.
 						for(size_t cid = 1; cid < _state.keyboard.minorColor.size(); ++cid){
 							_state.keyboard.minorColor[cid] = _state.keyboard.minorColor[0];
 						}
 					}
-					ImGui::PopItemWidth();
 				}
 			}
 			
@@ -610,7 +612,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 
 		// Keep the colors in sync if needed.
 		if (_state.lockParticleColor && (colNotesEdit || colPartsEdit || colMinorsEdit || colFlashesEdit)) {
-			for(size_t cid = 0; cid < _state.baseColors.size(); ++cid){
+			for(size_t cid = 0; cid < CHANNELS_COUNT; ++cid){
 				glm::vec3 refColor = _state.baseColors[cid];
 				if (colPartsEdit) {
 					refColor = _state.particles.colors[cid];
