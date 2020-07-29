@@ -41,7 +41,7 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 		data.push_back(float(note.start));
 		data.push_back(float(note.duration));
 		data.push_back(0.0f);
-		data.push_back(float(note.channel));
+		data.push_back(float((std::min)(int(note.channel), CHANNELS_COUNT-1)));
 		_duration = std::max(_duration, note.start + note.duration);
 	}
 
@@ -52,7 +52,7 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 		data.push_back(float(note.start));
 		data.push_back(float(note.duration));
 		data.push_back(1.0f);
-		data.push_back(float(note.channel));
+		data.push_back(float((std::min)(int(note.channel), CHANNELS_COUNT-1)));
 		_duration = std::max(_duration, note.start + note.duration);
 	}
 	_notesCount = notesM.size() + notesm.size();
@@ -246,7 +246,8 @@ void MIDIScene::updatesActiveNotes(double time){
 	_midiFile.getNotesActive(actives, time, 0);
 	for(int i = 0; i < 88; ++i){
 		const auto & note = actives[i];
-		_actives[i] = note.enabled ? note.channel : -1;
+		const int clamped = (std::min)(note.channel, CHANNELS_COUNT-1);
+		_actives[i] = note.enabled ? clamped : -1;
 		// Check if the note was triggered at this frame.
 		if(note.start > _previousTime && note.start <= time){
 			// Find an available particles system and update it with the note parameters.
@@ -256,7 +257,7 @@ void MIDIScene::updatesActiveNotes(double time){
 					particle.duration = (std::max)(note.duration*2.0f, note.duration + 1.2f);
 					particle.start = note.start;
 					particle.note = i;
-					particle.channel = note.channel;
+					particle.channel = clamped;
 					particle.elapsed = 0.0f;
 					break;
 				}
