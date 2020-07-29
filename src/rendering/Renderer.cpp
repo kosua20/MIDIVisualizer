@@ -481,14 +481,15 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 				if (_state.keyboard.customKeyColors) {
 
 					ImGui::SameLine(COLUMN_SIZE);
-					if(channelColorEdit("Major##KeysHighlight", "Major", _state.keyboard.majorColor)){
+					if(ImGui::ColorEdit3("Major##KeysHighlight", &_state.keyboard.majorColor[0][0], ImGuiColorEditFlags_NoInputs)){
 						// Ensure synchronization of the override array.
 						for(size_t cid = 1; cid < _state.keyboard.majorColor.size(); ++cid){
 							_state.keyboard.majorColor[cid] = _state.keyboard.majorColor[0];
 						}
 					}
+					
 					ImGui::SameLine(COLUMN_SIZE+80);
-					if(channelColorEdit("Minor##KeysHighlight", "Minor", _state.keyboard.minorColor)){
+					if(ImGui::ColorEdit3("Minor##KeysHighlight", &_state.keyboard.minorColor[0][0], ImGuiColorEditFlags_NoInputs)){
 						// Ensure synchronization of the override array.
 						for(size_t cid = 1; cid < _state.keyboard.minorColor.size(); ++cid){
 							_state.keyboard.minorColor[cid] = _state.keyboard.minorColor[0];
