@@ -117,8 +117,9 @@ MIDIFile::MIDIFile(const std::string & filePath){
 	_secondsPerMeasure = computeMeasureDuration(_tempos[0].tempo, _signature);
 
 	// Convert each track to real notes.
-	for(auto & track : _tracks){
-		track.extractNotes(_tempos, _unitsPerQuarterNote, 21, 108);
+	for(size_t tid = 0; tid < _tracks.size(); ++tid){
+		auto & track = _tracks[tid];
+		track.extractNotes(_tempos, _unitsPerQuarterNote, 21, 108, tid);
 	}
 
 	// For now, still merge.

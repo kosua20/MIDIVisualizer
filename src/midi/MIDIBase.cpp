@@ -1,6 +1,6 @@
 #include "MIDIBase.h"
 
-MIDINote::MIDINote(short aNote, double aStart, double aDuration, short aVelocity, short aChannel) : start(aStart), duration(aDuration), note(aNote), velocity(aVelocity), channel(aChannel) {
+MIDINote::MIDINote(short aNote, double aStart, double aDuration, short aVelocity, short aChannel, unsigned int trackId) : start(aStart), duration(aDuration), track(trackId), note(aNote), velocity(aVelocity), channel(aChannel) {
 
 }
 

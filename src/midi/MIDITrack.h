@@ -10,7 +10,7 @@ public:
 	
 	double extractTempos(std::vector<MIDITempo> & tempos) const;
 
-	void extractNotes(const std::vector<MIDITempo> & tempos, uint16_t unitsPerQuarterNote, short minId, short maxId);
+	void extractNotes(const std::vector<MIDITempo> & tempos, uint16_t unitsPerQuarterNote, short minId, short maxId, unsigned int trackId);
 
 	void print() const;
 

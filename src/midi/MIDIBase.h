@@ -5,12 +5,13 @@
 
 struct MIDINote {
 
-	MIDINote(short aNote, double aStart, double aDuration, short aVelocity, short aChannel);
+	MIDINote(short aNote, double aStart, double aDuration, short aVelocity, short aChannel, unsigned int trackId);
 
 	void print() const;
 
 	double start;
 	double duration;
+	unsigned int track;
 	short note;
 	short velocity;
 	short channel;
@@ -51,6 +52,7 @@ struct MIDITempo {
 struct ActiveNoteInfos {
 	float start = 1000000.0f;
 	float duration = 0.0f;
+	int channel = -1;
 	bool enabled = false;
 };
 

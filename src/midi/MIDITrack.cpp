@@ -83,7 +83,7 @@ double MIDITrack::extractTempos(std::vector<MIDITempo> & tempos) const {
 	return signature;
 }
 
-void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t unitsPerQuarterNote, short minId, short maxId){
+void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t unitsPerQuarterNote, short minId, short maxId, unsigned int trackId){
 	// Scan events, focusing on the note ON/OFF events.
 	// Keep track of active notes.
 	std::map<short, std::tuple<size_t, short, short>> currentNotes;
@@ -113,7 +113,7 @@ void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t uni
 
 			const short velocity = std::get<1>(noteTuple);
 			const short channel = std::get<2>(noteTuple);
-			_notes.emplace_back(noteInd, times.first, times.second - times.first, velocity, channel);
+			_notes.emplace_back(noteInd, times.first, times.second - times.first, velocity, channel, trackId);
 
 			// Remove note.
 			currentNotes.erase(noteInd);
@@ -164,6 +164,7 @@ void MIDITrack::getNotesActive(std::vector<ActiveNoteInfos>& actives, double tim
 			actives[note.note].enabled = true;
 			actives[note.note].duration = float(note.duration);
 			actives[note.note].start = float(note.start);
+			actives[note.note].channel = note.channel;
 		}
 	}
 }
