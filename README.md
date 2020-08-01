@@ -75,10 +75,7 @@ This seems to be a limitation of the Nautilus file manager, you can either doubl
 
 ## Compilation
 
-The project is configured using Cmake.
-
-    mkdir build && cd build
-    cmake ..
+The project is configured using Cmake. You can use the Cmake GUI ('source directory' is the root of this project, 'build directory' is build/, press 'Configure' then 'Generate', selecting the proper generator for your target platform and IDE); or the command line version, specifying your target generator.
     
 Depending on the target you chose in Cmake, you will get either a Visual Studio solution, an Xcode workspace or a set of Makefiles. You can build the main executable using the `MIDIVisualizer`sub-project/target. If you update the images or shaders in the `resources` directory, you will have to repackage them with the executable, by building the `Packaging` sub-project/target. MIDIVisualizer depends on the [GLFW3 library](http://www.glfw.org) and the [Native File Dialog library](https://github.com/mlabbe/nativefiledialog), both are included in the repository and built along with the main executable. MIDIVisualizer optionally relies on [FFMPEG](https://ffmpeg.org) for video export. For licensing reasons only MPEG-2 and MPEG-4 exports are supported for now.
 
