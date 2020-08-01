@@ -114,7 +114,7 @@ public:
 
 	void synchronizeChannels();
 
-	static std::string helpText(size_t & alignSize);
+	static size_t helpText(std::string & configOpts, std::string & setsOpts);
 
 private:
 

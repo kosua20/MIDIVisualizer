@@ -133,7 +133,7 @@ void State::defineOptions(){
 	}
 }
 
-std::string State::helpText(size_t & alignSize){
+size_t State::helpText(std::string & configOpts, std::string & setsOpts){
 	if(_sharedInfos.empty()){
 		defineOptions();
 	}
@@ -141,14 +141,24 @@ std::string State::helpText(size_t & alignSize){
 	for(const auto & param : _sharedInfos){
 		maxLength = (std::max)(maxLength, param.first.size());
 	}
-	alignSize = maxLength + 4;
+	size_t alignSize = maxLength + 4;
 
-	std::stringstream msg;
+	std::stringstream msgDefault;
+	std::stringstream msgSets;
+
 	for(const auto & param : _sharedInfos){
 		const std::string padString(alignSize - param.first.size(), ' ');
-		msg << "--" << param.first << padString << param.second.description << " (" << param.second.values << ")" << std::endl;
+		const std::string line = "--" + param.first + padString + param.second.description + " (" + param.second.values + ")\n";
+		if(param.second.category == OptionInfos::Category::SETS){
+			msgSets << line;
+		} else {
+			msgDefault << line;
+		}
 	}
-	return msg.str();
+
+	configOpts = msgDefault.str();
+	setsOpts = msgSets.str();
+	return alignSize;
 }
 
 State::State(){

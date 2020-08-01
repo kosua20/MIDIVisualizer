@@ -19,8 +19,8 @@
 
 
 void printHelp(){
-	size_t alignSize = 0;
-	const std::string opts = State::helpText(alignSize);
+	std::string configOpts, setsOpts;
+	const size_t alignSize = State::helpText(configOpts, setsOpts);
 
 	const std::vector<std::pair<std::string, std::string>> genOpts = {
 		{"midi", "path to a MIDI file to load"},
@@ -40,19 +40,25 @@ void printHelp(){
 
 	std::cout << "---- Infos ---- MIDIVisualizer v" << MIDIVIZ_VERSION_MAJOR << "." << MIDIVIZ_VERSION_MINOR << " --------" << std::endl
 	<< "Visually display a midi file in real time." << std::endl
-	<< "Created by Simon Rodriguez (https://github.com/kosua20/MIDIVisualizer)" << std::endl
-	<< std::endl << "* General options: " << std::endl;
+	<< "Created by Simon Rodriguez (https://github.com/kosua20/MIDIVisualizer)" << std::endl;
+
+	std::cout << std::endl << "* General options: " << std::endl;
 	for(const auto & opt : genOpts){
 		const std::string pad(std::max(int(alignSize) - int(opt.first.size()), 0), ' ');
 		std::cout << "--" << opt.first << pad << opt.second << std::endl;
 	}
+
 	std::cout << std::endl << "* Export options: (--export path is mandatory)" << std::endl;
 	for(const auto & opt : expOpts){
 		const std::string pad(std::max(int(alignSize) - int(opt.first.size()), 0), ' ');
 		std::cout << "--" << opt.first << pad << opt.second << std::endl;
 	}
+
 	std::cout << std::endl << "* Configuration options: (will override config file)" << std::endl
-	<< opts << std::endl;
+	<< configOpts;
+
+	std::cout << std::endl << "* Per-sets options: (will override config file)" << std::endl
+	<< setsOpts << std::endl;
 
 }
 
