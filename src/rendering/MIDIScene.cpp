@@ -17,8 +17,6 @@
 MIDIScene::~MIDIScene(){}
 
 MIDIScene::MIDIScene(){
-	_notesCount = 0;
-	_duration = 0.0f;
 	std::vector<float> data(5, 0.0f);
 	renderSetup(data);
 }
@@ -33,15 +31,12 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 	std::vector<float> data;
 	std::vector<MIDINote> notesM;
 	_midiFile.getNotes(notesM, NoteType::MAJOR, 0);
-	
-	_duration = 0.0;
 	for(auto& note : notesM){
 		data.push_back(float(note.note));
 		data.push_back(float(note.start));
 		data.push_back(float(note.duration));
 		data.push_back(0.0f);
 		data.push_back(float((std::min)(int(note.channel), CHANNELS_COUNT-1)));
-		_duration = std::max(_duration, note.start + note.duration);
 	}
 
 	std::vector<MIDINote> notesm;
@@ -52,11 +47,7 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 		data.push_back(float(note.duration));
 		data.push_back(1.0f);
 		data.push_back(float((std::min)(int(note.channel), CHANNELS_COUNT-1)));
-		_duration = std::max(_duration, note.start + note.duration);
 	}
-	_notesCount = notesM.size() + notesm.size();
-	std::cout << "[INFO]: Final track duration " << _duration << " sec." << std::endl;
-
 	// Upload to the GPU.
 	renderSetup(data);
 }
@@ -346,7 +337,7 @@ void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const Col
 	
 	// Draw the geometry.
 	glBindVertexArray(_vao);
-	glDrawElementsInstanced(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0, GLsizei(_notesCount));
+	glDrawElementsInstanced(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0, GLsizei(_midiFile.notesCount()));
 
 	glBindVertexArray(0);
 	glUseProgram(0);
@@ -426,5 +417,3 @@ void MIDIScene::clean(){
 	glDeleteProgram(_programFlashesId);
 	glDeleteProgram(_programParticulesId);
 }
-
-

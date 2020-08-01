@@ -36,7 +36,7 @@ public:
 
 	void setParticlesParameters(const float speed, const float expansion);
 	
-	double duration(){ return _duration; };
+	const double & duration() const { return _midiFile.duration(); };
 	
 	void resetParticles();
 
@@ -63,8 +63,6 @@ private:
 	GLuint _uboKeyboard;
 	
 	size_t _primitiveCount;
-	size_t _notesCount;
-	double _duration;
 	
 	std::vector<int> _actives;
 
