@@ -5,15 +5,16 @@
 #include "../midi/MIDIFile.h"
 #include "State.h"
 
-
 class MIDIScene {
 
 public:
 
 	MIDIScene();
 
-	MIDIScene(const std::string & midiFilePath);
+	MIDIScene(const std::string & midiFilePath, const SetOptions & options);
 
+	void updateSets(const SetOptions & options);
+	
 	~MIDIScene();
 	
 	void updatesActiveNotes(double time);

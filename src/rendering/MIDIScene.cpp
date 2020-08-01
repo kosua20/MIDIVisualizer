@@ -22,12 +22,24 @@ MIDIScene::MIDIScene(){
 	upload(data);
 }
 
-MIDIScene::MIDIScene(const std::string & midiFilePath){
+MIDIScene::MIDIScene(const std::string & midiFilePath, const SetOptions & options) {
 	
 	// MIDI processing.
 	_midiFile = MIDIFile(midiFilePath);
 
 	renderSetup();
+
+	updateSets(options);
+
+	std::cout << "[INFO]: Final track duration " << _midiFile.duration() << " sec." << std::endl;
+}
+
+
+void MIDIScene::updateSets(const SetOptions & options){
+	// Generate note data for rendering.
+	_midiFile.updateSets(options);
+
+	// Load notes shared data.
 	std::vector<float> data;
 	std::vector<MIDINote> notesM;
 	_midiFile.getNotes(notesM, NoteType::MAJOR, 0);
@@ -36,7 +48,7 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 		data.push_back(float(note.start));
 		data.push_back(float(note.duration));
 		data.push_back(0.0f);
-		data.push_back(float((std::min)(int(note.channel), CHANNELS_COUNT-1)));
+		data.push_back(float(note.set % CHANNELS_COUNT));
 	}
 
 	std::vector<MIDINote> notesm;
@@ -46,7 +58,7 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 		data.push_back(float(note.start));
 		data.push_back(float(note.duration));
 		data.push_back(1.0f);
-		data.push_back(float((std::min)(int(note.channel), CHANNELS_COUNT-1)));
+		data.push_back(float(note.set % CHANNELS_COUNT));
 	}
 	// Upload to the GPU.
 	upload(data);
