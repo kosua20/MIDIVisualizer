@@ -12,6 +12,7 @@ struct MIDINote {
 	double start;
 	double duration;
 	unsigned int track;
+	int set;
 	short note;
 	short velocity;
 	short channel;
