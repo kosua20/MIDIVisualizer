@@ -213,3 +213,17 @@ std::pair<double, double> MIDITrack::computeNoteTimings(const std::vector<MIDITe
 
 	return std::make_pair(startTime, endTime);
 }
+
+void MIDITrack::updateSets(const SetOptions & options){
+	for(auto & note : _notes){
+		if(options.mode == SetMode::CHANNEL){
+			note.set = int(note.channel);
+		} else if(options.mode == SetMode::TRACK){
+			note.set = int(note.track);
+		} else if(options.mode == SetMode::KEY){
+			note.set = note.note < options.key ? 0 : 1;
+		} else {
+			note.set = 0;
+		}
+	}
+}

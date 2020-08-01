@@ -208,3 +208,9 @@ void MIDIFile::getNotesActive(std::vector<ActiveNoteInfos> & actives, double tim
 	_tracks[track].getNotesActive(actives, time);
 
 }
+
+void MIDIFile::updateSets(const SetOptions & options){
+	for(auto & track : _tracks){
+		track.updateSets(options);
+	}
+}

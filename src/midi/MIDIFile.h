@@ -12,7 +12,9 @@ public:
 	MIDIFile();
 	
 	MIDIFile(const std::string & filePath);
-	
+
+	void updateSets(const SetOptions & options);
+
 	void print() const;
 
 	void getNotes(std::vector<MIDINote>& notes, NoteType type, size_t track) const;

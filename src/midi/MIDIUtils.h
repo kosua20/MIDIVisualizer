@@ -7,6 +7,17 @@
 #include <string>
 #include <iostream>
 
+enum class SetMode : int {
+	CHANNEL = 0,
+	TRACK = 1,
+	KEY = 2
+};
+
+struct SetOptions {
+	SetMode mode = SetMode::CHANNEL;
+	int key = 88;
+};
+
 enum MIDIType : uint16_t {
 	singleTrack = 0,
 	tempoTrack = 1,
