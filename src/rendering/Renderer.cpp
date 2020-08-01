@@ -571,14 +571,15 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		}
 		ImGui::Separator();
 
-
-		if(ImGui::CollapsingHeader("Export")){
-			if(_recorder.drawGUI()){
-				startRecording();
-			}
+		if(ImGui::Button("Export...")){
+			ImGui::OpenPopup("Export");
+		}
+		if(_recorder.drawGUI()){
+			startRecording();
 		}
 
-		ImGui::Separator();
+
+		ImGui::SameLine();
 
 		if (ImGui::Button("Save config...")) {
 			// Read arguments.

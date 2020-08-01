@@ -95,68 +95,82 @@ void Recorder::record(const std::shared_ptr<Framebuffer> & frame){
 bool Recorder::drawGUI(){
 	bool shouldStart = false;
 
-	// Pick directory/file.
-	const std::string exportType = _outFormat == Format::PNG ? "images" : "video";
-	const std::string exportButtonName = "Export " + exportType + " to...";
-	if (ImGui::Button(exportButtonName.c_str())) {
-		// Read arguments.
-		nfdchar_t *outPath = NULL;
 
-		if(_outFormat == Format::PNG){
-			nfdresult_t result = NFD_PickFolder(NULL, &outPath);
-			if(result == NFD_OKAY) {
-				_exportPath = std::string(outPath);
-				shouldStart = true;
-			}
-		} else {
-			const std::string & ext = _formats.at(int(_outFormat)).ext;
-			nfdresult_t result = NFD_SaveDialog(ext.c_str(), NULL, &outPath);
-			if(result == NFD_OKAY) {
-				_exportPath = std::string(outPath);
-				const std::string fullExt = "." + ext;
-				// Append extension if needed.
-				if(_exportPath.size() < 5 || (_exportPath.substr(_exportPath.size()-4) != fullExt)){
-					_exportPath.append(fullExt);
+	if(ImGui::BeginPopupModal("Export", nullptr, ImGuiWindowFlags_AlwaysAutoResize)){
+		ImGui::PushItemWidth(100);
+
+		// Dropdown list.
+		if(ImGui::BeginCombo("Format", _formats[int(_outFormat)].name.c_str())){
+			for(size_t i = 0; i < _formats.size(); ++i){
+				ImGui::PushID((void*)(intptr_t)i);
+
+				const auto & form = _formats[i];
+				const bool selected = form.format == _outFormat;
+				if(ImGui::Selectable(form.name.c_str(), selected)){
+					_outFormat = form.format;
 				}
-				shouldStart = true;
+				if(selected){
+					ImGui::SetItemDefaultFocus();
+				}
+				ImGui::PopID();
 			}
+			ImGui::EndCombo();
 		}
 
-	}
-	ImGui::SameLine(COLUMN_SIZE);
-	ImGui::PushItemWidth(100);
-	ImGui::InputInt("Framerate", &_exportFramerate);
+		// Extra options.
+		ImGui::SameLine(EXPORT_COLUMN_SIZE);
+		ImGui::InputInt("Framerate", &_exportFramerate);
 
-	// Dropdown list.
-	if(ImGui::BeginCombo("Format", _formats[int(_outFormat)].name.c_str())){
-		for(size_t i = 0; i < _formats.size(); ++i){
-			ImGui::PushID((void*)(intptr_t)i);
+		ImGui::InputInt2("Export size", &_size[0]);
 
-			const auto & form = _formats[i];
-			const bool selected = form.format == _outFormat;
-			if(ImGui::Selectable(form.name.c_str(), selected)){
-				_outFormat = form.format;
-			}
-			if(selected){
-				ImGui::SetItemDefaultFocus();
-			}
-			ImGui::PopID();
+		ImGui::SameLine(EXPORT_COLUMN_SIZE);
+		if(_outFormat == Format::PNG){
+			ImGui::Checkbox("Transparent bg.", &_exportNoBackground);
+		} else {
+			ImGui::InputInt("Rate (Mbps)", &_bitRate);
 		}
-		ImGui::EndCombo();
-	}
+		ImGui::PopItemWidth();
 
-	// Extra options.
-	ImGui::SameLine(COLUMN_SIZE);
-	if(_outFormat == Format::PNG){
-		ImGui::Checkbox("Transparent bg.", &_exportNoBackground);
-	} else {
-		ImGui::InputInt("Rate (Mbps)", &_bitRate);
-	}
-	ImGui::PopItemWidth();
 
-	ImGui::PushItemWidth(COLUMN_SIZE-10);
-	ImGui::InputInt2("Export size", &_size[0]);
-	ImGui::PopItemWidth();
+		// Pick directory/file.
+		const ImVec2 buttonSize(EXPORT_COLUMN_SIZE-20.0f, 0.0f);
+		if(ImGui::Button("Cancel##videpopup", buttonSize)){
+			ImGui::CloseCurrentPopup();
+		}
+		
+		ImGui::SameLine(EXPORT_COLUMN_SIZE);
+		const std::string exportType = _outFormat == Format::PNG ? "images" : "video";
+		const std::string exportButtonName = "Save " + exportType + " to...";
+
+		if (ImGui::Button(exportButtonName.c_str(), buttonSize)) {
+			// Read arguments.
+			nfdchar_t *outPath = NULL;
+
+			if(_outFormat == Format::PNG){
+				nfdresult_t result = NFD_PickFolder(NULL, &outPath);
+				if(result == NFD_OKAY) {
+					_exportPath = std::string(outPath);
+					shouldStart = true;
+					ImGui::CloseCurrentPopup();
+				}
+			} else {
+				const std::string & ext = _formats.at(int(_outFormat)).ext;
+				nfdresult_t result = NFD_SaveDialog(ext.c_str(), NULL, &outPath);
+				if(result == NFD_OKAY) {
+					_exportPath = std::string(outPath);
+					const std::string fullExt = "." + ext;
+					// Append extension if needed.
+					if(_exportPath.size() < 5 || (_exportPath.substr(_exportPath.size()-4) != fullExt)){
+						_exportPath.append(fullExt);
+					}
+					shouldStart = true;
+					ImGui::CloseCurrentPopup();
+				}
+			}
+
+		}
+		ImGui::EndPopup();
+	}
 
 	return shouldStart;
 }
