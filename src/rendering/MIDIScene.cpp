@@ -5,7 +5,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "../helpers/ProgramUtilities.h"
-#include "../helpers/MeshUtilities.h"
 #include "../helpers/ResourcesManager.h"
 
 #include "MIDIScene.h"

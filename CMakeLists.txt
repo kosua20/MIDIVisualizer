@@ -82,8 +82,6 @@ set(LibSources
 )
 
 set(Sources
-	"src/helpers/MeshUtilities.cpp"
-	"src/helpers/MeshUtilities.h"
 	"src/helpers/ProgramUtilities.cpp"
 	"src/helpers/ProgramUtilities.h"
 	"src/helpers/ResourcesManager.cpp"
