@@ -83,7 +83,6 @@ void State::defineOptions(){
 	_sharedInfos["show-blur"] = {"Should the blur be visible", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["show-blur-notes"] = {"Should the notes be part of the blur", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["lock-colors"] = {"Should the keys and all effects use the same color", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["per-channel"] = {"Should each channel use its own key/effects colors", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["show-horiz-lines"] = {"Should horizontal score lines be showed", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["show-vert-lines"] = {"Should vertical score lines be shown", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["show-numbers"] = {"Should measure numbers be shown", OptionInfos::Type::BOOLEAN};
@@ -126,11 +125,29 @@ void State::defineOptions(){
 
 	for(size_t cid = 1; cid < CHANNELS_COUNT; ++cid){
 		const std::string num = std::to_string(cid);
-		_sharedInfos["color-major-" + num] = {"Major notes color for channel " + num, OptionInfos::Type::COLOR};
-		_sharedInfos["color-particles-" + num] = {"Particles color for channel " + num, OptionInfos::Type::COLOR};
-		_sharedInfos["color-minor-" + num] = {"Minor notes color for channel " + num, OptionInfos::Type::COLOR};
-		_sharedInfos["color-flashes-" + num] = {"Flash effect color for channel " + num, OptionInfos::Type::COLOR};
+		_sharedInfos["color-major-" + num] = {"Major notes color for set " + num, OptionInfos::Type::COLOR};
+		_sharedInfos["color-particles-" + num] = {"Particles color for set " + num, OptionInfos::Type::COLOR};
+		_sharedInfos["color-minor-" + num] = {"Minor notes color for set " + num, OptionInfos::Type::COLOR};
+		_sharedInfos["color-flashes-" + num] = {"Flash effect color for set " + num, OptionInfos::Type::COLOR};
+
+		_sharedInfos["color-major-" + num].category = OptionInfos::Category::SETS;
+		_sharedInfos["color-particles-" + num].category = OptionInfos::Category::SETS;
+		_sharedInfos["color-minor-" + num].category = OptionInfos::Category::SETS;
+		_sharedInfos["color-flashes-" + num].category = OptionInfos::Category::SETS;
+
 	}
+	
+	_sharedInfos["colors-per-set"] = {"Should each notes set use its own key/effects colors", OptionInfos::Type::BOOLEAN};
+	_sharedInfos["colors-per-set"].category = OptionInfos::Category::SETS;
+
+	_sharedInfos["sets-mode"] = {"How should notes be grouped into sets", OptionInfos::Type::OTHER};
+	_sharedInfos["sets-mode"].values = "per-channel: 0, per-track: 1, based on a key separator: 2";
+	_sharedInfos["sets-mode"].category = OptionInfos::Category::SETS;
+
+	_sharedInfos["sets-separator-key"] = {"If notes are grouped in two sets, defines the key where the split should happen", OptionInfos::Type::OTHER};
+	_sharedInfos["sets-separator-key"].values = "0 is A0, 1 is A#0, etc.";
+	_sharedInfos["sets-separator-key"].category = OptionInfos::Category::SETS;
+
 }
 
 size_t State::helpText(std::string & configOpts, std::string & setsOpts){
@@ -177,7 +194,7 @@ void State::updateOptions(){
 	_boolInfos["show-blur"] = &showBlur;
 	_boolInfos["show-blur-notes"] = &showBlurNotes;
 	_boolInfos["lock-colors"] = &lockParticleColor;
-	_boolInfos["per-channel"] = &perChannelColors;
+	_boolInfos["colors-per-set"] = &perChannelColors;
 	_boolInfos["show-horiz-lines"] = &background.hLines;
 	_boolInfos["show-vert-lines"] = &background.vLines;
 	_boolInfos["show-numbers"] = &background.digits;
@@ -216,6 +233,9 @@ void State::updateOptions(){
 		_vecInfos["color-minor-" + num] = &minorColors[cid];
 		_vecInfos["color-flashes-" + num] = &flashColors[cid];
 	}
+
+	_intInfos["sets-mode"] = (int*)&setOptions.mode;
+	_intInfos["sets-separator-key"] = &setOptions.key;
 }
 
 
@@ -457,6 +477,8 @@ void State::reset(){
 	for (int i = 0; i < layersMap.size(); ++i) {
 		layersMap[i] = i;
 	}
+
+	setOptions = SetOptions();
 }
 
 void State::load(std::istream & configFile, int majVersion, int minVersion){

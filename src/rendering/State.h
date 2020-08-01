@@ -2,6 +2,7 @@
 #define State_h
 
 #include "../helpers/Configuration.h"
+#include "../midi/MIDIUtils.h"
 
 #include <gl3w/gl3w.h>
 #include <glm/glm.hpp>
@@ -82,6 +83,8 @@ public:
 	BackgroundState background;
 	ParticlesState particles;
 	KeyboardState keyboard;
+	SetOptions setOptions;
+
 	Quality::Level quality;
 	ColorArray baseColors; ///< Major notes color.
 	ColorArray minorColors; ///< Minor notes color.
