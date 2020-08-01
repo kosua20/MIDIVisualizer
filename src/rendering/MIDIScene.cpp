@@ -227,7 +227,7 @@ void MIDIScene::updatesActiveNotes(double time){
 		// Disable old particles.
 		if(float(time) >= particle.start + particle.duration){
 			particle.note = -1;
-			particle.channel = -1;
+			particle.set = -1;
 			particle.duration = particle.start = particle.elapsed = 0.0f;
 		}
 	}
@@ -236,7 +236,7 @@ void MIDIScene::updatesActiveNotes(double time){
 	_midiFile.getNotesActive(actives, time, 0);
 	for(int i = 0; i < 88; ++i){
 		const auto & note = actives[i];
-		const int clamped = (std::min)(note.channel, CHANNELS_COUNT-1);
+		const int clamped = note.set % CHANNELS_COUNT;
 		_actives[i] = note.enabled ? clamped : -1;
 		// Check if the note was triggered at this frame.
 		if(note.start > _previousTime && note.start <= time){
@@ -247,7 +247,7 @@ void MIDIScene::updatesActiveNotes(double time){
 					particle.duration = (std::max)(note.duration*2.0f, note.duration + 1.2f);
 					particle.start = note.start;
 					particle.note = i;
-					particle.channel = clamped;
+					particle.set = clamped;
 					particle.elapsed = 0.0f;
 					break;
 				}
@@ -260,7 +260,7 @@ void MIDIScene::updatesActiveNotes(double time){
 void MIDIScene::resetParticles() {
 	for (auto & particle : _particles) {
 		particle.note = -1;
-		particle.channel = -1;
+		particle.set = -1;
 		particle.duration = particle.start = particle.elapsed = 0.0f;
 	}
 }
@@ -306,7 +306,7 @@ void MIDIScene::drawParticles(float time, const glm::vec2 & invScreenSize, const
 			glUniform1i(globalShiftId, particle.note);
 			glUniform1f(timeId, particle.elapsed);
 			glUniform1f(durationId, particle.duration);
-			glUniform1i(channelId, particle.channel);
+			glUniform1i(channelId, particle.set);
 			glDrawElementsInstanced(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0, state.count);
 		}
 	}

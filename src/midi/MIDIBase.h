@@ -52,7 +52,7 @@ struct MIDITempo {
 struct ActiveNoteInfos {
 	float start = 1000000.0f;
 	float duration = 0.0f;
-	int channel = -1;
+	int set = -1;
 	bool enabled = false;
 };
 

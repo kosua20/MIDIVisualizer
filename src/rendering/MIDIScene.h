@@ -68,7 +68,7 @@ private:
 
 	struct Particles {
 		int note = -1;
-		int channel = -1;
+		int set = -1;
 		float duration = 0.0f;
 		float start = 1000000.0f;
 		float elapsed = 0.0f;

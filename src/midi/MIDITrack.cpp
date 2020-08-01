@@ -164,7 +164,7 @@ void MIDITrack::getNotesActive(std::vector<ActiveNoteInfos>& actives, double tim
 			actives[note.note].enabled = true;
 			actives[note.note].duration = float(note.duration);
 			actives[note.note].start = float(note.start);
-			actives[note.note].channel = note.channel;
+			actives[note.note].set = note.set;
 		}
 	}
 }
