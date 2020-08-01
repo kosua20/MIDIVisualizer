@@ -23,6 +23,10 @@ public:
 	
 	const double & secondsPerMeasure() const { return _secondsPerMeasure; }
 
+	const double & duration() const { return _duration; }
+
+	const int & notesCount() const { return _count; }
+
 private:
 
 	void populateTemposAndSignature();
@@ -35,6 +39,8 @@ private:
 	uint16_t _unitsPerQuarterNote = 1;
 	double _signature = 4.0/4.0;
 	double _secondsPerMeasure = 1.0;
+	double _duration = 0.0;
+	int _count = 0;
 
 	std::vector<MIDITrack> _tracks;
 	std::vector<MIDITempo> _tempos;

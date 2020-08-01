@@ -48,6 +48,7 @@ MIDIFile::MIDIFile(const std::string & filePath){
 	std::copy(std::istreambuf_iterator<char>(input),
 			  std::istreambuf_iterator<char>(),
 			  std::back_inserter(buffer));
+	input.close();
 
 	// Check midi header
 	if(buffer.size() < 5 || !(buffer[0] == 'M' && buffer[1] == 'T' && buffer[2] == 'h' && buffer[3] == 'd') || read32(buffer, 4) != 6){
@@ -128,7 +129,15 @@ MIDIFile::MIDIFile(const std::string & filePath){
 		mergeTracks();
 	}
 
-	input.close();
+	// Compute duration.
+	for(const auto & track : _tracks){
+		std::vector<MIDINote> notes;
+		track.getNotes(notes, NoteType::ALL);
+		for(const auto & note : notes){
+			_duration = std::max(_duration, note.start + note.duration);
+		}
+		_count += int(notes.size());
+	}
 }
 
 void MIDIFile::print() const {
