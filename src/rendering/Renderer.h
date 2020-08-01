@@ -100,6 +100,8 @@ private:
 
 	void showLayers();
 
+	void showSets();
+
 	void applyAllSettings();
 	
 	void reset();
@@ -112,7 +114,6 @@ private:
 
 	State _state;
 	std::array<Layer, 8> _layers;
-
 
 	float _timer;
 	float _timerStart;
