@@ -131,10 +131,15 @@ private:
 			BOOLEAN, INTEGER, FLOAT, COLOR, OTHER
 		};
 
+		enum class Category {
+			DEFAULT, SETS
+		};
+
 		std::string description;
 		std::string values;
 		Type type;
 		std::array<float, 2> range;
+		Category category = Category::DEFAULT;
 
 		OptionInfos();
 
