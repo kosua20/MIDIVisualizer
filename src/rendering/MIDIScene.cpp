@@ -18,16 +18,16 @@ MIDIScene::~MIDIScene(){}
 
 MIDIScene::MIDIScene(){
 	std::vector<float> data(5, 0.0f);
-	renderSetup(data);
+	renderSetup();
+	upload(data);
 }
 
 MIDIScene::MIDIScene(const std::string & midiFilePath){
 	
 	// MIDI processing.
 	_midiFile = MIDIFile(midiFilePath);
-	
-	
-	// Load geometry and notes shared data.
+
+	renderSetup();
 	std::vector<float> data;
 	std::vector<MIDINote> notesM;
 	_midiFile.getNotes(notesM, NoteType::MAJOR, 0);
@@ -49,10 +49,16 @@ MIDIScene::MIDIScene(const std::string & midiFilePath){
 		data.push_back(float((std::min)(int(note.channel), CHANNELS_COUNT-1)));
 	}
 	// Upload to the GPU.
-	renderSetup(data);
+	upload(data);
 }
 
-void MIDIScene::renderSetup(const std::vector<float> & data){
+void MIDIScene::upload(const std::vector<float> & data){
+	glBindBuffer(GL_ARRAY_BUFFER, _dataBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * data.size(), &(data[0]), GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void MIDIScene::renderSetup(){
 
 	std::vector<float> vertices = {-0.5,-0.5, 0.5, -0.5, 0.5,0.5, -0.5, 0.5};
 	std::vector<unsigned int> indices = {0, 1, 3, 3, 1, 2};
@@ -65,10 +71,10 @@ void MIDIScene::renderSetup(const std::vector<float> & data){
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * vertices.size() * 2, &(vertices[0]), GL_STATIC_DRAW);
 
 	// Notes buffer.
-	GLuint dataBufferId0 = 0;
-	glGenBuffers(1, &dataBufferId0);
-	glBindBuffer(GL_ARRAY_BUFFER, dataBufferId0);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * data.size(), &(data[0]), GL_STATIC_DRAW);
+	_dataBuffer = 0;
+	glGenBuffers(1, &_dataBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, _dataBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 1000, nullptr, GL_STATIC_DRAW);
 
 	// Enabled notes buffer (empty for now).
 	_flagsBufferId = 0;
@@ -100,13 +106,13 @@ void MIDIScene::renderSetup(const std::vector<float> & data){
 
 	// The second attribute will be the notes data.
 	glEnableVertexAttribArray(1);
-	glBindBuffer(GL_ARRAY_BUFFER, dataBufferId0);
+	glBindBuffer(GL_ARRAY_BUFFER, _dataBuffer);
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), NULL);
 	glVertexAttribDivisor(1, 1);
 
 	// The second attribute will be the notes data.
 	glEnableVertexAttribArray(2);
-	glBindBuffer(GL_ARRAY_BUFFER, dataBufferId0);
+	glBindBuffer(GL_ARRAY_BUFFER, _dataBuffer);
 	glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(4 * sizeof(GLfloat)));
 	glVertexAttribDivisor(2, 1);
 

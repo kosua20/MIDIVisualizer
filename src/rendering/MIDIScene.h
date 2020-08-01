@@ -42,8 +42,10 @@ public:
 
 private:
 
-	void renderSetup(const std::vector<float> & data);
-	
+	void renderSetup();
+
+	void upload(const std::vector<float> & data);
+
 	GLuint _programId;
 	GLuint _programFlashesId;
 	GLuint _programParticulesId;
@@ -51,6 +53,7 @@ private:
 	
 	GLuint _vao;
 	GLuint _ebo;
+	GLuint _dataBuffer;
 	
 	GLuint _flagsBufferId;
 	GLuint _vaoFlashes;
