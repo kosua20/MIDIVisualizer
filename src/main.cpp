@@ -57,7 +57,7 @@ void printHelp(){
 	std::cout << std::endl << "* Configuration options: (will override config file)" << std::endl
 	<< configOpts;
 
-	std::cout << std::endl << "* Per-sets options: (will override config file)" << std::endl
+	std::cout << std::endl << "* Note-sets options: (will override config file)" << std::endl
 	<< setsOpts << std::endl;
 
 }

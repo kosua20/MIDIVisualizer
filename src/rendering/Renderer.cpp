@@ -710,7 +710,10 @@ void Renderer::showLayers() {
 
 void Renderer::showSets(){
 	if(ImGui::BeginPopup("Note sets options")){
-		ImGui::Text("Set how to split notes in multiple sets with different colors.");
+		ImGui::Text("Decide how notes should be grouped in multiple sets");
+		ImGui::Text("(to which you can assign different key/effects colors).");
+		ImGui::Text("This can be based on the MIDI channel, the track or by");
+		ImGui::Text("separating notes that are lower or higher than a given key.");
 
 		bool shouldUpdate = false;
 		shouldUpdate = ImGui::RadioButton("Channel", (int*)(&_state.setOptions.mode), int(SetMode::CHANNEL)) || shouldUpdate;
@@ -721,7 +724,7 @@ void Renderer::showSets(){
 		ImGui::SameLine();
 
 		ImGui::PushItemWidth(100);
-		shouldUpdate = ImGui::Combo("##truc", &_state.setOptions.key, "A0\0A#0\0B0\0C1\0C#1\0D1\0D#1\0E1\0F1\0F#1\0G1\0G#1\0A1\0A#1\0B1\0C2\0C#2\0D2\0D#2\0E2\0F2\0F#2\0G2\0G#2\0A2\0A#2\0B2\0C3\0C#3\0D3\0D#3\0E3\0F3\0F#3\0G3\0G#3\0A3\0A#3\0B3\0C4\0C#4\0D4\0D#4\0E4\0F4\0F#4\0G4\0G#4\0A4\0A#4\0B4\0C5\0C#5\0D5\0D#5\0E5\0F5\0F#5\0G5\0G#5\0A5\0A#5\0B5\0C6\0C#6\0D6\0D#6\0E6\0F6\0F#6\0G6\0G#6\0A6\0A#6\0B6\0C7\0C#7\0D7\0D#7\0E7\0F7\0F#7\0G7\0G#7\0A7\0A#7\0B7\0C8\0D8\0") || shouldUpdate;
+		shouldUpdate = ImGui::Combo("##key", &_state.setOptions.key, "A0\0A#0\0B0\0C1\0C#1\0D1\0D#1\0E1\0F1\0F#1\0G1\0G#1\0A1\0A#1\0B1\0C2\0C#2\0D2\0D#2\0E2\0F2\0F#2\0G2\0G#2\0A2\0A#2\0B2\0C3\0C#3\0D3\0D#3\0E3\0F3\0F#3\0G3\0G#3\0A3\0A#3\0B3\0C4\0C#4\0D4\0D#4\0E4\0F4\0F#4\0G4\0G#4\0A4\0A#4\0B4\0C5\0C#5\0D5\0D#5\0E5\0F5\0F#5\0G5\0G#5\0A5\0A#5\0B5\0C6\0C#6\0D6\0D#6\0E6\0F6\0F#6\0G6\0G#6\0A6\0A#6\0B6\0C7\0C#7\0D7\0D#7\0E7\0F7\0F#7\0G7\0G#7\0A7\0A#7\0B7\0C8\0D8\0") || shouldUpdate;
 		ImGui::PopItemWidth();
 
 		if(shouldUpdate){
