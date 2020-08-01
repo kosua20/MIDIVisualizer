@@ -104,9 +104,9 @@ Renderer::~Renderer() {}
 
 bool Renderer::loadFile(const std::string &midiFilePath) {
 	std::shared_ptr<MIDIScene> scene(nullptr);
-	
+
 	try {
-		scene = std::make_shared<MIDIScene>(midiFilePath);
+		scene = std::make_shared<MIDIScene>(midiFilePath, _state.setOptions);
 	} catch(...){
 		// Failed to load.
 		return false;
@@ -602,7 +602,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		ImGui::SameLine();
 		if (ImGui::Button("Reset##config")) {
 			_state.reset();
-			applyAllSettings();
+			setState(_state);
 		}
 
 		if (smw0 || smw1) {
@@ -806,6 +806,10 @@ void Renderer::setState(const State & state){
 	_layers[Layer::NOTES].toggle = &_state.showNotes;
 	_layers[Layer::FLASHES].toggle = &_state.showFlashes;
 
+	// Update split notes.
+	if(_scene){
+		_scene->updateSets(_state.setOptions);
+	}
 	applyAllSettings();
 }
 
