@@ -18,7 +18,7 @@ uniform vec3 linesColor = vec3(1.0);
 const float octaveLinesPositions[8] = float[](2.0/52.0, 9.0/52.0, 16.0/52.0, 23.0/52.0, 30.0/52.0, 37.0/52.0, 44.0/52.0, 51.0/52.0);
 			
 uniform float mainSpeed;
-#define bottomLimit 0.25
+uniform float keyboardHeight = 0.25;
 
 out vec4 fragColor;
 
@@ -96,7 +96,7 @@ void main(){
 	
 	for(int i = 0; i < count; i++){
 		// Compute position of the measure currentMesure+i.
-		vec2 position = vec2(0.005,bottomLimit + (secondsPerMeasure*(currentMesure+i) - time)*mainSpeed*0.5);
+		vec2 position = vec2(0.005, keyboardHeight + (secondsPerMeasure*(currentMesure+i) - time)*mainSpeed*0.5);
 		
 		// Compute color for the number display, and for the horizontal line.
 		float numberIntensity = useDigits ? printNumber(currentMesure + i,position, In.uv, scale) : 0.0;

@@ -19,6 +19,7 @@ uniform float colorScale;
 
 uniform float expansionFactor = 1.0;
 uniform float speedScaling = 0.2;
+uniform float keyboardHeight = 0.25;
 
 #define notesCount 52.0
 
@@ -74,7 +75,7 @@ void main(){
 	shift.x *= max(0.5, pow(shift.y,0.3));
 	
 	// Combine global shift (due to note id) and local shift (based on read position).
-	vec2 globalShift = vec2(-1.0 + (shifts[globalId] * 2.0 + 1.0) / notesCount,-0.52);
+	vec2 globalShift = vec2(-1.0 + (shifts[globalId] * 2.0 + 1.0) / notesCount, (2.0 * keyboardHeight - 1.0)-0.02);
 	vec2 localShift = 0.003 * scale * v + shift * duration * vec2(1.0,0.5);
 	vec2 screenScaling = vec2(1.0,inverseScreenSize.y/inverseScreenSize.x);
 	vec2 finalPos = globalShift + screenScaling * localShift;

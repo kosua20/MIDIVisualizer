@@ -45,7 +45,7 @@ void main(){
 
 	vec3 frontColor = keysColor;
 	// Upper keyboard.
-	if(gl_FragCoord.y > 0.10/inverseScreenSize.y){
+	if(In.uv.y > 0.4){
 		int minorLocalId = min(int(floor(In.uv.x*52.0+0.5))-1, 51);
 		// Handle black keys.
 		if(minorLocalId >= 0 && isMinor[minorLocalId]){

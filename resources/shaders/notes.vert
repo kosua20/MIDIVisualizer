@@ -7,6 +7,7 @@ layout(location = 2) in float channel; //note id, start, duration, is minor
 uniform float time;
 uniform float mainSpeed;
 uniform float minorsWidth = 1.0;
+uniform float keyboardHeight = 0.25;
 
 #define notesCount 52.0
 
@@ -29,7 +30,7 @@ void main(){
 	// Vertical shift based on note start time, current time, speed, and height of the note quad.
 	const float a = (1.0/(notesCount-1.0)) * (2.0 - 2.0/notesCount);
 	const float b = -1.0 + 1.0/notesCount;
-	vec2 noteShift = vec2(id.x * a + b + id.w/notesCount, Out.noteSize.y * 0.5 - 0.5 + mainSpeed * (id.y - time));
+	vec2 noteShift = vec2(id.x * a + b + id.w/notesCount, (Out.noteSize.y * 0.5 + (2.0 * keyboardHeight - 1.0)) + mainSpeed * (id.y - time));
 	
 	// Scale uv.
 	Out.uv = Out.noteSize * v;

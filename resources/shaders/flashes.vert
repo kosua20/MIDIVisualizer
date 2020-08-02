@@ -6,6 +6,7 @@ layout(location = 1) in int onChan;
 uniform float time;
 uniform vec2 inverseScreenSize;
 uniform float userScale = 1.0;
+uniform float keyboardHeight = 0.25;
 
 #define notesCount 52.0
 
@@ -24,7 +25,7 @@ void main(){
 	// Scale quad, keep the square ratio.
 	vec2 scaledPosition = v * 2.0 * scale * userScale/notesCount * vec2(1.0, inverseScreenSize.y/inverseScreenSize.x);
 	// Shift based on note/flash id.
-	vec2 globalShift = vec2(-1.0 + (shifts[gl_InstanceID] * 2.0 + 1.0) / notesCount,-0.5);
+	vec2 globalShift = vec2(-1.0 + (shifts[gl_InstanceID] * 2.0 + 1.0) / notesCount, 2.0 * keyboardHeight - 1.0);
 	
 	gl_Position = vec4(scaledPosition + globalShift, 0.0 , 1.0) ;
 	
