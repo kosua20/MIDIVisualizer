@@ -53,7 +53,8 @@ void main(){
 	if(In.uv.y > 0.4){
 		int minorLocalId = min(int(floor(In.uv.x * notesCount + 0.5) + minNoteMajor) - 1, 74);
 		// Handle black keys.
-		if(minorLocalId >= 0 && isMinor[minorLocalId]){
+		// Hide keys that are on the edges.
+		if(minorLocalId >= 0 && isMinor[minorLocalId] && In.uv.x > 0.5/notesCount && In.uv.x < 1.0 - 0.5/notesCount){
 			// If the minor keys are not thinner, preserve a 1 px margin on each side.
 			float marginSize = minorsWidth != 1.0 ? minorsWidth : 1.0 - (2.0 * notesCount * inverseScreenSize.x);
 			intensity = step(marginSize, abs(fract(In.uv.x * notesCount + 0.5) * 2.0 - 1.0));
