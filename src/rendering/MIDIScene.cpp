@@ -92,12 +92,12 @@ void MIDIScene::renderSetup(){
 	_flagsBufferId = 0;
 	glGenBuffers(1, &_flagsBufferId);
 	glBindBuffer(GL_ARRAY_BUFFER, _flagsBufferId);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(int) * 88, NULL, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(int) * 128, NULL, GL_DYNAMIC_DRAW);
 
 	_uboKeyboard = 0;
 	glGenBuffers(1, &_uboKeyboard);
 	glBindBuffer(GL_UNIFORM_BUFFER, _uboKeyboard);
-	glBufferData(GL_UNIFORM_BUFFER, sizeof(int)*88, NULL, GL_DYNAMIC_DRAW);
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(int) * 128, NULL, GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 
@@ -210,7 +210,7 @@ void MIDIScene::renderSetup(){
 	glUniformBlockBinding(_programKeysId, uboLoc, 0);
 
 	// Prepare actives notes array.
-	_actives = std::vector<int>(88, -1);
+	_actives.fill(-1);
 	_previousTime = 0.0;
 	// Particle systems pool.
 	_particles = std::vector<Particles>(256);
@@ -262,9 +262,9 @@ void MIDIScene::updatesActiveNotes(double time){
 		}
 	}
 	// Get notes actives.
-	auto actives = std::vector<ActiveNoteInfos>(88);
+	auto actives = ActiveNotesArray();
 	_midiFile.getNotesActive(actives, time, 0);
-	for(int i = 0; i < 88; ++i){
+	for(int i = 0; i < 128; ++i){
 		const auto & note = actives[i];
 		const int clamped = note.set % CHANNELS_COUNT;
 		_actives[i] = note.enabled ? clamped : -1;
@@ -400,7 +400,7 @@ void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const C
 	
 	// Draw the geometry.
 	glBindVertexArray(_vaoFlashes);
-	glDrawElementsInstanced(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0, 88);
+	glDrawElementsInstanced(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0, 128);
 	
 	glBindVertexArray(0);
 	glUseProgram(0);

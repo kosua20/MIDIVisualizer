@@ -145,7 +145,7 @@ void State::defineOptions(){
 	_sharedInfos["sets-mode"].category = OptionInfos::Category::SETS;
 
 	_sharedInfos["sets-separator-key"] = {"If notes are grouped in two sets, defines the key where the split should happen", OptionInfos::Type::OTHER};
-	_sharedInfos["sets-separator-key"].values = "0 is A0, 1 is A#0, etc.";
+	_sharedInfos["sets-separator-key"].values = "0 is C-1, 1 is C-1#, etc.";
 	_sharedInfos["sets-separator-key"].category = OptionInfos::Category::SETS;
 
 	_sharedInfos["keyboard-size"] = {"Vertical size of the keyboard", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};

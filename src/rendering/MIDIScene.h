@@ -70,7 +70,7 @@ private:
 	
 	size_t _primitiveCount;
 	
-	std::vector<int> _actives;
+	std::array<int, 128> _actives;
 
 	struct Particles {
 		int note = -1;
