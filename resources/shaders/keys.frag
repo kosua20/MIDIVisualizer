@@ -6,7 +6,7 @@ in INTERFACE {
 
 
 layout(std140) uniform ActiveNotes {
-	ivec4 actives[22];
+	ivec4 actives[32];
 };
 
 #define CHANNELS_COUNT 8
@@ -18,9 +18,12 @@ uniform vec3 minorColor[CHANNELS_COUNT];
 uniform vec3 majorColor[CHANNELS_COUNT];
 uniform bool highlightKeys;
 
-const bool isMinor[52] = bool[](true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, true, true, false, true, true, true, false, false);
-const int majorIds[52] = int[](0, 2, 3, 5, 7, 8, 10, 12, 14, 15, 17, 19, 20, 22, 24, 26, 27, 29, 31, 32, 34, 36, 38, 39, 41, 43, 44, 46, 48, 50, 51, 53, 55, 56, 58, 60, 62, 63, 65, 67, 68, 70, 72, 74, 75, 77, 79, 80, 82, 84, 86, 87);
-const int minorIds[52] = int[](1, 0, 4, 6, 0, 9, 11, 13, 0, 16, 18, 0, 21, 23, 25, 0, 28, 30, 0, 33, 35, 37, 0, 40, 42, 0, 45, 47, 49, 0, 52, 54, 0, 57, 59, 61, 0, 64, 66, 0, 69, 71, 73, 0, 76, 78, 0, 81, 83, 85, 0, 0);
+#define notesCount 75.0
+
+const bool isMinor[75] = bool[](true, true, false, true, true, true, false,  true, true, false, true, true, true, false,  true, true, false, true, true, true, false,  true, true, false, true, true, true, false,  true, true, false, true, true, true, false,  true, true, false, true, true, true, false,  true, true, false, true, true, true, false,  true, true, false, true, true, true, false,  true, true, false, true, true, true, false,  true, true, false, true, true, true, false,  true, true, false, true, true);
+
+const int majorIds[75] = int[](0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23, 24, 26, 28, 29, 31, 33, 35, 36, 38, 40, 41, 43, 45, 47, 48, 50, 52, 53, 55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84, 86, 88, 89, 91, 93, 95, 96, 98, 100, 101, 103, 105, 107, 108, 110, 112, 113, 115, 117, 119, 120, 122, 124, 125, 127);
+const int minorIds[75] = int[](1, 3, 0, 6, 8, 10, 0, 13, 15, 0, 18, 20, 22, 0, 25, 27, 0, 30, 32, 34, 0, 37, 39, 0, 42, 44, 46, 0, 49, 51, 0, 54, 56, 58, 0, 61, 63, 0, 66, 68, 70, 0, 73, 75, 0, 78, 80, 82, 0, 85, 87, 0, 90, 92, 94, 0, 97, 99, 0, 102, 104, 106, 0, 109, 111, 0, 114, 116, 118, 0, 121, 123, 0, 126, 0);
 
 out vec4 fragColor;
 
@@ -36,22 +39,22 @@ void main(){
 	// Active key: activeColor
 
 	// White keys, and separators.
-	float intensity = int(abs(fract(In.uv.x*52.0)) >= 2.0 * 52.0 * inverseScreenSize.x);
+	float intensity = int(abs(fract(In.uv.x * notesCount)) >= 2.0 * notesCount * inverseScreenSize.x);
 	
 	// If the current major key is active, the majorColor is specific.
-	int majorId = majorIds[clamp(int(In.uv.x*52.0), 0, 51)];
+	int majorId = majorIds[clamp(int(In.uv.x * notesCount), 0, 74)];
 	int cidMajor = isIdActive(majorId);
 	vec3 backColor = (highlightKeys && cidMajor >= 0) ? majorColor[cidMajor] : vec3(1.0);
 
 	vec3 frontColor = keysColor;
 	// Upper keyboard.
 	if(In.uv.y > 0.4){
-		int minorLocalId = min(int(floor(In.uv.x*52.0+0.5))-1, 51);
+		int minorLocalId = min(int(floor(In.uv.x * notesCount + 0.5)) - 1, 74);
 		// Handle black keys.
 		if(minorLocalId >= 0 && isMinor[minorLocalId]){
 			// If the minor keys are not thinner, preserve a 1 px margin on each side.
-			float marginSize = minorsWidth != 1.0 ? minorsWidth : 1.0 - (2.0*52.0*inverseScreenSize.x);
-			intensity = step(marginSize, abs(fract(In.uv.x*52.0+0.5)*2.0-1.0));
+			float marginSize = minorsWidth != 1.0 ? minorsWidth : 1.0 - (2.0 * notesCount * inverseScreenSize.x);
+			intensity = step(marginSize, abs(fract(In.uv.x * notesCount + 0.5) * 2.0 - 1.0));
 			int minorId = minorIds[minorLocalId];
 			int cidMinor = isIdActive(minorId);
 			if(highlightKeys && cidMinor >= 0){

@@ -15,7 +15,7 @@ uniform sampler2D screenTexture;
 uniform vec3 textColor = vec3(1.0);
 uniform vec3 linesColor = vec3(1.0);
 
-const float octaveLinesPositions[8] = float[](2.0/52.0, 9.0/52.0, 16.0/52.0, 23.0/52.0, 30.0/52.0, 37.0/52.0, 44.0/52.0, 51.0/52.0);
+const float octaveLinesPositions[11] = float[](0.0/75.0, 7.0/75.0, 14.0/75.0, 21.0/75.0, 28.0/75.0, 35.0/75.0, 42.0/75.0, 49.0/75.0, 56.0/75.0, 63.0/75.0, 70.0/75.0);
 			
 uniform float mainSpeed;
 uniform float keyboardHeight = 0.25;
@@ -82,7 +82,7 @@ void main(){
 	
 	vec4 bgColor = vec4(0.0);
 	// Octaves lines.
-	for(int i = 0; i < 8; i++){
+	for(int i = 0; i < 11; i++){
 		float lineIntensity = useVLines ? (0.7 * step(abs(In.uv.x - octaveLinesPositions[i]),inverseScreenSize.x)) : 0.0;
 		bgColor = mix(bgColor, vec4(linesColor, 1.0), lineIntensity);
 	}
