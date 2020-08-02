@@ -47,3 +47,9 @@ void Score::setColors(const glm::vec3 & linesColor, const glm::vec3 & textColor,
 	glUseProgram(0);
 }
 
+void Score::setKeyboardSize(float keyboardHeight){
+	glUseProgram(_programId);
+	glUniform1f(glGetUniformLocation(_programId, "keyboardHeight"), keyboardHeight);
+	glUseProgram(0);
+}
+

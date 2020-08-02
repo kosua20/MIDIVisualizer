@@ -148,6 +148,8 @@ void State::defineOptions(){
 	_sharedInfos["sets-separator-key"].values = "0 is A0, 1 is A#0, etc.";
 	_sharedInfos["sets-separator-key"].category = OptionInfos::Category::SETS;
 
+	_sharedInfos["keyboard-size"] = {"Vertical size of the keyboard", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
+
 }
 
 size_t State::helpText(std::string & configOpts, std::string & setsOpts){
@@ -236,6 +238,8 @@ void State::updateOptions(){
 
 	_intInfos["sets-mode"] = (int*)&setOptions.mode;
 	_intInfos["sets-separator-key"] = &setOptions.key;
+	_floatInfos["keyboard-size"] = &keyboard.size;
+
 }
 
 
@@ -473,6 +477,7 @@ void State::reset(){
 	prerollTime = 1.0f;
 	keyboard.highlightKeys = true;
 	keyboard.customKeyColors = false;
+	keyboard.size = 0.25f;
 
 	for (int i = 0; i < layersMap.size(); ++i) {
 		layersMap[i] = i;

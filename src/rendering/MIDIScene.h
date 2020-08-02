@@ -36,7 +36,9 @@ public:
 	void setScaleAndMinorWidth(const float scale, const float minorWidth);
 
 	void setParticlesParameters(const float speed, const float expansion);
-	
+
+	void setKeyboardSize(float keyboardHeight);
+
 	const double & duration() const { return _midiFile.duration(); };
 	
 	void resetParticles();

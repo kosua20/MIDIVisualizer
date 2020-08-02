@@ -76,6 +76,7 @@ public:
 	struct KeyboardState {
 		ColorArray majorColor; ///< Major key pressed color.
 		ColorArray minorColor; ///< Minor key pressed color.
+		float size; ///< Size on screen, starting from the bottom.
 		bool highlightKeys; ///< Highlight pressed keys.
 		bool customKeyColors; ///< Use the custom colors above instead of the color of the notes.
 	};

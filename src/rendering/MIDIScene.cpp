@@ -237,6 +237,18 @@ void MIDIScene::setParticlesParameters(const float speed, const float expansion)
 	glUseProgram(0);
 }
 
+void MIDIScene::setKeyboardSize(float keyboardHeight){
+	glUseProgram(_programId);
+	glUniform1f(glGetUniformLocation(_programId, "keyboardHeight"), keyboardHeight);
+	glUseProgram(_programParticulesId);
+	glUniform1f(glGetUniformLocation(_programParticulesId, "keyboardHeight"), keyboardHeight);
+	glUseProgram(_programKeysId);
+	glUniform1f(glGetUniformLocation(_programKeysId, "keyboardHeight"), keyboardHeight);
+	glUseProgram(_programFlashesId);
+	glUniform1f(glGetUniformLocation(_programFlashesId, "keyboardHeight"), keyboardHeight);
+	glUseProgram(0);
+}
+
 void MIDIScene::updatesActiveNotes(double time){
 	// Update the particle systems lifetimes.
 	for(auto & particle : _particles){

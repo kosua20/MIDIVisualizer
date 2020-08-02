@@ -481,6 +481,16 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			}
 			ImGui::PopItemWidth();
 			ImGui::SameLine(COLUMN_SIZE);
+
+
+			ImGui::PushItemWidth(100);
+			if(ImGui::SliderFloat("Size##Keys", &_state.keyboard.size, 0.0f, 1.0f)){
+				_state.keyboard.size = (std::min)((std::max)(_state.keyboard.size, 0.0f), 1.0f);
+				_scene->setKeyboardSize(_state.keyboard.size);
+				_score->setKeyboardSize(_state.keyboard.size);
+			}
+			ImGui::PopItemWidth();
+
 			ImGui::Checkbox("Highlight keys", &_state.keyboard.highlightKeys);
 
 			if (_state.keyboard.highlightKeys) {
@@ -743,6 +753,8 @@ void Renderer::applyAllSettings() {
 	_scene->setParticlesParameters(_state.particles.speed, _state.particles.expansion);
 	_score->setDisplay(_state.background.digits, _state.background.hLines, _state.background.vLines);
 	_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
+	_scene->setKeyboardSize(_state.keyboard.size);
+	_score->setKeyboardSize(_state.keyboard.size);
 
 	// Reset buffers.
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
