@@ -248,7 +248,9 @@ void Renderer::drawBackgroundImage(const glm::vec2 &) {
 	glUseProgram(_backgroundTexture.programId());
 	glUniform1f(glGetUniformLocation(_backgroundTexture.programId(), "textureAlpha"), _state.background.imageAlpha);
 	glUniform1i(glGetUniformLocation(_backgroundTexture.programId(), "behindKeyboard"), _state.background.imageBehindKeyboard);
+	glUniform1f(glGetUniformLocation(_backgroundTexture.programId(), "keyboardHeight"), _state.keyboard.size);
 	_backgroundTexture.draw(_state.background.tex, _timer);
+
 	glDisable(GL_BLEND);
 }
 

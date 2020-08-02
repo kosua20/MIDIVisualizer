@@ -7,11 +7,12 @@ out INTERFACE {
 } Out ;
 
 uniform bool behindKeyboard;
+uniform float keyboardHeight = 0.25;
 
 void main(){
 	vec2 pos = v;
 	if(!behindKeyboard){
-		pos.y = 0.75 * pos.y + 0.25;
+		pos.y = (1.0-keyboardHeight) * pos.y + keyboardHeight;
 	}
 	// We directly output the position.
 	gl_Position = vec4(pos, 0.0, 1.0);
