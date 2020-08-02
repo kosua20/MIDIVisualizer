@@ -287,54 +287,8 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 	SystemAction action = SystemAction::NONE;
 
 	if (ImGui::Begin("Settings", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-		if (ImGui::Button(_shouldPlay ? "Pause (p)" : "Play (p)")) {
-			_shouldPlay = !_shouldPlay;
-			_timerStart = currentTime - _timer;
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Restart (r)")) {
-			reset();
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Hide (i)")) {
-			_showGUI = false;
-		}
-		ImGui::SameLine();
-		if(ImGui::Button("Display")){
-			ImGui::OpenPopup("Display options");
 
-		}
-		if(ImGui::BeginPopup("Display options")){
-			if(ImGui::Checkbox("Fullscreen", &_fullscreen)){
-				action = SystemAction::FULLSCREEN;
-			}
-			if(!_fullscreen){
-				ImGui::PushItemWidth(100);
-				ImGui::InputInt2("Window size", &_windowSize[0]);
-				ImGui::PopItemWidth();
-				ImGui::SameLine();
-				if(ImGui::Button("Resize")){
-					action = SystemAction::RESIZE;
-					action.data[0] = _windowSize[0];
-					action.data[1] = _windowSize[1];
-				}
-			}
-			ImGui::EndPopup();
-		}
-
-		ImGui::SameLine(340);
-		ImGui::TextDisabled("(?)");
-		if (ImGui::IsItemHovered()) {
-			ImGui::BeginTooltip();
-			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-			const std::string versionString = std::string("MIDIVisualizer v") + std::to_string(MIDIVIZ_VERSION_MAJOR) + "." + std::to_string(MIDIVIZ_VERSION_MINOR);
-			ImGui::TextUnformatted(versionString.c_str());
-			ImGui::TextUnformatted("Created by S. Rodriguez (kosua20)");
-			ImGui::TextUnformatted("github.com/kosua20/MIDIVisualizer");
-			ImGui::PopTextWrapPos();
-			ImGui::EndTooltip();
-		}
-
+		action = showTopButtons(currentTime);
 
 		ImGui::Separator();
 
@@ -418,225 +372,27 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 
 		bool colPartsEdit = false;
 		if (_state.showParticles && ImGui::CollapsingHeader("Particles##HEADER")) {
-
-			ImGui::PushID("ParticlesSettings");
-
-			colPartsEdit = channelColorEdit("Color##Particles", "Color", _state.particles.colors);
-
-			ImGui::SameLine(COLUMN_SIZE);
-
-			ImGui::PushItemWidth(100);
-			if (ImGui::InputFloat("Size", &_state.particles.scale, 1.0f, 10.0f)) {
-				_state.particles.scale = std::max(1.0f, _state.particles.scale);
-			}
-
-			ImGui::PushItemWidth(COLUMN_SIZE-10);
-			if (ImGui::SliderInt("Count", &_state.particles.count, 1, 512)) {
-				_state.particles.count = std::min(std::max(_state.particles.count, 1), 512);
-			}
-			ImGui::PopItemWidth();
-
-			const bool mp0 = ImGui::InputFloat("Speed", &_state.particles.speed, 0.001f, 1.0f);
-			ImGui::SameLine(COLUMN_SIZE);
-			const bool mp1 = ImGui::InputFloat(	"Expansion", &_state.particles.expansion, 0.1f, 5.0f);
-			ImGui::PopItemWidth();
-
-			if (mp1 || mp0) {
-				_scene->setParticlesParameters(_state.particles.speed, _state.particles.expansion);
-			}
-
-			if (ImGui::Button("Load images...##Particles")) {
-				// Read arguments.
-				nfdpathset_t outPaths;
-				nfdresult_t result = NFD_OpenDialogMultiple("png;jpg,jpeg;", NULL, &outPaths);
-
-				if (result == NFD_OKAY) {
-					std::vector<std::string> paths;
-					for (size_t i = 0; i < NFD_PathSet_GetCount(&outPaths); ++i) {
-						nfdchar_t *outPath = NFD_PathSet_GetPath(&outPaths, i);
-						const std::string imageFilePath = std::string(outPath);
-						paths.push_back(imageFilePath);
-					}
-					if (_state.particles.tex != ResourcesManager::getTextureFor("blankarray")) {
-						glDeleteTextures(1, &_state.particles.tex);
-					}
-					_state.particles.tex = loadTextureArray(paths, false, _state.particles.texCount);
-					NFD_PathSet_Free(&outPaths);
-					if (_state.particles.scale <= 9.0f) {
-						_state.particles.scale = 10.0f;
-					}
-				}
-			}
-			ImGui::SameLine();
-			ImGui::TextDisabled("(?)");
-			if (ImGui::IsItemHovered()) {
-				ImGui::BeginTooltip();
-				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-				ImGui::TextUnformatted("You can select multiple images (PNG or JPEG). They should be square and greyscale, where black is transparent, white opaque.");
-				ImGui::PopTextWrapPos();
-				ImGui::EndTooltip();
-			}
-
-			ImGui::SameLine(COLUMN_SIZE);
-			if (ImGui::Button("Clear images##TextureParticles")) {
-				if (_state.particles.tex != ResourcesManager::getTextureFor("blankarray")) {
-					glDeleteTextures(1, &_state.particles.tex);
-				}
-				// Use a white square particle appearance by default.
-				_state.particles.tex =  ResourcesManager::getTextureFor("blankarray");
-				_state.particles.texCount = 1;
-				_state.particles.scale = 1.0f;
-			}
-			ImGui::PopID();
+			colPartsEdit = showParticleOptions();
 		}
 
 		if (_state.showKeyboard && ImGui::CollapsingHeader("Keyboard##HEADER")) {
-			ImGui::PushItemWidth(25);
-			if (ImGui::ColorEdit3("Color##Keys", &_state.background.keysColor[0], ImGuiColorEditFlags_NoInputs)) {
-				_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
-			}
-			ImGui::PopItemWidth();
-			ImGui::SameLine(COLUMN_SIZE);
-
-
-			ImGui::PushItemWidth(100);
-			if(ImGui::SliderFloat("Size##Keys", &_state.keyboard.size, 0.0f, 1.0f)){
-				_state.keyboard.size = (std::min)((std::max)(_state.keyboard.size, 0.0f), 1.0f);
-				_scene->setKeyboardSize(_state.keyboard.size);
-				_score->setKeyboardSize(_state.keyboard.size);
-			}
-			ImGui::PopItemWidth();
-
-			ImGui::Checkbox("Highlight keys", &_state.keyboard.highlightKeys);
-
-			if (_state.keyboard.highlightKeys) {
-				ImGui::Checkbox("Custom colors", &_state.keyboard.customKeyColors);
-				if (_state.keyboard.customKeyColors) {
-
-					ImGui::SameLine(COLUMN_SIZE);
-					if(ImGui::ColorEdit3("Major##KeysHighlight", &_state.keyboard.majorColor[0][0], ImGuiColorEditFlags_NoInputs)){
-						// Ensure synchronization of the override array.
-						for(size_t cid = 1; cid < _state.keyboard.majorColor.size(); ++cid){
-							_state.keyboard.majorColor[cid] = _state.keyboard.majorColor[0];
-						}
-					}
-					
-					ImGui::SameLine(COLUMN_SIZE+80);
-					if(ImGui::ColorEdit3("Minor##KeysHighlight", &_state.keyboard.minorColor[0][0], ImGuiColorEditFlags_NoInputs)){
-						// Ensure synchronization of the override array.
-						for(size_t cid = 1; cid < _state.keyboard.minorColor.size(); ++cid){
-							_state.keyboard.minorColor[cid] = _state.keyboard.minorColor[0];
-						}
-					}
-				}
-			}
-			
+			showKeyboardOptions();
 		}
 
 		if (_state.showScore && ImGui::CollapsingHeader("Score##HEADER")) {
-			ImGui::PushItemWidth(25);
-			const bool cbg0 = ImGui::ColorEdit3("Lines##Background", &_state.background.linesColor[0], ImGuiColorEditFlags_NoInputs);
-			ImGui::SameLine();
-			const bool cbg1 = ImGui::ColorEdit3("Text##Background", &_state.background.textColor[0], ImGuiColorEditFlags_NoInputs);
-			ImGui::PopItemWidth();
-			ImGui::SameLine(COLUMN_SIZE);
-			const bool m1 = ImGui::Checkbox("Digits", &_state.background.digits);
-			const bool m2 = ImGui::Checkbox("Horizontal lines", &_state.background.hLines);
-			ImGui::SameLine(COLUMN_SIZE);
-			const bool m3 = ImGui::Checkbox("Vertical lines", &_state.background.vLines);
-
-			if (m1 || m2 || m3) {
-				_score->setDisplay(_state.background.digits, _state.background.hLines, _state.background.vLines);
-			}
-
-			if (cbg0 || cbg1) {
-				_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
-			}
+			showScoreOptions();
 		}
 
 		if (_state.showBlur && ImGui::CollapsingHeader("Blur##HEADER")) {
-			ImGui::Checkbox("Blur the notes", &_state.showBlurNotes);
-			ImGui::SameLine(COLUMN_SIZE);
-			ImGui::PushItemWidth(100);
-			if (ImGui::SliderFloat("Fading", &_state.attenuation, 0.0f, 1.0f)) {
-				_state.attenuation = std::min(1.0f, std::max(0.0f, _state.attenuation));
-				glUseProgram(_blurringScreen.programId());
-				const GLuint id1 = glGetUniformLocation(_blurringScreen.programId(), "attenuationFactor");
-				glUniform1f(id1, _state.attenuation);
-				glUseProgram(0);
-			}
-			ImGui::PopItemWidth();
+			showBlurOptions();
 		}
 
 		if (ImGui::CollapsingHeader("Background##HEADER")) {
-			ImGui::PushItemWidth(25);
-			ImGui::ColorEdit3("Color##Background", &_state.background.color[0],
-				ImGuiColorEditFlags_NoInputs);
-			ImGui::PopItemWidth();
-			ImGui::SameLine(COLUMN_SIZE);
-			ImGui::PushItemWidth(100);
-			if (ImGui::SliderFloat("Opacity##Background", &_state.background.imageAlpha, 0.0f, 1.0f)) {
-				_state.background.imageAlpha = std::min(std::max(_state.background.imageAlpha, 0.0f), 1.0f);
-			}
-			ImGui::PopItemWidth();
-			if (ImGui::Button("Load image...##Background")){
-				// Read arguments.
-				nfdchar_t *outPath = NULL;
-				nfdresult_t result = NFD_OpenDialog("jpg,jpeg;png", NULL, &outPath);
-				if (result == NFD_OKAY) {
-					glDeleteTextures(1, &_state.background.tex);
-					_state.background.tex = loadTexture(std::string(outPath), 4, false);
-					_state.background.image = true;
-					// Ensure minimal visibility.
-					if (_state.background.imageAlpha < 0.1f) {
-						_state.background.imageAlpha = 0.1f;
-					}
-				}
-			}
-			ImGui::SameLine(COLUMN_SIZE);
-			if (ImGui::Button("Clear image##Background")) {
-				_state.background.image = false;
-				glDeleteTextures(1, &_state.background.tex);
-				_state.background.tex = 0;
-			}
-			ImGui::Checkbox("Image extends under keyboard", &_state.background.imageBehindKeyboard);
-
+			showBackgroundOptions();
 		}
 		ImGui::Separator();
 
-		if(ImGui::Button("Export...")){
-			ImGui::OpenPopup("Export");
-		}
-		if(_recorder.drawGUI()){
-			startRecording();
-		}
-
-
-		ImGui::SameLine();
-
-		if (ImGui::Button("Save config...")) {
-			// Read arguments.
-			nfdchar_t *savePath = NULL;
-			nfdresult_t result = NFD_SaveDialog("ini", NULL, &savePath);
-			if (result == NFD_OKAY) {
-				_state.save(std::string(savePath));
-			}
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Load config...")) {
-			// Read arguments.
-			nfdchar_t *outPath = NULL;
-			nfdresult_t result = NFD_OpenDialog("ini", NULL, &outPath);
-			if (result == NFD_OKAY) {
-				_state.load(std::string(outPath));
-				setState(_state);
-			}
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Reset##config")) {
-			_state.reset();
-			setState(_state);
-		}
+		showBottomButtons();
 
 		// Keep the colors in sync if needed.
 		if (_state.lockParticleColor && (colNotesEdit || colPartsEdit || colMinorsEdit || colFlashesEdit)) {
@@ -675,6 +431,280 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 	}
 
 	return action;
+}
+
+SystemAction Renderer::showTopButtons(double currentTime){
+	if (ImGui::Button(_shouldPlay ? "Pause (p)" : "Play (p)")) {
+		_shouldPlay = !_shouldPlay;
+		_timerStart = currentTime - _timer;
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Restart (r)")) {
+		reset();
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Hide (i)")) {
+		_showGUI = false;
+	}
+	ImGui::SameLine();
+	if(ImGui::Button("Display")){
+		ImGui::OpenPopup("Display options");
+
+	}
+	SystemAction action = SystemAction::NONE;
+	if(ImGui::BeginPopup("Display options")){
+		if(ImGui::Checkbox("Fullscreen", &_fullscreen)){
+			action = SystemAction::FULLSCREEN;
+		}
+		if(!_fullscreen){
+			ImGui::PushItemWidth(100);
+			ImGui::InputInt2("Window size", &_windowSize[0]);
+			ImGui::PopItemWidth();
+			ImGui::SameLine();
+			if(ImGui::Button("Resize")){
+				action = SystemAction::RESIZE;
+				action.data[0] = _windowSize[0];
+				action.data[1] = _windowSize[1];
+			}
+		}
+		ImGui::EndPopup();
+	}
+
+	ImGui::SameLine(340);
+	ImGui::TextDisabled("(?)");
+	if (ImGui::IsItemHovered()) {
+		ImGui::BeginTooltip();
+		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+		const std::string versionString = std::string("MIDIVisualizer v") + std::to_string(MIDIVIZ_VERSION_MAJOR) + "." + std::to_string(MIDIVIZ_VERSION_MINOR);
+		ImGui::TextUnformatted(versionString.c_str());
+		ImGui::TextUnformatted("Created by S. Rodriguez (kosua20)");
+		ImGui::TextUnformatted("github.com/kosua20/MIDIVisualizer");
+		ImGui::PopTextWrapPos();
+		ImGui::EndTooltip();
+	}
+	return action;
+}
+
+bool Renderer::showParticleOptions(){
+	ImGui::PushID("ParticlesSettings");
+
+	const bool colPartsEdit = channelColorEdit("Color##Particles", "Color", _state.particles.colors);
+
+	ImGui::SameLine(COLUMN_SIZE);
+
+	ImGui::PushItemWidth(100);
+	if (ImGui::InputFloat("Size", &_state.particles.scale, 1.0f, 10.0f)) {
+		_state.particles.scale = std::max(1.0f, _state.particles.scale);
+	}
+
+	ImGui::PushItemWidth(COLUMN_SIZE-10);
+	if (ImGui::SliderInt("Count", &_state.particles.count, 1, 512)) {
+		_state.particles.count = std::min(std::max(_state.particles.count, 1), 512);
+	}
+	ImGui::PopItemWidth();
+
+	const bool mp0 = ImGui::InputFloat("Speed", &_state.particles.speed, 0.001f, 1.0f);
+	ImGui::SameLine(COLUMN_SIZE);
+	const bool mp1 = ImGui::InputFloat(	"Expansion", &_state.particles.expansion, 0.1f, 5.0f);
+	ImGui::PopItemWidth();
+
+	if (mp1 || mp0) {
+		_scene->setParticlesParameters(_state.particles.speed, _state.particles.expansion);
+	}
+
+	if (ImGui::Button("Load images...##Particles")) {
+		// Read arguments.
+		nfdpathset_t outPaths;
+		nfdresult_t result = NFD_OpenDialogMultiple("png;jpg,jpeg;", NULL, &outPaths);
+
+		if (result == NFD_OKAY) {
+			std::vector<std::string> paths;
+			for (size_t i = 0; i < NFD_PathSet_GetCount(&outPaths); ++i) {
+				nfdchar_t *outPath = NFD_PathSet_GetPath(&outPaths, i);
+				const std::string imageFilePath = std::string(outPath);
+				paths.push_back(imageFilePath);
+			}
+			if (_state.particles.tex != ResourcesManager::getTextureFor("blankarray")) {
+				glDeleteTextures(1, &_state.particles.tex);
+			}
+			_state.particles.tex = loadTextureArray(paths, false, _state.particles.texCount);
+			NFD_PathSet_Free(&outPaths);
+			if (_state.particles.scale <= 9.0f) {
+				_state.particles.scale = 10.0f;
+			}
+		}
+	}
+	ImGui::SameLine();
+	ImGui::TextDisabled("(?)");
+	if (ImGui::IsItemHovered()) {
+		ImGui::BeginTooltip();
+		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+		ImGui::TextUnformatted("You can select multiple images (PNG or JPEG). They should be square and greyscale, where black is transparent, white opaque.");
+		ImGui::PopTextWrapPos();
+		ImGui::EndTooltip();
+	}
+
+	ImGui::SameLine(COLUMN_SIZE);
+	if (ImGui::Button("Clear images##TextureParticles")) {
+		if (_state.particles.tex != ResourcesManager::getTextureFor("blankarray")) {
+			glDeleteTextures(1, &_state.particles.tex);
+		}
+		// Use a white square particle appearance by default.
+		_state.particles.tex =  ResourcesManager::getTextureFor("blankarray");
+		_state.particles.texCount = 1;
+		_state.particles.scale = 1.0f;
+	}
+	ImGui::PopID();
+
+	return colPartsEdit;
+}
+
+void Renderer::showKeyboardOptions(){
+	ImGui::PushItemWidth(25);
+	if (ImGui::ColorEdit3("Color##Keys", &_state.background.keysColor[0], ImGuiColorEditFlags_NoInputs)) {
+		_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
+	}
+	ImGui::PopItemWidth();
+	ImGui::SameLine(COLUMN_SIZE);
+
+
+	ImGui::PushItemWidth(100);
+	if(ImGui::SliderFloat("Size##Keys", &_state.keyboard.size, 0.0f, 1.0f)){
+		_state.keyboard.size = (std::min)((std::max)(_state.keyboard.size, 0.0f), 1.0f);
+		_scene->setKeyboardSize(_state.keyboard.size);
+		_score->setKeyboardSize(_state.keyboard.size);
+	}
+	ImGui::PopItemWidth();
+
+	ImGui::Checkbox("Highlight keys", &_state.keyboard.highlightKeys);
+
+	if (_state.keyboard.highlightKeys) {
+		ImGui::Checkbox("Custom colors", &_state.keyboard.customKeyColors);
+		if (_state.keyboard.customKeyColors) {
+
+			ImGui::SameLine(COLUMN_SIZE);
+			if(ImGui::ColorEdit3("Major##KeysHighlight", &_state.keyboard.majorColor[0][0], ImGuiColorEditFlags_NoInputs)){
+				// Ensure synchronization of the override array.
+				for(size_t cid = 1; cid < _state.keyboard.majorColor.size(); ++cid){
+					_state.keyboard.majorColor[cid] = _state.keyboard.majorColor[0];
+				}
+			}
+
+			ImGui::SameLine(COLUMN_SIZE+80);
+			if(ImGui::ColorEdit3("Minor##KeysHighlight", &_state.keyboard.minorColor[0][0], ImGuiColorEditFlags_NoInputs)){
+				// Ensure synchronization of the override array.
+				for(size_t cid = 1; cid < _state.keyboard.minorColor.size(); ++cid){
+					_state.keyboard.minorColor[cid] = _state.keyboard.minorColor[0];
+				}
+			}
+		}
+	}
+}
+
+void Renderer::showBlurOptions(){
+	ImGui::Checkbox("Blur the notes", &_state.showBlurNotes);
+	ImGui::SameLine(COLUMN_SIZE);
+	ImGui::PushItemWidth(100);
+	if (ImGui::SliderFloat("Fading", &_state.attenuation, 0.0f, 1.0f)) {
+		_state.attenuation = std::min(1.0f, std::max(0.0f, _state.attenuation));
+		glUseProgram(_blurringScreen.programId());
+		const GLuint id1 = glGetUniformLocation(_blurringScreen.programId(), "attenuationFactor");
+		glUniform1f(id1, _state.attenuation);
+		glUseProgram(0);
+	}
+	ImGui::PopItemWidth();
+}
+
+void Renderer::showScoreOptions(){
+	ImGui::PushItemWidth(25);
+	const bool cbg0 = ImGui::ColorEdit3("Lines##Background", &_state.background.linesColor[0], ImGuiColorEditFlags_NoInputs);
+	ImGui::SameLine();
+	const bool cbg1 = ImGui::ColorEdit3("Text##Background", &_state.background.textColor[0], ImGuiColorEditFlags_NoInputs);
+	ImGui::PopItemWidth();
+	ImGui::SameLine(COLUMN_SIZE);
+	const bool m1 = ImGui::Checkbox("Digits", &_state.background.digits);
+	const bool m2 = ImGui::Checkbox("Horizontal lines", &_state.background.hLines);
+	ImGui::SameLine(COLUMN_SIZE);
+	const bool m3 = ImGui::Checkbox("Vertical lines", &_state.background.vLines);
+
+	if (m1 || m2 || m3) {
+		_score->setDisplay(_state.background.digits, _state.background.hLines, _state.background.vLines);
+	}
+
+	if (cbg0 || cbg1) {
+		_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
+	}
+}
+
+void Renderer::showBackgroundOptions(){
+	ImGui::PushItemWidth(25);
+	ImGui::ColorEdit3("Color##Background", &_state.background.color[0],
+		ImGuiColorEditFlags_NoInputs);
+	ImGui::PopItemWidth();
+	ImGui::SameLine(COLUMN_SIZE);
+	ImGui::PushItemWidth(100);
+	if (ImGui::SliderFloat("Opacity##Background", &_state.background.imageAlpha, 0.0f, 1.0f)) {
+		_state.background.imageAlpha = std::min(std::max(_state.background.imageAlpha, 0.0f), 1.0f);
+	}
+	ImGui::PopItemWidth();
+	if (ImGui::Button("Load image...##Background")){
+		// Read arguments.
+		nfdchar_t *outPath = NULL;
+		nfdresult_t result = NFD_OpenDialog("jpg,jpeg;png", NULL, &outPath);
+		if (result == NFD_OKAY) {
+			glDeleteTextures(1, &_state.background.tex);
+			_state.background.tex = loadTexture(std::string(outPath), 4, false);
+			_state.background.image = true;
+			// Ensure minimal visibility.
+			if (_state.background.imageAlpha < 0.1f) {
+				_state.background.imageAlpha = 0.1f;
+			}
+		}
+	}
+	ImGui::SameLine(COLUMN_SIZE);
+	if (ImGui::Button("Clear image##Background")) {
+		_state.background.image = false;
+		glDeleteTextures(1, &_state.background.tex);
+		_state.background.tex = 0;
+	}
+	ImGui::Checkbox("Image extends under keyboard", &_state.background.imageBehindKeyboard);
+
+}
+
+void Renderer::showBottomButtons(){
+	if(ImGui::Button("Export...")){
+		ImGui::OpenPopup("Export");
+	}
+	if(_recorder.drawGUI()){
+		startRecording();
+	}
+	ImGui::SameLine();
+
+	if (ImGui::Button("Save config...")) {
+		// Read arguments.
+		nfdchar_t *savePath = NULL;
+		nfdresult_t result = NFD_SaveDialog("ini", NULL, &savePath);
+		if (result == NFD_OKAY) {
+			_state.save(std::string(savePath));
+		}
+	}
+	ImGui::SameLine();
+
+	if (ImGui::Button("Load config...")) {
+		// Read arguments.
+		nfdchar_t *outPath = NULL;
+		nfdresult_t result = NFD_OpenDialog("ini", NULL, &outPath);
+		if (result == NFD_OKAY) {
+			_state.load(std::string(outPath));
+			setState(_state);
+		}
+	}
+	ImGui::SameLine();
+
+	if (ImGui::Button("Reset##config")) {
+		_state.reset();
+		setState(_state);
+	}
 }
 
 void Renderer::showLayers() {

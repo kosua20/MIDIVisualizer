@@ -98,6 +98,20 @@ private:
 
 	void drawScene(bool transparentBG);
 
+	SystemAction showTopButtons(double currentTime);
+
+	bool showParticleOptions();
+
+	void showKeyboardOptions();
+
+	void showBlurOptions();
+
+	void showScoreOptions();
+
+	void showBackgroundOptions();
+
+	void showBottomButtons();
+
 	void showLayers();
 
 	void showSets();
