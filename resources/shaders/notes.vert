@@ -8,7 +8,9 @@ uniform float time;
 uniform float mainSpeed;
 uniform float minorsWidth = 1.0;
 uniform float keyboardHeight = 0.25;
-uniform float notesCount = 75.0;
+
+uniform int minNoteMajor;
+uniform float notesCount;
 
 out INTERFACE {
 	vec2 uv;
@@ -27,9 +29,17 @@ void main(){
 	// Compute note shift.
 	// Horizontal shift based on note id, width of keyboard, and if the note is minor or not.
 	// Vertical shift based on note start time, current time, speed, and height of the note quad.
-	float a = (1.0/(notesCount-1.0)) * (2.0 - 2.0/notesCount);
-	float b = -1.0 + 1.0/notesCount;
-	vec2 noteShift = vec2(id.x * a + b + id.w/notesCount, (Out.noteSize.y * 0.5 + (2.0 * keyboardHeight - 1.0)) + mainSpeed * (id.y - time));
+	//float a = (1.0/(notesCount-1.0)) * (2.0 - 2.0/notesCount);
+	//float b = -1.0 + 1.0/notesCount;
+	// This should be in -1.0, 1.0.
+	// input: id.x is in [0 MAJOR_COUNT]
+	// we want minNote to -1+1/c, maxNote to 1-1/c
+	float a = 2.0;
+	float b = -notesCount + 1.0 - 2.0 * float(minNoteMajor);
+
+	float horizLoc = (id.x * a + b + id.w) / notesCount;
+	float vertLoc = (Out.noteSize.y * 0.5 + (2.0 * keyboardHeight - 1.0)) + mainSpeed * (id.y - time);
+	vec2 noteShift = vec2(horizLoc, vertLoc);
 	
 	// Scale uv.
 	Out.uv = Out.noteSize * v;

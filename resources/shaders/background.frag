@@ -15,10 +15,15 @@ uniform sampler2D screenTexture;
 uniform vec3 textColor = vec3(1.0);
 uniform vec3 linesColor = vec3(1.0);
 
+#define MAJOR_COUNT 75.0
+
 const float octaveLinesPositions[11] = float[](0.0/75.0, 7.0/75.0, 14.0/75.0, 21.0/75.0, 28.0/75.0, 35.0/75.0, 42.0/75.0, 49.0/75.0, 56.0/75.0, 63.0/75.0, 70.0/75.0);
 			
 uniform float mainSpeed;
 uniform float keyboardHeight = 0.25;
+
+uniform int minNoteMajor;
+uniform float notesCount;
 
 out vec4 fragColor;
 
@@ -82,9 +87,18 @@ void main(){
 	
 	vec4 bgColor = vec4(0.0);
 	// Octaves lines.
-	for(int i = 0; i < 11; i++){
-		float lineIntensity = useVLines ? (0.7 * step(abs(In.uv.x - octaveLinesPositions[i]),inverseScreenSize.x)) : 0.0;
-		bgColor = mix(bgColor, vec4(linesColor, 1.0), lineIntensity);
+	if(useVLines){
+		// send 0 to (minNote)/MAJOR_COUNT
+		// send 1 to (maxNote)/MAJOR_COUNT
+		float a = (notesCount) / MAJOR_COUNT;
+		float b = float(minNoteMajor) / MAJOR_COUNT;
+		float refPos = a * In.uv.x + b;
+
+		for(int i = 0; i < 11; i++){
+			float linePos = octaveLinesPositions[i];
+			float lineIntensity = 0.7 * step(abs(refPos - linePos), inverseScreenSize.x / MAJOR_COUNT * notesCount);
+			bgColor = mix(bgColor, vec4(linesColor, 1.0), lineIntensity);
+		}
 	}
 	
 	vec2 scale = 1.5*vec2(64.0,50.0*inverseScreenSize.x/inverseScreenSize.y);
