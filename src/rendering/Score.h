@@ -22,6 +22,8 @@ public:
 
 	void setKeyboardSize(float keyboardHeight);
 
+	void setMinMaxKeys(int minKey, int minKeyMajor, int notesCount);
+
 };
 
 #endif

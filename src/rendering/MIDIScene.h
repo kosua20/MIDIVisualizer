@@ -39,6 +39,8 @@ public:
 
 	void setKeyboardSize(float keyboardHeight);
 
+	void setMinMaxKeys(int minKey, int minKeyMajor, int notesCount);
+
 	const double & duration() const { return _midiFile.duration(); };
 	
 	void resetParticles();

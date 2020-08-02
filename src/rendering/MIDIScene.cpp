@@ -439,6 +439,22 @@ void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::
 	glUseProgram(0);
 }
 
+void MIDIScene::setMinMaxKeys(int minKey, int minKeyMajor, int notesCount){
+	glUseProgram(_programId);
+	glUniform1i(glGetUniformLocation(_programId, "minNoteMajor"), minKeyMajor);
+	glUniform1f(glGetUniformLocation(_programId, "notesCount"), float(notesCount));
+	glUseProgram(_programFlashesId);
+	glUniform1i(glGetUniformLocation(_programFlashesId, "minNote"), minKey);
+	glUniform1f(glGetUniformLocation(_programFlashesId, "notesCount"), float(notesCount));
+	glUseProgram(_programKeysId);
+	glUniform1i(glGetUniformLocation(_programKeysId, "minNoteMajor"), minKeyMajor);
+	glUniform1f(glGetUniformLocation(_programKeysId, "notesCount"), float(notesCount));
+	glUseProgram(_programParticulesId);
+	glUniform1i(glGetUniformLocation(_programParticulesId, "minNote"), minKey);
+	glUniform1f(glGetUniformLocation(_programParticulesId, "notesCount"), float(notesCount));
+	glUseProgram(0);
+}
+
 void MIDIScene::clean(){
 	glDeleteVertexArrays(1, &_vao);
 	glDeleteVertexArrays(1, &_vaoFlashes);

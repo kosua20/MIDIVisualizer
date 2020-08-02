@@ -53,3 +53,10 @@ void Score::setKeyboardSize(float keyboardHeight){
 	glUseProgram(0);
 }
 
+void Score::setMinMaxKeys(int minKey, int minKeyMajor, int notesCount){
+	glUseProgram(_programId);
+	glUniform1i(glGetUniformLocation(_programId, "minNoteMajor"), minKeyMajor);
+	glUniform1f(glGetUniformLocation(_programId, "notesCount"), float(notesCount));
+	glUseProgram(0);
+}
+
