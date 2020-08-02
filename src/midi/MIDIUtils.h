@@ -69,11 +69,12 @@ extern std::map<MetaEventType, std::string> metaEventTypeName;
 extern std::map<MIDIEventType, std::string> MIDIEventTypeName;
 
 // Keyboard shifts.
-// \todo Cleanup.
 
-extern std::array<bool, 12> noteIsMinor;
+extern const std::array<bool, 12> noteIsMinor;
 
-extern std::array<short, 12> noteShift;
+extern const std::array<short, 12> noteShift;
+
+extern const char midiKeysString[];
 
 // Read data.
 
