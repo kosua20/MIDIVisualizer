@@ -120,7 +120,7 @@ MIDIFile::MIDIFile(const std::string & filePath){
 	// Convert each track to real notes.
 	for(size_t tid = 0; tid < _tracks.size(); ++tid){
 		auto & track = _tracks[tid];
-		track.extractNotes(_tempos, _unitsPerQuarterNote, 21, 108, tid);
+		track.extractNotes(_tempos, _unitsPerQuarterNote, 0, 127, tid);
 	}
 
 	// For now, still merge.
@@ -200,7 +200,7 @@ void MIDIFile::getNotes(std::vector<MIDINote> & notes, NoteType type, size_t tra
 	_tracks[track].getNotes(notes, type);
 }
 
-void MIDIFile::getNotesActive(std::vector<ActiveNoteInfos> & actives, double time, size_t track) const {
+void MIDIFile::getNotesActive(ActiveNotesArray & actives, double time, size_t track) const {
 
 	if(track >= _tracks.size()){
 		return;

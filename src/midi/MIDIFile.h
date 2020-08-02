@@ -19,7 +19,7 @@ public:
 
 	void getNotes(std::vector<MIDINote>& notes, NoteType type, size_t track) const;
 	
-	void getNotesActive(std::vector<ActiveNoteInfos>& actives, double time, size_t track) const;
+	void getNotesActive(ActiveNotesArray& actives, double time, size_t track) const;
 
 	const double & signature() const { return _signature; }
 	

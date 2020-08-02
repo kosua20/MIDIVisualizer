@@ -3,6 +3,8 @@
 
 #include "MIDIBase.h"
 
+typedef std::array<ActiveNoteInfos, 128> ActiveNotesArray;
+
 class MIDITrack {
 public:
 	
@@ -16,7 +18,7 @@ public:
 
 	void getNotes(std::vector<MIDINote> & notes, NoteType type) const;
 
-	void getNotesActive(std::vector<ActiveNoteInfos>& actives, double time) const;
+	void getNotesActive(ActiveNotesArray & actives, double time) const;
 
 	void merge(MIDITrack & other);
 

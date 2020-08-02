@@ -95,9 +95,9 @@ void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t uni
 			continue;
 		}
 		//Skip filtered notes.
-		if(event.data[1] < minId || event.data[1] > maxId){
-			continue;
-		}
+		//if(event.data[1] < minId || event.data[1] > maxId){
+			//continue;
+		//}
 		// Shift note index.
 		const size_t noteInd = event.data[1] - minId;
 		if(currentNotes.count(noteInd) > 0){
@@ -130,35 +130,24 @@ void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t uni
 void MIDITrack::getNotes(std::vector<MIDINote> & notes, NoteType type) const {
 	notes.clear();
 
-	if(type == NoteType::MINOR){
-		for(auto& note : _notes){
-			if(noteIsMinor[note.note]){
-				notes.push_back(note);
-				notes.back().note = noteShift[note.note];
-			}
-		}
-	} else if (type == NoteType::MAJOR){
-		for(auto& note : _notes){
-			if(!noteIsMinor[note.note]){
-				notes.push_back(note);
-				notes.back().note = noteShift[note.note];
-			}
-		}
-	} else {
-		for(auto& note : _notes){
+	for(auto& note : _notes){
+		const bool isMin = noteIsMinor[note.note % 12];
+		const short shiftId = (note.note/12) * 7 + noteShift[note.note % 12];
+		if(type == NoteType::ALL || (type == NoteType::MINOR && isMin) || (type == NoteType::MAJOR && !isMin)){
 			notes.push_back(note);
-			notes.back().note = noteShift[note.note];
+			notes.back().note = shiftId;
 		}
 	}
+
 }
 
-void MIDITrack::getNotesActive(std::vector<ActiveNoteInfos>& actives, double time) const {
+void MIDITrack::getNotesActive(ActiveNotesArray & actives, double time) const {
 	// Reset all notes.
 	for(int i = 0; i < int(actives.size()); ++i){
 		 actives[i].enabled = false;
 	}
 	const size_t count = _notes.size();
-	for(size_t i = 0; i < count;++i){
+	for(size_t i = 0; i < count; ++i){
 		auto& note = _notes[i];
 		if(note.start <= time && note.start+note.duration >= time){
 			actives[note.note].enabled = true;

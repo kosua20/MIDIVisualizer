@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <array>
 
 enum class SetMode : int {
 	CHANNEL = 0,
@@ -15,7 +16,7 @@ enum class SetMode : int {
 
 struct SetOptions {
 	SetMode mode = SetMode::CHANNEL;
-	int key = 88;
+	int key = 128;
 };
 
 enum MIDIType : uint16_t {
@@ -70,9 +71,9 @@ extern std::map<MIDIEventType, std::string> MIDIEventTypeName;
 // Keyboard shifts.
 // \todo Cleanup.
 
-extern std::vector<bool> noteIsMinor;
+extern std::array<bool, 12> noteIsMinor;
 
-extern std::vector<short> noteShift;
+extern std::array<short, 12> noteShift;
 
 // Read data.
 
