@@ -111,6 +111,8 @@ private:
 	void updateSizes();
 
 	bool channelColorEdit(const char * name, const char * displayName, ColorArray & colors);
+	
+	void updateMinMaxKeys();
 
 	State _state;
 	std::array<Layer, 8> _layers;

@@ -362,10 +362,24 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			updateSizes();
 		}
 
-		const bool smw0 = ImGui::InputFloat("Scale", &_state.scale, 0.01f, 0.1f);
+		if(ImGui::Combo("Min key", &_state.minKey, midiKeysString)){
+			updateMinMaxKeys();
+		}
 		ImGui::SameLine(COLUMN_SIZE);
-		bool smw1 = ImGui::SliderFloat("Minor size", &_state.background.minorsWidth, 0.1f, 1.0f, "%.2f");
-		
+		if(ImGui::Combo("Max key", &_state.maxKey, midiKeysString)){
+			updateMinMaxKeys();
+		}
+
+		bool smw0 = ImGui::InputFloat("Scale", &_state.scale, 0.01f, 0.1f);
+		ImGui::SameLine(COLUMN_SIZE);
+		smw0 = ImGui::SliderFloat("Minor size", &_state.background.minorsWidth, 0.1f, 1.0f, "%.2f") || smw0;
+		if (smw0) {
+			_state.scale = std::max(_state.scale, 0.01f);
+			_state.background.minorsWidth = std::min(std::max(_state.background.minorsWidth, 0.1f), 1.0f);
+			_scene->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
+			_score->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
+		}
+
 		ImGui::PopItemWidth();
 
 		bool colNotesEdit = channelColorEdit("Notes", "Notes", _state.baseColors);
@@ -624,13 +638,6 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			setState(_state);
 		}
 
-		if (smw0 || smw1) {
-			_state.scale = std::max(_state.scale, 0.01f);
-			_state.background.minorsWidth = std::min(std::max(_state.background.minorsWidth, 0.1f), 1.0f);
-			_scene->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
-			_score->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
-		}
-
 		// Keep the colors in sync if needed.
 		if (_state.lockParticleColor && (colNotesEdit || colPartsEdit || colMinorsEdit || colFlashesEdit)) {
 			for(size_t cid = 0; cid < CHANNELS_COUNT; ++cid){
@@ -736,7 +743,7 @@ void Renderer::showSets(){
 		ImGui::SameLine();
 
 		ImGui::PushItemWidth(100);
-		shouldUpdate = ImGui::Combo("##key", &_state.setOptions.key, "C-1\0C-1#\0D-1\0D-1#\0E-1\0F-1\0F-1#\0G-1\0G-1#\0A-1\0A-1#\0B-1\0C0\0C0#\0D0\0D0#\0E0\0F0\0F0#\0G0\0G0#\0A0\0A0#\0B0\0C1\0C1#\0D1\0D1#\0E1\0F1\0F1#\0G1\0G1#\0A1\0A1#\0B1\0C2\0C2#\0D2\0D2#\0E2\0F2\0F2#\0G2\0G2#\0A2\0A2#\0B2\0C3\0C3#\0D3\0D3#\0E3\0F3\0F3#\0G3\0G3#\0A3\0A3#\0B3\0C4\0C4#\0D4\0D4#\0E4\0F4\0F4#\0G4\0G4#\0A4\0A4#\0B4\0C5\0C5#\0D5\0D5#\0E5\0F5\0F5#\0G5\0G5#\0A5\0A5#\0B5\0C6\0C6#\0D6\0D6#\0E6\0F6\0F6#\0G6\0G6#\0A6\0A6#\0B6\0C7\0C7#\0D7\0D7#\0E7\0F7\0F7#\0G7\0G7#\0A7\0A7#\0B7\0C8\0C8#\0D8\0D8#\0E8\0F8\0F8#\0G8\0G8#\0A8\0A8#\0B8\0C9\0C9#\0D9\0D9#\0E9\0F9\0F9#\0G9\0") || shouldUpdate;
+		shouldUpdate = ImGui::Combo("##key", &_state.setOptions.key, midiKeysString) || shouldUpdate;
 		ImGui::PopItemWidth();
 
 		if(shouldUpdate){
@@ -757,6 +764,8 @@ void Renderer::applyAllSettings() {
 	_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
 	_scene->setKeyboardSize(_state.keyboard.size);
 	_score->setKeyboardSize(_state.keyboard.size);
+
+	updateMinMaxKeys();
 
 	// Reset buffers.
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -939,4 +948,19 @@ bool Renderer::channelColorEdit(const char * name, const char * displayName, Col
 		return edit;
 	}
 	return false;
+}
+
+
+void Renderer::updateMinMaxKeys(){
+	// Make sure keys are properly ordered.
+	if(_state.minKey > _state.maxKey){
+		std::swap(_state.minKey, _state.maxKey);
+	}
+	// Convert to "major" only indices.
+	const int minKeyMaj = (_state.minKey/12) * 7 + noteShift[_state.minKey % 12];
+	const int maxKeyMaj = (_state.maxKey/12) * 7 + noteShift[_state.maxKey % 12];
+	const int noteCount = (maxKeyMaj - minKeyMaj + 1);
+
+	_scene->setMinMaxKeys(_state.minKey, minKeyMaj, noteCount);
+	_score->setMinMaxKeys(_state.minKey, minKeyMaj, noteCount);
 }

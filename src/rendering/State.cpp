@@ -68,6 +68,9 @@ State::OptionInfos::OptionInfos(const std::string & adesc, State::OptionInfos::T
 		case Type::COLOR:
 			values = "R G B in [0.0, 1.0]";
 			break;
+		case Type::KEY:
+			values = "key index in [0,127]: 0 is C-1, 1 is C-1#, etc.";
+			break;
 		default:
 			break;
 	}
@@ -144,12 +147,14 @@ void State::defineOptions(){
 	_sharedInfos["sets-mode"].values = "per-channel: 0, per-track: 1, based on a key separator: 2";
 	_sharedInfos["sets-mode"].category = OptionInfos::Category::SETS;
 
-	_sharedInfos["sets-separator-key"] = {"If notes are grouped in two sets, defines the key where the split should happen", OptionInfos::Type::OTHER};
-	_sharedInfos["sets-separator-key"].values = "0 is C-1, 1 is C-1#, etc.";
+	_sharedInfos["sets-separator-key"] = {"If notes are grouped in two sets, defines the key where the split should happen", OptionInfos::Type::KEY, {0.0f, 127.0f}};
 	_sharedInfos["sets-separator-key"].category = OptionInfos::Category::SETS;
 
 	_sharedInfos["keyboard-size"] = {"Vertical size of the keyboard", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
 
+
+	_sharedInfos["min-key"] = {"Lowest key to display", OptionInfos::Type::KEY, {0.0f, 127.0f}};
+	_sharedInfos["max-key"] = {"Highest key to display", OptionInfos::Type::KEY, {0.0f, 127.0f}};
 }
 
 size_t State::helpText(std::string & configOpts, std::string & setsOpts){
@@ -239,6 +244,9 @@ void State::updateOptions(){
 	_intInfos["sets-mode"] = (int*)&setOptions.mode;
 	_intInfos["sets-separator-key"] = &setOptions.key;
 	_floatInfos["keyboard-size"] = &keyboard.size;
+
+	_intInfos["min-key"] = &minKey;
+	_intInfos["max-key"] = &maxKey;
 
 }
 
@@ -484,6 +492,9 @@ void State::reset(){
 	}
 
 	setOptions = SetOptions();
+
+	minKey = 21;
+	maxKey = 108;
 }
 
 void State::load(std::istream & configFile, int majVersion, int minVersion){

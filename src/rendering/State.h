@@ -94,6 +94,10 @@ public:
 	float attenuation; ///< Blur attenuation.
 	float flashSize; ///< Size of flashes.
 	float prerollTime; ///< Preroll time.
+
+	int minKey; ///< The lowest key to display.
+	int maxKey; ///< The highest key to display.
+
 	bool showParticles;
 	bool showFlashes;
 	bool showBlur;
@@ -132,7 +136,7 @@ private:
 	struct OptionInfos {
 
 		enum class Type {
-			BOOLEAN, INTEGER, FLOAT, COLOR, OTHER
+			BOOLEAN, INTEGER, FLOAT, COLOR, OTHER, KEY
 		};
 
 		enum class Category {
