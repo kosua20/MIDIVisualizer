@@ -28,6 +28,8 @@ public:
 	
 	void drawKeyboard(float time, const glm::vec2 & invScreenSize, const glm::vec3 & keyColor, const ColorArray & majorColors, const ColorArray & minorColors, bool highlightKeys);
 
+	void drawPedals(float time, const glm::vec2 & invScreenSize, const State::PedalsState & state);
+
 	/// Clean function
 	void clean();
 

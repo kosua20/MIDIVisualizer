@@ -439,6 +439,9 @@ void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::
 	glUseProgram(0);
 }
 
+void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const State::PedalsState & state) {
+}
+
 void MIDIScene::setMinMaxKeys(int minKey, int minKeyMajor, int notesCount){
 	glUseProgram(_programId);
 	glUniform1i(glGetUniformLocation(_programId, "minNoteMajor"), minKeyMajor);
