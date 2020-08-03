@@ -114,6 +114,8 @@ set(Sources
 	"src/rendering/camera/Camera.h"
 	"src/rendering/camera/Keyboard.cpp"
 	"src/rendering/camera/Keyboard.h"
+	"src/resources/meshes.h"
+	"src/resources/meshes.cpp"
 	"src/resources/data.h"
 	"src/resources/flash_image.cpp"
 	"src/resources/font_image.cpp"
