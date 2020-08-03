@@ -12,7 +12,7 @@ public:
 	
 	double extractTempos(std::vector<MIDITempo> & tempos) const;
 
-	void extractNotes(const std::vector<MIDITempo> & tempos, uint16_t unitsPerQuarterNote, short minId, short maxId, unsigned int trackId);
+	void extractNotes(const std::vector<MIDITempo> & tempos, uint16_t unitsPerQuarterNote, unsigned int trackId);
 
 	void print() const;
 
@@ -20,6 +20,8 @@ public:
 
 	void getNotesActive(ActiveNotesArray & actives, double time) const;
 
+	void getPedalsActive(bool & damper, bool &sostenuto, bool &soft, double time) const;
+	
 	void merge(MIDITrack & other);
 
 	void updateSets(const SetOptions & options);
@@ -30,6 +32,8 @@ private:
 
 	std::vector<MIDIEvent> _events;
 	std::vector<MIDINote> _notes;
+	std::vector<MIDIPedal> _pedals;
+
 	std::string _name;
 	std::string _instrument;
 	uint8_t _previousEventFirstByte = 0x0;
