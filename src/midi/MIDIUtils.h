@@ -62,6 +62,10 @@ enum class NoteType{
 	MAJOR, MINOR, ALL
 };
 
+enum class PedalType {
+	DAMPER, SOSTENUTO, SOFT
+};
+
 // Debug print data.
 
 extern std::map<MetaEventType, std::string> metaEventTypeName;
