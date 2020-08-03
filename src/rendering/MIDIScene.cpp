@@ -209,6 +209,8 @@ void MIDIScene::renderSetup(){
 	const GLuint uboLoc = glGetUniformBlockIndex(_programKeysId, "ActiveNotes");
 	glUniformBlockBinding(_programKeysId, uboLoc, 0);
 
+	// Pedals setup.
+	_programPedalsId = createGLProgramFromStrings(ResourcesManager::getStringForShader("pedal_vert"), ResourcesManager::getStringForShader("pedal_frag"));
 	// Prepare actives notes array.
 	_actives.fill(-1);
 	_previousTime = 0.0;
@@ -246,6 +248,8 @@ void MIDIScene::setKeyboardSize(float keyboardHeight){
 	glUniform1f(glGetUniformLocation(_programKeysId, "keyboardHeight"), keyboardHeight);
 	glUseProgram(_programFlashesId);
 	glUniform1f(glGetUniformLocation(_programFlashesId, "keyboardHeight"), keyboardHeight);
+	glUseProgram(_programPedalsId);
+	glUniform1f(glGetUniformLocation(_programPedalsId, "keyboardHeight"), keyboardHeight);
 	glUseProgram(0);
 }
 
@@ -440,6 +444,41 @@ void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::
 }
 
 void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const State::PedalsState & state) {
+	bool damper = false;
+	bool sostenuto = false;
+	bool soft = false;
+	_midiFile.getPedalsActive(damper, sostenuto, soft, time, 0),
+
+	glEnable(GL_BLEND);
+	glUseProgram(_programPedalsId);
+	glDisable(GL_CULL_FACE);
+
+	// Adjust for aspect ratio.
+	const float rat = invScreenSize.y/invScreenSize.x;
+	const glm::vec2 scale = state.size * (rat < 1.0f ? glm::vec2(1.0f, rat) : glm::vec2(1.0f/rat, 1.0f));
+
+	// Uniforms setup.
+	const GLuint colorId = glGetUniformLocation(_programPedalsId, "pedalColor");
+	const GLuint opacityId = glGetUniformLocation(_programPedalsId, "pedalOpacity");
+	const GLuint flagsId = glGetUniformLocation(_programPedalsId, "pedalFlags");
+	const GLuint scaleId = glGetUniformLocation(_programPedalsId, "scale");
+	const GLuint mergeId =  glGetUniformLocation(_programPedalsId, "mergePedals");
+	
+	glUniform3fv(colorId, 1, &(state.color[0]));
+	glUniform2fv(scaleId, 1, &(scale[0]));
+	glUniform1f(opacityId, state.opacity);
+	// sostenuto, damper, soft
+	glUniform3i(flagsId, sostenuto, damper, soft);
+	glUniform1i(mergeId, state.merge ? 1 : 0);
+
+	// Draw the geometry.
+	glBindVertexArray(_vaoPedals);
+	glDrawElements(GL_TRIANGLES, int(_countPedals), GL_UNSIGNED_INT, (void*)0);
+
+	glBindVertexArray(0);
+	glUseProgram(0);
+	glDisable(GL_BLEND);
+	glEnable(GL_CULL_FACE);
 }
 
 void MIDIScene::setMinMaxKeys(int minKey, int minKeyMajor, int notesCount){

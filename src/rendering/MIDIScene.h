@@ -57,6 +57,7 @@ private:
 	GLuint _programFlashesId;
 	GLuint _programParticulesId;
 	GLuint _programKeysId;
+	GLuint _programPedalsId;
 	
 	GLuint _vao;
 	GLuint _ebo;
@@ -71,6 +72,9 @@ private:
 
 	GLuint _vaoKeyboard;
 	GLuint _uboKeyboard;
+
+	GLuint _vaoPedals;
+	size_t _countPedals;
 	
 	size_t _primitiveCount;
 	
