@@ -2,7 +2,9 @@
 
 ![CI](https://github.com/kosua20/MIDIVisualizer/workflows/CI/badge.svg?branch=master)
 
-A small MIDI visualizer, written in C++/OpenGL. 
+A small MIDI visualizer, written in C++/OpenGL.
+Binaries for Windows, macOS and Ubuntu (experimental) are available in the [Releases tab](https://github.com/kosua20/MIDIVisualizer/releases).
+See the [troubleshooting section](#troubleshooting) if you encounter any issue.
 
 ![Result image](result1.png)  
 
@@ -11,9 +13,6 @@ A small MIDI visualizer, written in C++/OpenGL.
 On Windows and macOS platforms, you can now **run the application by simply double-clicking** on it. You will then be able to select a MIDI file to load. A *Settings* panel allows you to modify display parameters such as color, scale, lines,... Images and videos of the track can be exported. Note that MIDIVisualizer is currently not able to *play* soundtracks, only *display* them.
 
 Press `p` to play/pause the track, `r` to restart at the beginning of the track, and `i` to show/hide the *Settings* panel. 
-
-Binaries for Windows, macOS and Ubuntu (experimental) are available in the [Releases tab](https://github.com/kosua20/MIDIVisualizer/releases).
-See the [troubleshooting section](#troubleshooting) if you encounter any issue.
 
 ![Result image](result2.png) 
 
