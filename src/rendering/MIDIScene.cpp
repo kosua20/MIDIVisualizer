@@ -211,6 +211,24 @@ void MIDIScene::renderSetup(){
 
 	// Pedals setup.
 	_programPedalsId = createGLProgramFromStrings(ResourcesManager::getStringForShader("pedal_vert"), ResourcesManager::getStringForShader("pedal_frag"));
+	// Create an array buffer to host the geometry data.
+	GLuint vboPdl = 0;
+	glGenBuffers(1, &vboPdl);
+	glBindBuffer(GL_ARRAY_BUFFER, vboPdl);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * pedalsVertices.size(), &(pedalsVertices[0]), GL_STATIC_DRAW);
+	glGenVertexArrays (1, &_vaoPedals);
+	glBindVertexArray(_vaoPedals);
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, vboPdl);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+	// We load the indices data
+	GLuint eboPdl = 0;
+	glGenBuffers(1, &eboPdl);
+ 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboPdl);
+ 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * pedalsIndices.size(), &(pedalsIndices[0]), GL_STATIC_DRAW);
+	glBindVertexArray(0);
+	_countPedals = pedalsIndices.size();
+
 	// Prepare actives notes array.
 	_actives.fill(-1);
 	_previousTime = 0.0;
