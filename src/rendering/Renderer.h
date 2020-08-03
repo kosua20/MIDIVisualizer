@@ -68,7 +68,7 @@ private:
 	struct Layer {
 		
 		enum Type : unsigned int {
-			BGCOLOR = 0, BGTEXTURE, BLUR, ANNOTATIONS, KEYBOARD, PARTICLES, NOTES, FLASHES
+			BGCOLOR = 0, BGTEXTURE, BLUR, ANNOTATIONS, KEYBOARD, PARTICLES, NOTES, FLASHES, PEDAL, COUNT
 		};
 
 		Type type = BGCOLOR;
@@ -93,6 +93,8 @@ private:
 	void drawNotes(const glm::vec2 & invSize);
 
 	void drawFlashes(const glm::vec2 & invSize);
+
+	void drawPedals(const glm::vec2 & invSize);
 
 	SystemAction drawGUI(const float currentTime);
 
@@ -129,7 +131,7 @@ private:
 	void updateMinMaxKeys();
 
 	State _state;
-	std::array<Layer, 8> _layers;
+	std::array<Layer, Layer::COUNT> _layers;
 
 	float _timer;
 	float _timerStart;

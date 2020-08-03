@@ -84,6 +84,10 @@ Renderer::Renderer(int winW, int winH, bool fullscreen) {
 	_layers[Layer::FLASHES].name = "Flashes";
 	_layers[Layer::FLASHES].draw = &Renderer::drawFlashes;
 
+	_layers[Layer::PEDAL].type = Layer::PEDAL;
+	_layers[Layer::PEDAL].name = "Pedal";
+	_layers[Layer::PEDAL].draw = &Renderer::drawPedals;
+
 	// Register state.
 	_layers[Layer::BGTEXTURE].toggle = &_state.background.image;
 	_layers[Layer::BLUR].toggle = &_state.showBlur;
@@ -92,6 +96,7 @@ Renderer::Renderer(int winW, int winH, bool fullscreen) {
 	_layers[Layer::PARTICLES].toggle = &_state.showParticles;
 	_layers[Layer::NOTES].toggle = &_state.showNotes;
 	_layers[Layer::FLASHES].toggle = &_state.showFlashes;
+	_layers[Layer::PEDAL].toggle = &_state.showPedal;
 
 	// Check setup errors.
 	checkGLError();
@@ -280,6 +285,10 @@ void Renderer::drawNotes(const glm::vec2 & invSize) {
 
 void Renderer::drawFlashes(const glm::vec2 & invSize) {
 	_scene->drawFlashes(_timer, invSize, _state.flashColors, _state.flashSize);
+}
+
+void Renderer::drawPedals(const glm::vec2 & invSize){
+	_scene->drawPedals(_timer, invSize, _state.pedals);
 }
 
 SystemAction Renderer::drawGUI(const float currentTime) {
@@ -891,6 +900,7 @@ void Renderer::setState(const State & state){
 	_layers[Layer::PARTICLES].toggle = &_state.showParticles;
 	_layers[Layer::NOTES].toggle = &_state.showNotes;
 	_layers[Layer::FLASHES].toggle = &_state.showFlashes;
+	_layers[Layer::PEDAL].toggle = &_state.showPedal;
 
 	// Update split notes.
 	if(_scene){
