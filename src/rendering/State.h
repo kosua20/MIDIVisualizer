@@ -80,12 +80,20 @@ public:
 		bool highlightKeys; ///< Highlight pressed keys.
 		bool customKeyColors; ///< Use the custom colors above instead of the color of the notes.
 	};
+
+	struct PedalsState {
+		glm::vec3 color;
+		float size;
+		float opacity;
+		bool merge;
+	};
 	
 	BackgroundState background;
 	ParticlesState particles;
 	KeyboardState keyboard;
 	SetOptions setOptions;
-
+	PedalsState pedals;
+	
 	Quality::Level quality;
 	ColorArray baseColors; ///< Major notes color.
 	ColorArray minorColors; ///< Minor notes color.
@@ -107,6 +115,7 @@ public:
 	bool showScore;
 	bool showKeyboard;
 	bool perChannelColors;
+	bool showPedal;
 
 	std::array<int, 16> layersMap; ///< Location of each layer.
 
