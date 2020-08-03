@@ -2,7 +2,7 @@
 
 ![CI](https://github.com/kosua20/MIDIVisualizer/workflows/CI/badge.svg?branch=master)
 
-A small MIDI visualizer, written in C++/OpenGL.  
+A small MIDI visualizer, written in C++/OpenGL.
 Binaries for Windows, macOS and Ubuntu (experimental) are available in the [Releases tab](https://github.com/kosua20/MIDIVisualizer/releases).  
 See the [troubleshooting section](#troubleshooting) if you encounter any issue.
 
