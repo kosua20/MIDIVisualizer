@@ -266,8 +266,6 @@ void MIDIScene::setKeyboardSize(float keyboardHeight){
 	glUniform1f(glGetUniformLocation(_programKeysId, "keyboardHeight"), keyboardHeight);
 	glUseProgram(_programFlashesId);
 	glUniform1f(glGetUniformLocation(_programFlashesId, "keyboardHeight"), keyboardHeight);
-	glUseProgram(_programPedalsId);
-	glUniform1f(glGetUniformLocation(_programPedalsId, "keyboardHeight"), keyboardHeight);
 	glUseProgram(0);
 }
 
@@ -461,7 +459,7 @@ void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::
 	glUseProgram(0);
 }
 
-void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const State::PedalsState & state) {
+void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const State::PedalsState & state, float keyboardHeight) {
 	bool damper = false;
 	bool sostenuto = false;
 	bool soft = false;
@@ -474,6 +472,18 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 	// Adjust for aspect ratio.
 	const float rat = invScreenSize.y/invScreenSize.x;
 	const glm::vec2 scale = state.size * (rat < 1.0f ? glm::vec2(1.0f, rat) : glm::vec2(1.0f/rat, 1.0f));
+	const float extraHorizFix = state.merge ? 0.4f : 1.0f;
+	const glm::vec2 propShift = glm::vec2(extraHorizFix * 1.25f, 0.785f) * scale;
+	// Mode: top left, bottom left, top right, bottom right
+	const int mode = int(state.location);
+	const float vertSign = mode % 2 == 0 ? 1.0f : -1.0f;
+	const float horizSign = mode < 2 ? -1.0f : 1.0f;
+	glm::vec2 shift = glm::vec2(horizSign, vertSign) * (1.0f - propShift);
+	// If at the bottom, shift above the keyboard.
+	if(mode % 2 == 1){
+		shift[1] += 2.0f * keyboardHeight;
+	}
+
 
 	// Uniforms setup.
 	const GLuint colorId = glGetUniformLocation(_programPedalsId, "pedalColor");
@@ -481,9 +491,11 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 	const GLuint flagsId = glGetUniformLocation(_programPedalsId, "pedalFlags");
 	const GLuint scaleId = glGetUniformLocation(_programPedalsId, "scale");
 	const GLuint mergeId =  glGetUniformLocation(_programPedalsId, "mergePedals");
-	
+	const GLuint shiftId =  glGetUniformLocation(_programPedalsId, "shift");
+
 	glUniform3fv(colorId, 1, &(state.color[0]));
 	glUniform2fv(scaleId, 1, &(scale[0]));
+	glUniform2fv(shiftId, 1, &(shift[0]));
 	glUniform1f(opacityId, state.opacity);
 	// sostenuto, damper, soft
 	glUniform3i(flagsId, sostenuto, damper, soft);
