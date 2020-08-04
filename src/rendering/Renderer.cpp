@@ -388,6 +388,10 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			showKeyboardOptions();
 		}
 
+		if(_state.showPedal && ImGui::CollapsingHeader("Pedal##HEADER")){
+			showPedalOptions();
+		}
+
 		if (_state.showScore && ImGui::CollapsingHeader("Score##HEADER")) {
 			showScoreOptions();
 		}
@@ -608,6 +612,23 @@ void Renderer::showKeyboardOptions(){
 			}
 		}
 	}
+}
+
+void Renderer::showPedalOptions(){
+	ImGui::PushItemWidth(25);
+	ImGui::ColorEdit3("Color##Pedals", &_state.pedals.color[0], ImGuiColorEditFlags_NoInputs);
+	ImGui::PopItemWidth();
+	ImGui::SameLine(COLUMN_SIZE);
+	ImGui::Combo("Location", (int*)&_state.pedals.location, "Top left\0Bottom left\0Top right\0Bottom right\0");
+
+	if(ImGui::SliderFloat("Opacity##Pedals", &_state.pedals.opacity, 0.0f, 1.0f)){
+		_state.pedals.opacity = std::min(std::max(_state.pedals.opacity, 0.0f), 1.0f);
+	}
+	ImGui::SameLine(COLUMN_SIZE);
+	if(ImGui::SliderFloat("Size##Pedals", &_state.pedals.size, 0.05f, 0.5f)){
+		_state.pedals.size = std::min(std::max(_state.pedals.size, 0.05f), 0.5f);
+	}
+	ImGui::Checkbox("Merge pedals", &_state.pedals.merge);
 }
 
 void Renderer::showBlurOptions(){

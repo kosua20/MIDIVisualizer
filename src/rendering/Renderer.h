@@ -106,6 +106,8 @@ private:
 
 	void showKeyboardOptions();
 
+	void showPedalOptions();
+
 	void showBlurOptions();
 
 	void showScoreOptions();
