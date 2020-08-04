@@ -333,45 +333,53 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			updateMinMaxKeys();
 		}
 
-		bool smw0 = ImGui::InputFloat("Scale", &_state.scale, 0.01f, 0.1f);
-		ImGui::SameLine(COLUMN_SIZE);
-		smw0 = ImGui::SliderFloat("Minor size", &_state.background.minorsWidth, 0.1f, 1.0f, "%.2f") || smw0;
-		if (smw0) {
-			_state.scale = std::max(_state.scale, 0.01f);
-			_state.background.minorsWidth = std::min(std::max(_state.background.minorsWidth, 0.1f), 1.0f);
-			_scene->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
-			_score->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
-		}
+		if(ImGui::CollapsingHeader("Notes##HEADER")){
 
-		ImGui::PopItemWidth();
-
-		bool colNotesEdit = channelColorEdit("Notes", "Notes", _state.baseColors);
-		ImGui::SameLine();
-		bool colMinorsEdit = channelColorEdit("Minors", "Minors", _state.minorColors);
-
-		ImGui::SameLine(COLUMN_SIZE);
-		if (ImGui::Checkbox("Sync colors", &_state.lockParticleColor)) {
-			// If we enable the lock, make sure the colors are synched.
-			colNotesEdit = true;
-		}
-
-		if(ImGui::Checkbox("Per-set colors", &_state.perChannelColors)){
-			if(!_state.perChannelColors){
-				_state.synchronizeChannels();
-			}
-		}
-		if(_state.perChannelColors){
+			bool smw0 = ImGui::InputFloat("Scale", &_state.scale, 0.01f, 0.1f);
 			ImGui::SameLine(COLUMN_SIZE);
-			if(ImGui::Button("Define sets...")){
-				ImGui::OpenPopup("Note sets options");
+			smw0 = ImGui::SliderFloat("Minor size", &_state.background.minorsWidth, 0.1f, 1.0f, "%.2f") || smw0;
+			if (smw0) {
+				_state.scale = std::max(_state.scale, 0.01f);
+				_state.background.minorsWidth = std::min(std::max(_state.background.minorsWidth, 0.1f), 1.0f);
+				_scene->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
+				_score->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
 			}
-			showSets();
+
+
+			if(channelColorEdit("Notes", "Notes", _state.baseColors)){
+				synchronizeColors(_state.baseColors);
+			}
+			ImGui::SameLine();
+			if(channelColorEdit("Minors", "Minors", _state.minorColors)){
+				synchronizeColors(_state.minorColors);
+			}
+
+			ImGui::SameLine(COLUMN_SIZE);
+			if (ImGui::Checkbox("Sync colors", &_state.lockParticleColor)) {
+				// If we enable the lock, make sure the colors are synched.
+				synchronizeColors(_state.baseColors);
+			}
+
+			if(ImGui::Checkbox("Per-set colors", &_state.perChannelColors)){
+				if(!_state.perChannelColors){
+					_state.synchronizeChannels();
+				}
+			}
+			if(_state.perChannelColors){
+				ImGui::SameLine(COLUMN_SIZE);
+				if(ImGui::Button("Define sets...")){
+					ImGui::OpenPopup("Note sets options");
+				}
+				showSets();
+			}
 		}
 
-		bool colFlashesEdit = false;
+
 		if (_state.showFlashes && ImGui::CollapsingHeader("Flashes##HEADER")) {
 
-			colFlashesEdit = channelColorEdit("Color##Flashes", "Color", _state.flashColors);
+			if(channelColorEdit("Color##Flashes", "Color", _state.flashColors)){
+				synchronizeColors(_state.flashColors);
+			}
 
 			ImGui::SameLine(COLUMN_SIZE);
 			ImGui::PushItemWidth(100);
@@ -379,9 +387,9 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			ImGui::PopItemWidth();
 		}
 
-		bool colPartsEdit = false;
+
 		if (_state.showParticles && ImGui::CollapsingHeader("Particles##HEADER")) {
-			colPartsEdit = showParticleOptions();
+			showParticleOptions();
 		}
 
 		if (_state.showKeyboard && ImGui::CollapsingHeader("Keyboard##HEADER")) {
@@ -407,24 +415,6 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 
 		showBottomButtons();
 
-		// Keep the colors in sync if needed.
-		if (_state.lockParticleColor && (colNotesEdit || colPartsEdit || colMinorsEdit || colFlashesEdit)) {
-			for(size_t cid = 0; cid < CHANNELS_COUNT; ++cid){
-				glm::vec3 refColor = _state.baseColors[cid];
-				if (colPartsEdit) {
-					refColor = _state.particles.colors[cid];
-				}
-				else if (colMinorsEdit) {
-					refColor = _state.minorColors[cid];
-				}
-				else if (colFlashesEdit) {
-					refColor = _state.flashColors[cid];
-				}
-				_state.baseColors[cid] = _state.particles.colors[cid] = _state.minorColors[cid] = _state.flashColors[cid] = refColor;
-			}
-
-		}
-
 		if (_showDebug) {
 			ImGui::Separator();
 			ImGui::Text("Debug: ");
@@ -444,6 +434,17 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 	}
 
 	return action;
+}
+
+void Renderer::synchronizeColors(const ColorArray & colors){
+	// Keep the colors in sync if needed.
+	if (!_state.lockParticleColor) {
+		return;
+	}
+
+	for(size_t cid = 0; cid < CHANNELS_COUNT; ++cid){
+		_state.baseColors[cid] = _state.particles.colors[cid] = _state.minorColors[cid] = _state.flashColors[cid] = colors[cid];
+	}
 }
 
 SystemAction Renderer::showTopButtons(double currentTime){
@@ -498,10 +499,12 @@ SystemAction Renderer::showTopButtons(double currentTime){
 	return action;
 }
 
-bool Renderer::showParticleOptions(){
+void Renderer::showParticleOptions(){
 	ImGui::PushID("ParticlesSettings");
 
-	const bool colPartsEdit = channelColorEdit("Color##Particles", "Color", _state.particles.colors);
+	if(channelColorEdit("Color##Particles", "Color", _state.particles.colors)){
+		synchronizeColors(_state.particles.colors);
+	}
 
 	ImGui::SameLine(COLUMN_SIZE);
 
@@ -568,8 +571,6 @@ bool Renderer::showParticleOptions(){
 		_state.particles.scale = 1.0f;
 	}
 	ImGui::PopID();
-
-	return colPartsEdit;
 }
 
 void Renderer::showKeyboardOptions(){

@@ -102,7 +102,7 @@ private:
 
 	SystemAction showTopButtons(double currentTime);
 
-	bool showParticleOptions();
+	void showParticleOptions();
 
 	void showKeyboardOptions();
 
@@ -131,6 +131,8 @@ private:
 	bool channelColorEdit(const char * name, const char * displayName, ColorArray & colors);
 	
 	void updateMinMaxKeys();
+
+	void synchronizeColors(const ColorArray & colors);
 
 	State _state;
 	std::array<Layer, Layer::COUNT> _layers;
