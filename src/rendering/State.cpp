@@ -157,10 +157,12 @@ void State::defineOptions(){
 	_sharedInfos["max-key"] = {"Highest key to display", OptionInfos::Type::KEY, {0.0f, 127.0f}};
 
 	_sharedInfos["show-pedal"] = {"Display the pedals indicator", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["pedal-size"] = {"Pedal indicator size", OptionInfos::Type::FLOAT, {0.01f, 1.0f}};
+	_sharedInfos["pedal-size"] = {"Pedal indicator size", OptionInfos::Type::FLOAT, {0.05f, 0.5f}};
 	_sharedInfos["pedal-opacity"] = {"Pedal indicator opcaity when not pressed", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
 	_sharedInfos["color-pedal"] = {"Pedal color when pressed", OptionInfos::Type::COLOR};
 	_sharedInfos["pedal-merge"] = {"Display only one pedal", OptionInfos::Type::BOOLEAN};
+	_sharedInfos["pedal-location"] = {"Pedal location on screen", OptionInfos::Type::OTHER, {0.0f, 3.0f}};
+	_sharedInfos["pedal-location"].values = "top-left: 0, bottom-left: 1, top-right: 2, bottom-right: 3";
 }
 
 size_t State::helpText(std::string & configOpts, std::string & setsOpts){
@@ -259,6 +261,7 @@ void State::updateOptions(){
 	_floatInfos["pedal-opacity"] = &pedals.opacity;
 	_vecInfos["color-pedal"] = &pedals.color;
 	_boolInfos["pedal-merge"] = &pedals.merge;
+	_intInfos["pedal-location"] = (int*)&pedals.location;
 
 }
 
@@ -507,11 +510,13 @@ void State::reset(){
 
 	minKey = 21;
 	maxKey = 108;
-	showPedal = true;
+	
+	showPedal = false;
 	pedals.color = baseColors[0];
 	pedals.size = 0.2f;
 	pedals.opacity = 0.4f;
 	pedals.merge = false;
+	pedals.location = PedalsState::BOTTOMRIGHT;
 }
 
 void State::load(std::istream & configFile, int majVersion, int minVersion){

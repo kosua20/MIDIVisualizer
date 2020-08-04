@@ -82,7 +82,13 @@ public:
 	};
 
 	struct PedalsState {
+
+		enum Location : int {
+			TOPLEFT = 0, BOTTOMLEFT = 1, TOPRIGHT = 2, BOTTOMRIGHT = 3
+		};
+
 		glm::vec3 color;
+		Location location;
 		float size;
 		float opacity;
 		bool merge;
