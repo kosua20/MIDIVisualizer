@@ -122,6 +122,7 @@ public:
 	bool showKeyboard;
 	bool perChannelColors;
 	bool showPedal;
+	bool showWave;
 
 	std::array<int, 16> layersMap; ///< Location of each layer.
 

@@ -88,6 +88,10 @@ Renderer::Renderer(int winW, int winH, bool fullscreen) {
 	_layers[Layer::PEDAL].name = "Pedal";
 	_layers[Layer::PEDAL].draw = &Renderer::drawPedals;
 
+	_layers[Layer::WAVE].type = Layer::WAVE;
+	_layers[Layer::WAVE].name = "Waves";
+	_layers[Layer::WAVE].draw = &Renderer::drawWaves;
+
 	// Register state.
 	_layers[Layer::BGTEXTURE].toggle = &_state.background.image;
 	_layers[Layer::BLUR].toggle = &_state.showBlur;
@@ -97,6 +101,7 @@ Renderer::Renderer(int winW, int winH, bool fullscreen) {
 	_layers[Layer::NOTES].toggle = &_state.showNotes;
 	_layers[Layer::FLASHES].toggle = &_state.showFlashes;
 	_layers[Layer::PEDAL].toggle = &_state.showPedal;
+	_layers[Layer::WAVE].toggle = &_state.showWave;
 
 	// Check setup errors.
 	checkGLError();
@@ -289,6 +294,9 @@ void Renderer::drawFlashes(const glm::vec2 & invSize) {
 
 void Renderer::drawPedals(const glm::vec2 & invSize){
 	_scene->drawPedals(_timer, invSize, _state.pedals, _state.keyboard.size);
+}
+
+void Renderer::drawWaves(const glm::vec2 & invSize){
 }
 
 SystemAction Renderer::drawGUI(const float currentTime) {
@@ -923,6 +931,7 @@ void Renderer::setState(const State & state){
 	_layers[Layer::NOTES].toggle = &_state.showNotes;
 	_layers[Layer::FLASHES].toggle = &_state.showFlashes;
 	_layers[Layer::PEDAL].toggle = &_state.showPedal;
+	_layers[Layer::WAVE].toggle = &_state.showWave;
 
 	// Update split notes.
 	if(_scene){

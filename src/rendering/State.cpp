@@ -163,6 +163,8 @@ void State::defineOptions(){
 	_sharedInfos["pedal-merge"] = {"Display only one pedal", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["pedal-location"] = {"Pedal location on screen", OptionInfos::Type::OTHER, {0.0f, 3.0f}};
 	_sharedInfos["pedal-location"].values = "top-left: 0, bottom-left: 1, top-right: 2, bottom-right: 3";
+
+	_sharedInfos["show-wave"] = {"Display the wave effect along the top of the keyboard", OptionInfos::Type::BOOLEAN};
 }
 
 size_t State::helpText(std::string & configOpts, std::string & setsOpts){
@@ -262,6 +264,8 @@ void State::updateOptions(){
 	_vecInfos["color-pedal"] = &pedals.color;
 	_boolInfos["pedal-merge"] = &pedals.merge;
 	_intInfos["pedal-location"] = (int*)&pedals.location;
+
+	_boolInfos["show-wave"] = &showWave;
 
 }
 
@@ -517,6 +521,8 @@ void State::reset(){
 	pedals.opacity = 0.4f;
 	pedals.merge = false;
 	pedals.location = PedalsState::BOTTOMRIGHT;
+
+	showWave = true;
 }
 
 void State::load(std::istream & configFile, int majVersion, int minVersion){
