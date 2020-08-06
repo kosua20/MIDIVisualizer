@@ -553,25 +553,36 @@ void MIDIScene::drawWaves(float time, const glm::vec2 & invScreenSize, const Sta
 	glEnable(GL_BLEND);
 	glUseProgram(_programWaveId);
 	glDisable(GL_CULL_FACE);
-
+	glBlendFunc(GL_ONE, GL_ONE);
 	// Uniforms setup.
 	const GLuint colorId = glGetUniformLocation(_programWaveId, "waveColor");
+	const GLuint opacityId = glGetUniformLocation(_programWaveId, "waveOpacity");
+	const GLuint spreadId = glGetUniformLocation(_programWaveId, "spread");
 	const GLuint scaleId = glGetUniformLocation(_programWaveId, "amplitude");
-	const GLuint timeId = glGetUniformLocation(_programWaveId, "time");
-	const GLuint shiftId =  glGetUniformLocation(_programWaveId, "shift");
-	const GLuint fposId =  glGetUniformLocation(_programWaveId, "freqPos");
-	const GLuint ftimeId =  glGetUniformLocation(_programWaveId, "freqTime");
-	const GLuint hashId =  glGetUniformLocation(_programWaveId, "hash");
+	const GLuint freqId =  glGetUniformLocation(_programWaveId, "freq");
+	const GLuint phaseId =  glGetUniformLocation(_programWaveId, "phase");
+	const GLuint shiftId =  glGetUniformLocation(_programWaveId, "keyboardSize");
+
 	glUniform3fv(colorId, 1, &(state.color[0]));
-	glUniform1f(timeId, time);
 	glUniform1f(shiftId, keyboardHeight);
+	glUniform1f(opacityId, state.opacity);
+	glUniform1f(spreadId, state.spread);
+
 	glBindVertexArray(_vaoWave);
 
+	// Fixed initial parameters.
+	const float ampls[4] = {-0.023f, -0.011f, 0.017f, 0.009f};
+	const float freqs[4] = {10.3f, -8.27f, -4.4f, 13.7f};
+	const float phases[4] = {5.2f, 4.7f, 9.3f, -7.1f};
+	// Render multiple waves with additive blending.
 	for(int i = 0; i < 4; ++i){
-		glUniform1f(scaleId, float(i)/100.0f);
-		glUniform1f(fposId, (i%2 ? -1.0f : 1.0f) * (3.0f + i * 5.2f));
-		glUniform1f(ftimeId, 3.3f + (4 - i) * 5.1f);
-		glUniform1f(hashId, float(i));
+		const int sgn = i%2 == 0 ? 1.0f : -1.0f;
+		const float ampl = state.amplitude * ampls[i];
+		const float freq = state.frequency * freqs[i];
+		const float phase = phases[i] * time + float(i+1) * 7.39f;
+		glUniform1f(scaleId, ampl);
+		glUniform1f(freqId, freq);
+		glUniform1f(phaseId, phase);
 		glDrawElements(GL_TRIANGLES, int(_countWave), GL_UNSIGNED_INT, (void*)0);
 	}
 
@@ -579,6 +590,7 @@ void MIDIScene::drawWaves(float time, const glm::vec2 & invScreenSize, const Sta
 
 	glBindVertexArray(0);
 	glUseProgram(0);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDisable(GL_BLEND);
 }
 
