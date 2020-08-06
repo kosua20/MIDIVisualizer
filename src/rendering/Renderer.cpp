@@ -409,6 +409,10 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			showPedalOptions();
 		}
 
+		if(_state.showWave && ImGui::CollapsingHeader("Wave##HEADER")){
+			showWaveOptions();
+		}
+
 		if (_state.showScore && ImGui::CollapsingHeader("Score##HEADER")) {
 			showScoreOptions();
 		}
@@ -641,6 +645,20 @@ void Renderer::showPedalOptions(){
 		_state.pedals.size = std::min(std::max(_state.pedals.size, 0.05f), 0.5f);
 	}
 	ImGui::Checkbox("Merge pedals", &_state.pedals.merge);
+}
+
+
+void Renderer::showWaveOptions(){
+	ImGui::PushItemWidth(25);
+	ImGui::ColorEdit3("Color##Waves", &_state.waves.color[0], ImGuiColorEditFlags_NoInputs);
+	ImGui::PopItemWidth();
+	ImGui::SameLine(COLUMN_SIZE);
+	ImGui::SliderFloat("Spread##Waves", &_state.waves.spread, 0.0f, 5.0f);
+
+	ImGui::SliderFloat("Amplitude##Waves", &_state.waves.amplitude, 0.0f, 5.0f);
+	ImGui::SameLine(COLUMN_SIZE);
+	ImGui::SliderFloat("Frequency##Waves", &_state.waves.frequency, 0.0f, 5.0f);
+
 }
 
 void Renderer::showBlurOptions(){
