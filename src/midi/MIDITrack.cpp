@@ -83,46 +83,70 @@ double MIDITrack::extractTempos(std::vector<MIDITempo> & tempos) const {
 	return signature;
 }
 
-void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t unitsPerQuarterNote, short minId, short maxId, unsigned int trackId){
+void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t unitsPerQuarterNote, unsigned int trackId){
 	// Scan events, focusing on the note ON/OFF events.
 	// Keep track of active notes.
 	std::map<short, std::tuple<size_t, short, short>> currentNotes;
+	std::map<PedalType, size_t> currentPedals;
+
 	size_t timeInUnits = 0;
 
 	for(auto& event : _events){
 		timeInUnits += (event.delta);
-		if(event.category != EventCategory::MIDI || (event.type != noteOn && event.type != noteOff)){
+		if(event.category != EventCategory::MIDI){
 			continue;
 		}
-		//Skip filtered notes.
-		//if(event.data[1] < minId || event.data[1] > maxId){
-			//continue;
-		//}
-		// Shift note index.
-		const size_t noteInd = event.data[1] - minId;
-		if(currentNotes.count(noteInd) > 0){
-			// The current note is already present.
-			const auto & noteTuple = currentNotes[noteInd];
-			// Finish it.
-			const size_t start = std::get<0>(noteTuple);
-			const size_t end = timeInUnits;
-			// Create the final note with timing.
-			// Look for the start and end timestamps using the tempos and their timestamps.
 
-			const auto times = computeNoteTimings(tempos, start, end, unitsPerQuarterNote);
+		// Handle notes.
+		if(event.type == noteOn || event.type == noteOff){
+			const size_t noteInd = event.data[1];
+			if(currentNotes.count(noteInd) > 0){
+				// The current note is already present.
+				const auto & noteTuple = currentNotes[noteInd];
+				// Finish it.
+				const size_t start = std::get<0>(noteTuple);
+				const size_t end = timeInUnits;
+				// Create the final note with timing.
+				// Look for the start and end timestamps using the tempos and their timestamps.
 
-			const short velocity = std::get<1>(noteTuple);
-			const short channel = std::get<2>(noteTuple);
-			_notes.emplace_back(noteInd, times.first, times.second - times.first, velocity, channel, trackId);
+				const auto times = computeNoteTimings(tempos, start, end, unitsPerQuarterNote);
 
-			// Remove note.
-			currentNotes.erase(noteInd);
-		}
+				const short velocity = std::get<1>(noteTuple);
+				const short channel = std::get<2>(noteTuple);
+				_notes.emplace_back(noteInd, times.first, times.second - times.first, velocity, channel, trackId);
 
-		// Check if we have to start a new note.
-		const bool shouldNew = event.type == noteOn && event.data[2] > 0;
-		if(shouldNew){
-			currentNotes[noteInd] = std::make_tuple(timeInUnits, event.data[2], event.data[0]);
+				// Remove note.
+				currentNotes.erase(noteInd);
+			}
+
+			// Check if we have to start a new note.
+			const bool shouldNew = event.type == noteOn && event.data[2] > 0;
+			if(shouldNew){
+				currentNotes[noteInd] = std::make_tuple(timeInUnits, event.data[2], event.data[0]);
+			}
+		} else if(event.type == controllerChange){
+			const int rawType = event.data[1];
+			// Handle only pedal changes.
+			if(rawType != 64 && rawType != 66 && rawType != 67){
+				continue;
+			}
+			const PedalType type = rawType == 64 ? PedalType::DAMPER : (rawType == 66 ? PedalType::SOSTENUTO : PedalType::SOFT);
+			const bool shouldStart = event.data[2] >= 64;
+			const bool isOn = currentPedals.count(type) > 0;
+			// Check if the pedal was on before and we should now stop it.
+			if(isOn && !shouldStart){
+				// Finish the pedal.
+				const size_t start = currentPedals[type];
+				const size_t end = timeInUnits;
+				// Create the final pedal with timing.
+				// Look for the start and end timestamps using the tempos and their timestamps.
+				const auto times = computeNoteTimings(tempos, start, end, unitsPerQuarterNote);
+				_pedals.emplace_back(type, times.first, times.second - times.first);
+				// Remove pedal.
+				currentPedals.erase(type);
+			} else if(!isOn && shouldStart){
+				currentPedals[type] = timeInUnits;
+			}
 		}
 	}
 }
@@ -158,6 +182,27 @@ void MIDITrack::getNotesActive(ActiveNotesArray & actives, double time) const {
 	}
 }
 
+void MIDITrack::getPedalsActive(bool & damper, bool &sostenuto, bool &soft, double time) const {
+	damper = sostenuto = soft = false;
+	const size_t count = _pedals.size();
+	for(size_t i = 0; i < count; ++i){
+		auto& pedal = _pedals[i];
+		if(pedal.start <= time && pedal.start+pedal.duration >= time){
+			if(pedal.type == PedalType::DAMPER){
+				damper = true;
+			} else if(pedal.type == PedalType::SOSTENUTO){
+				sostenuto = true;
+			} else if(pedal.type == PedalType::SOFT){
+				soft = true;
+			}
+			// Early exit (rare).
+			if(damper && sostenuto && soft){
+				break;
+			}
+		}
+	}
+}
+
 void MIDITrack::print() const {
 	std::cout << "[INFO]: * Events (" << _events.size() << "): " << std::endl;
 	for(auto& event : _events){
@@ -167,13 +212,23 @@ void MIDITrack::print() const {
 	for(auto& note : _notes){
 		note.print();
 	}
+
+	std::cout << "[INFO]: * Pedals (" << _pedals.size() << "): " << std::endl;
+	for(auto& pedal : _pedals){
+		pedal.print();
+	}
 }
 
 void MIDITrack::merge(MIDITrack & other){
 	for(auto& note : other._notes){
 		_notes.push_back(note);
 	}
-	std::sort(_notes.begin(), _notes.end(), [](const MIDINote & note1, const MIDINote & note2) { return(note1.start < note2.start); } );
+	std::sort(_notes.begin(), _notes.end(), [](const MIDINote & a, const MIDINote & b) { return(a.start < b.start); } );
+
+	for(auto& pedal : other._pedals){
+		_pedals.push_back(pedal);
+	}
+	std::sort(_pedals.begin(), _pedals.end(), [](const MIDIPedal & a, const MIDIPedal & b) { return(a.start < b.start); } );
 }
 
 std::pair<double, double> MIDITrack::computeNoteTimings(const std::vector<MIDITempo> & tempos, size_t start,size_t end, uint16_t upqn) const {

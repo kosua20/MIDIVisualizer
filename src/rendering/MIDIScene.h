@@ -28,6 +28,8 @@ public:
 	
 	void drawKeyboard(float time, const glm::vec2 & invScreenSize, const glm::vec3 & keyColor, const ColorArray & majorColors, const ColorArray & minorColors, bool highlightKeys);
 
+	void drawPedals(float time, const glm::vec2 & invScreenSize, const State::PedalsState & state, float keyboardHeight);
+
 	/// Clean function
 	void clean();
 
@@ -55,6 +57,7 @@ private:
 	GLuint _programFlashesId;
 	GLuint _programParticulesId;
 	GLuint _programKeysId;
+	GLuint _programPedalsId;
 	
 	GLuint _vao;
 	GLuint _ebo;
@@ -69,6 +72,9 @@ private:
 
 	GLuint _vaoKeyboard;
 	GLuint _uboKeyboard;
+
+	GLuint _vaoPedals;
+	size_t _countPedals;
 	
 	size_t _primitiveCount;
 	

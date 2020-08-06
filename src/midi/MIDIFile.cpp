@@ -120,7 +120,7 @@ MIDIFile::MIDIFile(const std::string & filePath){
 	// Convert each track to real notes.
 	for(size_t tid = 0; tid < _tracks.size(); ++tid){
 		auto & track = _tracks[tid];
-		track.extractNotes(_tempos, _unitsPerQuarterNote, 0, 127, tid);
+		track.extractNotes(_tempos, _unitsPerQuarterNote, tid);
 	}
 
 	// For now, still merge.
@@ -207,6 +207,10 @@ void MIDIFile::getNotesActive(ActiveNotesArray & actives, double time, size_t tr
 	}
 	_tracks[track].getNotesActive(actives, time);
 
+}
+
+void MIDIFile::getPedalsActive(bool & damper, bool &sostenuto, bool &soft, double time, size_t track) const {
+	_tracks[track].getPedalsActive(damper, sostenuto, soft, time);
 }
 
 void MIDIFile::updateSets(const SetOptions & options){

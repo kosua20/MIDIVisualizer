@@ -18,6 +18,17 @@ struct MIDINote {
 	short channel;
 };
 
+struct MIDIPedal {
+
+	MIDIPedal(PedalType aType, double aStart, double aDuration);
+
+	void print() const;
+	
+	double start;
+	double duration;
+	PedalType type;
+};
+
 struct MIDIEvent {
 
 	MIDIEvent(EventCategory aCategory, uint8_t aType, size_t aDelta, std::vector<short> aData);
