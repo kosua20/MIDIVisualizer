@@ -523,6 +523,12 @@ void State::reset(){
 	pedals.location = PedalsState::BOTTOMRIGHT;
 
 	showWave = true;
+	waves.color = baseColors[0];
+	waves.amplitude = 1.0f;
+	waves.frequency = 1.0f;
+	waves.opacity = 1.0f;
+	waves.spread = 1.0f;
+	
 }
 
 void State::load(std::istream & configFile, int majVersion, int minVersion){
@@ -616,4 +622,7 @@ void State::load(std::istream & configFile, int majVersion, int minVersion){
 
 	// Ensure synchronization of all channels colors.
 	synchronizeChannels();
+
+	pedals.color = baseColors[0];
+	waves.color = baseColors[0];
 }
