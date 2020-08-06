@@ -436,7 +436,8 @@ void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const C
 	
 	// Need alpha blending.
 	glEnable(GL_BLEND);
-	
+
+	glBlendFunc(GL_ONE, GL_ONE);
 	// Update the flags buffer accordingly.
 	glBindBuffer(GL_ARRAY_BUFFER, _flagsBufferId);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, _actives.size()*sizeof(int) ,&(_actives[0]));
@@ -463,7 +464,7 @@ void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const C
 	glBindVertexArray(0);
 	glUseProgram(0);
 	glDisable(GL_BLEND);
-	
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::vec3 & keyColor, const ColorArray & majorColors, const ColorArray & minorColors, bool highlightKeys) {
