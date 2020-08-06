@@ -606,6 +606,7 @@ void Renderer::showKeyboardOptions(){
 		if (_state.keyboard.customKeyColors) {
 
 			ImGui::SameLine(COLUMN_SIZE);
+			ImGui::PushItemWidth(25);
 			if(ImGui::ColorEdit3("Major##KeysHighlight", &_state.keyboard.majorColor[0][0], ImGuiColorEditFlags_NoInputs)){
 				// Ensure synchronization of the override array.
 				for(size_t cid = 1; cid < _state.keyboard.majorColor.size(); ++cid){
@@ -620,6 +621,7 @@ void Renderer::showKeyboardOptions(){
 					_state.keyboard.minorColor[cid] = _state.keyboard.minorColor[0];
 				}
 			}
+			ImGui::PopItemWidth();
 		}
 	}
 }
