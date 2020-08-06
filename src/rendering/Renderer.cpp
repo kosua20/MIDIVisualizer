@@ -297,7 +297,7 @@ void Renderer::drawPedals(const glm::vec2 & invSize){
 }
 
 void Renderer::drawWaves(const glm::vec2 & invSize){
-	_scene->drawWaves(_timer, invSize, _state.pedals, _state.keyboard.size);
+	_scene->drawWaves(_timer, invSize, _state.waves, _state.keyboard.size);
 }
 
 SystemAction Renderer::drawGUI(const float currentTime) {

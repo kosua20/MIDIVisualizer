@@ -548,7 +548,7 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 	glDisable(GL_BLEND);
 }
 
-void MIDIScene::drawWaves(float time, const glm::vec2 & invScreenSize, const State::PedalsState & state, float keyboardHeight) {
+void MIDIScene::drawWaves(float time, const glm::vec2 & invScreenSize, const State::WaveState & state, float keyboardHeight) {
 
 	glEnable(GL_BLEND);
 	glUseProgram(_programWaveId);

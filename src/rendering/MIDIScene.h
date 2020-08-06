@@ -30,7 +30,7 @@ public:
 
 	void drawPedals(float time, const glm::vec2 & invScreenSize, const State::PedalsState & state, float keyboardHeight);
 
-	void drawWaves(float time, const glm::vec2 & invScreenSize, const State::PedalsState & state, float keyboardHeight);
+	void drawWaves(float time, const glm::vec2 & invScreenSize, const State::WaveState & state, float keyboardHeight);
 
 	/// Clean function
 	void clean();
