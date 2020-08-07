@@ -158,7 +158,7 @@ void State::defineOptions(){
 
 	_sharedInfos["show-pedal"] = {"Display the pedals indicator", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["pedal-size"] = {"Pedal indicator size", OptionInfos::Type::FLOAT, {0.05f, 0.5f}};
-	_sharedInfos["pedal-opacity"] = {"Pedal indicator opcaity when not pressed", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos["pedal-opacity"] = {"Pedal indicator opacity when not pressed", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
 	_sharedInfos["color-pedal"] = {"Pedal color when pressed", OptionInfos::Type::COLOR};
 	_sharedInfos["pedal-merge"] = {"Display only one pedal", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["pedal-location"] = {"Pedal location on screen", OptionInfos::Type::OTHER, {0.0f, 3.0f}};
@@ -168,7 +168,7 @@ void State::defineOptions(){
 	_sharedInfos["wave-size"] = {"Wave effect size", OptionInfos::Type::FLOAT, {0.0f, 5.0f}};
 	_sharedInfos["wave-opacity"] = {"Wave effect opacity", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
 	_sharedInfos["wave-amplitude"] = {"Wave effect amplitude", OptionInfos::Type::FLOAT, {0.0f, 5.0f}};
-	_sharedInfos["wave-frequency"] = {"Wave effect oscillations frequency", OptionInfos::Type::FLOAT, {0.0f, 5.0f}};
+	_sharedInfos["wave-frequency"] = {"Wave effect frequency", OptionInfos::Type::FLOAT, {0.0f, 5.0f}};
 	_sharedInfos["color-wave"] = {"Wave effect color", OptionInfos::Type::COLOR};
 
 	_sharedInfos["smooth"] = {"Apply anti-aliasing to smooth all lines", OptionInfos::Type::BOOLEAN};
