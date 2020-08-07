@@ -44,11 +44,14 @@ Renderer::Renderer(int winW, int winH, bool fullscreen) {
 		GL_RGBA, GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
 	_blurFramebuffer = std::shared_ptr<Framebuffer>(new Framebuffer(renderSize[0], renderSize[1],
 		GL_RGBA, GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
+	_renderFramebuffer = std::shared_ptr<Framebuffer>(new Framebuffer(renderSize[0], renderSize[1],
+	GL_RGBA, GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
 	_finalFramebuffer = std::shared_ptr<Framebuffer>(new Framebuffer(renderSize[0], renderSize[1],
 		GL_RGBA, GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
 
 	_backgroundTexture.init("backgroundtexture_frag", "backgroundtexture_vert");
 	_blurringScreen.init(_particlesFramebuffer->textureId(), "particlesblur_frag");
+	_fxaa.init("fxaa_frag");
 	_passthrough.init("screenquad_frag");
 
 	// Create the layers.
@@ -185,7 +188,7 @@ void Renderer::drawScene(bool transparentBG){
 	// Update active notes listing (for particles).
 	_scene->updatesActiveNotes(_timer);
 
-	const glm::vec2 invSizeFb = 1.0f / glm::vec2(_finalFramebuffer->_width, _finalFramebuffer->_height);
+	const glm::vec2 invSizeFb = 1.0f / glm::vec2(_renderFramebuffer->_width, _renderFramebuffer->_height);
 
 	// Blur rendering.
 	if (_state.showBlur) {
@@ -193,8 +196,8 @@ void Renderer::drawScene(bool transparentBG){
 	}
 
 	// Set viewport
-	_finalFramebuffer->bind();
-	glViewport(0, 0, _finalFramebuffer->_width, _finalFramebuffer->_height);
+	_renderFramebuffer->bind();
+	glViewport(0, 0, _renderFramebuffer->_width, _renderFramebuffer->_height);
 
 	// Final pass (directly on screen).
 	// Background color.
@@ -217,7 +220,21 @@ void Renderer::drawScene(bool transparentBG){
 		}
 	}
 
-	_finalFramebuffer->unbind();
+	_renderFramebuffer->unbind();
+
+	// Apply fxaa.
+	if(_state.applyAA){
+		_finalFramebuffer->bind();
+		_fxaa.draw(_renderFramebuffer->textureId(), 0.0, invSizeFb);
+		_finalFramebuffer->unbind();
+	} else {
+		// Else just do a blit.
+		_renderFramebuffer->bind(GL_READ_FRAMEBUFFER);
+		_finalFramebuffer->bind(GL_DRAW_FRAMEBUFFER);
+		glBlitFramebuffer(0, 0, _renderFramebuffer->_width, _renderFramebuffer->_height, 0, 0, _finalFramebuffer->_width, _finalFramebuffer->_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		_finalFramebuffer->unbind();
+	}
+
 }
 
 void Renderer::blurPrepass() {
@@ -439,7 +456,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			ImGui::SameLine();
 			ImGui::TextDisabled("(press D to hide)");
 			ImGui::Text("%.1f FPS / %.1f ms", ImGui::GetIO().Framerate, ImGui::GetIO().DeltaTime * 1000.0f);
-			ImGui::Text("Final framebuffer size: %dx%d, screen size: %dx%d", _finalFramebuffer->_width, _finalFramebuffer->_height, _camera.screenSize()[0], _camera.screenSize()[1]);
+			ImGui::Text("Render size: %dx%d, screen size: %dx%d", _renderFramebuffer->_width, _renderFramebuffer->_height, _camera.screenSize()[0], _camera.screenSize()[1]);
 			if (ImGui::Button("Print MIDI content to console")) {
 				_scene->midiFile().print();
 			}
@@ -896,9 +913,11 @@ void Renderer::clean() {
 	_blurringScreen.clean();
 	_passthrough.clean();
 	_backgroundTexture.clean();
+	_fxaa.clean();
 	_particlesFramebuffer->clean();
 	_blurFramebuffer->clean();
 	_finalFramebuffer->clean();
+	_renderFramebuffer->clean();
 }
 
 void Renderer::rescale(float scale){
@@ -921,6 +940,7 @@ void Renderer::updateSizes(){
 	const glm::vec2 baseRes(_camera.renderSize());
 	_particlesFramebuffer->resize(currentQuality.particlesResolution * baseRes);
 	_blurFramebuffer->resize(currentQuality.blurResolution * baseRes);
+	_renderFramebuffer->resize(currentQuality.finalResolution * baseRes);
 	_finalFramebuffer->resize(currentQuality.finalResolution * baseRes);
 	_recorder.setSize(glm::ivec2(_finalFramebuffer->_width, _finalFramebuffer->_height));
 }
@@ -1007,6 +1027,8 @@ void Renderer::startRecording(){
 	_particlesFramebuffer->bind();
 	glClear(GL_COLOR_BUFFER_BIT);
 	_blurFramebuffer->bind();
+	glClear(GL_COLOR_BUFFER_BIT);
+	_renderFramebuffer->bind();
 	glClear(GL_COLOR_BUFFER_BIT);
 	_finalFramebuffer->bind();
 	glClear(GL_COLOR_BUFFER_BIT);

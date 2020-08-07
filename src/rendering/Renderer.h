@@ -153,12 +153,14 @@ private:
 	
 	std::shared_ptr<Framebuffer> _particlesFramebuffer;
 	std::shared_ptr<Framebuffer> _blurFramebuffer;
+	std::shared_ptr<Framebuffer> _renderFramebuffer;
 	std::shared_ptr<Framebuffer> _finalFramebuffer;
 
 	std::shared_ptr<MIDIScene> _scene;
 	ScreenQuad _blurringScreen;
 	ScreenQuad _passthrough;
 	ScreenQuad _backgroundTexture;
+	ScreenQuad _fxaa;
 	std::shared_ptr<Score> _score;
 
 	glm::ivec2 _windowSize;
