@@ -506,6 +506,7 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 
 	glEnable(GL_BLEND);
 	glUseProgram(_programPedalsId);
+	glDisable(GL_CULL_FACE);
 
 	// Adjust for aspect ratio.
 	const float rat = invScreenSize.y/invScreenSize.x;
@@ -546,13 +547,13 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 	glBindVertexArray(0);
 	glUseProgram(0);
 	glDisable(GL_BLEND);
+	glEnable(GL_CULL_FACE);
 }
 
 void MIDIScene::drawWaves(float time, const glm::vec2 & invScreenSize, const State::WaveState & state, float keyboardHeight) {
 
 	glEnable(GL_BLEND);
 	glUseProgram(_programWaveId);
-	glDisable(GL_CULL_FACE);
 	glBlendFunc(GL_ONE, GL_ONE);
 	// Uniforms setup.
 	const GLuint colorId = glGetUniformLocation(_programWaveId, "waveColor");
@@ -585,8 +586,6 @@ void MIDIScene::drawWaves(float time, const glm::vec2 & invScreenSize, const Sta
 		glUniform1f(phaseId, phase);
 		glDrawElements(GL_TRIANGLES, int(_countWave), GL_UNSIGNED_INT, (void*)0);
 	}
-
-
 
 	glBindVertexArray(0);
 	glUseProgram(0);

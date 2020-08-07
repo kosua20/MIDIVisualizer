@@ -31,6 +31,7 @@ Renderer::Renderer(int winW, int winH, bool fullscreen) {
 	glFrontFace(GL_CCW);
 	glCullFace(GL_BACK);
 	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glBlendEquation(GL_FUNC_ADD);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
