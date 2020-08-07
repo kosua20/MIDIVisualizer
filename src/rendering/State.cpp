@@ -537,7 +537,7 @@ void State::reset(){
 	pedals.merge = false;
 	pedals.location = PedalsState::BOTTOMRIGHT;
 
-	showWave = true;
+	showWave = false;
 	waves.color = baseColors[0];
 	waves.amplitude = 1.0f;
 	waves.frequency = 1.0f;
