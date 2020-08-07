@@ -293,7 +293,8 @@ void Renderer::drawFlashes(const glm::vec2 & invSize) {
 }
 
 void Renderer::drawPedals(const glm::vec2 & invSize){
-	_scene->drawPedals(_timer, invSize, _state.pedals, _state.keyboard.size);
+	// Extra shift above the waves.
+	_scene->drawPedals(_timer, invSize, _state.pedals, _state.keyboard.size + (_state.showWave ? 0.01f : 0.0f));
 }
 
 void Renderer::drawWaves(const glm::vec2 & invSize){
