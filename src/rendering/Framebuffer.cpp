@@ -51,6 +51,10 @@ void Framebuffer::bind(){
 	glBindFramebuffer(GL_FRAMEBUFFER, _id);
 }
 
+void Framebuffer::bind(GLenum mode){
+	glBindFramebuffer(mode, _id);
+}
+
 void Framebuffer::unbind(){
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

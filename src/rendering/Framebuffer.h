@@ -16,6 +16,8 @@ public:
 	
 	/// Bind the framebuffer.
 	void bind();
+
+	void bind(GLenum mode);
 	
 	/// Unbind the framebuffer.
 	void unbind();
