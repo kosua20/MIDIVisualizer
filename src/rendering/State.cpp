@@ -165,6 +165,12 @@ void State::defineOptions(){
 	_sharedInfos["pedal-location"].values = "top-left: 0, bottom-left: 1, top-right: 2, bottom-right: 3";
 
 	_sharedInfos["show-wave"] = {"Display the wave effect along the top of the keyboard", OptionInfos::Type::BOOLEAN};
+	_sharedInfos["wave-size"] = {"Wave effect size", OptionInfos::Type::FLOAT, {0.0f, 5.0f}};
+	_sharedInfos["wave-opacity"] = {"Wave effect opacity", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos["wave-amplitude"] = {"Wave effect amplitude", OptionInfos::Type::FLOAT, {0.0f, 5.0f}};
+	_sharedInfos["wave-frequency"] = {"Wave effect oscillations frequency", OptionInfos::Type::FLOAT, {0.0f, 5.0f}};
+	_sharedInfos["color-wave"] = {"Wave effect color", OptionInfos::Type::COLOR};
+	
 }
 
 size_t State::helpText(std::string & configOpts, std::string & setsOpts){
@@ -266,6 +272,11 @@ void State::updateOptions(){
 	_intInfos["pedal-location"] = (int*)&pedals.location;
 
 	_boolInfos["show-wave"] = &showWave;
+	_floatInfos["wave-size"] = &waves.spread;
+	_floatInfos["wave-opacity"] = &waves.opacity;
+	_floatInfos["wave-amplitude"] =  &waves.amplitude;
+	_floatInfos["wave-frequency"] =  &waves.frequency;
+	_vecInfos["color-wave"] = &waves.color;
 
 }
 
