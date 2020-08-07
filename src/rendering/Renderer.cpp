@@ -481,7 +481,11 @@ void Renderer::synchronizeColors(const ColorArray & colors){
 	for(size_t cid = 0; cid < CHANNELS_COUNT; ++cid){
 		_state.baseColors[cid] = _state.particles.colors[cid] = _state.minorColors[cid] = _state.flashColors[cid] = colors[cid];
 	}
-	_state.pedals.color = _state.waves.color = _state.baseColors[0];
+
+	// If we have only one channel, synchronize one-shoft effects.
+	if(!_state.perChannelColors){
+		_state.pedals.color = _state.waves.color = _state.baseColors[0];
+	}
 }
 
 SystemAction Renderer::showTopButtons(double currentTime){

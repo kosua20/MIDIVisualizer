@@ -16,7 +16,7 @@ enum class SetMode : int {
 
 struct SetOptions {
 	SetMode mode = SetMode::CHANNEL;
-	int key = 128;
+	int key = 64;
 };
 
 enum MIDIType : uint16_t {
