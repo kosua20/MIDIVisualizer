@@ -342,6 +342,11 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			updateMinMaxKeys();
 		}
 
+		if (ImGui::Checkbox("Sync effect colors", &_state.lockParticleColor)) {
+			// If we enable the lock, make sure the colors are synched.
+			synchronizeColors(_state.baseColors);
+		}
+
 		if(ImGui::CollapsingHeader("Notes##HEADER")){
 
 			bool smw0 = ImGui::InputFloat("Scale", &_state.scale, 0.01f, 0.1f);
@@ -354,7 +359,6 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 				_score->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
 			}
 
-
 			if(channelColorEdit("Notes", "Notes", _state.baseColors)){
 				synchronizeColors(_state.baseColors);
 			}
@@ -364,10 +368,6 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			}
 
 			ImGui::SameLine(COLUMN_SIZE);
-			if (ImGui::Checkbox("Sync colors", &_state.lockParticleColor)) {
-				// If we enable the lock, make sure the colors are synched.
-				synchronizeColors(_state.baseColors);
-			}
 
 			if(ImGui::Checkbox("Per-set colors", &_state.perChannelColors)){
 				if(!_state.perChannelColors){
@@ -375,7 +375,6 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 				}
 			}
 			if(_state.perChannelColors){
-				ImGui::SameLine(COLUMN_SIZE);
 				if(ImGui::Button("Define sets...")){
 					ImGui::OpenPopup("Note sets options");
 				}
@@ -653,11 +652,15 @@ void Renderer::showWaveOptions(){
 	ImGui::ColorEdit3("Color##Waves", &_state.waves.color[0], ImGuiColorEditFlags_NoInputs);
 	ImGui::PopItemWidth();
 	ImGui::SameLine(COLUMN_SIZE);
-	ImGui::SliderFloat("Spread##Waves", &_state.waves.spread, 0.0f, 5.0f);
-
 	ImGui::SliderFloat("Amplitude##Waves", &_state.waves.amplitude, 0.0f, 5.0f);
+
+	ImGui::SliderFloat("Spread##Waves", &_state.waves.spread, 0.0f, 5.0f);
 	ImGui::SameLine(COLUMN_SIZE);
 	ImGui::SliderFloat("Frequency##Waves", &_state.waves.frequency, 0.0f, 5.0f);
+
+	if(ImGui::SliderFloat("Opacity##Waves", &_state.waves.opacity, 0.0f, 1.0f)){
+		_state.waves.opacity = std::min(std::max(_state.waves.opacity, 0.0f), 1.0f);
+	}
 
 }
 
