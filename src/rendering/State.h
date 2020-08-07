@@ -93,12 +93,21 @@ public:
 		float opacity;
 		bool merge;
 	};
+
+	struct WaveState {
+		glm::vec3 color;
+		float opacity;
+		float spread;
+		float amplitude;
+		float frequency;
+	};
 	
 	BackgroundState background;
 	ParticlesState particles;
 	KeyboardState keyboard;
 	SetOptions setOptions;
 	PedalsState pedals;
+	WaveState waves;
 	
 	Quality::Level quality;
 	ColorArray baseColors; ///< Major notes color.
@@ -122,6 +131,7 @@ public:
 	bool showKeyboard;
 	bool perChannelColors;
 	bool showPedal;
+	bool showWave;
 
 	std::array<int, 16> layersMap; ///< Location of each layer.
 

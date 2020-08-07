@@ -88,6 +88,10 @@ Renderer::Renderer(int winW, int winH, bool fullscreen) {
 	_layers[Layer::PEDAL].name = "Pedal";
 	_layers[Layer::PEDAL].draw = &Renderer::drawPedals;
 
+	_layers[Layer::WAVE].type = Layer::WAVE;
+	_layers[Layer::WAVE].name = "Waves";
+	_layers[Layer::WAVE].draw = &Renderer::drawWaves;
+
 	// Register state.
 	_layers[Layer::BGTEXTURE].toggle = &_state.background.image;
 	_layers[Layer::BLUR].toggle = &_state.showBlur;
@@ -97,6 +101,7 @@ Renderer::Renderer(int winW, int winH, bool fullscreen) {
 	_layers[Layer::NOTES].toggle = &_state.showNotes;
 	_layers[Layer::FLASHES].toggle = &_state.showFlashes;
 	_layers[Layer::PEDAL].toggle = &_state.showPedal;
+	_layers[Layer::WAVE].toggle = &_state.showWave;
 
 	// Check setup errors.
 	checkGLError();
@@ -288,7 +293,12 @@ void Renderer::drawFlashes(const glm::vec2 & invSize) {
 }
 
 void Renderer::drawPedals(const glm::vec2 & invSize){
-	_scene->drawPedals(_timer, invSize, _state.pedals, _state.keyboard.size);
+	// Extra shift above the waves.
+	_scene->drawPedals(_timer, invSize, _state.pedals, _state.keyboard.size + (_state.showWave ? 0.01f : 0.0f));
+}
+
+void Renderer::drawWaves(const glm::vec2 & invSize){
+	_scene->drawWaves(_timer, invSize, _state.waves, _state.keyboard.size);
 }
 
 SystemAction Renderer::drawGUI(const float currentTime) {
@@ -333,6 +343,11 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			updateMinMaxKeys();
 		}
 
+		if (ImGui::Checkbox("Sync effect colors", &_state.lockParticleColor)) {
+			// If we enable the lock, make sure the colors are synched.
+			synchronizeColors(_state.baseColors);
+		}
+
 		if(ImGui::CollapsingHeader("Notes##HEADER")){
 
 			bool smw0 = ImGui::InputFloat("Scale", &_state.scale, 0.01f, 0.1f);
@@ -345,7 +360,6 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 				_score->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
 			}
 
-
 			if(channelColorEdit("Notes", "Notes", _state.baseColors)){
 				synchronizeColors(_state.baseColors);
 			}
@@ -355,10 +369,6 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			}
 
 			ImGui::SameLine(COLUMN_SIZE);
-			if (ImGui::Checkbox("Sync colors", &_state.lockParticleColor)) {
-				// If we enable the lock, make sure the colors are synched.
-				synchronizeColors(_state.baseColors);
-			}
 
 			if(ImGui::Checkbox("Per-set colors", &_state.perChannelColors)){
 				if(!_state.perChannelColors){
@@ -366,7 +376,6 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 				}
 			}
 			if(_state.perChannelColors){
-				ImGui::SameLine(COLUMN_SIZE);
 				if(ImGui::Button("Define sets...")){
 					ImGui::OpenPopup("Note sets options");
 				}
@@ -398,6 +407,10 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 
 		if(_state.showPedal && ImGui::CollapsingHeader("Pedal##HEADER")){
 			showPedalOptions();
+		}
+
+		if(_state.showWave && ImGui::CollapsingHeader("Wave##HEADER")){
+			showWaveOptions();
 		}
 
 		if (_state.showScore && ImGui::CollapsingHeader("Score##HEADER")) {
@@ -445,6 +458,7 @@ void Renderer::synchronizeColors(const ColorArray & colors){
 	for(size_t cid = 0; cid < CHANNELS_COUNT; ++cid){
 		_state.baseColors[cid] = _state.particles.colors[cid] = _state.minorColors[cid] = _state.flashColors[cid] = colors[cid];
 	}
+	_state.pedals.color = _state.waves.color = _state.baseColors[0];
 }
 
 SystemAction Renderer::showTopButtons(double currentTime){
@@ -597,6 +611,7 @@ void Renderer::showKeyboardOptions(){
 		if (_state.keyboard.customKeyColors) {
 
 			ImGui::SameLine(COLUMN_SIZE);
+			ImGui::PushItemWidth(25);
 			if(ImGui::ColorEdit3("Major##KeysHighlight", &_state.keyboard.majorColor[0][0], ImGuiColorEditFlags_NoInputs)){
 				// Ensure synchronization of the override array.
 				for(size_t cid = 1; cid < _state.keyboard.majorColor.size(); ++cid){
@@ -611,6 +626,7 @@ void Renderer::showKeyboardOptions(){
 					_state.keyboard.minorColor[cid] = _state.keyboard.minorColor[0];
 				}
 			}
+			ImGui::PopItemWidth();
 		}
 	}
 }
@@ -630,6 +646,24 @@ void Renderer::showPedalOptions(){
 		_state.pedals.size = std::min(std::max(_state.pedals.size, 0.05f), 0.5f);
 	}
 	ImGui::Checkbox("Merge pedals", &_state.pedals.merge);
+}
+
+
+void Renderer::showWaveOptions(){
+	ImGui::PushItemWidth(25);
+	ImGui::ColorEdit3("Color##Waves", &_state.waves.color[0], ImGuiColorEditFlags_NoInputs);
+	ImGui::PopItemWidth();
+	ImGui::SameLine(COLUMN_SIZE);
+	ImGui::SliderFloat("Amplitude##Waves", &_state.waves.amplitude, 0.0f, 5.0f);
+
+	ImGui::SliderFloat("Spread##Waves", &_state.waves.spread, 0.0f, 5.0f);
+	ImGui::SameLine(COLUMN_SIZE);
+	ImGui::SliderFloat("Frequency##Waves", &_state.waves.frequency, 0.0f, 5.0f);
+
+	if(ImGui::SliderFloat("Opacity##Waves", &_state.waves.opacity, 0.0f, 1.0f)){
+		_state.waves.opacity = std::min(std::max(_state.waves.opacity, 0.0f), 1.0f);
+	}
+
 }
 
 void Renderer::showBlurOptions(){
@@ -923,6 +957,7 @@ void Renderer::setState(const State & state){
 	_layers[Layer::NOTES].toggle = &_state.showNotes;
 	_layers[Layer::FLASHES].toggle = &_state.showFlashes;
 	_layers[Layer::PEDAL].toggle = &_state.showPedal;
+	_layers[Layer::WAVE].toggle = &_state.showWave;
 
 	// Update split notes.
 	if(_scene){

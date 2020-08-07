@@ -58,5 +58,6 @@ void main(){
 	
 	// Boost intensity.
 	fragColor *= 1.1;
-	
+	// Premultiplied alpha.
+	fragColor.rgb *= fragColor.a;
 }

@@ -229,6 +229,44 @@ void MIDIScene::renderSetup(){
 	glBindVertexArray(0);
 	_countPedals = pedalsIndices.size();
 
+	// Wave setup.
+	_programWaveId = createGLProgramFromStrings(ResourcesManager::getStringForShader("wave_vert"), ResourcesManager::getStringForShader("wave_frag"));
+	// Create an array buffer to host the geometry data.
+	const int numSegments = 512;
+	std::vector<glm::vec2> waveVerts((numSegments+1)*2);
+	for(int vid = 0; vid < numSegments+1; ++vid){
+		const float x = 2.0 * float(vid) / float(numSegments) - 1.0;
+		waveVerts[2*vid] = glm::vec2(x, 1.0f);
+		waveVerts[2*vid+1] = glm::vec2(x, -1.0f);
+	}
+	std::vector<unsigned int> waveInds(3 * 2 * numSegments);
+	for(int sid = 0; sid < numSegments; ++sid){
+		const int bid = 6 * sid;
+		const int vid = 2 * sid;
+		waveInds[bid  ] = vid;
+		waveInds[bid+1] = vid + 1;
+		waveInds[bid+2] = vid + 2;
+		waveInds[bid+3] = vid + 2;
+		waveInds[bid+4] = vid + 1;
+		waveInds[bid+5] = vid + 3;
+	}
+	GLuint vboWav = 0;
+	glGenBuffers(1, &vboWav);
+	glBindBuffer(GL_ARRAY_BUFFER, vboWav);
+	glBufferData(GL_ARRAY_BUFFER, 2 * sizeof(GLfloat) * waveVerts.size(), &(waveVerts[0][0]), GL_STATIC_DRAW);
+	glGenVertexArrays (1, &_vaoWave);
+	glBindVertexArray(_vaoWave);
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, vboWav);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+	// We load the indices data
+	GLuint eboWav = 0;
+	glGenBuffers(1, &eboWav);
+ 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboWav);
+ 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * waveInds.size(), &(waveInds[0]), GL_STATIC_DRAW);
+	glBindVertexArray(0);
+	_countWave = waveInds.size();
+
 	// Prepare actives notes array.
 	_actives.fill(-1);
 	_previousTime = 0.0;
@@ -398,7 +436,8 @@ void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const C
 	
 	// Need alpha blending.
 	glEnable(GL_BLEND);
-	
+
+	glBlendFunc(GL_ONE, GL_ONE);
 	// Update the flags buffer accordingly.
 	glBindBuffer(GL_ARRAY_BUFFER, _flagsBufferId);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, _actives.size()*sizeof(int) ,&(_actives[0]));
@@ -425,7 +464,7 @@ void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const C
 	glBindVertexArray(0);
 	glUseProgram(0);
 	glDisable(GL_BLEND);
-	
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::vec3 & keyColor, const ColorArray & majorColors, const ColorArray & minorColors, bool highlightKeys) {
@@ -467,7 +506,6 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 
 	glEnable(GL_BLEND);
 	glUseProgram(_programPedalsId);
-	glDisable(GL_CULL_FACE);
 
 	// Adjust for aspect ratio.
 	const float rat = invScreenSize.y/invScreenSize.x;
@@ -508,7 +546,52 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 	glBindVertexArray(0);
 	glUseProgram(0);
 	glDisable(GL_BLEND);
-	glEnable(GL_CULL_FACE);
+}
+
+void MIDIScene::drawWaves(float time, const glm::vec2 & invScreenSize, const State::WaveState & state, float keyboardHeight) {
+
+	glEnable(GL_BLEND);
+	glUseProgram(_programWaveId);
+	glDisable(GL_CULL_FACE);
+	glBlendFunc(GL_ONE, GL_ONE);
+	// Uniforms setup.
+	const GLuint colorId = glGetUniformLocation(_programWaveId, "waveColor");
+	const GLuint opacityId = glGetUniformLocation(_programWaveId, "waveOpacity");
+	const GLuint spreadId = glGetUniformLocation(_programWaveId, "spread");
+	const GLuint scaleId = glGetUniformLocation(_programWaveId, "amplitude");
+	const GLuint freqId =  glGetUniformLocation(_programWaveId, "freq");
+	const GLuint phaseId =  glGetUniformLocation(_programWaveId, "phase");
+	const GLuint shiftId =  glGetUniformLocation(_programWaveId, "keyboardSize");
+
+	glUniform3fv(colorId, 1, &(state.color[0]));
+	glUniform1f(shiftId, keyboardHeight);
+	glUniform1f(opacityId, state.opacity);
+	glUniform1f(spreadId, state.spread);
+
+	glBindVertexArray(_vaoWave);
+
+	// Fixed initial parameters.
+	const float ampls[4] = {-0.023f, -0.011f, 0.017f, 0.009f};
+	const float freqs[4] = {10.3f, -8.27f, -4.4f, 13.7f};
+	const float phases[4] = {5.2f, 4.7f, 9.3f, -7.1f};
+	// Render multiple waves with additive blending.
+	for(int i = 0; i < 4; ++i){
+		const int sgn = i%2 == 0 ? 1.0f : -1.0f;
+		const float ampl = state.amplitude * ampls[i];
+		const float freq = state.frequency * freqs[i];
+		const float phase = phases[i] * time + float(i+1) * 7.39f;
+		glUniform1f(scaleId, ampl);
+		glUniform1f(freqId, freq);
+		glUniform1f(phaseId, phase);
+		glDrawElements(GL_TRIANGLES, int(_countWave), GL_UNSIGNED_INT, (void*)0);
+	}
+
+
+
+	glBindVertexArray(0);
+	glUseProgram(0);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glDisable(GL_BLEND);
 }
 
 void MIDIScene::setMinMaxKeys(int minKey, int minKeyMajor, int notesCount){

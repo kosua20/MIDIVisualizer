@@ -30,6 +30,8 @@ public:
 
 	void drawPedals(float time, const glm::vec2 & invScreenSize, const State::PedalsState & state, float keyboardHeight);
 
+	void drawWaves(float time, const glm::vec2 & invScreenSize, const State::WaveState & state, float keyboardHeight);
+
 	/// Clean function
 	void clean();
 
@@ -58,6 +60,7 @@ private:
 	GLuint _programParticulesId;
 	GLuint _programKeysId;
 	GLuint _programPedalsId;
+	GLuint _programWaveId;
 	
 	GLuint _vao;
 	GLuint _ebo;
@@ -75,6 +78,9 @@ private:
 
 	GLuint _vaoPedals;
 	size_t _countPedals;
+
+	GLuint _vaoWave;
+	size_t _countWave;
 	
 	size_t _primitiveCount;
 	

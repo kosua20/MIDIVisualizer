@@ -68,7 +68,7 @@ private:
 	struct Layer {
 		
 		enum Type : unsigned int {
-			BGCOLOR = 0, BGTEXTURE, BLUR, ANNOTATIONS, KEYBOARD, PARTICLES, NOTES, FLASHES, PEDAL, COUNT
+			BGCOLOR = 0, BGTEXTURE, BLUR, ANNOTATIONS, KEYBOARD, PARTICLES, NOTES, FLASHES, PEDAL, WAVE, COUNT
 		};
 
 		Type type = BGCOLOR;
@@ -95,6 +95,8 @@ private:
 	void drawFlashes(const glm::vec2 & invSize);
 
 	void drawPedals(const glm::vec2 & invSize);
+	
+	void drawWaves(const glm::vec2 & invSize);
 
 	SystemAction drawGUI(const float currentTime);
 
@@ -107,6 +109,8 @@ private:
 	void showKeyboardOptions();
 
 	void showPedalOptions();
+	
+	void showWaveOptions();
 
 	void showBlurOptions();
 
