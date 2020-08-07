@@ -132,6 +132,7 @@ public:
 	bool perChannelColors;
 	bool showPedal;
 	bool showWave;
+	bool applyAA;
 
 	std::array<int, 16> layersMap; ///< Location of each layer.
 

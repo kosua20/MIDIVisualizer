@@ -170,6 +170,8 @@ void State::defineOptions(){
 	_sharedInfos["wave-amplitude"] = {"Wave effect amplitude", OptionInfos::Type::FLOAT, {0.0f, 5.0f}};
 	_sharedInfos["wave-frequency"] = {"Wave effect oscillations frequency", OptionInfos::Type::FLOAT, {0.0f, 5.0f}};
 	_sharedInfos["color-wave"] = {"Wave effect color", OptionInfos::Type::COLOR};
+
+	_sharedInfos["smooth"] = {"Apply anti-aliasing to smooth all lines", OptionInfos::Type::BOOLEAN};
 	
 }
 
@@ -277,6 +279,8 @@ void State::updateOptions(){
 	_floatInfos["wave-amplitude"] =  &waves.amplitude;
 	_floatInfos["wave-frequency"] =  &waves.frequency;
 	_vecInfos["color-wave"] = &waves.color;
+
+	_boolInfos["smooth"] = &applyAA;
 
 }
 
@@ -539,6 +543,8 @@ void State::reset(){
 	waves.frequency = 1.0f;
 	waves.opacity = 1.0f;
 	waves.spread = 1.0f;
+
+	applyAA = false;
 	
 }
 

@@ -335,6 +335,14 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			updateSizes();
 		}
 
+		if (ImGui::Checkbox("Sync effect colors", &_state.lockParticleColor)) {
+			// If we enable the lock, make sure the colors are synched.
+			synchronizeColors(_state.baseColors);
+		}
+		// Add FXAA.
+		ImGui::SameLine(COLUMN_SIZE);
+		ImGui::Checkbox("Smoothing", &_state.applyAA);
+
 		if(ImGui::Combo("Min key", &_state.minKey, midiKeysString)){
 			updateMinMaxKeys();
 		}
@@ -343,10 +351,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			updateMinMaxKeys();
 		}
 
-		if (ImGui::Checkbox("Sync effect colors", &_state.lockParticleColor)) {
-			// If we enable the lock, make sure the colors are synched.
-			synchronizeColors(_state.baseColors);
-		}
+
 
 		if(ImGui::CollapsingHeader("Notes##HEADER")){
 
