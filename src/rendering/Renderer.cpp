@@ -326,9 +326,16 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 	if (ImGui::Begin("Settings", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
 
 		action = showTopButtons(currentTime);
-
 		ImGui::Separator();
 
+		// Detail text.
+		const int nCount = _scene->midiFile().notesCount();
+		const double duration = _scene->duration();
+		const int speed = int(std::round(double(nCount)/duration));
+		ImGui::Text("Notes: %d, duration: %.1fs, speed: %d notes/s", nCount, duration, speed);
+		ImGui::Separator();
+		
+		// Load button.
 		if (ImGui::Button("Load MIDI file...")) {
 			// Read arguments.
 			nfdchar_t *outPath = NULL;
