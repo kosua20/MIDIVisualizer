@@ -7,8 +7,8 @@ assignees: ''
 
 ---
 
-Thank you for your interest in MIDIVisualizer, and thank you for reporting issues!  
-Don't forget to check the [troubleshooting section](https://github.com/kosua20/MIDIVisualizer/blob/master/README.md#troubleshooting), there might be information related to your issue.
+Thank you for your interest in MIDIVisualizer, and thank you for reporting issues!
+Don't forget to check the [troubleshooting section](https://github.com/kosua20/MIDIVisualizer/blob/master/README.md#troubleshooting), there might be information related to your issue.  
 Please help me pinpoint (and hopefully fix) the issue more quickly by filling in the information below.
 If you are not sure about some of the details asked below, don't worry, you can leave them blank.
 
