@@ -7,7 +7,8 @@ assignees: ''
 
 ---
 
-Thank you for your interest in MIDIVisualizer, and thank you for reporting issues!
+Thank you for your interest in MIDIVisualizer, and thank you for reporting issues!  
+Don't forget to check the [troubleshooting section](https://github.com/kosua20/MIDIVisualizer/blob/master/README.md#troubleshooting), there might be information related to your issue.
 Please help me pinpoint (and hopefully fix) the issue more quickly by filling in the information below.
 If you are not sure about some of the details asked below, don't worry, you can leave them blank.
 
@@ -17,5 +18,7 @@ If you encounter the issue with specific MIDI files, it would be awesome if you 
 
 **Hardware info:**
 - OS: [e.g. Windows, macOS], if possible give the OS version and, *for Windows*, if it's 32 or 64 bits.
-- MIDIVisualizer version (3.4, 4.1, etc.) and ,*for Windows*, if it's 32 or 64 bits.
+- MIDIVisualizer version (3.4, 4.1, etc.) and, *for Windows*, if it's 32 or 64 bits.
 - GPU model (Nvidia GeForce 1080, AMD Radeon HD5000, etc.)
+
+Please don't forget that MIDIVisualizer is a personal project that I maintain on my free time, free to use and open source :)
