@@ -54,6 +54,8 @@ If display options are given, they will override those specified in the configur
 
 ## Troubleshooting
 
+Please note that MIDIVisualizer requires OpenGL 3.2 or higher on all platforms.
+
 ### Windows
 
 - *I can't open the application as it is blocked by Safeguard.*  
