@@ -141,11 +141,11 @@ private:
 	State _state;
 	std::array<Layer, Layer::COUNT> _layers;
 
-	float _timer;
-	float _timerStart;
-	bool _shouldPlay;
-	bool _showGUI;
-	bool _showDebug;
+	float _timer = 0.0f;
+	float _timerStart = 0.0f;
+	bool _shouldPlay = false;
+	bool _showGUI = true;
+	bool _showDebug = false;
 
 	Recorder _recorder;
 	

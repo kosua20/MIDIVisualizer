@@ -187,7 +187,7 @@ SystemAction Renderer::draw(float currentTime) {
 void Renderer::drawScene(bool transparentBG){
 
 	// Update active notes listing (for particles).
-	_scene->updatesActiveNotes(_timer);
+	_scene->updatesActiveNotes(_state.scrollSpeed * _timer, _state.scrollSpeed);
 
 	const glm::vec2 invSizeFb = 1.0f / glm::vec2(_renderFramebuffer->_width, _renderFramebuffer->_height);
 
@@ -293,7 +293,7 @@ void Renderer::drawParticles(const glm::vec2 & invSize) {
 }
 
 void Renderer::drawScore(const glm::vec2 & invSize) {
-	_score->draw(_timer, invSize);
+	_score->draw(_timer * _state.scrollSpeed, invSize);
 }
 
 void Renderer::drawKeyboard(const glm::vec2 & invSize) {
@@ -303,7 +303,7 @@ void Renderer::drawKeyboard(const glm::vec2 & invSize) {
 }
 
 void Renderer::drawNotes(const glm::vec2 & invSize) {
-	_scene->drawNotes(_timer, invSize, _state.baseColors, _state.minorColors, _state.reverseScroll, false);
+	_scene->drawNotes(_timer * _state.scrollSpeed, invSize, _state.baseColors, _state.minorColors, _state.reverseScroll, false);
 }
 
 void Renderer::drawFlashes(const glm::vec2 & invSize) {
@@ -378,6 +378,10 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 
 		if(ImGui::Checkbox("Reverse", &_state.reverseScroll)){
 			_score->setPlayDirection(_state.reverseScroll);
+		}
+		ImGui::SameLine(COLUMN_SIZE);
+		if(ImGui::SliderFloat("Speed", &_state.scrollSpeed, 0.1f, 2.0f)){
+			_state.scrollSpeed = std::max(0.01f, _state.scrollSpeed);
 		}
 
 		if(ImGui::CollapsingHeader("Notes##HEADER")){
@@ -1015,7 +1019,7 @@ void Renderer::startDirectRecording(const std::string & path, Recorder::Format f
 
 void Renderer::startRecording(){
 	// We need to provide some information for the recorder to start.
-	_recorder.start(_state.prerollTime, float(_scene->duration()));
+	_recorder.start(_state.prerollTime, float(_scene->duration()), _state.scrollSpeed);
 
 	// Start by clearing up all buffers.
 	// We need:
