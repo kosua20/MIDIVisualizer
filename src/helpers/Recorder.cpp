@@ -121,7 +121,10 @@ bool Recorder::drawGUI(){
 		ImGui::SameLine(EXPORT_COLUMN_SIZE);
 		ImGui::InputInt("Framerate", &_exportFramerate);
 
-		ImGui::InputInt2("Export size", &_size[0]);
+		if(ImGui::InputInt2("Export size", &_size[0])){
+			_size[0] += _size[0] % 2;
+			_size[1] += _size[1] % 2;
+		}
 
 		ImGui::SameLine(EXPORT_COLUMN_SIZE);
 		if(_outFormat == Format::PNG){
@@ -231,6 +234,8 @@ const glm::ivec2 & Recorder::requiredSize() const {
 
 void Recorder::setSize(const glm::ivec2 & size){
 	_size = size;
+	_size[0] += _size[0]%2;
+	_size[1] += _size[1]%2;
 }
 
 void Recorder::setParameters(const std::string & path, Format format, int framerate, int bitrate, bool skipBackground){
@@ -325,7 +330,7 @@ bool Recorder::initVideo(const std::string & path, Format format){
 	_frame->width = _codecCtx->width;
 	_frame->height = _codecCtx->height;
 	_frame->pts = 0;
-	if(av_frame_get_buffer(_frame, 32) < 0){
+	if(av_frame_get_buffer(_frame, 0) < 0){
 		std::cerr << "Unable to create frame buffer." << std::endl;
 		return false;
 	}
