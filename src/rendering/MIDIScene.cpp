@@ -307,11 +307,11 @@ void MIDIScene::setKeyboardSize(float keyboardHeight){
 	glUseProgram(0);
 }
 
-void MIDIScene::updatesActiveNotes(double time){
+void MIDIScene::updatesActiveNotes(double time, double speed){
 	// Update the particle systems lifetimes.
 	for(auto & particle : _particles){
 		// Give a bit of a head start to the animation.
-		particle.elapsed = (float(time) - particle.start + 0.25f) / particle.duration;
+		particle.elapsed = (float(time) - particle.start + 0.25f) / (speed * particle.duration);
 		// Disable old particles.
 		if(float(time) >= particle.start + particle.duration){
 			particle.note = -1;

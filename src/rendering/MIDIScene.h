@@ -17,7 +17,7 @@ public:
 	
 	~MIDIScene();
 	
-	void updatesActiveNotes(double time);
+	void updatesActiveNotes(double time, double speed);
 	
 	/// Draw function
 	void drawNotes(float time, const glm::vec2 & invScreenSize, const ColorArray & majorColors, const ColorArray & minorColors, bool reverseScroll, bool prepass);
