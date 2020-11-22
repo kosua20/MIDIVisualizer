@@ -14,6 +14,7 @@ uniform float minorsWidth = 1.0;
 uniform sampler2D screenTexture;
 uniform vec3 textColor = vec3(1.0);
 uniform vec3 linesColor = vec3(1.0);
+uniform bool reverseMode = false;
 
 #define MAJOR_COUNT 75.0
 
@@ -107,13 +108,16 @@ void main(){
 	int currentMesure = int(floor(time/secondsPerMeasure));
 	// How many mesures do we check.
 	int count = int(ceil(0.75*(2.0/mainSpeed)))+2;
-	
-	for(int i = 0; i < count; i++){
-		// Compute position of the measure currentMesure+i.
-		vec2 position = vec2(0.005, keyboardHeight + (secondsPerMeasure*(currentMesure+i) - time)*mainSpeed*0.5);
-		
+
+	// We check two extra measures to avoid sudden disappearance below the keyboard.
+	for(int i = -2; i < count; i++){
+		// Compute position of the measure currentMesure+-i.
+		int mesure = currentMesure + (reverseMode ? -1 : 1) * i;
+		vec2 position = vec2(0.005, keyboardHeight + (reverseMode ? -1.0 : 1.0) * (secondsPerMeasure * mesure - time)*mainSpeed*0.5);
+		//position.y *= ;
+
 		// Compute color for the number display, and for the horizontal line.
-		float numberIntensity = useDigits ? printNumber(currentMesure + i,position, In.uv, scale) : 0.0;
+		float numberIntensity = useDigits ? printNumber(mesure, position, In.uv, scale) : 0.0;
 		bgColor = mix(bgColor, vec4(textColor, 1.0), numberIntensity);
 		float lineIntensity = useHLines ? (0.25*(step(abs(In.uv.y - position.y - 0.5 / scale.y), inverseScreenSize.y))) : 0.0;
 		bgColor = mix(bgColor, vec4(linesColor, 1.0), lineIntensity);

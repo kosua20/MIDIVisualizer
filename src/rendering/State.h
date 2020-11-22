@@ -133,6 +133,7 @@ public:
 	bool showPedal;
 	bool showWave;
 	bool applyAA;
+	bool reverseScroll;
 
 	std::array<int, 16> layersMap; ///< Location of each layer.
 

@@ -8,6 +8,7 @@ uniform float time;
 uniform float mainSpeed;
 uniform float minorsWidth = 1.0;
 uniform float keyboardHeight = 0.25;
+uniform bool reverseMode = false;
 
 uniform int minNoteMajor;
 uniform float notesCount;
@@ -38,7 +39,8 @@ void main(){
 	float b = -notesCount + 1.0 - 2.0 * float(minNoteMajor);
 
 	float horizLoc = (id.x * a + b + id.w) / notesCount;
-	float vertLoc = (Out.noteSize.y * 0.5 + (2.0 * keyboardHeight - 1.0)) + mainSpeed * (id.y - time);
+	float vertLoc = 2.0 * keyboardHeight - 1.0;
+	vertLoc += (reverseMode ? -1.0 : 1.0) * (Out.noteSize.y * 0.5 + mainSpeed * (id.y - time));
 	vec2 noteShift = vec2(horizLoc, vertLoc);
 	
 	// Scale uv.

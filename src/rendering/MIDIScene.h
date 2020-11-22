@@ -20,7 +20,7 @@ public:
 	void updatesActiveNotes(double time);
 	
 	/// Draw function
-	void drawNotes(float time, const glm::vec2 & invScreenSize, const ColorArray & majorColors, const ColorArray & minorColors, bool prepass);
+	void drawNotes(float time, const glm::vec2 & invScreenSize, const ColorArray & majorColors, const ColorArray & minorColors, bool reverseScroll, bool prepass);
 	
 	void drawFlashes(float time, const glm::vec2 & invScreenSize, const ColorArray & baseColors, float userScale);
 	

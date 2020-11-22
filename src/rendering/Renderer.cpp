@@ -252,7 +252,7 @@ void Renderer::blurPrepass() {
 	}
 	if (_state.showBlurNotes) {
 		// Draw the notes.
-		_scene->drawNotes(_timer, invSizeB, _state.baseColors, _state.minorColors, true);
+		_scene->drawNotes(_timer, invSizeB, _state.baseColors, _state.minorColors, _state.reverseScroll, true);
 	}
 
 	_particlesFramebuffer->unbind();
@@ -303,7 +303,7 @@ void Renderer::drawKeyboard(const glm::vec2 & invSize) {
 }
 
 void Renderer::drawNotes(const glm::vec2 & invSize) {
-	_scene->drawNotes(_timer, invSize, _state.baseColors, _state.minorColors, false);
+	_scene->drawNotes(_timer, invSize, _state.baseColors, _state.minorColors, _state.reverseScroll, false);
 }
 
 void Renderer::drawFlashes(const glm::vec2 & invSize) {
@@ -376,7 +376,9 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			updateMinMaxKeys();
 		}
 
-
+		if(ImGui::Checkbox("Reverse", &_state.reverseScroll)){
+			_score->setPlayDirection(_state.reverseScroll);
+		}
 
 		if(ImGui::CollapsingHeader("Notes##HEADER")){
 
@@ -893,6 +895,7 @@ void Renderer::applyAllSettings() {
 	_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
 	_scene->setKeyboardSize(_state.keyboard.size);
 	_score->setKeyboardSize(_state.keyboard.size);
+	_score->setPlayDirection(_state.reverseScroll);
 
 	updateMinMaxKeys();
 

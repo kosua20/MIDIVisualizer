@@ -60,3 +60,9 @@ void Score::setMinMaxKeys(int minKey, int minKeyMajor, int notesCount){
 	glUseProgram(0);
 }
 
+void Score::setPlayDirection(bool reverse){
+	glUseProgram(_programId);
+	glUniform1i(glGetUniformLocation(_programId, "reverseMode"), reverse ? 1 : 0);
+	glUseProgram(0);
+}
+

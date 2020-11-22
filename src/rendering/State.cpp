@@ -172,6 +172,7 @@ void State::defineOptions(){
 	_sharedInfos["color-wave"] = {"Wave effect color", OptionInfos::Type::COLOR};
 
 	_sharedInfos["smooth"] = {"Apply anti-aliasing to smooth all lines", OptionInfos::Type::BOOLEAN};
+	_sharedInfos["reverse"] = {"Notes scroll from bottom to top instead of the opposite", OptionInfos::Type::BOOLEAN};
 	
 }
 
@@ -281,7 +282,7 @@ void State::updateOptions(){
 	_vecInfos["color-wave"] = &waves.color;
 
 	_boolInfos["smooth"] = &applyAA;
-
+	_boolInfos["reverse"] = &reverseScroll;
 }
 
 
@@ -545,7 +546,7 @@ void State::reset(){
 	waves.spread = 1.0f;
 
 	applyAA = false;
-	
+	reverseScroll = false;
 }
 
 void State::load(std::istream & configFile, int majVersion, int minVersion){

@@ -405,7 +405,7 @@ void MIDIScene::drawParticles(float time, const glm::vec2 & invScreenSize, const
 
 }
 
-void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const ColorArray & majorColors, const ColorArray & minorColors, bool prepass){
+void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const ColorArray & majorColors, const ColorArray & minorColors, bool reverseScroll, bool prepass){
 	
 	glUseProgram(_programId);
 	
@@ -415,13 +415,14 @@ void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const Col
 	GLuint colorId = glGetUniformLocation(_programId, "baseColor");
 	GLuint colorMinId = glGetUniformLocation(_programId, "minorColor");
 	GLuint colorScaleId = glGetUniformLocation(_programId, "colorScale");
+	GLuint reverseId = glGetUniformLocation(_programId, "reverseMode");
 	glUniform2fv(screenId,1, &(invScreenSize[0]));
-	glUniform1f(timeId,time);
+	glUniform1f(timeId, time);
 	glUniform1f(colorScaleId, prepass ? 0.6f: 1.0f);
 
 	glUniform3fv(colorId, majorColors.size(), &(majorColors[0][0]));
 	glUniform3fv(colorMinId, minorColors.size(), &(minorColors[0][0]));
-	
+	glUniform1i(reverseId, reverseScroll ? 1 : 0);
 	
 	// Draw the geometry.
 	glBindVertexArray(_vao);

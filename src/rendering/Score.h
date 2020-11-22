@@ -24,6 +24,8 @@ public:
 
 	void setMinMaxKeys(int minKey, int minKeyMajor, int notesCount);
 
+	void setPlayDirection(bool reverse);
+
 };
 
 #endif
