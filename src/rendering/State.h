@@ -117,6 +117,7 @@ public:
 	float attenuation; ///< Blur attenuation.
 	float flashSize; ///< Size of flashes.
 	float prerollTime; ///< Preroll time.
+	float scrollSpeed; ///< Playback speed.
 
 	int minKey; ///< The lowest key to display.
 	int maxKey; ///< The highest key to display.

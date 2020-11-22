@@ -106,6 +106,7 @@ void State::defineOptions(){
 	_sharedInfos["blur-attenuation"] = {"Blur attenuation speed", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
 	_sharedInfos["flashes-size"] = {"Flash effect size", OptionInfos::Type::FLOAT, {0.1f, 3.0f}};
 	_sharedInfos["preroll"] = {"Preroll time in seconds before starting to play", OptionInfos::Type::FLOAT};
+	_sharedInfos["scroll-speed"] = {"Playback speed", OptionInfos::Type::FLOAT};
 	_sharedInfos["bg-img-opacity"] = {"Background opacity", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
 
 	// Colors.
@@ -172,7 +173,7 @@ void State::defineOptions(){
 	_sharedInfos["color-wave"] = {"Wave effect color", OptionInfos::Type::COLOR};
 
 	_sharedInfos["smooth"] = {"Apply anti-aliasing to smooth all lines", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["reverse"] = {"Notes scroll from bottom to top instead of the opposite", OptionInfos::Type::BOOLEAN};
+	_sharedInfos["scroll-reverse"] = {"Notes scroll from bottom to top instead of the opposite", OptionInfos::Type::BOOLEAN};
 	
 }
 
@@ -239,6 +240,7 @@ void State::updateOptions(){
 	_floatInfos["blur-attenuation"] = &attenuation;
 	_floatInfos["flashes-size"] = &flashSize;
 	_floatInfos["preroll"] = &prerollTime;
+	_floatInfos["scroll-speed"] = &scrollSpeed;
 	_floatInfos["bg-img-opacity"] = &background.imageAlpha;
 	_vecInfos["color-bg"] = &background.color;
 	_vecInfos["color-keyboard-major"] = &keyboard.majorColor[0];
@@ -282,7 +284,7 @@ void State::updateOptions(){
 	_vecInfos["color-wave"] = &waves.color;
 
 	_boolInfos["smooth"] = &applyAA;
-	_boolInfos["reverse"] = &reverseScroll;
+	_boolInfos["scroll-reverse"] = &reverseScroll;
 }
 
 
@@ -518,6 +520,7 @@ void State::reset(){
 	
 	quality = Quality::MEDIUM;
 	prerollTime = 1.0f;
+	scrollSpeed = 1.0f;
 	keyboard.highlightKeys = true;
 	keyboard.customKeyColors = false;
 	keyboard.size = 0.25f;
