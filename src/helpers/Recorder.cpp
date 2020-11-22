@@ -178,10 +178,10 @@ bool Recorder::drawGUI(){
 	return shouldStart;
 }
 
-void Recorder::start(float preroll, float duration){
+void Recorder::start(float preroll, float duration, float speed){
 	_currentFrame = 0;
 	_currentTime = -preroll;
-	_framesCount = int(std::ceil((duration + 10.0f + preroll) * _exportFramerate));
+	_framesCount = int(std::ceil((duration + 10.0f + preroll) * _exportFramerate / speed));
 	_sceneDuration = duration;
 	// Image writing setup.
 	_buffer.resize(_size[0] * _size[1] * 4);

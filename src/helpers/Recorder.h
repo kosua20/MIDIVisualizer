@@ -31,7 +31,7 @@ public:
 
 	bool drawGUI();
 
-	void start(float preroll, float duration);
+	void start(float preroll, float duration, float speed);
 
 	void drawProgress();
 	
