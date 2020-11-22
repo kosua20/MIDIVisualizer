@@ -164,6 +164,7 @@ private:
 	std::shared_ptr<Score> _score;
 
 	glm::ivec2 _windowSize;
+	uint _shouldQuit = 0;
 	bool _showLayers = false;
 	bool _exitAfterRecording = false;
 	bool _fullscreen = false;

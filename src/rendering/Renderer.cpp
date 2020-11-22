@@ -380,7 +380,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			_score->setPlayDirection(_state.reverseScroll);
 		}
 		ImGui::SameLine(COLUMN_SIZE);
-		if(ImGui::SliderFloat("Speed", &_state.scrollSpeed, 0.1f, 2.0f)){
+		if(ImGui::SliderFloat("Speed", &_state.scrollSpeed, 0.1f, 5.0f)){
 			_state.scrollSpeed = std::max(0.01f, _state.scrollSpeed);
 		}
 
@@ -482,6 +482,28 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		showLayers();
 	}
 
+	if(_shouldQuit != 0){
+		// We should only open the popup once.
+		if(_shouldQuit == 1){
+			ImGui::OpenPopup("Quit");
+			_shouldQuit = 2;
+		}
+
+		if(ImGui::BeginPopupModal("Quit", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)){
+			ImGui::Text("Are you sure you want to quit?");
+			const ImVec2 buttonSize(100, 0);
+			if(ImGui::Button("No", buttonSize)){
+				_shouldQuit = 0;
+			}
+			ImGui::SameLine();
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.1f, 0.1f, 1.0f));
+			if(ImGui::Button("Yes", buttonSize)){
+				return SystemAction::QUIT;
+			}
+			ImGui::PopStyleColor();
+		}
+	}
+
 	return action;
 }
 
@@ -517,8 +539,8 @@ SystemAction Renderer::showTopButtons(double currentTime){
 	ImGui::SameLine();
 	if(ImGui::Button("Display")){
 		ImGui::OpenPopup("Display options");
-
 	}
+
 	SystemAction action = SystemAction::NONE;
 	if(ImGui::BeginPopup("Display options")){
 		if(ImGui::Checkbox("Fullscreen", &_fullscreen)){
@@ -687,7 +709,6 @@ void Renderer::showPedalOptions(){
 	}
 	ImGui::Checkbox("Merge pedals", &_state.pedals.merge);
 }
-
 
 void Renderer::showWaveOptions(){
 	ImGui::PushItemWidth(25);
@@ -979,6 +1000,9 @@ void Renderer::keyPressed(int key, int action) {
 		}
 		else if (key == GLFW_KEY_D) {
 			_showDebug = !_showDebug;
+		}
+		else if (key == GLFW_KEY_ESCAPE){
+			_shouldQuit = 1;
 		}
 	}
 }

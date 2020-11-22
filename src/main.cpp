@@ -76,12 +76,6 @@ void rescale_callback(GLFWwindow* window, float xscale, float yscale){
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
-	
-	// Handle quitting
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS){ 
-		glfwSetWindowShouldClose(window, GL_TRUE);
-		return;
-	}
 	if(!ImGui::GetIO().WantCaptureKeyboard){
 		// Get pointer to the renderer.
 		Renderer *renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
