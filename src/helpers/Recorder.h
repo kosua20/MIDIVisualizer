@@ -29,7 +29,7 @@ public:
 
 	void record(const std::shared_ptr<Framebuffer> & frame);
 
-	bool drawGUI();
+	bool drawGUI(float scale);
 
 	void start(float preroll, float duration, float speed);
 

@@ -344,8 +344,8 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 				loadFile(std::string(outPath));
 			}
 		}
-		ImGui::SameLine(COLUMN_SIZE);
-		ImGui::PushItemWidth(100);
+		ImGuiSameLine(COLUMN_SIZE);
+		ImGuiPushItemWidth(100);
 		if (ImGui::InputFloat("Preroll", &_state.prerollTime, 0.1f, 1.0f)) {
 			reset();
 		}
@@ -354,8 +354,8 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		if (ImGui::Button("Show layers...")) {
 			_showLayers = true;
 		}
-		ImGui::SameLine(COLUMN_SIZE);
-		ImGui::PushItemWidth(100);
+		ImGuiSameLine(COLUMN_SIZE);
+		ImGuiPushItemWidth(100);
 		if (ImGui::Combo("Quality", (int *)(&_state.quality), "Half\0Low\0Medium\0High\0Double\0\0")) {
 			updateSizes();
 		}
@@ -365,13 +365,13 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			synchronizeColors(_state.baseColors);
 		}
 		// Add FXAA.
-		ImGui::SameLine(COLUMN_SIZE);
+		ImGuiSameLine(COLUMN_SIZE);
 		ImGui::Checkbox("Smoothing", &_state.applyAA);
 
 		if(ImGui::Combo("Min key", &_state.minKey, midiKeysString)){
 			updateMinMaxKeys();
 		}
-		ImGui::SameLine(COLUMN_SIZE);
+		ImGuiSameLine(COLUMN_SIZE);
 		if(ImGui::Combo("Max key", &_state.maxKey, midiKeysString)){
 			updateMinMaxKeys();
 		}
@@ -379,7 +379,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		if(ImGui::Checkbox("Reverse", &_state.reverseScroll)){
 			_score->setPlayDirection(_state.reverseScroll);
 		}
-		ImGui::SameLine(COLUMN_SIZE);
+		ImGuiSameLine(COLUMN_SIZE);
 		if(ImGui::SliderFloat("Speed", &_state.scrollSpeed, 0.1f, 5.0f)){
 			_state.scrollSpeed = std::max(0.01f, _state.scrollSpeed);
 		}
@@ -387,7 +387,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		if(ImGui::CollapsingHeader("Notes##HEADER")){
 
 			bool smw0 = ImGui::InputFloat("Scale", &_state.scale, 0.01f, 0.1f);
-			ImGui::SameLine(COLUMN_SIZE);
+			ImGuiSameLine(COLUMN_SIZE);
 			smw0 = ImGui::SliderFloat("Minor size", &_state.background.minorsWidth, 0.1f, 1.0f, "%.2f") || smw0;
 			if (smw0) {
 				_state.scale = std::max(_state.scale, 0.01f);
@@ -399,12 +399,12 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			if(channelColorEdit("Notes", "Notes", _state.baseColors)){
 				synchronizeColors(_state.baseColors);
 			}
-			ImGui::SameLine();
+			ImGuiSameLine(0);
 			if(channelColorEdit("Minors", "Minors", _state.minorColors)){
 				synchronizeColors(_state.minorColors);
 			}
 
-			ImGui::SameLine(COLUMN_SIZE);
+			ImGuiSameLine(COLUMN_SIZE);
 
 			if(ImGui::Checkbox("Per-set colors", &_state.perChannelColors)){
 				if(!_state.perChannelColors){
@@ -426,8 +426,8 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 				synchronizeColors(_state.flashColors);
 			}
 
-			ImGui::SameLine(COLUMN_SIZE);
-			ImGui::PushItemWidth(100);
+			ImGuiSameLine(COLUMN_SIZE);
+			ImGuiPushItemWidth(100);
 			ImGui::SliderFloat("Flash size", &_state.flashSize, 0.1f, 3.0f);
 			ImGui::PopItemWidth();
 		}
@@ -467,7 +467,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		if (_showDebug) {
 			ImGui::Separator();
 			ImGui::Text("Debug: ");
-			ImGui::SameLine();
+			ImGuiSameLine(0);
 			ImGui::TextDisabled("(press D to hide)");
 			ImGui::Text("%.1f FPS / %.1f ms", ImGui::GetIO().Framerate, ImGui::GetIO().DeltaTime * 1000.0f);
 			ImGui::Text("Render size: %dx%d, screen size: %dx%d", _renderFramebuffer->_width, _renderFramebuffer->_height, _camera.screenSize()[0], _camera.screenSize()[1]);
@@ -491,11 +491,11 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 
 		if(ImGui::BeginPopupModal("Quit", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)){
 			ImGui::Text("Are you sure you want to quit?");
-			const ImVec2 buttonSize(100, 0);
+			const ImVec2 buttonSize(_guiScale * (COLUMN_SIZE - 20.0f), 0.0f);
 			if(ImGui::Button("No", buttonSize)){
 				_shouldQuit = 0;
 			}
-			ImGui::SameLine();
+			ImGuiSameLine(COLUMN_SIZE);
 			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.1f, 0.1f, 1.0f));
 			if(ImGui::Button("Yes", buttonSize)){
 				return SystemAction::QUIT;
@@ -503,7 +503,6 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			ImGui::PopStyleColor();
 		}
 	}
-
 	return action;
 }
 
@@ -528,39 +527,52 @@ SystemAction Renderer::showTopButtons(double currentTime){
 		_shouldPlay = !_shouldPlay;
 		_timerStart = currentTime - _timer;
 	}
-	ImGui::SameLine();
+	ImGuiSameLine(0);
 	if (ImGui::Button("Restart (r)")) {
 		reset();
 	}
-	ImGui::SameLine();
+	ImGuiSameLine(0);
 	if (ImGui::Button("Hide (i)")) {
 		_showGUI = false;
 	}
-	ImGui::SameLine();
+	ImGuiSameLine(0);
 	if(ImGui::Button("Display")){
 		ImGui::OpenPopup("Display options");
 	}
 
 	SystemAction action = SystemAction::NONE;
 	if(ImGui::BeginPopup("Display options")){
+		
+		ImGuiPushItemWidth(100);
+		if(ImGui::InputFloat("GUI size", &_guiScale, 0.25f, 1.0f)){
+			_guiScale = glm::clamp(_guiScale, 0.25f, 4.0f);
+			setGUIScale(_guiScale);
+		}
+		ImGui::PopItemWidth();
+		ImGuiSameLine(EXPORT_COLUMN_SIZE);
+		if(ImGui::Button("Reset##GUI")){
+			setGUIScale(1.0f);
+		}
+
 		if(ImGui::Checkbox("Fullscreen", &_fullscreen)){
 			action = SystemAction::FULLSCREEN;
 		}
 		if(!_fullscreen){
-			ImGui::PushItemWidth(100);
+			ImGuiPushItemWidth(100);
 			ImGui::InputInt2("Window size", &_windowSize[0]);
 			ImGui::PopItemWidth();
-			ImGui::SameLine();
+			ImGuiSameLine(EXPORT_COLUMN_SIZE);
 			if(ImGui::Button("Resize")){
 				action = SystemAction::RESIZE;
 				action.data[0] = _windowSize[0];
 				action.data[1] = _windowSize[1];
 			}
 		}
+
 		ImGui::EndPopup();
 	}
 
-	ImGui::SameLine(340);
+	ImGuiSameLine(340);
 	ImGui::TextDisabled("(?)");
 	if (ImGui::IsItemHovered()) {
 		ImGui::BeginTooltip();
@@ -582,21 +594,21 @@ void Renderer::showParticleOptions(){
 		synchronizeColors(_state.particles.colors);
 	}
 
-	ImGui::SameLine(COLUMN_SIZE);
+	ImGuiSameLine(COLUMN_SIZE);
 
-	ImGui::PushItemWidth(100);
+	ImGuiPushItemWidth(100);
 	if (ImGui::InputFloat("Size", &_state.particles.scale, 1.0f, 10.0f)) {
 		_state.particles.scale = std::max(1.0f, _state.particles.scale);
 	}
 
-	ImGui::PushItemWidth(COLUMN_SIZE-10);
+	ImGuiPushItemWidth(COLUMN_SIZE-10);
 	if (ImGui::SliderInt("Count", &_state.particles.count, 1, 512)) {
 		_state.particles.count = std::min(std::max(_state.particles.count, 1), 512);
 	}
 	ImGui::PopItemWidth();
 
 	const bool mp0 = ImGui::InputFloat("Speed", &_state.particles.speed, 0.001f, 1.0f);
-	ImGui::SameLine(COLUMN_SIZE);
+	ImGuiSameLine(COLUMN_SIZE);
 	const bool mp1 = ImGui::InputFloat(	"Expansion", &_state.particles.expansion, 0.1f, 5.0f);
 	ImGui::PopItemWidth();
 
@@ -626,7 +638,7 @@ void Renderer::showParticleOptions(){
 			}
 		}
 	}
-	ImGui::SameLine();
+	ImGuiSameLine(0);
 	ImGui::TextDisabled("(?)");
 	if (ImGui::IsItemHovered()) {
 		ImGui::BeginTooltip();
@@ -636,7 +648,7 @@ void Renderer::showParticleOptions(){
 		ImGui::EndTooltip();
 	}
 
-	ImGui::SameLine(COLUMN_SIZE);
+	ImGuiSameLine(COLUMN_SIZE);
 	if (ImGui::Button("Clear images##TextureParticles")) {
 		if (_state.particles.tex != ResourcesManager::getTextureFor("blankarray")) {
 			glDeleteTextures(1, &_state.particles.tex);
@@ -650,15 +662,15 @@ void Renderer::showParticleOptions(){
 }
 
 void Renderer::showKeyboardOptions(){
-	ImGui::PushItemWidth(25);
+	ImGuiPushItemWidth(25);
 	if (ImGui::ColorEdit3("Color##Keys", &_state.background.keysColor[0], ImGuiColorEditFlags_NoInputs)) {
 		_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
 	}
 	ImGui::PopItemWidth();
-	ImGui::SameLine(COLUMN_SIZE);
+	ImGuiSameLine(COLUMN_SIZE);
 
 
-	ImGui::PushItemWidth(100);
+	ImGuiPushItemWidth(100);
 	if(ImGui::SliderFloat("Size##Keys", &_state.keyboard.size, 0.0f, 1.0f)){
 		_state.keyboard.size = (std::min)((std::max)(_state.keyboard.size, 0.0f), 1.0f);
 		_scene->setKeyboardSize(_state.keyboard.size);
@@ -672,8 +684,8 @@ void Renderer::showKeyboardOptions(){
 		ImGui::Checkbox("Custom colors", &_state.keyboard.customKeyColors);
 		if (_state.keyboard.customKeyColors) {
 
-			ImGui::SameLine(COLUMN_SIZE);
-			ImGui::PushItemWidth(25);
+			ImGuiSameLine(COLUMN_SIZE);
+			ImGuiPushItemWidth(25);
 			if(ImGui::ColorEdit3("Major##KeysHighlight", &_state.keyboard.majorColor[0][0], ImGuiColorEditFlags_NoInputs)){
 				// Ensure synchronization of the override array.
 				for(size_t cid = 1; cid < _state.keyboard.majorColor.size(); ++cid){
@@ -681,7 +693,7 @@ void Renderer::showKeyboardOptions(){
 				}
 			}
 
-			ImGui::SameLine(COLUMN_SIZE+80);
+			ImGuiSameLine(COLUMN_SIZE+80);
 			if(ImGui::ColorEdit3("Minor##KeysHighlight", &_state.keyboard.minorColor[0][0], ImGuiColorEditFlags_NoInputs)){
 				// Ensure synchronization of the override array.
 				for(size_t cid = 1; cid < _state.keyboard.minorColor.size(); ++cid){
@@ -694,16 +706,16 @@ void Renderer::showKeyboardOptions(){
 }
 
 void Renderer::showPedalOptions(){
-	ImGui::PushItemWidth(25);
+	ImGuiPushItemWidth(25);
 	ImGui::ColorEdit3("Color##Pedals", &_state.pedals.color[0], ImGuiColorEditFlags_NoInputs);
 	ImGui::PopItemWidth();
-	ImGui::SameLine(COLUMN_SIZE);
+	ImGuiSameLine(COLUMN_SIZE);
 	ImGui::Combo("Location", (int*)&_state.pedals.location, "Top left\0Bottom left\0Top right\0Bottom right\0");
 
 	if(ImGui::SliderFloat("Opacity##Pedals", &_state.pedals.opacity, 0.0f, 1.0f)){
 		_state.pedals.opacity = std::min(std::max(_state.pedals.opacity, 0.0f), 1.0f);
 	}
-	ImGui::SameLine(COLUMN_SIZE);
+	ImGuiSameLine(COLUMN_SIZE);
 	if(ImGui::SliderFloat("Size##Pedals", &_state.pedals.size, 0.05f, 0.5f)){
 		_state.pedals.size = std::min(std::max(_state.pedals.size, 0.05f), 0.5f);
 	}
@@ -711,14 +723,14 @@ void Renderer::showPedalOptions(){
 }
 
 void Renderer::showWaveOptions(){
-	ImGui::PushItemWidth(25);
+	ImGuiPushItemWidth(25);
 	ImGui::ColorEdit3("Color##Waves", &_state.waves.color[0], ImGuiColorEditFlags_NoInputs);
 	ImGui::PopItemWidth();
-	ImGui::SameLine(COLUMN_SIZE);
+	ImGuiSameLine(COLUMN_SIZE);
 	ImGui::SliderFloat("Amplitude##Waves", &_state.waves.amplitude, 0.0f, 5.0f);
 
 	ImGui::SliderFloat("Spread##Waves", &_state.waves.spread, 0.0f, 5.0f);
-	ImGui::SameLine(COLUMN_SIZE);
+	ImGuiSameLine(COLUMN_SIZE);
 	ImGui::SliderFloat("Frequency##Waves", &_state.waves.frequency, 0.0f, 5.0f);
 
 	if(ImGui::SliderFloat("Opacity##Waves", &_state.waves.opacity, 0.0f, 1.0f)){
@@ -729,8 +741,8 @@ void Renderer::showWaveOptions(){
 
 void Renderer::showBlurOptions(){
 	ImGui::Checkbox("Blur the notes", &_state.showBlurNotes);
-	ImGui::SameLine(COLUMN_SIZE);
-	ImGui::PushItemWidth(100);
+	ImGuiSameLine(COLUMN_SIZE);
+	ImGuiPushItemWidth(100);
 	if (ImGui::SliderFloat("Fading", &_state.attenuation, 0.0f, 1.0f)) {
 		_state.attenuation = std::min(1.0f, std::max(0.0f, _state.attenuation));
 		glUseProgram(_blurringScreen.programId());
@@ -742,15 +754,15 @@ void Renderer::showBlurOptions(){
 }
 
 void Renderer::showScoreOptions(){
-	ImGui::PushItemWidth(25);
+	ImGuiPushItemWidth(25);
 	const bool cbg0 = ImGui::ColorEdit3("Lines##Background", &_state.background.linesColor[0], ImGuiColorEditFlags_NoInputs);
-	ImGui::SameLine();
+	ImGuiSameLine(0);
 	const bool cbg1 = ImGui::ColorEdit3("Text##Background", &_state.background.textColor[0], ImGuiColorEditFlags_NoInputs);
 	ImGui::PopItemWidth();
-	ImGui::SameLine(COLUMN_SIZE);
+	ImGuiSameLine(COLUMN_SIZE);
 	const bool m1 = ImGui::Checkbox("Digits", &_state.background.digits);
 	const bool m2 = ImGui::Checkbox("Horizontal lines", &_state.background.hLines);
-	ImGui::SameLine(COLUMN_SIZE);
+	ImGuiSameLine(COLUMN_SIZE);
 	const bool m3 = ImGui::Checkbox("Vertical lines", &_state.background.vLines);
 
 	if (m1 || m2 || m3) {
@@ -763,12 +775,12 @@ void Renderer::showScoreOptions(){
 }
 
 void Renderer::showBackgroundOptions(){
-	ImGui::PushItemWidth(25);
+	ImGuiPushItemWidth(25);
 	ImGui::ColorEdit3("Color##Background", &_state.background.color[0],
 		ImGuiColorEditFlags_NoInputs);
 	ImGui::PopItemWidth();
-	ImGui::SameLine(COLUMN_SIZE);
-	ImGui::PushItemWidth(100);
+	ImGuiSameLine(COLUMN_SIZE);
+	ImGuiPushItemWidth(100);
 	if (ImGui::SliderFloat("Opacity##Background", &_state.background.imageAlpha, 0.0f, 1.0f)) {
 		_state.background.imageAlpha = std::min(std::max(_state.background.imageAlpha, 0.0f), 1.0f);
 	}
@@ -787,7 +799,7 @@ void Renderer::showBackgroundOptions(){
 			}
 		}
 	}
-	ImGui::SameLine(COLUMN_SIZE);
+	ImGuiSameLine(COLUMN_SIZE);
 	if (ImGui::Button("Clear image##Background")) {
 		_state.background.image = false;
 		glDeleteTextures(1, &_state.background.tex);
@@ -801,10 +813,10 @@ void Renderer::showBottomButtons(){
 	if(ImGui::Button("Export...")){
 		ImGui::OpenPopup("Export");
 	}
-	if(_recorder.drawGUI()){
+	if(_recorder.drawGUI(_guiScale)){
 		startRecording();
 	}
-	ImGui::SameLine();
+	ImGuiSameLine(0);
 
 	if (ImGui::Button("Save config...")) {
 		// Read arguments.
@@ -814,7 +826,7 @@ void Renderer::showBottomButtons(){
 			_state.save(std::string(savePath));
 		}
 	}
-	ImGui::SameLine();
+	ImGuiSameLine(0);
 
 	if (ImGui::Button("Load config...")) {
 		// Read arguments.
@@ -825,7 +837,7 @@ void Renderer::showBottomButtons(){
 			setState(_state);
 		}
 	}
-	ImGui::SameLine();
+	ImGuiSameLine(0);
 
 	if (ImGui::Button("Reset##config")) {
 		_state.reset();
@@ -852,7 +864,7 @@ void Renderer::showLayers() {
 			ImGui::PushID(layerId);
 
 			ImGui::Checkbox("##LayerCheckbox", layer.toggle);
-			ImGui::SameLine();
+			ImGuiSameLine(0);
 			ImGui::Selectable(layer.name.c_str());
 
 			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
@@ -892,13 +904,13 @@ void Renderer::showSets(){
 
 		bool shouldUpdate = false;
 		shouldUpdate = ImGui::RadioButton("Channel", (int*)(&_state.setOptions.mode), int(SetMode::CHANNEL)) || shouldUpdate;
-		ImGui::SameLine(120);
+		ImGuiSameLine(120);
 		shouldUpdate = ImGui::RadioButton("Track", (int*)(&_state.setOptions.mode), int(SetMode::TRACK)) || shouldUpdate;
-		ImGui::SameLine(2*120);
+		ImGuiSameLine(2*120);
 		shouldUpdate = ImGui::RadioButton("Key", (int*)(&_state.setOptions.mode), int(SetMode::KEY)) || shouldUpdate;
-		ImGui::SameLine();
+		ImGuiSameLine(0);
 
-		ImGui::PushItemWidth(100);
+		ImGuiPushItemWidth(100);
 		shouldUpdate = ImGui::Combo("##key", &_state.setOptions.key, midiKeysString) || shouldUpdate;
 		ImGui::PopItemWidth();
 
@@ -1034,6 +1046,16 @@ void Renderer::setState(const State & state){
 	applyAllSettings();
 }
 
+
+void  Renderer::setGUIScale(float scale){
+	_guiScale = std::max(0.25f, scale);
+	ImGui::GetStyle() = ImGuiStyle();
+	ImGui::StyleColorsDark();
+	ImGui::GetIO().FontGlobalScale = _guiScale;
+	ImGui::GetStyle().ScaleAllSizes(_guiScale);
+	ImGui::GetStyle().FrameRounding = 3 * _guiScale;
+}
+
 void Renderer::startDirectRecording(const std::string & path, Recorder::Format format, int framerate, int bitrate, bool skipBackground, const glm::vec2 & size){
 	_recorder.setParameters(path, format, framerate, bitrate, skipBackground);
 	_recorder.setSize(size);
@@ -1081,7 +1103,7 @@ void Renderer::startRecording(){
 bool Renderer::channelColorEdit(const char * name, const char * displayName, ColorArray & colors){
 	if(!_state.perChannelColors){
 		// If locked, display color sink.
-		ImGui::PushItemWidth(25);
+		ImGuiPushItemWidth(25);
 		const bool inter = ImGui::ColorEdit3(name, &colors[0][0], ImGuiColorEditFlags_NoInputs);
 		ImGui::PopItemWidth();
 		if(inter){
@@ -1097,17 +1119,17 @@ bool Renderer::channelColorEdit(const char * name, const char * displayName, Col
 	if(ImGui::ArrowButton(name, ImGuiDir_Down)){
 		ImGui::OpenPopup(name);
 	}
-	ImGui::SameLine(); ImGui::Text("%s", displayName);
+	ImGuiSameLine(0); ImGui::Text("%s", displayName);
 
 	if(ImGui::BeginPopup(name)){
 		// Do 2x4 color sinks.
 		bool edit = false;
-		ImGui::PushItemWidth(25);
+		ImGuiPushItemWidth(25);
 		for(size_t cid = 0; cid < colors.size(); ++cid){
 			const std::string nameC = "Set " + std::to_string(cid);
 			edit = ImGui::ColorEdit3(nameC.c_str(), &colors[cid][0], ImGuiColorEditFlags_NoInputs) || edit;
 			if(cid % 2 == 0 && cid != colors.size()-1){
-				ImGui::SameLine();
+				ImGuiSameLine(0);
 			}
 		}
 		ImGui::PopItemWidth();
@@ -1130,4 +1152,13 @@ void Renderer::updateMinMaxKeys(){
 
 	_scene->setMinMaxKeys(_state.minKey, minKeyMaj, noteCount);
 	_score->setMinMaxKeys(_state.minKey, minKeyMaj, noteCount);
+}
+
+
+void Renderer::ImGuiPushItemWidth(int w){
+	ImGui::PushItemWidth(_guiScale * w);
+}
+
+void Renderer::ImGuiSameLine(int w){
+	ImGui::SameLine(_guiScale * w);
 }

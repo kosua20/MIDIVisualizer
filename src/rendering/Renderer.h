@@ -61,7 +61,9 @@ public:
 
 	/// Diretly start recording.
 	void startDirectRecording(const std::string & path, Recorder::Format format, int framerate, int bitrate, bool skipBackground, const glm::vec2 & size);
-	
+
+	void setGUIScale(float scale);
+
 private:
 	
 
@@ -138,6 +140,10 @@ private:
 
 	void synchronizeColors(const ColorArray & colors);
 
+	void ImGuiPushItemWidth(int w);
+
+	void ImGuiSameLine(int w);
+
 	State _state;
 	std::array<Layer, Layer::COUNT> _layers;
 
@@ -164,7 +170,8 @@ private:
 	std::shared_ptr<Score> _score;
 
 	glm::ivec2 _windowSize;
-	uint _shouldQuit = 0;
+	float _guiScale = 1.0f;
+	unsigned int _shouldQuit = 0;
 	bool _showLayers = false;
 	bool _exitAfterRecording = false;
 	bool _fullscreen = false;

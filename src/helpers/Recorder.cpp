@@ -92,12 +92,13 @@ void Recorder::record(const std::shared_ptr<Framebuffer> & frame){
 	++_currentFrame;
 }
 
-bool Recorder::drawGUI(){
+bool Recorder::drawGUI(float scale){
 	bool shouldStart = false;
 
 
 	if(ImGui::BeginPopupModal("Export", nullptr, ImGuiWindowFlags_AlwaysAutoResize)){
-		ImGui::PushItemWidth(100);
+		ImGui::PushItemWidth(scale * 100);
+		const float scaledColumn = scale * EXPORT_COLUMN_SIZE;
 
 		// Dropdown list.
 		if(ImGui::BeginCombo("Format", _formats[int(_outFormat)].name.c_str())){
@@ -118,7 +119,7 @@ bool Recorder::drawGUI(){
 		}
 
 		// Extra options.
-		ImGui::SameLine(EXPORT_COLUMN_SIZE);
+		ImGui::SameLine(scaledColumn);
 		ImGui::InputInt("Framerate", &_exportFramerate);
 
 		if(ImGui::InputInt2("Export size", &_size[0])){
@@ -126,7 +127,7 @@ bool Recorder::drawGUI(){
 			_size[1] += _size[1] % 2;
 		}
 
-		ImGui::SameLine(EXPORT_COLUMN_SIZE);
+		ImGui::SameLine(scaledColumn);
 		if(_outFormat == Format::PNG){
 			ImGui::Checkbox("Transparent bg.", &_exportNoBackground);
 		} else {
@@ -136,12 +137,12 @@ bool Recorder::drawGUI(){
 
 
 		// Pick directory/file.
-		const ImVec2 buttonSize(EXPORT_COLUMN_SIZE-20.0f, 0.0f);
+		const ImVec2 buttonSize(scaledColumn - scale * 20.0f, 0.0f);
 		if(ImGui::Button("Cancel##videpopup", buttonSize)){
 			ImGui::CloseCurrentPopup();
 		}
 		
-		ImGui::SameLine(EXPORT_COLUMN_SIZE);
+		ImGui::SameLine(scaledColumn);
 		const std::string exportType = _outFormat == Format::PNG ? "images" : "video";
 		const std::string exportButtonName = "Save " + exportType + " to...";
 

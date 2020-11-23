@@ -27,6 +27,7 @@ void printHelp(){
 		{"config", "path to a configuration INI file"},
 		{"size", "dimensions of the window (--size W H)"},
 		{"fullscreen", "start in fullscreen (1 or 0 to enabled/disable)"},
+		{"gui-size", "GUI text and button scaling (number, default 1.0)"},
 	};
 
 	const std::vector<std::pair<std::string, std::string>> expOpts = {
@@ -231,6 +232,13 @@ int main( int argc, char** argv) {
 		return 3;
 	}
 
+	// Setup ImGui for
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	io.IniFilename = NULL;
+	ImGui_ImplGlfw_InitForOpenGL(window, false);
+	ImGui_ImplOpenGL3_Init("#version 330");
+
 	// Apply custom state.
 	State state;
 	if(args.count("config") > 0){
@@ -258,17 +266,13 @@ int main( int argc, char** argv) {
 	glfwGetFramebufferSize(window, &width, &height);
 	const float scale = float(width) / float((std::max)(frame[2], 1));
 	renderer.resizeAndRescale(width, height, scale);
-	
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	ImGui::StyleColorsDark();
-	ImGui::GetStyle().FrameRounding = 3;
-	io.IniFilename = NULL;
-	
-	ImGui_ImplGlfw_InitForOpenGL(window, false);
-	ImGui_ImplOpenGL3_Init("#version 330");
 
-
+	// Scale the GUI based on options.
+	float guiScale = 1.0f;
+	if(args.count("gui-size") > 0){
+		guiScale = Configuration::parseFloat(args["gui-size"][0]);
+	}
+	renderer.setGUIScale(guiScale);
 
 	const bool directRecord = args.count("export") > 0;
 	if(directRecord){
