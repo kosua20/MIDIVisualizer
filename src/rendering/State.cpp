@@ -71,6 +71,9 @@ State::OptionInfos::OptionInfos(const std::string & adesc, State::OptionInfos::T
 		case Type::KEY:
 			values = "key index in [0,127]: 0 is C-1, 1 is C-1#, etc.";
 			break;
+		case Type::PATH:
+			values = "absolute path to file on disk";
+			break;
 		default:
 			break;
 	}
@@ -125,7 +128,7 @@ void State::defineOptions(){
 	_sharedInfos["quality"] = {"Rendering quality", OptionInfos::Type::OTHER};
 	_sharedInfos["quality"].values = "values: LOW_RES, LOW, MEDIUM, HIGH, HIGH_RES";
 	_sharedInfos["layers"] = {"Active layers indices, from background to foreground", OptionInfos::Type::OTHER};
-	_sharedInfos["layers"].values = "values: bg-color: 0, bg-texture: 1, blur: 2, score: 3, keyboard: 4, particles: 5, notes: 6, flashes: 7";
+	_sharedInfos["layers"].values = "values: bg-color: 0, bg-texture: 1, blur: 2, score: 3, keyboard: 4, particles: 5, notes: 6, flashes: 7, pedal: 8, wave: 9";
 
 	for(size_t cid = 1; cid < CHANNELS_COUNT; ++cid){
 		const std::string num = std::to_string(cid);
@@ -331,6 +334,16 @@ void State::save(const std::string & path){
 		configFile << param.first << ": " << val[0] << " " << val[1] << " " << val[2] << std::endl;
 	}
 
+	for(const auto & param : _stringInfos){
+		// Skip empty strings.
+		if(param.second->empty()){
+			continue;
+		}
+		configFile << std::endl << "# " << _sharedInfos[param.first].description << " (";
+		configFile << _sharedInfos[param.first].values << ")" << std::endl;
+		configFile << param.first << ": " << *(param.second) << std::endl;
+	}
+
 	configFile << std::endl << "# " << _sharedInfos["quality"].description << " (";
 	configFile << _sharedInfos["quality"].values << ")" << std::endl;
 	configFile << "quality: " << Quality::availables.at(quality).name << std::endl;
@@ -450,6 +463,18 @@ void State::load(const Arguments & configArgs){
 		if(itv != _vecInfos.end()){
 			const auto & opt = itv->second;
 			*opt = Configuration::parseVec3(arg.second);
+			continue;
+		}
+
+		const auto its = _stringInfos.find(key);
+		if(its != _stringInfos.end()){
+			const auto & opt = its->second;
+			std::string str = arg.second[0];
+			for(size_t tid = 1; tid < arg.second.size(); ++tid){
+				str.append(" ");
+				str.append(arg.second[tid]);
+			}
+			*opt = str;
 			continue;
 		}
 	}

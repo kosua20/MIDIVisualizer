@@ -164,7 +164,7 @@ private:
 	struct OptionInfos {
 
 		enum class Type {
-			BOOLEAN, INTEGER, FLOAT, COLOR, OTHER, KEY
+			BOOLEAN, INTEGER, FLOAT, COLOR, OTHER, KEY, PATH
 		};
 
 		enum class Category {
@@ -187,6 +187,7 @@ private:
 	std::map<std::string, int*> _intInfos;
 	std::map<std::string, float*> _floatInfos;
 	std::map<std::string, glm::vec3*> _vecInfos;
+	std::map<std::string, std::string*> _stringInfos;
 
 };
 
