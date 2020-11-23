@@ -235,7 +235,7 @@ void MIDIScene::renderSetup(){
 	const int numSegments = 512;
 	std::vector<glm::vec2> waveVerts((numSegments+1)*2);
 	for(int vid = 0; vid < numSegments+1; ++vid){
-		const float x = 2.0 * float(vid) / float(numSegments) - 1.0;
+		const float x = 2.0f * float(vid) / float(numSegments) - 1.0f;
 		waveVerts[2*vid] = glm::vec2(x, 1.0f);
 		waveVerts[2*vid+1] = glm::vec2(x, -1.0f);
 	}
@@ -311,7 +311,7 @@ void MIDIScene::updatesActiveNotes(double time, double speed){
 	// Update the particle systems lifetimes.
 	for(auto & particle : _particles){
 		// Give a bit of a head start to the animation.
-		particle.elapsed = (float(time) - particle.start + 0.25f) / (speed * particle.duration);
+		particle.elapsed = (float(time) - particle.start + 0.25f) / (float(speed) * particle.duration);
 		// Disable old particles.
 		if(float(time) >= particle.start + particle.duration){
 			particle.note = -1;
@@ -376,7 +376,7 @@ void MIDIScene::drawParticles(float time, const glm::vec2 & invScreenSize, const
 	glUniform1f(colorScaleId, prepass ? 0.6f : 1.6f);
 	glUniform1f(scaleId, state.scale * (prepass ? 2.0f : 1.0f));
 
-	glUniform3fv(colorId, state.colors.size(), &state.colors[0][0]);
+	glUniform3fv(colorId, GLsizei(state.colors.size()), &state.colors[0][0]);
 	
 	// Particles trajectories texture.
 	glActiveTexture(GL_TEXTURE0);
@@ -420,8 +420,8 @@ void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const Col
 	glUniform1f(timeId, time);
 	glUniform1f(colorScaleId, prepass ? 0.6f: 1.0f);
 
-	glUniform3fv(colorId, majorColors.size(), &(majorColors[0][0]));
-	glUniform3fv(colorMinId, minorColors.size(), &(minorColors[0][0]));
+	glUniform3fv(colorId, GLsizei(majorColors.size()), &(majorColors[0][0]));
+	glUniform3fv(colorMinId, GLsizei(minorColors.size()), &(minorColors[0][0]));
 	glUniform1i(reverseId, reverseScroll ? 1 : 0);
 	
 	// Draw the geometry.
@@ -452,7 +452,7 @@ void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const C
 	GLuint scaleId = glGetUniformLocation(_programFlashesId, "userScale");
 	glUniform2fv(screenId1,1, &(invScreenSize[0]));
 	glUniform1f(timeId1,time);
-	glUniform3fv(colorId, baseColors.size(), &(baseColors[0][0]));
+	glUniform3fv(colorId, GLsizei(baseColors.size()), &(baseColors[0][0]));
 	glUniform1f(scaleId,userScale);
 	// Flash texture.
 	glActiveTexture(GL_TEXTURE0);
@@ -484,8 +484,8 @@ void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::
 	const GLuint highId = glGetUniformLocation(_programKeysId, "highlightKeys");
 	glUniform2fv(screenId1, 1, &(invScreenSize[0]));
 	glUniform3fv(colorId, 1, &(keyColor[0]));
-	glUniform3fv(majorId, majorColors.size(), &(majorColors[0][0]));
-	glUniform3fv(minorId, minorColors.size(), &(minorColors[0][0]));
+	glUniform3fv(majorId, GLsizei(majorColors.size()), &(majorColors[0][0]));
+	glUniform3fv(minorId, GLsizei(minorColors.size()), &(minorColors[0][0]));
 	glUniform1i(highId, int(highlightKeys));
 
 	glBindBuffer(GL_UNIFORM_BUFFER, _uboKeyboard);
@@ -578,7 +578,6 @@ void MIDIScene::drawWaves(float time, const glm::vec2 & invScreenSize, const Sta
 	const float phases[4] = {5.2f, 4.7f, 9.3f, -7.1f};
 	// Render multiple waves with additive blending.
 	for(int i = 0; i < 4; ++i){
-		const int sgn = i%2 == 0 ? 1.0f : -1.0f;
 		const float ampl = state.amplitude * ampls[i];
 		const float freq = state.frequency * freqs[i];
 		const float phase = phases[i] * time + float(i+1) * 7.39f;

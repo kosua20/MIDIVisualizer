@@ -525,7 +525,7 @@ void Renderer::synchronizeColors(const ColorArray & colors){
 SystemAction Renderer::showTopButtons(double currentTime){
 	if (ImGui::Button(_shouldPlay ? "Pause (p)" : "Play (p)")) {
 		_shouldPlay = !_shouldPlay;
-		_timerStart = currentTime - _timer;
+		_timerStart = float(currentTime) - _timer;
 	}
 	ImGuiSameLine(0);
 	if (ImGui::Button("Restart (r)")) {

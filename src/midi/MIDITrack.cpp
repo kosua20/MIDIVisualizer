@@ -99,7 +99,7 @@ void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t uni
 
 		// Handle notes.
 		if(event.type == noteOn || event.type == noteOff){
-			const size_t noteInd = event.data[1];
+			const short noteInd = event.data[1];
 			if(currentNotes.count(noteInd) > 0){
 				// The current note is already present.
 				const auto & noteTuple = currentNotes[noteInd];

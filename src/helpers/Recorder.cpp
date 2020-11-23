@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <vector>
 #include <map>
+#include <algorithm>
 
 #ifdef MIDIVIZ_SUPPORT_VIDEO
 extern "C" {
