@@ -72,7 +72,7 @@ if (_GLFW_X11 OR _GLFW_WAYLAND)
     endif()
 endif()
 
-if (APPLE)
+if ("${CMAKE_VERSION}" VERSION_LESS "3.16" AND APPLE)
     # For some reason, CMake doesn't know about .m
     set_source_files_properties(${glfw_SOURCES} PROPERTIES LANGUAGE C)
 endif()
