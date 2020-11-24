@@ -1048,6 +1048,14 @@ void Renderer::setState(const State & state){
 		_scene->updateSets(_state.setOptions);
 	}
 	applyAllSettings();
+
+	// Textures.
+	// Load the background image.
+	if(!_state.background.imagePath.empty()){
+		glDeleteTextures(1, &_state.background.tex);
+		_state.background.tex = loadTexture(_state.background.imagePath, 4, false);
+		// Don't modify the rest of the potentially restored state.
+	}
 }
 
 
