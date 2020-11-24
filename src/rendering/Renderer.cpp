@@ -1063,6 +1063,27 @@ void Renderer::setState(const State & state){
 		_state.background.tex = loadTexture(_state.background.imagePath, 4, false);
 		// Don't modify the rest of the potentially restored state.
 	}
+
+	if(!_state.particles.imagePaths.empty()){
+		const auto & lPaths = _state.particles.imagePaths;
+		// Build the list of paths.
+		std::vector<std::string> paths;
+		std::string::size_type bPos = 0;
+		std::string::size_type ePos = lPaths.find_first_of(" ");
+		while(ePos != std::string::npos) {
+			const std::string value = lPaths.substr(bPos, ePos - bPos);
+			paths.push_back(value);
+			bPos = ePos + 1;
+			ePos = lPaths.find_first_of(" ", bPos);
+		}
+		// Cleanup texture if it's not the default one.
+		if (_state.particles.tex != ResourcesManager::getTextureFor("blankarray")) {
+			glDeleteTextures(1, &_state.particles.tex);
+		}
+		// Load new particles.
+		_state.particles.tex = loadTextureArray(paths, false, _state.particles.texCount);
+		// Don't modify the rest of the potentially restored state.
+	}
 }
 
 
