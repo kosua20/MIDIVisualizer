@@ -180,6 +180,7 @@ void State::defineOptions(){
 
 	// Paths.
 	_sharedInfos["bg-img-path"] = {"Path to an image on disk to use as background", OptionInfos::Type::PATH};
+	_sharedInfos["particles-paths"] = {"Set of paths (separated by spaces) to B&W images on disk to use as particles", OptionInfos::Type::PATH};
 	
 }
 
@@ -293,6 +294,7 @@ void State::updateOptions(){
 	_boolInfos["scroll-reverse"] = &reverseScroll;
 
 	_stringInfos["bg-img-path"] = &background.imagePath;
+	_stringInfos["particles-paths"] = &particles.imagePaths;
 }
 
 
@@ -545,6 +547,7 @@ void State::reset(){
 	particles.expansion = 1.0f;
 	particles.scale = 1.0f;
 	particles.count = 256;
+	particles.imagePaths = "";
 	const GLuint blankID = ResourcesManager::getTextureFor("blankarray");
 	particles.tex = blankID;
 	particles.texCount = 1;

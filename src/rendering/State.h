@@ -65,6 +65,7 @@ public:
 	
 	
 	struct ParticlesState {
+		std::string imagePaths; ///< List of paths to images on disk.
 		ColorArray colors; ///< Particles color.
 		GLuint tex;
 		int texCount;

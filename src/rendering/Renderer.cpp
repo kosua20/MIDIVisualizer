@@ -636,6 +636,12 @@ void Renderer::showParticleOptions(){
 			if (_state.particles.scale <= 9.0f) {
 				_state.particles.scale = 10.0f;
 			}
+			// Save the paths to the state.
+			_state.particles.imagePaths = "";
+			for(size_t pid = 0; pid < paths.size(); ++pid){
+				_state.particles.imagePaths.append(pid == 0 ? "" : " ");
+				_state.particles.imagePaths.append(paths[pid]);
+			}
 		}
 	}
 	ImGuiSameLine(0);
@@ -657,6 +663,7 @@ void Renderer::showParticleOptions(){
 		_state.particles.tex =  ResourcesManager::getTextureFor("blankarray");
 		_state.particles.texCount = 1;
 		_state.particles.scale = 1.0f;
+		_state.particles.imagePaths = "";
 	}
 	ImGui::PopID();
 }
