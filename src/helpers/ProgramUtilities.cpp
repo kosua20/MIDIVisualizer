@@ -183,7 +183,7 @@ GLuint loadTexture(const std::string& path, unsigned int channels, bool sRGB){
 	stbi_set_flip_vertically_on_load(true);
 	unsigned char * image = stbi_load(path.c_str(), &imwidth, &imheight, &nChans, channels);
 	if(image == NULL){
-		std::cerr << "Unable to load the texture at path " << path << "." << std::endl;
+		std::cerr << "[TEXTURE] Unable to load the texture at path " << path << "." << std::endl;
 		return 0;
 	}
 	stbi_set_flip_vertically_on_load(false);
@@ -220,7 +220,8 @@ GLuint loadTextureArray(const std::vector<std::string>& paths, bool sRGB, int & 
 		glm::ivec2 size(0);
 		unsigned char * image = stbi_load(path.c_str(), &size[0], &size[1], &nChans, 1);
 		if (image == NULL) {
-			// Skip non existant file.
+			// Skip non existent file.
+			std::cerr << "[TEXTURE] " << "Unable to load the texture at path " << path << "." << std::endl;
 			continue;
 		}
 		images.push_back(image);

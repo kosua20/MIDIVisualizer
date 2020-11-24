@@ -27,7 +27,7 @@ Arguments Configuration::parseArguments(std::istream & configFile){
 		// Split at first space.
 		const std::string::size_type keySep = lineTrim.find_first_of(" \t");
 		if(keySep == std::string::npos){
-			std::cerr << "Ignoring key " << keySep << " without arguments." << std::endl;
+			std::cerr << "[CONFIG] Ignoring key " << lineTrim << " without arguments." << std::endl;
 			continue;
 		}
 		std::vector<std::string> values;
