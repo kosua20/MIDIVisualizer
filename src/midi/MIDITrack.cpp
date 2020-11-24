@@ -127,10 +127,10 @@ void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t uni
 		} else if(event.type == controllerChange){
 			const int rawType = event.data[1];
 			// Handle only pedal changes.
-			if(rawType != 64 && rawType != 66 && rawType != 67){
+			if(rawType != 64 && rawType != 66 && rawType != 67 && rawType != 11){
 				continue;
 			}
-			const PedalType type = rawType == 64 ? PedalType::DAMPER : (rawType == 66 ? PedalType::SOSTENUTO : PedalType::SOFT);
+			const PedalType type = PedalType(rawType);
 			const bool shouldStart = event.data[2] >= 64;
 			const bool isOn = currentPedals.count(type) > 0;
 			// Check if the pedal was on before and we should now stop it.
@@ -182,7 +182,7 @@ void MIDITrack::getNotesActive(ActiveNotesArray & actives, double time) const {
 	}
 }
 
-void MIDITrack::getPedalsActive(bool & damper, bool &sostenuto, bool &soft, double time) const {
+void MIDITrack::getPedalsActive(bool & damper, bool &sostenuto, bool &soft, bool &expression, double time) const {
 	damper = sostenuto = soft = false;
 	const size_t count = _pedals.size();
 	for(size_t i = 0; i < count; ++i){
@@ -194,9 +194,11 @@ void MIDITrack::getPedalsActive(bool & damper, bool &sostenuto, bool &soft, doub
 				sostenuto = true;
 			} else if(pedal.type == PedalType::SOFT){
 				soft = true;
+			} else if(pedal.type == PedalType::EXPRESSION){
+				expression = true;
 			}
 			// Early exit (rare).
-			if(damper && sostenuto && soft){
+			if(damper && sostenuto && soft && expression){
 				break;
 			}
 		}

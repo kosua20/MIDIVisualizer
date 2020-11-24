@@ -62,8 +62,8 @@ enum class NoteType{
 	MAJOR, MINOR, ALL
 };
 
-enum class PedalType {
-	DAMPER, SOSTENUTO, SOFT
+enum PedalType : uint8_t {
+	EXPRESSION = 11, DAMPER = 64, SOSTENUTO = 66, SOFT = 67
 };
 
 // Debug print data.
