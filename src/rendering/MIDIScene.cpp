@@ -9,6 +9,8 @@
 
 #include "MIDIScene.h"
 
+#include <imgui/imgui.h>
+
 #ifdef _WIN32
 #undef MIN
 #undef MAX
@@ -514,11 +516,17 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 	const float rat = invScreenSize.y/invScreenSize.x;
 	const glm::vec2 scale = state.size * (rat < 1.0f ? glm::vec2(1.0f, rat) : glm::vec2(1.0f/rat, 1.0f));
 	const float extraHorizFix = state.merge ? 0.4f : 1.0f;
-	const glm::vec2 propShift = glm::vec2(extraHorizFix * 1.25f, 0.785f) * scale;
+
 	// Mode: top left, bottom left, top right, bottom right
 	const int mode = int(state.location);
+	const bool isTop = (mode % 2 == 0);
 	const float vertSign = mode % 2 == 0 ? 1.0f : -1.0f;
 	const float horizSign = mode < 2 ? -1.0f : 1.0f;
+
+	// Extra vertical shift for the horizontal pedal when at the top.
+	const glm::vec2 propShift = glm::vec2(extraHorizFix * 1.25f,
+							(isTop && !state.merge) ? 1.2f : 0.8f) * scale;
+
 	glm::vec2 shift = glm::vec2(horizSign, vertSign) * (1.0f - propShift);
 	// If at the bottom, shift above the keyboard.
 	if(mode % 2 == 1){

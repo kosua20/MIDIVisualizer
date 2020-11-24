@@ -8,7 +8,7 @@ in INTERFACE {
 uniform vec2 inverseScreenSize;
 
 uniform vec3 pedalColor;
-uniform ivec3 pedalFlags; // sostenuto, damper, soft
+uniform ivec4 pedalFlags; // sostenuto, damper, soft, expression
 uniform float pedalOpacity;
 uniform bool mergePedals;
 
@@ -25,7 +25,7 @@ void main(){
 	}
 
 	// Else find if the current pedal (or any if merging) is active.
-	for(int i = 0; i < 3; ++i){
+	for(int i = 0; i < 4; ++i){
 		if((mergePedals || int(In.id) == i) && pedalFlags[i] > 0){
 			vis = 1.0;
 			break;
