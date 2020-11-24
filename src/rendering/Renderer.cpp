@@ -790,18 +790,22 @@ void Renderer::showBackgroundOptions(){
 		nfdchar_t *outPath = NULL;
 		nfdresult_t result = NFD_OpenDialog("jpg,jpeg;png", NULL, &outPath);
 		if (result == NFD_OKAY) {
+			_state.background.imagePath = std::string(outPath);
 			glDeleteTextures(1, &_state.background.tex);
-			_state.background.tex = loadTexture(std::string(outPath), 4, false);
-			_state.background.image = true;
-			// Ensure minimal visibility.
-			if (_state.background.imageAlpha < 0.1f) {
-				_state.background.imageAlpha = 0.1f;
+			_state.background.tex = loadTexture(_state.background.imagePath, 4, false);
+			if(_state.background.tex != 0){
+				_state.background.image = true;
+				// Ensure minimal visibility.
+				if (_state.background.imageAlpha < 0.1f) {
+					_state.background.imageAlpha = 0.1f;
+				}
 			}
 		}
 	}
 	ImGuiSameLine(COLUMN_SIZE);
 	if (ImGui::Button("Clear image##Background")) {
 		_state.background.image = false;
+		_state.background.imagePath = "";
 		glDeleteTextures(1, &_state.background.tex);
 		_state.background.tex = 0;
 	}

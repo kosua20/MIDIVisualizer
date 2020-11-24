@@ -177,6 +177,9 @@ void State::defineOptions(){
 
 	_sharedInfos["smooth"] = {"Apply anti-aliasing to smooth all lines", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["scroll-reverse"] = {"Notes scroll from bottom to top instead of the opposite", OptionInfos::Type::BOOLEAN};
+
+	// Paths.
+	_sharedInfos["bg-img-path"] = {"Path to an image on disk to use as background", OptionInfos::Type::PATH};
 	
 }
 
@@ -288,6 +291,8 @@ void State::updateOptions(){
 
 	_boolInfos["smooth"] = &applyAA;
 	_boolInfos["scroll-reverse"] = &reverseScroll;
+
+	_stringInfos["bg-img-path"] = &background.imagePath;
 }
 
 
@@ -534,6 +539,7 @@ void State::reset(){
 	background.imageAlpha = 1.0f;
 	background.tex = 0;
 	background.imageBehindKeyboard = false;
+	background.imagePath = "";
 
 	particles.speed = 0.2f;
 	particles.expansion = 1.0f;

@@ -48,6 +48,7 @@ struct Quality {
 class State {
 public:
 	struct BackgroundState {
+		std::string imagePath; ///< Path to an image on disk.
 		glm::vec3 color; ///< Background color.
 		glm::vec3 linesColor; ///< Score lines color.
 		glm::vec3 textColor; ///< Score text color.
