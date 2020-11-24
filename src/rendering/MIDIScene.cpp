@@ -503,7 +503,8 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 	bool damper = false;
 	bool sostenuto = false;
 	bool soft = false;
-	_midiFile.getPedalsActive(damper, sostenuto, soft, time, 0),
+	bool expression = false;
+	_midiFile.getPedalsActive(damper, sostenuto, soft, expression, time, 0),
 
 	glEnable(GL_BLEND);
 	glUseProgram(_programPedalsId);
@@ -538,7 +539,7 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 	glUniform2fv(shiftId, 1, &(shift[0]));
 	glUniform1f(opacityId, state.opacity);
 	// sostenuto, damper, soft
-	glUniform3i(flagsId, sostenuto, damper, soft);
+	glUniform4i(flagsId, sostenuto, damper, soft, expression);
 	glUniform1i(mergeId, state.merge ? 1 : 0);
 
 	// Draw the geometry.

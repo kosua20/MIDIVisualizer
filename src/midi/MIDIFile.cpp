@@ -209,8 +209,8 @@ void MIDIFile::getNotesActive(ActiveNotesArray & actives, double time, size_t tr
 
 }
 
-void MIDIFile::getPedalsActive(bool & damper, bool &sostenuto, bool &soft, double time, size_t track) const {
-	_tracks[track].getPedalsActive(damper, sostenuto, soft, time);
+void MIDIFile::getPedalsActive(bool & damper, bool &sostenuto, bool &soft, bool &expression, double time, size_t track) const {
+	_tracks[track].getPedalsActive(damper, sostenuto, soft, expression, time);
 }
 
 void MIDIFile::updateSets(const SetOptions & options){

@@ -21,7 +21,7 @@ public:
 	
 	void getNotesActive(ActiveNotesArray& actives, double time, size_t track) const;
 
-	void getPedalsActive(bool & damper, bool &sostenuto, bool &soft, double time, size_t track) const;
+	void getPedalsActive(bool &damper, bool &sostenuto, bool &soft, bool &expression, double time, size_t track) const;
 
 	const double & signature() const { return _signature; }
 	
