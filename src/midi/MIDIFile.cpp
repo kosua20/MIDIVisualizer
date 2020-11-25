@@ -129,6 +129,11 @@ MIDIFile::MIDIFile(const std::string & filePath){
 		mergeTracks();
 	}
 
+	// Normalize pedal values.
+	for(auto & track : _tracks){
+		track.normalizePedalVelocity();
+	}
+
 	// Compute duration.
 	for(const auto & track : _tracks){
 		std::vector<MIDINote> notes;

@@ -87,7 +87,7 @@ void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t uni
 	// Scan events, focusing on the note ON/OFF events.
 	// Keep track of active notes.
 	std::map<short, std::tuple<size_t, short, short>> currentNotes;
-	std::map<PedalType, size_t> currentPedals;
+	std::map<PedalType, std::tuple<size_t, short>> currentPedals;
 
 	size_t timeInUnits = 0;
 
@@ -131,22 +131,31 @@ void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t uni
 				continue;
 			}
 			const PedalType type = PedalType(rawType);
-			const bool shouldStart = event.data[2] >= 64;
-			const bool isOn = currentPedals.count(type) > 0;
-			// Check if the pedal was on before and we should now stop it.
-			if(isOn && !shouldStart){
-				// Finish the pedal.
-				const size_t start = currentPedals[type];
+
+			if(currentPedals.count(type) > 0){
+				// Stop the current event, store it.
+				const auto & pedalTuple = currentPedals[type];
+				const size_t start = std::get<0>(pedalTuple);
 				const size_t end = timeInUnits;
 				// Create the final pedal with timing.
 				// Look for the start and end timestamps using the tempos and their timestamps.
+
 				const auto times = computeNoteTimings(tempos, start, end, unitsPerQuarterNote);
-				_pedals.emplace_back(type, times.first, times.second - times.first);
-				// Remove pedal.
+				const double duration = times.second - times.first;
+				if(duration > 0.0){
+					const float velocity = float(std::get<1>(pedalTuple));
+					_pedals.emplace_back(type, times.first, duration, velocity);
+				}
+
+				// Remove press.
 				currentPedals.erase(type);
-			} else if(!isOn && shouldStart){
-				currentPedals[type] = timeInUnits;
 			}
+			// Check if we have to start a new press.
+			const bool shouldNew = event.data[2] > 0;
+			if(shouldNew){
+				currentPedals[type] = std::make_tuple(timeInUnits, event.data[2]);
+			}
+
 		}
 	}
 }
@@ -182,8 +191,24 @@ void MIDITrack::getNotesActive(ActiveNotesArray & actives, double time) const {
 	}
 }
 
-void MIDITrack::getPedalsActive(bool & damper, bool &sostenuto, bool &soft, bool &expression, double time) const {
-	damper = sostenuto = soft = false;
+void MIDITrack::normalizePedalVelocity() {
+	if(_pedals.empty()){
+		return;
+	}
+	// For now we only normalize wrt the upper bound.
+	float maxV = _pedals[0].velocity;
+	float minV = 0.0f;
+	for(size_t pid = 1; pid < _pedals.size(); ++pid){
+		maxV = (std::max)(maxV, _pedals[pid].velocity);
+	}
+	// Renormalize in 0,1.
+	const float denom = 1.0f / (maxV - minV);
+	for(auto & pedal : _pedals){
+		pedal.velocity = (pedal.velocity - minV) * denom;
+	}
+}
+
+void MIDITrack::getPedalsActive(float & damper, float &sostenuto, float &soft, float &expression, double time) const {
 	const size_t count = _pedals.size();
 	for(size_t i = 0; i < count; ++i){
 		auto& pedal = _pedals[i];
