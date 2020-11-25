@@ -8,7 +8,7 @@ in INTERFACE {
 uniform vec2 inverseScreenSize;
 
 uniform vec3 pedalColor;
-uniform ivec4 pedalFlags; // sostenuto, damper, soft, expression
+uniform vec4 pedalFlags; // sostenuto, damper, soft, expression
 uniform float pedalOpacity;
 uniform bool mergePedals;
 
@@ -17,20 +17,20 @@ out vec4 fragColor;
 
 void main(){
 
-	float vis = pedalOpacity;
-
 	// When merging, only display the center pedal.
 	if(mergePedals && (int(In.id) != 0)){
 		discard;
 	}
 
 	// Else find if the current pedal (or any if merging) is active.
+	float maxIntensity = 0.0f;
+
 	for(int i = 0; i < 4; ++i){
-		if((mergePedals || int(In.id) == i) && pedalFlags[i] > 0){
-			vis = 1.0;
-			break;
+		if(mergePedals || int(In.id) == i){
+			maxIntensity = max(maxIntensity, pedalFlags[i]);
 		}
 	}
-	
-	fragColor = vec4(pedalColor, vis);
+
+	float finalOpacity = mix(pedalOpacity, 1.0, maxIntensity);
+	fragColor = vec4(pedalColor, finalOpacity);
 }
