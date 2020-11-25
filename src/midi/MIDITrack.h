@@ -20,8 +20,9 @@ public:
 
 	void getNotesActive(ActiveNotesArray & actives, double time) const;
 
-	void getPedalsActive(bool & damper, bool &sostenuto, bool &soft, bool &expression, double time) const;
 	void normalizePedalVelocity();
+
+	void getPedalsActive(float & damper, float &sostenuto, float &soft, float &expression, double time) const;
 	
 	void merge(MIDITrack & other);
 

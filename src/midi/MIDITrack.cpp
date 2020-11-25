@@ -209,21 +209,23 @@ void MIDITrack::normalizePedalVelocity() {
 }
 
 void MIDITrack::getPedalsActive(float & damper, float &sostenuto, float &soft, float &expression, double time) const {
+	damper = sostenuto = soft = expression = 0.0f;
+	
 	const size_t count = _pedals.size();
 	for(size_t i = 0; i < count; ++i){
 		auto& pedal = _pedals[i];
 		if(pedal.start <= time && pedal.start+pedal.duration >= time){
 			if(pedal.type == PedalType::DAMPER){
-				damper = true;
+				damper = pedal.velocity;
 			} else if(pedal.type == PedalType::SOSTENUTO){
-				sostenuto = true;
+				sostenuto = pedal.velocity;
 			} else if(pedal.type == PedalType::SOFT){
-				soft = true;
+				soft = pedal.velocity;
 			} else if(pedal.type == PedalType::EXPRESSION){
-				expression = true;
+				expression = pedal.velocity;
 			}
 			// Early exit (rare).
-			if(damper && sostenuto && soft && expression){
+			if(damper != 0.0f && sostenuto != 0.0f && soft != 0.0f && expression != 0.0f){
 				break;
 			}
 		}

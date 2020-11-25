@@ -502,10 +502,10 @@ void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::
 }
 
 void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const State::PedalsState & state, float keyboardHeight) {
-	bool damper = false;
-	bool sostenuto = false;
-	bool soft = false;
-	bool expression = false;
+	float damper = 0.0f;
+	float sostenuto = 0.0f;
+	float soft = 0.0f;
+	float expression = 0.0f;
 	_midiFile.getPedalsActive(damper, sostenuto, soft, expression, time, 0),
 
 	glEnable(GL_BLEND);
@@ -547,7 +547,7 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 	glUniform2fv(shiftId, 1, &(shift[0]));
 	glUniform1f(opacityId, state.opacity);
 	// sostenuto, damper, soft
-	glUniform4i(flagsId, sostenuto, damper, soft, expression);
+	glUniform4f(flagsId, sostenuto, damper, soft, expression);
 	glUniform1i(mergeId, state.merge ? 1 : 0);
 
 	// Draw the geometry.
