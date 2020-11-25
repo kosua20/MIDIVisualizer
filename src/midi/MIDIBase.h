@@ -20,12 +20,13 @@ struct MIDINote {
 
 struct MIDIPedal {
 
-	MIDIPedal(PedalType aType, double aStart, double aDuration);
+	MIDIPedal(PedalType aType, double aStart, double aDuration, float velocity);
 
 	void print() const;
 	
 	double start;
 	double duration;
+	float velocity;
 	PedalType type;
 };
 

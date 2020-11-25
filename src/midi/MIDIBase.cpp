@@ -16,7 +16,7 @@ MIDITempo::MIDITempo(size_t astart, unsigned int atempo) : start(astart), tempo(
 	
 }
 
-MIDIPedal::MIDIPedal(PedalType aType, double aStart, double aDuration) : start(aStart), duration(aDuration), type(aType) {
+MIDIPedal::MIDIPedal(PedalType aType, double aStart, double aDuration, float aVelocity) : start(aStart), duration(aDuration), type(aType), velocity(aVelocity) {
 
 }
 
@@ -44,7 +44,7 @@ void MIDITempo::print() const {
 }
 
 void MIDIPedal::print() const {
-	std::cout << "[INFO]: Pedal " << int(type) << " (at "<< start << ", " << duration << ")." << std::endl;
+	std::cout << "[INFO]: Pedal " << int(type) << " (at "<< start << "s, " << duration << "s) with velocity " << velocity << "." << std::endl;
 }
 
 MIDIEvent MIDIEvent::readMIDIEvent(const std::vector<char> & buffer, size_t & position, size_t delta, uint8_t & previousFirstByte){
