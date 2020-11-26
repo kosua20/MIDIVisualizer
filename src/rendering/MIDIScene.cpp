@@ -314,8 +314,8 @@ void MIDIScene::updatesActiveNotes(double time, double speed){
 	for(auto & particle : _particles){
 		// Give a bit of a head start to the animation.
 		particle.elapsed = (float(time) - particle.start + 0.25f) / (float(speed) * particle.duration);
-		// Disable old particles.
-		if(float(time) >= particle.start + particle.duration){
+		// Disable particles that shouldn't be visible at the current time.
+		if(float(time) >= particle.start + particle.duration || float(time) < particle.start){
 			particle.note = -1;
 			particle.set = -1;
 			particle.duration = particle.start = particle.elapsed = 0.0f;
@@ -390,7 +390,7 @@ void MIDIScene::drawParticles(float time, const glm::vec2 & invScreenSize, const
 
 	// Select the geometry.
 	glBindVertexArray(_vaoParticles);
-	// For each activ particles system, draw it with the right parameters.
+	// For each active particles system, draw it with the right parameters.
 	for(const auto & particle : _particles){
 		if(particle.note >= 0){
 			glUniform1i(globalShiftId, particle.note);
