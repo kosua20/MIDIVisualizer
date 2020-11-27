@@ -152,6 +152,7 @@ private:
 	bool _shouldPlay = false;
 	bool _showGUI = true;
 	bool _showDebug = false;
+	bool _printSizes = false;
 
 	Recorder _recorder;
 	
@@ -170,6 +171,7 @@ private:
 	std::shared_ptr<Score> _score;
 
 	glm::ivec2 _windowSize;
+	glm::ivec2 _backbufferSize;
 	float _guiScale = 1.0f;
 	unsigned int _shouldQuit = 0;
 	bool _showLayers = false;

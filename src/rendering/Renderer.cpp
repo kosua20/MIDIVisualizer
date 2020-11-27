@@ -39,7 +39,9 @@ Renderer::Renderer(int winW, int winH, bool fullscreen) {
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
 	_camera.screen(winW, winH, 1.0f);
-	// Setup framebuffers, size does not really matter as we expect.
+	_backbufferSize = glm::vec2(winW, winH);
+
+	// Setup framebuffers, size does not really matter as we expect a resize event just after.
 	const glm::ivec2 renderSize = _camera.renderSize();
 	_particlesFramebuffer = std::shared_ptr<Framebuffer>(new Framebuffer(renderSize[0], renderSize[1],
 		GL_RGBA, GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
@@ -159,7 +161,7 @@ SystemAction Renderer::draw(float currentTime) {
 			updateSizes();
 		}
 		// Make sure the backbuffer is updated, this is nicer.
-		glViewport(0, 0, GLsizei(_camera.screenSize()[0]), GLsizei(_camera.screenSize()[1]));
+		glViewport(0, 0, GLsizei(_backbufferSize[0]), GLsizei(_backbufferSize[1]));
 		_passthrough.draw(_finalFramebuffer->textureId(), _timer);
 		return action;
 	}
@@ -173,7 +175,7 @@ SystemAction Renderer::draw(float currentTime) {
 	// Render scene and blit, with GUI on top if needed.
 	drawScene(false);
 
-	glViewport(0, 0, GLsizei(_camera.screenSize()[0]), GLsizei(_camera.screenSize()[1]));
+	glViewport(0, 0, GLsizei(_backbufferSize[0]), GLsizei(_backbufferSize[1]));
 	_passthrough.draw(_finalFramebuffer->textureId(), _timer);
 
 	SystemAction action = SystemAction::NONE;
@@ -474,6 +476,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			if (ImGui::Button("Print MIDI content to console")) {
 				_scene->midiFile().print();
 			}
+			ImGui::Checkbox("Log sizes", &_printSizes);
 		}
 	}
 	ImGui::End();
@@ -992,6 +995,18 @@ void Renderer::resize(int width, int height) {
 }
 
 void Renderer::resizeAndRescale(int width, int height, float scale) {
+	
+	_backbufferSize[0] = width;
+	_backbufferSize[1] = height;
+	// Don't update the rendering buffers if the size is 0, to handle minimizing
+	// or if we are currently recording.
+	if(width == 0 || height == 0 || _recorder.isRecording()){
+		return;
+	}
+
+	if (_printSizes) {
+		std::cout << "Resizing to " << width << " x " << height << std::endl;
+	}
 	// Update the projection matrix.
 	_camera.screen(width, height, scale);
 	updateSizes();
@@ -1105,7 +1120,7 @@ void Renderer::startDirectRecording(const std::string & path, Recorder::Format f
 
 void Renderer::startRecording(){
 	// We need to provide some information for the recorder to start.
-	_recorder.start(_state.prerollTime, float(_scene->duration()), _state.scrollSpeed);
+	_recorder.prepare(_state.prerollTime, float(_scene->duration()), _state.scrollSpeed);
 
 	// Start by clearing up all buffers.
 	// We need:
@@ -1138,6 +1153,8 @@ void Renderer::startRecording(){
 	_finalFramebuffer->bind();
 	glClear(GL_COLOR_BUFFER_BIT);
 	_finalFramebuffer->unbind();
+
+	_recorder.start(_printSizes);
 }
 
 bool Renderer::channelColorEdit(const char * name, const char * displayName, ColorArray & colors){
