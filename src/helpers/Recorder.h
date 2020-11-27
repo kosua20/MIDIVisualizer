@@ -31,7 +31,9 @@ public:
 
 	bool drawGUI(float scale);
 
-	void start(float preroll, float duration, float speed);
+	void prepare(float preroll, float duration, float speed);
+
+	void start(bool verbose);
 
 	void drawProgress();
 	
@@ -53,7 +55,7 @@ public:
 
 private:
 
-	bool initVideo(const std::string & path, Format format);
+	bool initVideo(const std::string & path, Format format, bool verbose);
 
 	bool addFrameToVideo(GLubyte * data);
 	

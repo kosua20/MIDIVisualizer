@@ -180,16 +180,21 @@ bool Recorder::drawGUI(float scale){
 	return shouldStart;
 }
 
-void Recorder::start(float preroll, float duration, float speed){
-	_currentFrame = 0;
+void Recorder::prepare(float preroll, float duration, float speed){
 	_currentTime = -preroll;
 	_framesCount = int(std::ceil((duration + 10.0f + preroll) * _exportFramerate / speed));
+	_currentFrame = _framesCount;
 	_sceneDuration = duration;
 	// Image writing setup.
 	_buffer.resize(_size[0] * _size[1] * 4);
 
-	if(_outFormat != Format::PNG){
-		initVideo(_exportPath, _outFormat);
+}
+
+void Recorder::start(bool verbose) {
+	_currentFrame = 0;
+
+	if (_outFormat != Format::PNG) {
+		initVideo(_exportPath, _outFormat, verbose);
 	}
 }
 
@@ -248,11 +253,15 @@ void Recorder::setParameters(const std::string & path, Format format, int framer
 	_exportNoBackground = skipBackground;
 }
 
-bool Recorder::initVideo(const std::string & path, Format format){
+bool Recorder::initVideo(const std::string & path, Format format, bool verbose){
 #ifdef MIDIVIZ_SUPPORT_VIDEO
 	if(format == Format::PNG){
 		std::cerr << "Unable to use PNG format for video." << std::endl;
 		return false;
+	}
+
+	if (verbose) {
+		std::cout << "Attempting export at " << _size[0] << " x " << _size[1] << std::endl;
 	}
 
 	// Allocate general context.
@@ -355,7 +364,11 @@ bool Recorder::initVideo(const std::string & path, Format format){
 	}
 
 	// Debug log.
-	//av_dump_format(_formatCtx, 0, path.c_str(), 1);
+	if (verbose) {
+		std::cout << "Context infos: " << std::endl;
+		av_dump_format(_formatCtx, 0, path.c_str(), 1);
+		std::cout << std::endl;
+	}
 	return true;
 #else
 	return false;
