@@ -28,6 +28,7 @@ You can also run the executable from the command-line, specifying a midi file an
 	--config            path to a configuration INI file
 	--size              dimensions of the window (--size W H)
 	--fullscreen        start in fullscreen (1 or 0 to enabled/disable)
+	--gui-size          GUI text and button scaling (number, default 1.0)
 	--help              display a detailed help of all options
 	
 ### Export options
@@ -55,6 +56,12 @@ If display options are given, they will override those specified in the configur
 ## Troubleshooting
 
 Please note that MIDIVisualizer requires OpenGL 3.2 or higher on all platforms.
+
+- *MIDIVisualizer is not playing any sound.*  
+MIDIVisualizer is only a MIDI viewer, and does not currently support audio playback.
+
+- *I have encountered an issue while using MIDIVisualizer.*  
+You can open an issue ticket [here](https://github.com/kosua20/MIDIVisualizer/issues/new?assignees=&labels=bug&template=issue-report.md&title=). Please also check the issue [page](https://github.com/kosua20/MIDIVisualizer/issues), as some other people might have encountered a similar issue or offer help to your questions.
 
 ### Windows
 
