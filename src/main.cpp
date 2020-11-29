@@ -124,9 +124,13 @@ void performAction(SystemAction action, GLFWwindow * window, glm::ivec4 & frame)
 			break;
 		case SystemAction::FIX_SIZE:
 			glfwSetWindowAttrib(window, GLFW_RESIZABLE, GLFW_FALSE);
+			// This is for recording, to go as fast as possible on the GPU size.
+			glfwSwapInterval(0);
 			break;
 		case SystemAction::FREE_SIZE:
 			glfwSetWindowAttrib(window, GLFW_RESIZABLE, GLFW_TRUE);
+			// Restore V-sync after recording end.
+			glfwSwapInterval(1);
 			break;
 		case SystemAction::QUIT:
 			glfwSetWindowShouldClose(window, GLFW_TRUE);

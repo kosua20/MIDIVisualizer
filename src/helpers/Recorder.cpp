@@ -86,7 +86,10 @@ void Recorder::record(const std::shared_ptr<Framebuffer> & frame){
 
 	// Flush log.
 	if(_currentFrame + 1 == _framesCount){
+		const auto endTime	 = std::chrono::high_resolution_clock::now();
+		const long long duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - _startTime).count();
 		std::cout << std::endl;
+		std::cout << "[EXPORT] Export took " << (float(duration) / 1000.0f) << "s." << std::endl;
 	}
 
 	_currentTime += (1.0f / float(_exportFramerate));
@@ -196,6 +199,7 @@ void Recorder::start(bool verbose) {
 	if (_outFormat != Format::PNG) {
 		initVideo(_exportPath, _outFormat, verbose);
 	}
+	_startTime = std::chrono::high_resolution_clock::now();
 }
 
 void Recorder::drawProgress(){

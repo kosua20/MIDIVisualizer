@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <chrono>
 
 // Forward declare FFmpeg objects in all cases.
 struct AVFormatContext;
@@ -90,6 +91,7 @@ private:
 	AVFrame * _frame = nullptr;
 	SwsContext * _swsContext = nullptr;
 
+	std::chrono::time_point<std::chrono::high_resolution_clock> _startTime;
 };
 
 #endif

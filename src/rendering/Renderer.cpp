@@ -159,7 +159,7 @@ SystemAction Renderer::draw(float currentTime) {
 			_timer = 0.0f;
 			_timerStart = 0.0f;
 			_shouldPlay = false;
-			updateSizes();
+			resize(_backbufferSize[0], _backbufferSize[1]);
 		}
 		// Make sure the backbuffer is updated, this is nicer.
 		glViewport(0, 0, GLsizei(_backbufferSize[0]), GLsizei(_backbufferSize[1]));
@@ -1130,19 +1130,21 @@ void Renderer::startRecording(){
 	// - the camera screen size and scale to remain the same afterwards (and during for a nice background display).
 	// We can do this by leveraging the fact that camera parameters are not used during render.
 	// We can thus:
-	// - backup the camera parameters
+	// - backup the camera parameters and backbuffer resolution
 	// - trigger a buffers size update at the target resolution
-	// - restore the camera parameters.
+	// - restore the camera parameters and backbuffer resolution
 	// All that will be left is to trigger a size update at the end of the recording.
 
 	const glm::ivec2 backSize = _camera.screenSize();
 	const float backScale = _camera.scale();
+	const glm::ivec2 backBufferSize = _backbufferSize;
 
 	const auto &currentQuality = Quality::availables.at(_state.quality);
 	const glm::vec2 finalSize = glm::vec2(_recorder.requiredSize()) / currentQuality.finalResolution;
 	resizeAndRescale(int(finalSize[0]), int(finalSize[1]), 1.0f);
 
 	_camera.screen(backSize[0], backSize[1], backScale);
+	_backbufferSize = backBufferSize;
 
 	// Reset buffers.
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
