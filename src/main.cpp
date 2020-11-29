@@ -211,9 +211,8 @@ int main( int argc, char** argv) {
 		nfdresult_t result = NFD_OpenDialog( NULL, NULL, &outPath );
 		if(result == NFD_OKAY){
 			midiFilePath = std::string(outPath);
-		} else if(result == NFD_CANCEL){
-			return 0;
-		} else {
+		} else if(result != NFD_CANCEL){
+			// There was an issue with the file picker.
 			return 10;
 		}
 	}
@@ -223,13 +222,9 @@ int main( int argc, char** argv) {
 	// Create the renderer.
 	Renderer renderer(isw, ish, fullscreen);
 
-	// Load midi file, graphics setup.
-	if(!renderer.loadFile(midiFilePath)){
-		// File not found, probably (error message handled locally).
-		renderer.clean();
-		glfwDestroyWindow(window);
-		glfwTerminate();
-		return 3;
+	// Load midi file if specified by command-line or file picker.
+	if(!midiFilePath.empty()){
+		renderer.loadFile(midiFilePath);
 	}
 
 	// Setup ImGui for
