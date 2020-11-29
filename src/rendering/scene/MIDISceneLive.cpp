@@ -136,8 +136,24 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 				_secondsPerMeasure = computeMeasureDuration(_tempo, _signature);
 			}
 
+		} else if(type == rtmidi::message_type::CONTROL_CHANGE){
 			// Handle pedal.
+			const int rawType = message[1];
+			// Handle only pedal changes.
+			if(rawType != 64 && rawType != 66 && rawType != 67 && rawType != 11){
+				continue;
+			}
+			const PedalType type = PedalType(rawType);
+			// Stop the current pedal.
+			float & pedal = (type == DAMPER ? _pedals.damper : (type == SOSTENUTO ? _pedals.sostenuto : (type == SOFT ? _pedals.soft : _pedals.expression)));
+			pedal = 0.0f;
+
+			if(message[2] > 0){
+				pedal = float(message[2])/127.0f;
+			}
+
 		}
+
 	}
 
 	_dataBufferSubsize = std::min(int(_notes.size()), _notesCount);
@@ -148,10 +164,6 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 	}
 
 	_previousTime = time;
-
-	// Update pedal state.
-	_pedals.damper = _pedals.sostenuto = _pedals.soft = _pedals.expression = 0.0f;
-	//_midiFile.getPedalsActive(_pedals.damper, _pedals.sostenuto, _pedals.soft, _pedals.expression, time, 0);
 }
 
 double MIDISceneLive::duration() const {
