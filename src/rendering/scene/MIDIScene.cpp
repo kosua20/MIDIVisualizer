@@ -4,8 +4,8 @@
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "../helpers/ProgramUtilities.h"
-#include "../helpers/ResourcesManager.h"
+#include "../../helpers/ProgramUtilities.h"
+#include "../../helpers/ResourcesManager.h"
 
 #include "MIDIScene.h"
 
@@ -19,51 +19,7 @@
 MIDIScene::~MIDIScene(){}
 
 MIDIScene::MIDIScene(){
-	std::vector<float> data(5, 0.0f);
 	renderSetup();
-	upload(data);
-}
-
-MIDIScene::MIDIScene(const std::string & midiFilePath, const SetOptions & options) {
-	
-	// MIDI processing.
-	_midiFile = MIDIFile(midiFilePath);
-
-	renderSetup();
-
-	updateSets(options);
-
-	std::cout << "[INFO]: Final track duration " << _midiFile.duration() << " sec." << std::endl;
-}
-
-
-void MIDIScene::updateSets(const SetOptions & options){
-	// Generate note data for rendering.
-	_midiFile.updateSets(options);
-
-	// Load notes shared data.
-	std::vector<float> data;
-	std::vector<MIDINote> notesM;
-	_midiFile.getNotes(notesM, NoteType::MAJOR, 0);
-	for(auto& note : notesM){
-		data.push_back(float(note.note));
-		data.push_back(float(note.start));
-		data.push_back(float(note.duration));
-		data.push_back(0.0f);
-		data.push_back(float(note.set % CHANNELS_COUNT));
-	}
-
-	std::vector<MIDINote> notesm;
-	_midiFile.getNotes(notesm, NoteType::MINOR, 0);
-	for(auto& note : notesm){
-		data.push_back(float(note.note));
-		data.push_back(float(note.start));
-		data.push_back(float(note.duration));
-		data.push_back(1.0f);
-		data.push_back(float(note.set % CHANNELS_COUNT));
-	}
-	// Upload to the GPU.
-	upload(data);
 }
 
 void MIDIScene::upload(const std::vector<float> & data){
@@ -271,7 +227,6 @@ void MIDIScene::renderSetup(){
 
 	// Prepare actives notes array.
 	_actives.fill(-1);
-	_previousTime = 0.0;
 	// Particle systems pool.
 	_particles = std::vector<Particles>(256);
 }
@@ -307,44 +262,6 @@ void MIDIScene::setKeyboardSize(float keyboardHeight){
 	glUseProgram(_programFlashesId);
 	glUniform1f(glGetUniformLocation(_programFlashesId, "keyboardHeight"), keyboardHeight);
 	glUseProgram(0);
-}
-
-void MIDIScene::updatesActiveNotes(double time, double speed){
-	// Update the particle systems lifetimes.
-	for(auto & particle : _particles){
-		// Give a bit of a head start to the animation.
-		particle.elapsed = (float(time) - particle.start + 0.25f) / (float(speed) * particle.duration);
-		// Disable particles that shouldn't be visible at the current time.
-		if(float(time) >= particle.start + particle.duration || float(time) < particle.start){
-			particle.note = -1;
-			particle.set = -1;
-			particle.duration = particle.start = particle.elapsed = 0.0f;
-		}
-	}
-	// Get notes actives.
-	auto actives = ActiveNotesArray();
-	_midiFile.getNotesActive(actives, time, 0);
-	for(int i = 0; i < 128; ++i){
-		const auto & note = actives[i];
-		const int clamped = note.set % CHANNELS_COUNT;
-		_actives[i] = note.enabled ? clamped : -1;
-		// Check if the note was triggered at this frame.
-		if(note.start > _previousTime && note.start <= time){
-			// Find an available particles system and update it with the note parameters.
-			for(auto & particle : _particles){
-				if(particle.note < 0){
-					// Update with new note parameter.
-					particle.duration = (std::max)(note.duration*2.0f, note.duration + 1.2f);
-					particle.start = note.start;
-					particle.note = i;
-					particle.set = clamped;
-					particle.elapsed = 0.0f;
-					break;
-				}
-			}
-		}
-	}
-	_previousTime = time;
 }
 
 void MIDIScene::resetParticles() {
@@ -428,7 +345,7 @@ void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const Col
 	
 	// Draw the geometry.
 	glBindVertexArray(_vao);
-	glDrawElementsInstanced(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0, GLsizei(_midiFile.notesCount()));
+	glDrawElementsInstanced(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0, GLsizei(notesCount()));
 
 	glBindVertexArray(0);
 	glUseProgram(0);
@@ -502,11 +419,6 @@ void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::
 }
 
 void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const State::PedalsState & state, float keyboardHeight) {
-	float damper = 0.0f;
-	float sostenuto = 0.0f;
-	float soft = 0.0f;
-	float expression = 0.0f;
-	_midiFile.getPedalsActive(damper, sostenuto, soft, expression, time, 0),
 
 	glEnable(GL_BLEND);
 	glUseProgram(_programPedalsId);
@@ -547,7 +459,7 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 	glUniform2fv(shiftId, 1, &(shift[0]));
 	glUniform1f(opacityId, state.opacity);
 	// sostenuto, damper, soft
-	glUniform4f(flagsId, sostenuto, damper, soft, expression);
+	glUniform4f(flagsId, _pedals.sostenuto, _pedals.damper, _pedals.soft, _pedals.expression);
 	glUniform1i(mergeId, state.merge ? 1 : 0);
 
 	// Draw the geometry.

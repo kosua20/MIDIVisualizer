@@ -3,7 +3,7 @@
 #include <gl3w/gl3w.h>
 #include <glm/glm.hpp>
 #include "../midi/MIDIFile.h"
-#include "State.h"
+#include "../State.h"
 
 class MIDIScene {
 
@@ -11,14 +11,6 @@ public:
 
 	MIDIScene();
 
-	MIDIScene(const std::string & midiFilePath, const SetOptions & options);
-
-	void updateSets(const SetOptions & options);
-	
-	~MIDIScene();
-	
-	void updatesActiveNotes(double time, double speed);
-	
 	/// Draw function
 	void drawNotes(float time, const glm::vec2 & invScreenSize, const ColorArray & majorColors, const ColorArray & minorColors, bool reverseScroll, bool prepass);
 	
@@ -34,8 +26,6 @@ public:
 
 	/// Clean function
 	void clean();
-
-	const MIDIFile& midiFile() { return _midiFile; }
 	
 	void setScaleAndMinorWidth(const float scale, const float minorWidth);
 
@@ -45,15 +35,50 @@ public:
 
 	void setMinMaxKeys(int minKey, int minKeyMajor, int notesCount);
 
-	const double & duration() const { return _midiFile.duration(); };
-	
 	void resetParticles();
 
+	// Type specific methods.
+
+	virtual void updateSets(const SetOptions & options) = 0;
+
+	virtual void updatesActiveNotes(double time, double speed) = 0;
+
+	virtual double duration() const = 0;
+
+	virtual double secondsPerMeasure() const = 0;
+
+	virtual int notesCount() const = 0;
+
+	virtual void print() const = 0;
+
+	virtual ~MIDIScene();
+
+protected:
+
+	struct Pedals {
+		float damper = 0.0f;
+		float sostenuto = 0.0f;
+		float soft = 0.0f;
+		float expression = 0.0f;
+	};
+
+	struct Particles {
+		int note = -1;
+		int set = -1;
+		float duration = 0.0f;
+		float start = 1000000.0f;
+		float elapsed = 0.0f;
+	};
+
+	void upload(const std::vector<float> & data);
+
+	std::array<int, 128> _actives;
+	std::vector<Particles> _particles;
+	Pedals _pedals;
+	
 private:
 
 	void renderSetup();
-
-	void upload(const std::vector<float> & data);
 
 	GLuint _programId;
 	GLuint _programFlashesId;
@@ -83,23 +108,7 @@ private:
 	size_t _countWave;
 	
 	size_t _primitiveCount;
-	
-	std::array<int, 128> _actives;
 
-	struct Particles {
-		int note = -1;
-		int set = -1;
-		float duration = 0.0f;
-		float start = 1000000.0f;
-		float elapsed = 0.0f;
-	};
-	std::vector<Particles> _particles;
-	double _previousTime;
-
-	MIDIFile _midiFile;
-	
-	
-	
 };
 
 #endif

@@ -8,7 +8,7 @@
 
 #include "Framebuffer.h"
 #include "camera/Camera.h"
-#include "MIDIScene.h"
+#include "scene/MIDIScene.h"
 #include "ScreenQuad.h"
 #include "Score.h"
 

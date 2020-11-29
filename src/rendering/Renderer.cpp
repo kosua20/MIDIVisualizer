@@ -133,7 +133,7 @@ bool Renderer::loadFile(const std::string &midiFilePath) {
 
 	// Init objects.
 	_scene = scene;
-	_score = std::make_shared<Score>(_scene->midiFile().secondsPerMeasure());
+	_score = std::make_shared<Score>(_scene->secondsPerMeasure());
 	applyAllSettings();
 	return true;
 }
@@ -331,10 +331,11 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		ImGui::Separator();
 
 		// Detail text.
-		const int nCount = _scene->midiFile().notesCount();
+		const int nCount = _scene->notesCount();
 		const double duration = _scene->duration();
-		const int speed = int(std::round(double(nCount)/duration));
+		const int speed = int(std::round(double(nCount)/std::max(0.001, duration)));
 		ImGui::Text("Notes: %d, duration: %.1fs, speed: %d notes/s", nCount, duration, speed);
+
 		ImGui::Separator();
 		
 		// Load button.
@@ -474,7 +475,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			ImGui::Text("%.1f FPS / %.1f ms", ImGui::GetIO().Framerate, ImGui::GetIO().DeltaTime * 1000.0f);
 			ImGui::Text("Render size: %dx%d, screen size: %dx%d", _renderFramebuffer->_width, _renderFramebuffer->_height, _camera.screenSize()[0], _camera.screenSize()[1]);
 			if (ImGui::Button("Print MIDI content to console")) {
-				_scene->midiFile().print();
+				_scene->print();
 			}
 			ImGui::Checkbox("Log sizes", &_printSizes);
 		}

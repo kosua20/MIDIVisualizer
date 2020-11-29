@@ -1,6 +1,6 @@
 
 #include "State.h"
-#include "MIDIScene.h"
+#include "scene/MIDIScene.h"
 #include "../helpers/ResourcesManager.h"
 
 #include <iostream>
