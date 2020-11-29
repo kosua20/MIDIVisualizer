@@ -70,11 +70,22 @@ protected:
 		float elapsed = 0.0f;
 	};
 
-	void upload(const std::vector<float> & data);
+	struct GPUNote {
+		float note = 0.0f;
+		float start = 0.0f;
+		float duration = 0.0f;
+		float isMinor = 0.0f;
+		float set = 0.0f;
+	};
+
+	void upload(const std::vector<GPUNote> & data);
+	
+	void upload(const std::vector<GPUNote> & data, int mini, int maxi);
 
 	std::array<int, 128> _actives;
 	std::vector<Particles> _particles;
 	Pedals _pedals;
+	int _dataBufferSubsize = 0;
 	
 private:
 
@@ -108,6 +119,27 @@ private:
 	size_t _countWave;
 	
 	size_t _primitiveCount;
+
+};
+
+class MIDISceneEmpty : public MIDIScene {
+public:
+
+	MIDISceneEmpty();
+	
+	void updateSets(const SetOptions & options);
+
+	void updatesActiveNotes(double time, double speed);
+
+	double duration() const;
+
+	double secondsPerMeasure() const;
+
+	int notesCount() const;
+
+	void print() const;
+
+	~MIDISceneEmpty();
 
 };
 

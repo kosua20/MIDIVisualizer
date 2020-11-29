@@ -16,11 +16,6 @@
 
 MIDISceneFile::~MIDISceneFile(){}
 
-MIDISceneFile::MIDISceneFile() : MIDIScene(){
-	std::vector<float> data(5, 0.0f);
-	upload(data);
-}
-
 MIDISceneFile::MIDISceneFile(const std::string & midiFilePath, const SetOptions & options) : MIDIScene() {
 
 	// MIDI processing.
@@ -37,28 +32,31 @@ void MIDISceneFile::updateSets(const SetOptions & options){
 	_midiFile.updateSets(options);
 
 	// Load notes shared data.
-	std::vector<float> data;
+	std::vector<GPUNote> data;
 	std::vector<MIDINote> notesM;
 	_midiFile.getNotes(notesM, NoteType::MAJOR, 0);
 	for(auto& note : notesM){
-		data.push_back(float(note.note));
-		data.push_back(float(note.start));
-		data.push_back(float(note.duration));
-		data.push_back(0.0f);
-		data.push_back(float(note.set % CHANNELS_COUNT));
+		data.emplace_back();
+		data.back().note = float(note.note);
+		data.back().start = float(note.start);
+		data.back().duration = float(note.duration);
+		data.back().isMinor = 0.0f;
+		data.back().set = float(note.set % CHANNELS_COUNT);
 	}
 
 	std::vector<MIDINote> notesm;
 	_midiFile.getNotes(notesm, NoteType::MINOR, 0);
 	for(auto& note : notesm){
-		data.push_back(float(note.note));
-		data.push_back(float(note.start));
-		data.push_back(float(note.duration));
-		data.push_back(1.0f);
-		data.push_back(float(note.set % CHANNELS_COUNT));
+		data.emplace_back();
+		data.back().note = float(note.note);
+		data.back().start = float(note.start);
+		data.back().duration = float(note.duration);
+		data.back().isMinor =  1.0f;
+		data.back().set = float(note.set % CHANNELS_COUNT);
 	}
 	// Upload to the GPU.
 	upload(data);
+	_dataBufferSubsize = data.size();
 }
 
 void MIDISceneFile::updatesActiveNotes(double time, double speed){

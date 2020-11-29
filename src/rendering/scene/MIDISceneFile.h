@@ -10,8 +10,6 @@ class MIDISceneFile : public MIDIScene {
 
 public:
 
-	MIDISceneFile();
-
 	MIDISceneFile(const std::string & midiFilePath, const SetOptions & options);
 
 	void updateSets(const SetOptions & options);

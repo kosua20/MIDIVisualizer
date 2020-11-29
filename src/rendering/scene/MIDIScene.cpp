@@ -22,12 +22,6 @@ MIDIScene::MIDIScene(){
 	renderSetup();
 }
 
-void MIDIScene::upload(const std::vector<float> & data){
-	glBindBuffer(GL_ARRAY_BUFFER, _dataBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * data.size(), &(data[0]), GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
 void MIDIScene::renderSetup(){
 
 	std::vector<float> vertices = {-0.5,-0.5, 0.5, -0.5, 0.5,0.5, -0.5, 0.5};
@@ -345,7 +339,7 @@ void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const Col
 	
 	// Draw the geometry.
 	glBindVertexArray(_vao);
-	glDrawElementsInstanced(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0, GLsizei(notesCount()));
+	glDrawElementsInstanced(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0, GLsizei(_dataBufferSubsize));
 
 	glBindVertexArray(0);
 	glUseProgram(0);
@@ -537,4 +531,52 @@ void MIDIScene::clean(){
 	glDeleteProgram(_programId);
 	glDeleteProgram(_programFlashesId);
 	glDeleteProgram(_programParticulesId);
+}
+
+void MIDIScene::upload(const std::vector<GPUNote> & data){
+	glBindBuffer(GL_ARRAY_BUFFER, _dataBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GPUNote) * data.size(), &(data[0]), GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void MIDIScene::upload(const std::vector<GPUNote> & data, int mini, int maxi){
+	const int size = maxi - mini + 1;
+	glBindBuffer(GL_ARRAY_BUFFER, _dataBuffer);
+	glBufferSubData(GL_ARRAY_BUFFER, mini * sizeof(GPUNote), size * sizeof(GPUNote), &(data[mini]));
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+MIDISceneEmpty::MIDISceneEmpty(){
+	// Upload one dummy note.
+	std::vector<GPUNote> data = { GPUNote() };
+	upload(data);
+	_dataBufferSubsize = 0;
+}
+
+void MIDISceneEmpty::updateSets(const SetOptions & options){
+
+}
+
+void MIDISceneEmpty::updatesActiveNotes(double time, double speed){
+
+}
+
+double MIDISceneEmpty::duration() const {
+	return 0.0;
+}
+
+double MIDISceneEmpty::secondsPerMeasure() const {
+	return 1.0;
+}
+
+int MIDISceneEmpty::notesCount() const {
+	return 0;
+}
+
+void MIDISceneEmpty::print() const {
+
+}
+
+MIDISceneEmpty::~MIDISceneEmpty(){
+
 }

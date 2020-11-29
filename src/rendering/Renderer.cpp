@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "Renderer.h"
+#include "scene/MIDIScene.h"
 #include "scene/MIDISceneFile.h"
 
 #include <algorithm>
@@ -114,7 +115,7 @@ Renderer::Renderer(int winW, int winH, bool fullscreen) {
 	checkGLError();
 
 	_score.reset(new Score(2.0f));
-	_scene.reset(new MIDISceneFile());
+	_scene.reset(new MIDISceneEmpty());
 }
 
 Renderer::~Renderer() {}
