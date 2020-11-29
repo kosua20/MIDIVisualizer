@@ -206,15 +206,16 @@ void MIDIFile::getNotes(std::vector<MIDINote> & notes, NoteType type, size_t tra
 }
 
 void MIDIFile::getNotesActive(ActiveNotesArray & actives, double time, size_t track) const {
-
 	if(track >= _tracks.size()){
 		return;
 	}
 	_tracks[track].getNotesActive(actives, time);
-
 }
 
 void MIDIFile::getPedalsActive(float & damper, float &sostenuto, float &soft, float &expression, double time, size_t track) const {
+	if(track >= _tracks.size()){
+		return;
+	}
 	_tracks[track].getPedalsActive(damper, sostenuto, soft, expression, time);
 }
 
