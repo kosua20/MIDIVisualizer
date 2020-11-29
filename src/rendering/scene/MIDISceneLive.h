@@ -35,7 +35,10 @@ private:
 	std::vector<GPUNote> _notes;
 	std::array<int, 128> _activeIds;
 	double _previousTime = 0.0;
+	double _signature = 4.0/4.0;
+	double _secondsPerMeasure;
 	int _notesCount = 0;
+	int _tempo = 500000;
 
 	static rtmidi::midi_in & shared();
 

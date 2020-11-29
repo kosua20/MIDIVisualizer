@@ -30,36 +30,11 @@ MIDISceneLive::MIDISceneLive(int port) : MIDIScene(){
 
 	_activeIds.fill(-1);
 	_notes.resize(MAX_NOTES_IN_FLIGHT);
-	_notesCount = 0;
+	_secondsPerMeasure = computeMeasureDuration(_tempo, _signature);
 }
 
 void MIDISceneLive::updateSets(const SetOptions & options){
 
-	//_midiFile.updateSets(options);
-
-	// Load notes shared data.
-	//	std::vector<float> data;
-	//	std::vector<MIDINote> notesM;
-	//	//_midiFile.getNotes(notesM, NoteType::MAJOR, 0);
-	//	for(auto& note : notesM){
-	//		data.push_back(float(note.note));
-	//		data.push_back(float(note.start));
-	//		data.push_back(float(note.duration));
-	//		data.push_back(0.0f);
-	//		data.push_back(float(note.set % CHANNELS_COUNT));
-	//	}
-	//
-	//	std::vector<MIDINote> notesm;
-	//	//_midiFile.getNotes(notesm, NoteType::MINOR, 0);
-	//	for(auto& note : notesm){
-	//		data.push_back(float(note.note));
-	//		data.push_back(float(note.start));
-	//		data.push_back(float(note.duration));
-	//		data.push_back(1.0f);
-	//		data.push_back(float(note.set % CHANNELS_COUNT));
-	//	}
-	//	// Upload to the GPU.
-	//	upload(data);
 }
 
 void MIDISceneLive::updatesActiveNotes(double time, double speed){
@@ -149,7 +124,18 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 				++_notesCount;
 			}
 
-		} else {
+		} else if(message.is_meta_event()){
+			const rtmidi::meta_event_type metaType = message.get_meta_event_type();
+
+			if(metaType == rtmidi::meta_event_type::TIME_SIGNATURE){
+				_signature = double(message[3]) / double(std::pow(2, short(message[4])));
+				_secondsPerMeasure = computeMeasureDuration(_tempo, _signature);
+
+			} else if(metaType == rtmidi::meta_event_type::TEMPO_CHANGE){
+				_tempo = int(((message[3] & 0xFF) << 16) | ((message[4] & 0xFF) << 8) | (message[5] & 0xFF));
+				_secondsPerMeasure = computeMeasureDuration(_tempo, _signature);
+			}
+
 			// Handle pedal.
 		}
 	}
@@ -173,7 +159,7 @@ double MIDISceneLive::duration() const {
 }
 
 double MIDISceneLive::secondsPerMeasure() const {
-	return 1.0;
+	return _secondsPerMeasure;
 }
 
 int MIDISceneLive::notesCount() const {
