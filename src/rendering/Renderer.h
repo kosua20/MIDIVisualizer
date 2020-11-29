@@ -124,6 +124,8 @@ private:
 
 	void showLayers();
 
+	void showDevices();
+
 	void showSets();
 
 	void applyAllSettings();
@@ -174,6 +176,7 @@ private:
 	glm::ivec2 _backbufferSize;
 	float _guiScale = 1.0f;
 	unsigned int _shouldQuit = 0;
+	int _selectedPort = 0;
 	bool _showLayers = false;
 	bool _exitAfterRecording = false;
 	bool _fullscreen = false;

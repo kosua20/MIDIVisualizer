@@ -11,6 +11,7 @@
 #include "Renderer.h"
 #include "scene/MIDIScene.h"
 #include "scene/MIDISceneFile.h"
+#include "scene/MIDISceneLive.h"
 
 #include <algorithm>
 #include <fstream>
@@ -350,13 +351,18 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			}
 		}
 		ImGuiSameLine(COLUMN_SIZE);
+		if (ImGui::Button("Live session...")) {
+			ImGui::OpenPopup("Devices");
+		}
+		showDevices();
+
 		ImGuiPushItemWidth(100);
 		if (ImGui::InputFloat("Preroll", &_state.prerollTime, 0.1f, 1.0f)) {
 			reset();
 		}
 		ImGui::PopItemWidth();
 
-		if (ImGui::Button("Show layers...")) {
+		if (ImGui::Button("Show effects...")) {
 			_showLayers = true;
 		}
 		ImGuiSameLine(COLUMN_SIZE);
@@ -484,7 +490,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 	}
 	ImGui::End();
 
-	if (_showLayers) {
+	if(_showLayers){
 		showLayers();
 	}
 
@@ -507,6 +513,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 				return SystemAction::QUIT;
 			}
 			ImGui::PopStyleColor();
+			ImGui::EndPopup();
 		}
 	}
 	return action;
@@ -910,6 +917,44 @@ void Renderer::showLayers() {
 		ImGui::Separator();
 	}
 	ImGui::End();
+}
+
+void Renderer::showDevices(){
+	if(ImGui::BeginPopupModal("Devices", nullptr, ImGuiWindowFlags_AlwaysAutoResize)){
+		ImGui::Text("Select a device for live session.");
+		ImGui::Separator();
+
+		const auto & devices = MIDISceneLive::availablePorts();
+		for(int i = 0; i < devices.size(); ++i){
+			ImGui::RadioButton(devices[i].c_str(), &_selectedPort, i);
+		}
+
+		if(devices.empty()){
+			ImGui::TextDisabled("No device found.");
+		}
+
+		ImGui::Separator();
+
+		const ImVec2 buttonSize(_guiScale * (COLUMN_SIZE - 20.0f), 0.0f);
+
+		if(ImGui::Button("Cancel", buttonSize)){
+			ImGui::CloseCurrentPopup();
+		}
+		ImGuiSameLine(COLUMN_SIZE);
+		if(ImGui::Button("Start", buttonSize)){
+			_scene = std::make_shared<MIDISceneLive>(_selectedPort);
+
+			_timer = 0.0f;
+			_shouldPlay = true;
+			_state.reverseScroll = true;
+
+			_score = std::make_shared<Score>(_scene->secondsPerMeasure());
+			applyAllSettings();
+
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+	}
 }
 
 void Renderer::showSets(){
