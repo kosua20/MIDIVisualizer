@@ -113,6 +113,8 @@ set(Sources
 	"src/rendering/scene/MIDIScene.h"
 	"src/rendering/scene/MIDISceneFile.cpp"
 	"src/rendering/scene/MIDISceneFile.h"
+	"src/rendering/scene/MIDISceneLive.cpp"
+	"src/rendering/scene/MIDISceneLive.h"
 	"src/rendering/Renderer.cpp"
 	"src/rendering/Renderer.h"
 	"src/rendering/ScreenQuad.cpp"
