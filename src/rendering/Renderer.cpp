@@ -9,9 +9,10 @@
 #include <vector>
 
 #include "Renderer.h"
+#include "scene/MIDISceneFile.h"
+
 #include <algorithm>
 #include <fstream>
-
 
 
 SystemAction::SystemAction(SystemAction::Type act) {
@@ -113,7 +114,7 @@ Renderer::Renderer(int winW, int winH, bool fullscreen) {
 	checkGLError();
 
 	_score.reset(new Score(2.0f));
-	_scene.reset(new MIDIScene());
+	_scene.reset(new MIDISceneFile());
 }
 
 Renderer::~Renderer() {}
@@ -122,7 +123,7 @@ bool Renderer::loadFile(const std::string &midiFilePath) {
 	std::shared_ptr<MIDIScene> scene(nullptr);
 
 	try {
-		scene = std::make_shared<MIDIScene>(midiFilePath, _state.setOptions);
+		scene = std::make_shared<MIDISceneFile>(midiFilePath, _state.setOptions);
 	} catch(...){
 		// Failed to load.
 		return false;
