@@ -180,6 +180,7 @@ private:
 	bool _showLayers = false;
 	bool _exitAfterRecording = false;
 	bool _fullscreen = false;
+	bool _liveplay = false;
 };
 
 #endif

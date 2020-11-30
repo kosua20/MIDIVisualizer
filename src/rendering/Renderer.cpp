@@ -133,6 +133,7 @@ bool Renderer::loadFile(const std::string &midiFilePath) {
 	// Player.
 	_timer = -_state.prerollTime;
 	_shouldPlay = false;
+	_liveplay = false;
 
 	// Init objects.
 	_scene = scene;
@@ -351,10 +352,21 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			}
 		}
 		ImGuiSameLine(COLUMN_SIZE);
-		if (ImGui::Button("Live session...")) {
-			ImGui::OpenPopup("Devices");
+		if(_liveplay){
+			if (ImGui::Button("Clear session")) {
+				_scene = std::make_shared<MIDISceneEmpty>();
+				_liveplay = false;
+				_shouldPlay = false;
+				_timer = 0.0f;
+				_score = std::make_shared<Score>(_scene->secondsPerMeasure());
+				applyAllSettings();
+			}
+		} else {
+			if (ImGui::Button("Live session...")) {
+				ImGui::OpenPopup("Devices");
+			}
+			showDevices();
 		}
-		showDevices();
 
 		ImGuiPushItemWidth(100);
 		if (ImGui::InputFloat("Preroll", &_state.prerollTime, 0.1f, 1.0f)) {
@@ -387,13 +399,16 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			updateMinMaxKeys();
 		}
 
-		if(ImGui::Checkbox("Reverse", &_state.reverseScroll)){
-			_score->setPlayDirection(_state.reverseScroll);
+		if(!_liveplay){
+			if(ImGui::Checkbox("Reverse", &_state.reverseScroll)){
+				_score->setPlayDirection(_state.reverseScroll);
+			}
+			ImGuiSameLine(COLUMN_SIZE);
+			if(ImGui::SliderFloat("Speed", &_state.scrollSpeed, 0.1f, 5.0f)){
+				_state.scrollSpeed = std::max(0.01f, _state.scrollSpeed);
+			}
 		}
-		ImGuiSameLine(COLUMN_SIZE);
-		if(ImGui::SliderFloat("Speed", &_state.scrollSpeed, 0.1f, 5.0f)){
-			_state.scrollSpeed = std::max(0.01f, _state.scrollSpeed);
-		}
+
 
 		if(ImGui::CollapsingHeader("Notes##HEADER")){
 
@@ -947,7 +962,7 @@ void Renderer::showDevices(){
 			_timer = 0.0f;
 			_shouldPlay = true;
 			_state.reverseScroll = true;
-
+			_liveplay = true;
 			_score = std::make_shared<Score>(_scene->secondsPerMeasure());
 			applyAllSettings();
 
