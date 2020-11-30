@@ -32,9 +32,16 @@ public:
 
 private:
 
+	struct NoteInfos {
+		short note;
+		short channel;
+	};
+
 	std::vector<GPUNote> _notes;
+	std::vector<NoteInfos> _notesInfos;
 	std::array<int, 128> _activeIds;
 	double _previousTime = 0.0;
+	double _maxTime = 0.0;
 	double _signature = 4.0/4.0;
 	double _secondsPerMeasure;
 	int _notesCount = 0;

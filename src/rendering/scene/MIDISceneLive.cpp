@@ -30,11 +30,23 @@ MIDISceneLive::MIDISceneLive(int port) : MIDIScene(){
 
 	_activeIds.fill(-1);
 	_notes.resize(MAX_NOTES_IN_FLIGHT);
+	_notesInfos.resize(MAX_NOTES_IN_FLIGHT);
 	_secondsPerMeasure = computeMeasureDuration(_tempo, _signature);
 }
 
 void MIDISceneLive::updateSets(const SetOptions & options){
-
+	for(size_t nid = 0; nid < _notesCount; ++nid){
+		auto & note = _notes[nid];
+		if(options.mode == SetMode::CHANNEL){
+			// Restore channel from backup vector.
+			note.set = float(int(_notesInfos[nid].channel) % CHANNELS_COUNT);
+		} else if(options.mode == SetMode::KEY){
+			note.set = (note.note < options.key ? 0.0f : 1.0f);
+		} else {
+			note.set = 0.0f;
+		}
+	}
+	upload(_notes);
 }
 
 void MIDISceneLive::updatesActiveNotes(double time, double speed){
@@ -93,6 +105,9 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 				// Activate the key.
 				_actives[note] = clamped;
 				_activeIds[note] = index;
+				// Save the note channel.
+				_notesInfos[index].channel = clamped;
+				_notesInfos[index].note = note;
 
 				auto & newNote = _notes[index];
 				newNote.start = time;
@@ -156,6 +171,8 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 
 	}
 
+	_previousTime = time;
+
 	_dataBufferSubsize = std::min(int(_notes.size()), _notesCount);
 
 	// If we have indeed updated a note.
@@ -164,10 +181,11 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 	}
 
 	_previousTime = time;
+	_maxTime = std::max(time, _maxTime);
 }
 
 double MIDISceneLive::duration() const {
-	return _previousTime;
+	return _maxTime;
 }
 
 double MIDISceneLive::secondsPerMeasure() const {
