@@ -53,6 +53,18 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 	int minUpdated = MAX_NOTES_IN_FLIGHT;
 	int maxUpdated = 0;
 
+	// If we are paused, just empty the queue.
+	if(_previousTime == time){
+		while(true){
+			auto message = shared().get_message();
+			if(message.size() == 0){
+				// End of the queue.
+				break;
+			}
+		}
+		return;
+	}
+
 	// Update the particle systems lifetimes.
 	for(auto & particle : _particles){
 		// Give a bit of a head start to the animation.
