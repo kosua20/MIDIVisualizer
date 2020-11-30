@@ -33,6 +33,7 @@ MIDISceneLive::MIDISceneLive(int port) : MIDIScene(){
 	_notes.resize(MAX_NOTES_IN_FLIGHT);
 	_notesInfos.resize(MAX_NOTES_IN_FLIGHT);
 	_secondsPerMeasure = computeMeasureDuration(_tempo, _signature);
+	upload(_notes);
 }
 
 void MIDISceneLive::updateSets(const SetOptions & options){
