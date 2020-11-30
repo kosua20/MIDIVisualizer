@@ -29,6 +29,7 @@ MIDISceneLive::MIDISceneLive(int port) : MIDIScene(){
 	shared().open_port(port, "MIDIVisualizer input");
 
 	_activeIds.fill(-1);
+	_activeRecording.fill(false);
 	_notes.resize(MAX_NOTES_IN_FLIGHT);
 	_notesInfos.resize(MAX_NOTES_IN_FLIGHT);
 	_secondsPerMeasure = computeMeasureDuration(_tempo, _signature);
@@ -79,7 +80,9 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 
 	// Update all active notes, extending their duration.
 	for(size_t nid = 0; nid < _actives.size(); ++nid){
-		if(_actives[nid] < 0){
+
+		if(!_activeRecording[nid]){
+			_actives[nid] = -1;
 			continue;
 		}
 		const int noteId = _activeIds[nid];
@@ -107,6 +110,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 				_actives[note] = -1;
 				// Keep the note as-is, complete.
 				// Duration has already been updated above.
+				_activeRecording[note] = false;
 			}
 
 			// Now if this is an on event, we should start a new note.
@@ -117,6 +121,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 				// Activate the key.
 				_actives[note] = clamped;
 				_activeIds[note] = index;
+				_activeRecording[note] = true;
 				// Save the note channel.
 				_notesInfos[index].channel = clamped;
 				_notesInfos[index].note = note;
@@ -182,6 +187,42 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 		}
 
 	}
+
+	// Update "regular notes"
+	for(size_t i = 0; i < _dataBufferSubsize; ++i){
+		const auto & noteId = _notesInfos[i];
+		// If the note is already active, skip.
+		if(_actives[noteId.note] >= 0){
+			continue;
+		}
+
+		auto& note = _notes[i];
+		// Ignore notes that just ended.
+		float noteEnd = note.start+note.duration;
+		if(noteEnd > _previousTime && noteEnd <= time){
+			continue;
+		}
+
+		if(note.start <= time && note.start+note.duration >= time){
+			_actives[noteId.note] = note.set;
+		}
+
+		if(note.start > _previousTime && note.start <= time){
+			// Find an available particles system and update it with the note parameters.
+			for(auto & particle : _particles){
+				if(particle.note < 0){
+					// Update with new note parameter.
+					particle.duration = (std::max)(note.duration*2.0f, note.duration + 1.2f);
+					particle.start = note.start;
+					particle.note = noteId.note;
+					particle.set = note.set;
+					particle.elapsed = 0.0f;
+					break;
+				}
+			}
+		}
+	}
+
 
 	_previousTime = time;
 
