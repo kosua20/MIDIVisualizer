@@ -209,7 +209,7 @@ int main( int argc, char** argv) {
 	// Check if a path is given in argument.
 	if(args.count("midi") > 0){
 		midiFilePath = args["midi"][0];
-	} else {
+	} /*else {
 		// We are in direct-to-gui mode.
 		nfdchar_t *outPath = NULL;
 		nfdresult_t result = NFD_OpenDialog( NULL, NULL, &outPath );
@@ -219,7 +219,7 @@ int main( int argc, char** argv) {
 			// There was an issue with the file picker.
 			return 10;
 		}
-	}
+	}*/
 
 	// Setup resources.
 	ResourcesManager::loadResources();
