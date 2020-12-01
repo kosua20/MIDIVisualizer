@@ -353,7 +353,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		}
 		ImGuiSameLine(COLUMN_SIZE);
 		if(_liveplay){
-			if (ImGui::Button("Clear session")) {
+			if (ImGui::Button("Clear and stop session")) {
 				_scene = std::make_shared<MIDISceneEmpty>();
 				_liveplay = false;
 				_shouldPlay = false;
@@ -362,53 +362,61 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 				applyAllSettings();
 			}
 		} else {
-			if (ImGui::Button("Live session...")) {
+			if (ImGui::Button("Connect to device...")) {
 				ImGui::OpenPopup("Devices");
 			}
 			showDevices();
 		}
 
 		ImGuiPushItemWidth(100);
-		if (ImGui::InputFloat("Preroll", &_state.prerollTime, 0.1f, 1.0f)) {
-			reset();
-		}
-		ImGui::PopItemWidth();
-
-		if (ImGui::Button("Show effects...")) {
-			_showLayers = true;
-		}
-		ImGuiSameLine(COLUMN_SIZE);
-		ImGuiPushItemWidth(100);
 		if (ImGui::Combo("Quality", (int *)(&_state.quality), "Half\0Low\0Medium\0High\0Double\0\0")) {
 			updateSizes();
 		}
+		ImGui::PopItemWidth();
+
+		// Add FXAA.
+		ImGuiSameLine(COLUMN_SIZE);
+		ImGui::Checkbox("Smoothing", &_state.applyAA);
 
 		if (ImGui::Checkbox("Sync effect colors", &_state.lockParticleColor)) {
 			// If we enable the lock, make sure the colors are synched.
 			synchronizeColors(_state.baseColors);
 		}
-		// Add FXAA.
-		ImGuiSameLine(COLUMN_SIZE);
-		ImGui::Checkbox("Smoothing", &_state.applyAA);
 
+		if(!_liveplay){
+			ImGuiSameLine(COLUMN_SIZE);
+			if(ImGui::Checkbox("Reverse scroll", &_state.reverseScroll)){
+				_score->setPlayDirection(_state.reverseScroll);
+			}
+		}
+
+		ImGuiPushItemWidth(100);
 		if(ImGui::Combo("Min key", &_state.minKey, midiKeysString)){
 			updateMinMaxKeys();
 		}
+
 		ImGuiSameLine(COLUMN_SIZE);
 		if(ImGui::Combo("Max key", &_state.maxKey, midiKeysString)){
 			updateMinMaxKeys();
 		}
+		ImGui::PopItemWidth();
+
+		ImGuiPushItemWidth(100);
+		if (ImGui::InputFloat("Preroll", &_state.prerollTime, 0.1f, 1.0f)) {
+			reset();
+		}
 
 		if(!_liveplay){
-			if(ImGui::Checkbox("Reverse", &_state.reverseScroll)){
-				_score->setPlayDirection(_state.reverseScroll);
-			}
 			ImGuiSameLine(COLUMN_SIZE);
 			if(ImGui::SliderFloat("Speed", &_state.scrollSpeed, 0.1f, 5.0f)){
 				_state.scrollSpeed = std::max(0.01f, _state.scrollSpeed);
 			}
 		}
+		ImGui::PopItemWidth();
 
+		if (ImGui::Button("Show effect layers...")) {
+			_showLayers = true;
+		}
 
 		if(ImGui::CollapsingHeader("Notes##HEADER")){
 
@@ -955,18 +963,21 @@ void Renderer::showDevices(){
 		if(ImGui::Button("Cancel", buttonSize)){
 			ImGui::CloseCurrentPopup();
 		}
-		ImGuiSameLine(COLUMN_SIZE);
-		if(ImGui::Button("Start", buttonSize)){
-			_scene = std::make_shared<MIDISceneLive>(_selectedPort);
+		if(!devices.empty()){
+			ImGuiSameLine(COLUMN_SIZE);
+			if(ImGui::Button("Start", buttonSize)){
+				_scene = std::make_shared<MIDISceneLive>(_selectedPort);
 
-			_timer = 0.0f;
-			_shouldPlay = true;
-			_state.reverseScroll = true;
-			_liveplay = true;
-			_score = std::make_shared<Score>(_scene->secondsPerMeasure());
-			applyAllSettings();
+				_timer = 0.0f;
+				_shouldPlay = true;
+				_state.reverseScroll = true;
+				_state.scrollSpeed = 1.0f;
+				_liveplay = true;
+				_score = std::make_shared<Score>(_scene->secondsPerMeasure());
+				applyAllSettings();
 
-			ImGui::CloseCurrentPopup();
+				ImGui::CloseCurrentPopup();
+			}
 		}
 		ImGui::EndPopup();
 	}
