@@ -7,6 +7,7 @@
 #include "MIDIScene.h"
 
 #include <rtmidi17/rtmidi17.hpp>
+#include <map>
 
 class MIDISceneLive : public MIDIScene {
 
@@ -43,6 +44,8 @@ private:
 	std::vector<NoteInfos> _notesInfos;
 	std::array<int, 128> _activeIds;
 	std::array<bool, 128> _activeRecording;
+	std::map<float, Pedals> _pedalInfos;
+
 	double _previousTime = 0.0;
 	double _maxTime = 0.0;
 	double _signature = 4.0/4.0;

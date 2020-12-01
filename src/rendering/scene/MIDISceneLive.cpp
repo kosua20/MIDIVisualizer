@@ -33,6 +33,7 @@ MIDISceneLive::MIDISceneLive(int port) : MIDIScene(){
 	_notes.resize(MAX_NOTES_IN_FLIGHT);
 	_notesInfos.resize(MAX_NOTES_IN_FLIGHT);
 	_secondsPerMeasure = computeMeasureDuration(_tempo, _signature);
+	_pedalInfos[-10000.0f] = Pedals();
 	upload(_notes);
 }
 
@@ -89,7 +90,8 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 	for(size_t nid = 0; nid < _actives.size(); ++nid){
 		_actives[nid] = -1;
 	}
-	// Update all recording notes, extending their duration.
+
+	// Update all currently recording notes, extending their duration.
 	for(size_t nid = 0; nid < _actives.size(); ++nid){
 		if(!_activeRecording[nid]){
 			continue;
@@ -103,6 +105,14 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 		maxUpdated = std::max(maxUpdated, noteId);
 	}
 
+	// Restore pedals to the last known state.
+	_pedals = Pedals();
+	auto nextBig = _pedalInfos.upper_bound(time);
+	if(nextBig != _pedalInfos.begin()){
+		_pedals = std::prev(nextBig)->second;
+	}
+
+	// Process new events.
 	while(true){
 		auto message = shared().get_message();
 		if(message.size() == 0){
@@ -184,19 +194,21 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 		} else if(type == rtmidi::message_type::CONTROL_CHANGE){
 			// Handle pedal.
 			const int rawType = message[1];
-			// Handle only pedal changes.
+			// Skip other CC.
 			if(rawType != 64 && rawType != 66 && rawType != 67 && rawType != 11){
 				continue;
 			}
 			const PedalType type = PedalType(rawType);
-			// Stop the current pedal.
-			float & pedal = (type == DAMPER ? _pedals.damper : (type == SOSTENUTO ? _pedals.sostenuto : (type == SOFT ? _pedals.soft : _pedals.expression)));
-			pedal = 0.0f;
 
+			float & pedal = (type == DAMPER ? _pedals.damper : (type == SOSTENUTO ? _pedals.sostenuto : (type == SOFT ? _pedals.soft : _pedals.expression)));
+			// Stop the current pedal.
+			pedal = 0.0f;
+			// If non-zero velocity, enable pedal, normalized velocity.
 			if(message[2] > 0){
 				pedal = float(message[2])/127.0f;
 			}
-
+			// Register new pedal event with updated state.
+			_pedalInfos[time] = Pedals(_pedals);
 		}
 
 	}
