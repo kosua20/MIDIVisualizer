@@ -36,17 +36,23 @@ MIDISceneLive::MIDISceneLive(int port) : MIDIScene(){
 	upload(_notes);
 }
 
+void MIDISceneLive::updateSet(GPUNote & note, int channel, const SetOptions & options){
+	if(options.mode == SetMode::CHANNEL){
+		// Restore channel from backup vector.
+		note.set = float(int(channel) % CHANNELS_COUNT);
+	} else if(options.mode == SetMode::KEY){
+		note.set = (note.note < options.key ? 0.0f : 1.0f);
+	} else {
+		note.set = 0.0f;
+	}
+}
+
 void MIDISceneLive::updateSets(const SetOptions & options){
+	_currentSetOption = options;
+	
 	for(size_t nid = 0; nid < _notesCount; ++nid){
 		auto & note = _notes[nid];
-		if(options.mode == SetMode::CHANNEL){
-			// Restore channel from backup vector.
-			note.set = float(int(_notesInfos[nid].channel) % CHANNELS_COUNT);
-		} else if(options.mode == SetMode::KEY){
-			note.set = (note.note < options.key ? 0.0f : 1.0f);
-		} else {
-			note.set = 0.0f;
-		}
+		updateSet(note, _notesInfos[nid].channel, _currentSetOption);
 	}
 	upload(_notes);
 }
@@ -91,7 +97,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 		const int noteId = _activeIds[nid];
 		GPUNote & note = _notes[noteId];
 		note.duration = time - note.start;
-		_actives[nid] = note.set;
+		_actives[nid] = int(note.set);
 		// Keep track of which region was modified.
 		minUpdated = std::min(minUpdated, noteId);
 		maxUpdated = std::max(maxUpdated, noteId);
@@ -106,6 +112,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 
 		const auto type = message.get_message_type();
 
+		// Handle note events.
 		if(message.is_note_on_or_off()){
 			short note = short(message[1]);
 
@@ -113,31 +120,33 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 			if(_activeRecording[note]){
 				_activeRecording[note] = false;
 				_actives[note] = -1;
-				// Keep the note as-is, complete.
 				// Duration has already been updated above.
 			}
 
-			// Now if this is an on event, we should start a new note.
+			// If this is an on event with positive veolcity, start a new note.
 			if(type == rtmidi::message_type::NOTE_ON && message[2] > 0){
-				const int clamped = message.get_channel() % CHANNELS_COUNT;
+
 				const size_t index = _notesCount % MAX_NOTES_IN_FLIGHT;
 				// Get new note.
 				auto & newNote = _notes[index];
 				newNote.start = time;
 				newNote.duration = 0.0f;
-				newNote.set = clamped;
-				_actives[note] = clamped;
+				// Save the original channel.
+				_notesInfos[index].channel = message.get_channel();
+				// Compute set according to current setting.
+				updateSet(newNote, _notesInfos[index].channel, _currentSetOption);
+				_actives[note] = int(newNote.set);
 				// Activate recording of the key.
 				_activeRecording[note] = true;
 				_activeIds[note] = index;
-				// Save the note channel.
-				_notesInfos[index].channel = clamped;
-				_notesInfos[index].note = note;
 
+				// Compute proper rendering note.
 				const bool isMin = noteIsMinor[note % 12];
 				const short shiftId = (note/12) * 7 + noteShift[note % 12];
 				newNote.isMinor = isMin ? 1.0f : 0.0f;
 				newNote.note = float(shiftId);
+				// Save original note.
+				_notesInfos[index].note = note;
 
 				// Keep track of which region was modified.
 				minUpdated = std::min(minUpdated, int(index));
@@ -148,9 +157,9 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 					if(particle.note < 0){
 						// Update with new note parameter.
 						particle.duration = 10.0f; // Fixed value.
-						particle.start = time;
+						particle.start = newNote.start;
 						particle.note = note;
-						particle.set = clamped;
+						particle.set = int(newNote.set);
 						particle.elapsed = 0.0f;
 						break;
 					}
@@ -160,6 +169,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 			}
 
 		} else if(message.is_meta_event()){
+			// Handle tempo and signature changes.
 			const rtmidi::meta_event_type metaType = message.get_meta_event_type();
 
 			if(metaType == rtmidi::meta_event_type::TIME_SIGNATURE){
@@ -191,25 +201,25 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 
 	}
 
-	// Update "regular notes"
+	// Update completed notes.
 	for(size_t i = 0; i < _dataBufferSubsize; ++i){
 		const auto & noteId = _notesInfos[i];
-		// If the note is recording, skip.
+		// If the key is recording, no need to update _actives, skip.
 		if(_activeRecording[noteId.note]){
 			continue;
 		}
 
 		auto& note = _notes[i];
-		// Ignore notes that just ended.
+		// Ignore notes that ended at this frame.
 		float noteEnd = note.start+note.duration;
 		if(noteEnd > _previousTime && noteEnd <= time){
 			continue;
 		}
-
+		// Update for notes currently playins.
 		if(note.start <= time && note.start+note.duration >= time){
-			_actives[noteId.note] = note.set;
+			_actives[noteId.note] = int(note.set);
 		}
-
+		// Detect notes that started at this frame.
 		if(note.start > _previousTime && note.start <= time){
 			// Find an available particles system and update it with the note parameters.
 			for(auto & particle : _particles){
@@ -218,7 +228,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 					particle.duration = (std::max)(note.duration*2.0f, note.duration + 1.2f);
 					particle.start = note.start;
 					particle.note = noteId.note;
-					particle.set = note.set;
+					particle.set = int(note.set);
 					particle.elapsed = 0.0f;
 					break;
 				}
@@ -226,16 +236,13 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 		}
 	}
 
-
-	_previousTime = time;
-
-	_dataBufferSubsize = std::min(MAX_NOTES_IN_FLIGHT, _notesCount);
-
-	// If we have indeed updated a note.
+	// If we have indeed updated a note, trigger an upload.
 	if(minUpdated <= maxUpdated){
 		upload(_notes, minUpdated, maxUpdated);
 	}
-
+	// Update range of notes to show.
+	_dataBufferSubsize = std::min(MAX_NOTES_IN_FLIGHT, _notesCount);
+	// Update timings.
 	_previousTime = time;
 	_maxTime = std::max(time, _maxTime);
 }

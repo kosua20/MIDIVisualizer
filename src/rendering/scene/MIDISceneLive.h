@@ -37,6 +37,8 @@ private:
 		short channel;
 	};
 
+	static void updateSet(GPUNote & note, int channel, const SetOptions & options);
+
 	std::vector<GPUNote> _notes;
 	std::vector<NoteInfos> _notesInfos;
 	std::array<int, 128> _activeIds;
@@ -47,6 +49,7 @@ private:
 	double _secondsPerMeasure;
 	int _notesCount = 0;
 	int _tempo = 500000;
+	SetOptions _currentSetOption;
 
 	static rtmidi::midi_in & shared();
 
