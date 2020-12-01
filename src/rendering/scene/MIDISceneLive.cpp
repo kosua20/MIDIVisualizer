@@ -15,7 +15,7 @@
 #undef MAX
 #endif
 
-#define MAX_NOTES_IN_FLIGHT 1024
+#define MAX_NOTES_IN_FLIGHT 8192
 
 MIDISceneLive::~MIDISceneLive(){
 	shared().close_port();
@@ -79,16 +79,19 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 		}
 	}
 
-	// Update all active notes, extending their duration.
+	// Restore all active flags.
 	for(size_t nid = 0; nid < _actives.size(); ++nid){
-
+		_actives[nid] = -1;
+	}
+	// Update all recording notes, extending their duration.
+	for(size_t nid = 0; nid < _actives.size(); ++nid){
 		if(!_activeRecording[nid]){
-			_actives[nid] = -1;
 			continue;
 		}
 		const int noteId = _activeIds[nid];
 		GPUNote & note = _notes[noteId];
 		note.duration = time - note.start;
+		_actives[nid] = note.set;
 		// Keep track of which region was modified.
 		minUpdated = std::min(minUpdated, noteId);
 		maxUpdated = std::max(maxUpdated, noteId);
@@ -106,31 +109,30 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 		if(message.is_note_on_or_off()){
 			short note = short(message[1]);
 
-			// If the note is currently active, disable it.
-			if(_actives[note] >= 0){
+			// If the note is currently recording, disable it.
+			if(_activeRecording[note]){
+				_activeRecording[note] = false;
 				_actives[note] = -1;
 				// Keep the note as-is, complete.
 				// Duration has already been updated above.
-				_activeRecording[note] = false;
 			}
 
 			// Now if this is an on event, we should start a new note.
 			if(type == rtmidi::message_type::NOTE_ON && message[2] > 0){
 				const int clamped = message.get_channel() % CHANNELS_COUNT;
 				const size_t index = _notesCount % MAX_NOTES_IN_FLIGHT;
-
-				// Activate the key.
-				_actives[note] = clamped;
-				_activeIds[note] = index;
-				_activeRecording[note] = true;
-				// Save the note channel.
-				_notesInfos[index].channel = clamped;
-				_notesInfos[index].note = note;
-
+				// Get new note.
 				auto & newNote = _notes[index];
 				newNote.start = time;
 				newNote.duration = 0.0f;
 				newNote.set = clamped;
+				_actives[note] = clamped;
+				// Activate recording of the key.
+				_activeRecording[note] = true;
+				_activeIds[note] = index;
+				// Save the note channel.
+				_notesInfos[index].channel = clamped;
+				_notesInfos[index].note = note;
 
 				const bool isMin = noteIsMinor[note % 12];
 				const short shiftId = (note/12) * 7 + noteShift[note % 12];
@@ -192,8 +194,8 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 	// Update "regular notes"
 	for(size_t i = 0; i < _dataBufferSubsize; ++i){
 		const auto & noteId = _notesInfos[i];
-		// If the note is already active, skip.
-		if(_actives[noteId.note] >= 0){
+		// If the note is recording, skip.
+		if(_activeRecording[noteId.note]){
 			continue;
 		}
 
@@ -227,7 +229,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 
 	_previousTime = time;
 
-	_dataBufferSubsize = std::min(int(_notes.size()), _notesCount);
+	_dataBufferSubsize = std::min(MAX_NOTES_IN_FLIGHT, _notesCount);
 
 	// If we have indeed updated a note.
 	if(minUpdated <= maxUpdated){
