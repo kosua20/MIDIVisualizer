@@ -520,7 +520,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			if (ImGui::Button("Print MIDI content to console")) {
 				_scene->print();
 			}
-			ImGui::Checkbox("Log sizes", &_printSizes);
+			ImGui::Checkbox("Verbose log", &_verbose);
 		}
 	}
 	ImGui::End();
@@ -1098,8 +1098,8 @@ void Renderer::resizeAndRescale(int width, int height, float scale) {
 		return;
 	}
 
-	if (_printSizes) {
-		std::cout << "Resizing to " << width << " x " << height << std::endl;
+	if (_verbose) {
+		std::cout << "[LOG] Resizing to " << width << " x " << height << std::endl;
 	}
 	// Update the projection matrix.
 	_camera.screen(width, height, scale);
@@ -1250,7 +1250,7 @@ void Renderer::startRecording(){
 	glClear(GL_COLOR_BUFFER_BIT);
 	_finalFramebuffer->unbind();
 
-	_recorder.start(_printSizes);
+	_recorder.start(_verbose);
 }
 
 bool Renderer::channelColorEdit(const char * name, const char * displayName, ColorArray & colors){

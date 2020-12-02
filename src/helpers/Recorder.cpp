@@ -265,8 +265,10 @@ bool Recorder::initVideo(const std::string & path, Format format, bool verbose){
 	}
 
 	if (verbose) {
-		std::cout << "Attempting export at " << _size[0] << " x " << _size[1] << std::endl;
+		std::cout << "[LOG] Attempting export at " << _size[0] << " x " << _size[1] << std::endl;
 	}
+
+	av_log_set_level(verbose ? AV_LOG_VERBOSE : AV_LOG_ERROR);
 
 	// Allocate general context.
 	if(avformat_alloc_output_context2(&_formatCtx, nullptr, nullptr, path.c_str()) < 0 || !_formatCtx){

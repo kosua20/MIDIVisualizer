@@ -98,7 +98,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 		}
 		const int noteId = _activeIds[nid];
 		GPUNote & note = _notes[noteId];
-		note.duration = time - note.start;
+		note.duration = float(time - double(note.start));
 		_actives[nid] = int(note.set);
 		// Keep track of which region was modified.
 		minUpdated = std::min(minUpdated, noteId);
@@ -107,7 +107,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 
 	// Restore pedals to the last known state.
 	_pedals = Pedals();
-	auto nextBig = _pedalInfos.upper_bound(time);
+	auto nextBig = _pedalInfos.upper_bound(float(time));
 	if(nextBig != _pedalInfos.begin()){
 		_pedals = std::prev(nextBig)->second;
 	}
@@ -136,10 +136,10 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 			// If this is an on event with positive veolcity, start a new note.
 			if(type == rtmidi::message_type::NOTE_ON && message[2] > 0){
 
-				const size_t index = _notesCount % MAX_NOTES_IN_FLIGHT;
+				const int index = _notesCount % MAX_NOTES_IN_FLIGHT;
 				// Get new note.
 				auto & newNote = _notes[index];
-				newNote.start = time;
+				newNote.start = float(time);
 				newNote.duration = 0.0f;
 				// Save the original channel.
 				_notesInfos[index].channel = message.get_channel();
@@ -208,7 +208,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 				pedal = float(message[2])/127.0f;
 			}
 			// Register new pedal event with updated state.
-			_pedalInfos[time] = Pedals(_pedals);
+			_pedalInfos[float(time)] = Pedals(_pedals);
 		}
 
 	}

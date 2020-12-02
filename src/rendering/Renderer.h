@@ -154,7 +154,7 @@ private:
 	bool _shouldPlay = false;
 	bool _showGUI = true;
 	bool _showDebug = false;
-	bool _printSizes = false;
+	bool _verbose = false;
 
 	Recorder _recorder;
 	
