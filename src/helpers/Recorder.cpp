@@ -214,7 +214,7 @@ void Recorder::drawProgress(){
 		ImGui::Text("Exporting %zu frames at resolution %dx%d...", _framesCount, _size[0], _size[1]);
 
 		const std::string currProg = std::to_string(_currentFrame + 1) + "/" + std::to_string(_framesCount);
-		ImGui::ProgressBar(float(_currentFrame + 1) / float(_framesCount), ImVec2(400.0f, 0.0f), currProg.c_str());
+		ImGui::ProgressBar(float(_currentFrame + 1) / float(_framesCount), ImVec2(-1.0f, 0.0f), currProg.c_str());
 		ImGui::EndPopup();
 	}
 }

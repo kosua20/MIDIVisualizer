@@ -17,6 +17,15 @@
 #include <fstream>
 
 
+bool ImGuiSliderPercent(const char* label, float* v, float v_min, float v_max){
+	float tmp = (*v) * 100.0f;
+	const bool press = ImGui::SliderFloat(label, &tmp, v_min * 100.0f, v_max * 100.0f, "%.0f%%");
+	if(press){
+		*v = tmp / 100.0f;
+	}
+	return press;
+}
+
 SystemAction::SystemAction(SystemAction::Type act) {
 	type = act;
 	data = glm::ivec4(0);
@@ -368,6 +377,8 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			showDevices();
 		}
 
+		ImGui::Separator();
+
 		ImGuiPushItemWidth(100);
 		if (ImGui::Combo("Quality", (int *)(&_state.quality), "Half\0Low\0Medium\0High\0Double\0\0")) {
 			updateSizes();
@@ -399,16 +410,14 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		if(ImGui::Combo("Max key", &_state.maxKey, midiKeysString)){
 			updateMinMaxKeys();
 		}
-		ImGui::PopItemWidth();
 
-		ImGuiPushItemWidth(100);
-		if (ImGui::InputFloat("Preroll", &_state.prerollTime, 0.1f, 1.0f)) {
+		if (ImGui::InputFloat("Preroll", &_state.prerollTime, 0.1f, 1.0f, "%.1fs")) {
 			reset();
 		}
 
 		if(!_liveplay){
 			ImGuiSameLine(COLUMN_SIZE);
-			if(ImGui::SliderFloat("Speed", &_state.scrollSpeed, 0.1f, 5.0f)){
+			if(ImGui::SliderFloat("Speed", &_state.scrollSpeed, 0.1f, 5.0f, "%.1fx")){
 				_state.scrollSpeed = std::max(0.01f, _state.scrollSpeed);
 			}
 		}
@@ -420,9 +429,12 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 
 		if(ImGui::CollapsingHeader("Notes##HEADER")){
 
-			bool smw0 = ImGui::InputFloat("Scale", &_state.scale, 0.01f, 0.1f);
+			ImGuiPushItemWidth(100);
+			bool smw0 = ImGui::InputFloat("Scale", &_state.scale, 0.01f, 0.1f, "%.2fx");
 			ImGuiSameLine(COLUMN_SIZE);
-			smw0 = ImGui::SliderFloat("Minor size", &_state.background.minorsWidth, 0.1f, 1.0f, "%.2f") || smw0;
+			smw0 = ImGuiSliderPercent("Minor width", &_state.background.minorsWidth, 0.1f, 1.0f) || smw0;
+			ImGui::PopItemWidth();
+
 			if (smw0) {
 				_state.scale = std::max(_state.scale, 0.01f);
 				_state.background.minorsWidth = std::min(std::max(_state.background.minorsWidth, 0.1f), 1.0f);
@@ -462,7 +474,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 
 			ImGuiSameLine(COLUMN_SIZE);
 			ImGuiPushItemWidth(100);
-			ImGui::SliderFloat("Flash size", &_state.flashSize, 0.1f, 3.0f);
+			ImGui::SliderFloat("Scale##flash", &_state.flashSize, 0.1f, 3.0f, "%.2fx");
 			ImGui::PopItemWidth();
 		}
 
@@ -580,7 +592,7 @@ SystemAction Renderer::showTopButtons(double currentTime){
 	if(ImGui::BeginPopup("Display options")){
 		
 		ImGuiPushItemWidth(100);
-		if(ImGui::InputFloat("GUI size", &_guiScale, 0.25f, 1.0f)){
+		if(ImGui::InputFloat("GUI size", &_guiScale, 0.25f, 1.0f, "%.2fx")){
 			_guiScale = glm::clamp(_guiScale, 0.25f, 4.0f);
 			setGUIScale(_guiScale);
 		}
@@ -633,19 +645,18 @@ void Renderer::showParticleOptions(){
 	ImGuiSameLine(COLUMN_SIZE);
 
 	ImGuiPushItemWidth(100);
-	if (ImGui::InputFloat("Size", &_state.particles.scale, 1.0f, 10.0f)) {
+	if (ImGui::InputFloat("Size##particles", &_state.particles.scale, 1.0f, 10.0f, "%.0fpx")) {
 		_state.particles.scale = std::max(1.0f, _state.particles.scale);
 	}
 
-	ImGuiPushItemWidth(COLUMN_SIZE-10);
+	const bool mp0 = ImGui::InputFloat("Speed", &_state.particles.speed, 0.01f, 1.0f, "%.2fx");
+	ImGuiSameLine(COLUMN_SIZE);
+	const bool mp1 = ImGui::InputFloat("Spread", &_state.particles.expansion, 0.1f, 5.0f, "%.1fx");
+
 	if (ImGui::SliderInt("Count", &_state.particles.count, 1, 512)) {
 		_state.particles.count = std::min(std::max(_state.particles.count, 1), 512);
 	}
-	ImGui::PopItemWidth();
 
-	const bool mp0 = ImGui::InputFloat("Speed", &_state.particles.speed, 0.001f, 1.0f);
-	ImGuiSameLine(COLUMN_SIZE);
-	const bool mp1 = ImGui::InputFloat(	"Expansion", &_state.particles.expansion, 0.1f, 5.0f);
 	ImGui::PopItemWidth();
 
 	if (mp1 || mp0) {
@@ -714,7 +725,7 @@ void Renderer::showKeyboardOptions(){
 
 
 	ImGuiPushItemWidth(100);
-	if(ImGui::SliderFloat("Size##Keys", &_state.keyboard.size, 0.0f, 1.0f)){
+	if(ImGuiSliderPercent("Height##Keys", &_state.keyboard.size, 0.0f, 1.0f)){
 		_state.keyboard.size = (std::min)((std::max)(_state.keyboard.size, 0.0f), 1.0f);
 		_scene->setKeyboardSize(_state.keyboard.size);
 		_score->setKeyboardSize(_state.keyboard.size);
@@ -752,16 +763,20 @@ void Renderer::showPedalOptions(){
 	ImGuiPushItemWidth(25);
 	ImGui::ColorEdit3("Color##Pedals", &_state.pedals.color[0], ImGuiColorEditFlags_NoInputs);
 	ImGui::PopItemWidth();
+
+	ImGuiPushItemWidth(100);
 	ImGuiSameLine(COLUMN_SIZE);
 	ImGui::Combo("Location", (int*)&_state.pedals.location, "Top left\0Bottom left\0Top right\0Bottom right\0");
 
-	if(ImGui::SliderFloat("Opacity##Pedals", &_state.pedals.opacity, 0.0f, 1.0f)){
+	if(ImGuiSliderPercent("Opacity##Pedals", &_state.pedals.opacity, 0.0f, 1.0f)){
 		_state.pedals.opacity = std::min(std::max(_state.pedals.opacity, 0.0f), 1.0f);
 	}
 	ImGuiSameLine(COLUMN_SIZE);
-	if(ImGui::SliderFloat("Size##Pedals", &_state.pedals.size, 0.05f, 0.5f)){
+	if(ImGuiSliderPercent("Size##Pedals", &_state.pedals.size, 0.05f, 0.5f)){
 		_state.pedals.size = std::min(std::max(_state.pedals.size, 0.05f), 0.5f);
 	}
+	ImGui::PopItemWidth();
+
 	ImGui::Checkbox("Merge pedals", &_state.pedals.merge);
 }
 
@@ -769,16 +784,19 @@ void Renderer::showWaveOptions(){
 	ImGuiPushItemWidth(25);
 	ImGui::ColorEdit3("Color##Waves", &_state.waves.color[0], ImGuiColorEditFlags_NoInputs);
 	ImGui::PopItemWidth();
-	ImGuiSameLine(COLUMN_SIZE);
-	ImGui::SliderFloat("Amplitude##Waves", &_state.waves.amplitude, 0.0f, 5.0f);
 
-	ImGui::SliderFloat("Spread##Waves", &_state.waves.spread, 0.0f, 5.0f);
+	ImGuiPushItemWidth(100);
 	ImGuiSameLine(COLUMN_SIZE);
-	ImGui::SliderFloat("Frequency##Waves", &_state.waves.frequency, 0.0f, 5.0f);
+	ImGui::SliderFloat("Amplitude##Waves", &_state.waves.amplitude, 0.0f, 5.0f, "%.2fx");
 
-	if(ImGui::SliderFloat("Opacity##Waves", &_state.waves.opacity, 0.0f, 1.0f)){
+	ImGui::SliderFloat("Spread##Waves", &_state.waves.spread, 0.0f, 5.0f, "%.2fx");
+	ImGuiSameLine(COLUMN_SIZE);
+	ImGui::SliderFloat("Frequency##Waves", &_state.waves.frequency, 0.0f, 5.0f, "%.2fx");
+
+	if(ImGuiSliderPercent("Opacity##Waves", &_state.waves.opacity, 0.0f, 1.0f)){
 		_state.waves.opacity = std::min(std::max(_state.waves.opacity, 0.0f), 1.0f);
 	}
+	ImGui::PopItemWidth();
 
 }
 
@@ -824,9 +842,11 @@ void Renderer::showBackgroundOptions(){
 	ImGui::PopItemWidth();
 	ImGuiSameLine(COLUMN_SIZE);
 	ImGuiPushItemWidth(100);
-	if (ImGui::SliderFloat("Opacity##Background", &_state.background.imageAlpha, 0.0f, 1.0f)) {
+
+	if (ImGuiSliderPercent("Opacity##Background", &_state.background.imageAlpha, 0.0f, 1.0f)) {
 		_state.background.imageAlpha = std::min(std::max(_state.background.imageAlpha, 0.0f), 1.0f);
 	}
+
 	ImGui::PopItemWidth();
 	if (ImGui::Button("Load image...##Background")){
 		// Read arguments.
