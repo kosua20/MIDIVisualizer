@@ -568,14 +568,14 @@ void State::reset(){
 	minKey = 21;
 	maxKey = 108;
 	
-	showPedal = false;
+	showPedal = true;
 	pedals.color = baseColors[0];
 	pedals.size = 0.2f;
 	pedals.opacity = 0.4f;
 	pedals.merge = false;
 	pedals.location = PedalsState::BOTTOMRIGHT;
 
-	showWave = false;
+	showWave = true;
 	waves.color = baseColors[0];
 	waves.amplitude = 1.0f;
 	waves.frequency = 1.0f;
