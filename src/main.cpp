@@ -205,123 +205,113 @@ int main( int argc, char** argv) {
 		return -1;
 	}
 
-	std::string midiFilePath;
-	// Check if a path is given in argument.
-	if(args.count("midi") > 0){
-		midiFilePath = args["midi"][0];
-	} /*else {
-		// We are in direct-to-gui mode.
-		nfdchar_t *outPath = NULL;
-		nfdresult_t result = NFD_OpenDialog( NULL, NULL, &outPath );
-		if(result == NFD_OKAY){
-			midiFilePath = std::string(outPath);
-		} else if(result != NFD_CANCEL){
-			// There was an issue with the file picker.
-			return 10;
+	// We need a scope to ensure the renderer is deleted before the OpenGL context is destroyed.
+	{
+
+		// Setup resources.
+		ResourcesManager::loadResources();
+		// Create the renderer.
+		Renderer renderer(isw, ish, fullscreen);
+
+		// Load midi file if specified by command-line.
+		// Check if a path is given in argument.
+		if(args.count("midi") > 0){
+			renderer.loadFile(args["midi"][0]);
 		}
-	}*/
 
-	// Setup resources.
-	ResourcesManager::loadResources();
-	// Create the renderer.
-	Renderer renderer(isw, ish, fullscreen);
+		// Setup ImGui for interface.
+		ImGui::CreateContext();
+		ImGuiIO& io = ImGui::GetIO();
+		io.IniFilename = NULL;
+		ImGui_ImplGlfw_InitForOpenGL(window, false);
+		ImGui_ImplOpenGL3_Init("#version 330");
 
-	// Load midi file if specified by command-line or file picker.
-	if(!midiFilePath.empty()){
-		renderer.loadFile(midiFilePath);
-	}
+		// Apply custom state.
+		State state;
+		if(args.count("config") > 0){
+			state.load(args.at("config")[0]);
+		}
+		// Apply any extra display argument on top of the (optional) config.
+		state.load(args);
+		renderer.setState(state);
 
-	// Setup ImGui for
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
-	io.IniFilename = NULL;
-	ImGui_ImplGlfw_InitForOpenGL(window, false);
-	ImGui_ImplOpenGL3_Init("#version 330");
+		// Define utility pointer for callbacks (can be obtained back from inside the callbacks).
+		glfwSetWindowUserPointer(window, &renderer);
+		// Callbacks.
+		glfwSetFramebufferSizeCallback(window, resize_callback);	// Resizing the window
+		glfwSetKeyCallback(window,key_callback);					// Pressing a key
+		glfwSetScrollCallback(window,scroll_callback);				// Scrolling
+		glfwSetCharCallback(window, ImGui_ImplGlfw_CharCallback);
+		//glfwSetWindowContentScaleCallback(window, rescale_callback);
+		glfwSwapInterval(1);
 
-	// Apply custom state.
-	State state;
-	if(args.count("config") > 0){
-		state.load(args.at("config")[0]);
-	}
-	// Apply any extra display argument on top of the (optional) config.
-	state.load(args);
-	renderer.setState(state);
-	
-	// Define utility pointer for callbacks (can be obtained back from inside the callbacks).
-	glfwSetWindowUserPointer(window, &renderer);
-	// Callbacks.
-	glfwSetFramebufferSizeCallback(window, resize_callback);	// Resizing the window
-	glfwSetKeyCallback(window,key_callback);					// Pressing a key
-	glfwSetScrollCallback(window,scroll_callback);				// Scrolling
-	glfwSetCharCallback(window, ImGui_ImplGlfw_CharCallback);
-	//glfwSetWindowContentScaleCallback(window, rescale_callback);
-	glfwSwapInterval(1);
+		// On HiDPI screens, we might have to initially resize the framebuffers size.
+		glm::ivec4 frame(0);
+		glfwGetWindowPos(window, &frame[0], &frame[1]);
+		glfwGetWindowSize(window, &frame[2], &frame[3]);
+		int width, height;
+		glfwGetFramebufferSize(window, &width, &height);
+		const float scale = float(width) / float((std::max)(frame[2], 1));
+		renderer.resizeAndRescale(width, height, scale);
 
-	// On HiDPI screens, we might have to initially resize the framebuffers size.
-	glm::ivec4 frame(0);
-	glfwGetWindowPos(window, &frame[0], &frame[1]);
-	glfwGetWindowSize(window, &frame[2], &frame[3]);
-	int width, height;
-	glfwGetFramebufferSize(window, &width, &height);
-	const float scale = float(width) / float((std::max)(frame[2], 1));
-	renderer.resizeAndRescale(width, height, scale);
+		// Scale the GUI based on options.
+		float guiScale = 1.0f;
+		if(args.count("gui-size") > 0){
+			guiScale = Configuration::parseFloat(args["gui-size"][0]);
+		}
+		renderer.setGUIScale(guiScale);
 
-	// Scale the GUI based on options.
-	float guiScale = 1.0f;
-	if(args.count("gui-size") > 0){
-		guiScale = Configuration::parseFloat(args["gui-size"][0]);
-	}
-	renderer.setGUIScale(guiScale);
-
-	const bool directRecord = args.count("export") > 0;
-	if(directRecord){
-		const int framerate = args.count("framerate") > 0 ? Configuration::parseInt(args["framerate"][0]) : 60;
-		const int bitrate = args.count("bitrate") > 0 ? Configuration::parseInt(args["bitrate"][0]) : 40;
-		const bool pngAlpha = args.count("png-alpha") > 0 ? Configuration::parseBool(args["png-alpha"][0]) : false;
-		const std::string exportPath = args["export"][0];
-		Recorder::Format format = Recorder::Format::PNG;
-		if(args.count("format") > 0){
-			const auto & formatRaw = args["format"][0];
-			if(formatRaw == "MPEG2"){
-				format = Recorder::Format::MPEG2;
-			} else if(formatRaw == "MPEG4"){
-				format = Recorder::Format::MPEG4;
+		const bool directRecord = args.count("export") > 0;
+		if(directRecord){
+			const int framerate = args.count("framerate") > 0 ? Configuration::parseInt(args["framerate"][0]) : 60;
+			const int bitrate = args.count("bitrate") > 0 ? Configuration::parseInt(args["bitrate"][0]) : 40;
+			const bool pngAlpha = args.count("png-alpha") > 0 ? Configuration::parseBool(args["png-alpha"][0]) : false;
+			const std::string exportPath = args["export"][0];
+			Recorder::Format format = Recorder::Format::PNG;
+			if(args.count("format") > 0){
+				const auto & formatRaw = args["format"][0];
+				if(formatRaw == "MPEG2"){
+					format = Recorder::Format::MPEG2;
+				} else if(formatRaw == "MPEG4"){
+					format = Recorder::Format::MPEG4;
+				}
 			}
+			renderer.startDirectRecording(exportPath, format, framerate, bitrate, pngAlpha, glm::vec2(isw, ish));
 		}
-		renderer.startDirectRecording(exportPath, format, framerate, bitrate, pngAlpha, glm::vec2(isw, ish));
+
+		if(fullscreen){
+			performAction(SystemAction::FULLSCREEN, window, frame);
+		}
+
+		// Start the display/interaction loop.
+		while (!glfwWindowShouldClose(window)) {
+			ImGui_ImplOpenGL3_NewFrame();
+			ImGui_ImplGlfw_NewFrame();
+			ImGui::NewFrame();
+
+			// Update the content of the window.
+			SystemAction action = renderer.draw(DEBUG_SPEED*float(glfwGetTime()));
+
+			// Perform system window action if required.
+			performAction(action, window, frame);
+
+			// Interface rendering.
+			ImGui::Render();
+			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+			//Display the result fo the current rendering loop.
+			glfwSwapBuffers(window);
+			// Update events (inputs,...).
+			glfwPollEvents();
+
+		}
+
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui_ImplGlfw_Shutdown();
+		ImGui::DestroyContext();
+		renderer.clean();
 	}
 
-	if(fullscreen){
-		performAction(SystemAction::FULLSCREEN, window, frame);
-	}
-
-	// Start the display/interaction loop.
-	while (!glfwWindowShouldClose(window)) {
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-
-		// Update the content of the window.
-		SystemAction action = renderer.draw(DEBUG_SPEED*float(glfwGetTime()));
-
-		// Perform system window action if required.
-		performAction(action, window, frame);
-
-		// Interface rendering.
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-		//Display the result fo the current rendering loop.
-		glfwSwapBuffers(window);
-		// Update events (inputs,...).
-		glfwPollEvents();
-		
-	}
-	
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
-	renderer.clean();
 	// Remove the window.
 	glfwDestroyWindow(window);
 	// Clean other resources
