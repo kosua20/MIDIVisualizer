@@ -964,7 +964,21 @@ void Renderer::showLayers() {
 
 void Renderer::showDevices(){
 	if(ImGui::BeginPopupModal("Devices", nullptr, ImGuiWindowFlags_AlwaysAutoResize)){
-		ImGui::Text("Select a device for live session.");
+
+		bool starting = false;
+		const ImVec2 buttonSize(_guiScale * (EXPORT_COLUMN_SIZE-20.0f), 0.0f);
+
+		ImGui::Text("Select a device to listen to or");
+
+		ImGuiSameLine();
+
+		if(ImGui::SmallButton("start virtual device")){
+			_scene = std::make_shared<MIDISceneLive>(-1);
+			starting = true;
+		}
+		if(ImGui::IsItemHovered()){
+			ImGui::SetTooltip("Act as a virtual device (via JACK)\nother MIDI elements can connect to");
+		}
 		ImGui::Separator();
 
 		const auto & devices = MIDISceneLive::availablePorts();
@@ -978,26 +992,28 @@ void Renderer::showDevices(){
 
 		ImGui::Separator();
 
-		const ImVec2 buttonSize(_guiScale * (COLUMN_SIZE - 20.0f), 0.0f);
-
 		if(ImGui::Button("Cancel", buttonSize)){
 			ImGui::CloseCurrentPopup();
 		}
+
 		if(!devices.empty()){
-			ImGuiSameLine(COLUMN_SIZE);
+			ImGuiSameLine(EXPORT_COLUMN_SIZE);
 			if(ImGui::Button("Start", buttonSize)){
 				_scene = std::make_shared<MIDISceneLive>(_selectedPort);
-
-				_timer = 0.0f;
-				_shouldPlay = true;
-				_state.reverseScroll = true;
-				_state.scrollSpeed = 1.0f;
-				_liveplay = true;
-				_score = std::make_shared<Score>(_scene->secondsPerMeasure());
-				applyAllSettings();
-
-				ImGui::CloseCurrentPopup();
+				starting = true;
 			}
+		}
+
+		if(starting){
+			_timer = 0.0f;
+			_shouldPlay = true;
+			_state.reverseScroll = true;
+			_state.scrollSpeed = 1.0f;
+			_liveplay = true;
+			_score = std::make_shared<Score>(_scene->secondsPerMeasure());
+			applyAllSettings();
+
+			ImGui::CloseCurrentPopup();
 		}
 		ImGui::EndPopup();
 	}
