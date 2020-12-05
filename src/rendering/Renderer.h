@@ -144,7 +144,7 @@ private:
 
 	void ImGuiPushItemWidth(int w);
 
-	void ImGuiSameLine(int w);
+	void ImGuiSameLine(int w = 0);
 
 	State _state;
 	std::array<Layer, Layer::COUNT> _layers;

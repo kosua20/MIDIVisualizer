@@ -445,7 +445,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			if(channelColorEdit("Notes", "Notes", _state.baseColors)){
 				synchronizeColors(_state.baseColors);
 			}
-			ImGuiSameLine(0);
+			ImGuiSameLine();
 			if(channelColorEdit("Minors", "Minors", _state.minorColors)){
 				synchronizeColors(_state.minorColors);
 			}
@@ -513,7 +513,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		if (_showDebug) {
 			ImGui::Separator();
 			ImGui::Text("Debug: ");
-			ImGuiSameLine(0);
+			ImGuiSameLine();
 			ImGui::TextDisabled("(press D to hide)");
 			ImGui::Text("%.1f FPS / %.1f ms", ImGui::GetIO().Framerate, ImGui::GetIO().DeltaTime * 1000.0f);
 			ImGui::Text("Render size: %dx%d, screen size: %dx%d", _renderFramebuffer->_width, _renderFramebuffer->_height, _camera.screenSize()[0], _camera.screenSize()[1]);
@@ -575,15 +575,15 @@ SystemAction Renderer::showTopButtons(double currentTime){
 		_shouldPlay = !_shouldPlay;
 		_timerStart = float(currentTime) - _timer;
 	}
-	ImGuiSameLine(0);
+	ImGuiSameLine();
 	if (ImGui::Button("Restart (r)")) {
 		reset();
 	}
-	ImGuiSameLine(0);
+	ImGuiSameLine();
 	if (ImGui::Button("Hide (i)")) {
 		_showGUI = false;
 	}
-	ImGuiSameLine(0);
+	ImGuiSameLine();
 	if(ImGui::Button("Display")){
 		ImGui::OpenPopup("Display options");
 	}
@@ -691,7 +691,7 @@ void Renderer::showParticleOptions(){
 			}
 		}
 	}
-	ImGuiSameLine(0);
+	ImGuiSameLine();
 	ImGui::TextDisabled("(?)");
 	if (ImGui::IsItemHovered()) {
 		ImGui::BeginTooltip();
@@ -817,7 +817,7 @@ void Renderer::showBlurOptions(){
 void Renderer::showScoreOptions(){
 	ImGuiPushItemWidth(25);
 	const bool cbg0 = ImGui::ColorEdit3("Lines##Background", &_state.background.linesColor[0], ImGuiColorEditFlags_NoInputs);
-	ImGuiSameLine(0);
+	ImGuiSameLine();
 	const bool cbg1 = ImGui::ColorEdit3("Text##Background", &_state.background.textColor[0], ImGuiColorEditFlags_NoInputs);
 	ImGui::PopItemWidth();
 	ImGuiSameLine(COLUMN_SIZE);
@@ -883,7 +883,7 @@ void Renderer::showBottomButtons(){
 	if(_recorder.drawGUI(_guiScale)){
 		startRecording();
 	}
-	ImGuiSameLine(0);
+	ImGuiSameLine();
 
 	if (ImGui::Button("Save config...")) {
 		// Read arguments.
@@ -893,7 +893,7 @@ void Renderer::showBottomButtons(){
 			_state.save(std::string(savePath));
 		}
 	}
-	ImGuiSameLine(0);
+	ImGuiSameLine();
 
 	if (ImGui::Button("Load config...")) {
 		// Read arguments.
@@ -904,7 +904,7 @@ void Renderer::showBottomButtons(){
 			setState(_state);
 		}
 	}
-	ImGuiSameLine(0);
+	ImGuiSameLine();
 
 	if (ImGui::Button("Reset##config")) {
 		_state.reset();
@@ -931,7 +931,7 @@ void Renderer::showLayers() {
 			ImGui::PushID(layerId);
 
 			ImGui::Checkbox("##LayerCheckbox", layer.toggle);
-			ImGuiSameLine(0);
+			ImGuiSameLine();
 			ImGui::Selectable(layer.name.c_str());
 
 			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
@@ -1016,7 +1016,7 @@ void Renderer::showSets(){
 		shouldUpdate = ImGui::RadioButton("Track", (int*)(&_state.setOptions.mode), int(SetMode::TRACK)) || shouldUpdate;
 		ImGuiSameLine(2*120);
 		shouldUpdate = ImGui::RadioButton("Key", (int*)(&_state.setOptions.mode), int(SetMode::KEY)) || shouldUpdate;
-		ImGuiSameLine(0);
+		ImGuiSameLine();
 
 		ImGuiPushItemWidth(100);
 		shouldUpdate = ImGui::Combo("##key", &_state.setOptions.key, midiKeysString) || shouldUpdate;
@@ -1272,7 +1272,7 @@ bool Renderer::channelColorEdit(const char * name, const char * displayName, Col
 	if(ImGui::ArrowButton(name, ImGuiDir_Down)){
 		ImGui::OpenPopup(name);
 	}
-	ImGuiSameLine(0); ImGui::Text("%s", displayName);
+	ImGuiSameLine(); ImGui::Text("%s", displayName);
 
 	if(ImGui::BeginPopup(name)){
 		// Do 2x4 color sinks.
@@ -1282,7 +1282,7 @@ bool Renderer::channelColorEdit(const char * name, const char * displayName, Col
 			const std::string nameC = "Set " + std::to_string(cid);
 			edit = ImGui::ColorEdit3(nameC.c_str(), &colors[cid][0], ImGuiColorEditFlags_NoInputs) || edit;
 			if(cid % 2 == 0 && cid != colors.size()-1){
-				ImGuiSameLine(0);
+				ImGuiSameLine();
 			}
 		}
 		ImGui::PopItemWidth();
