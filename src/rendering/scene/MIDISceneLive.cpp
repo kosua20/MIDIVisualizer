@@ -26,7 +26,12 @@ MIDISceneLive::MIDISceneLive(int port) : MIDIScene(){
 	if(shared().is_port_open()){
 		shared().close_port();
 	}
-	shared().open_port(port, "MIDIVisualizer input");
+	if(port >= 0){
+		shared().open_port(port, "MIDIVisualizer input");
+	} else {
+		shared().open_virtual_port("MIDIVisualizer virtual input");
+	}
+
 
 	_activeIds.fill(-1);
 	_activeRecording.fill(false);
