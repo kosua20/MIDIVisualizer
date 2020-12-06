@@ -75,7 +75,9 @@ void main(){
 			localUv = abs( (localUv - shifts.x) / (1.0 - shifts.x - shifts.y) * 2.0 - 1.0);
 			// Detect edges.
 			intensity = step(marginSize, localUv);
-
+			//float roundEdge = (1.0 - exp(50.0 * (-In.uv.y + 0.4)))*1.1;
+			//intensity += smoothstep(roundEdge - 0.1, roundEdge + 0.1, localUv);
+			//intensity = clamp(intensity, 0.0, 1.0);
 			int cidMinor = isIdActive(minorId);
 			if(highlightKeys && cidMinor >= 0){
 				frontColor = minorColor[cidMinor];
