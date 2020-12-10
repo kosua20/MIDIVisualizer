@@ -564,10 +564,11 @@ void Renderer::synchronizeColors(const ColorArray & colors){
 		_state.baseColors[cid] = _state.particles.colors[cid] = _state.minorColors[cid] = _state.flashColors[cid] = colors[cid];
 	}
 
-	// If we have only one channel, synchronize one-shoft effects.
-	if(!_state.perChannelColors){
-		_state.pedals.color = _state.waves.color = _state.baseColors[0];
-	}
+	// If we have only one channel, synchronize one-shot effects.
+	// Disable this because it's not symmetric.
+	//if(!_state.perChannelColors){
+	//	_state.pedals.color = _state.waves.color = _state.baseColors[0];
+	//}
 }
 
 SystemAction Renderer::showTopButtons(double currentTime){
@@ -1275,6 +1276,11 @@ bool Renderer::channelColorEdit(const char * name, const char * displayName, Col
 		ImGuiPushItemWidth(25);
 		const bool inter = ImGui::ColorEdit3(name, &colors[0][0], ImGuiColorEditFlags_NoInputs);
 		ImGui::PopItemWidth();
+
+		if(_state.lockParticleColor && ImGui::IsItemHovered()){
+			ImGui::SetTooltip("(!) Effect colors\n    are synced");
+		}
+
 		if(inter){
 			// Ensure synchronization.
 			for(size_t cid = 1; cid < colors.size(); ++cid){
