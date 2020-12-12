@@ -28,6 +28,15 @@ Recorder::Recorder(){
 		{"MPEG4", "mp4", Recorder::Format::MPEG4}
 	#endif
 	};
+
+	#ifdef MIDIVIZ_SUPPORT_VIDEO
+		// Some linux distributions (eg Ubuntu 18 LTS) use an old version of ffmpeg/libavformat
+		// that needs to be initialized to detect available codecs and formats.
+		#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58, 9, 100)
+			av_register_all();
+			avcodec_register_all();
+		#endif
+	#endif
 }
 
 Recorder::~Recorder(){
