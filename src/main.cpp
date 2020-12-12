@@ -17,6 +17,10 @@
 #define INITIAL_SIZE_WIDTH 1280
 #define INITIAL_SIZE_HEIGHT 600
 
+void printVersion(){
+	std::cout << "MIDIVisualizer v" << MIDIVIZ_VERSION_MAJOR << "." << MIDIVIZ_VERSION_MINOR << std::endl;
+	std::cout << "* Built on " << __DATE__ << ", at " << __TIME__ << "." << std::endl;
+}
 
 void printHelp(){
 	std::string configOpts, setsOpts;
@@ -28,6 +32,8 @@ void printHelp(){
 		{"size", "dimensions of the window (--size W H)"},
 		{"fullscreen", "start in fullscreen (1 or 0 to enabled/disable)"},
 		{"gui-size", "GUI text and button scaling (number, default 1.0)"},
+		{"help", "display this help message"},
+		{"version", "display the executable version and configuration"},
 	};
 
 	const std::vector<std::pair<std::string, std::string>> expOpts = {
@@ -145,10 +151,15 @@ int main( int argc, char** argv) {
 
 	// Parse arguments.
 	bool showHelp = false;
-	Arguments args = Configuration::parseArguments(std::vector<std::string>(argv, argv+argc), showHelp);
+	bool showVersion = false;
+	Arguments args = Configuration::parseArguments(std::vector<std::string>(argv, argv+argc), showHelp, showVersion);
 
 	if(showHelp){
 		printHelp();
+		return 0;
+	}
+	if(showVersion){
+		printVersion();
 		return 0;
 	}
 

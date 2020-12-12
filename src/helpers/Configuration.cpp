@@ -52,7 +52,7 @@ Arguments Configuration::parseArguments(std::istream & configFile){
 	return args;
 }
 
-Arguments Configuration::parseArguments(const std::vector<std::string> & argv, bool & showHelp){
+Arguments Configuration::parseArguments(const std::vector<std::string> & argv, bool & showHelp, bool & showVersion){
 	std::map<std::string, std::vector<std::string>> args;
 
 	const size_t argc = argv.size();
@@ -65,8 +65,12 @@ Arguments Configuration::parseArguments(const std::vector<std::string> & argv, b
 		++aid;
 		
 		// Note help and skip.
-		if(arg == "help"){
+		if(arg == "help" || arg == "h"){
 			showHelp = true;
+			continue;
+		}
+		if(arg == "version" || arg == "v"){
+			showVersion = true;
 			continue;
 		}
 		std::vector<std::string> values;

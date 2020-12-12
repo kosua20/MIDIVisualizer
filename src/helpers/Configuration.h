@@ -18,7 +18,7 @@ public:
 	static Arguments parseArguments(std::istream & configFile);
 
 	/** Will filter arguments without values. */
-	static Arguments parseArguments(const std::vector<std::string> & argv, bool & showHelp);
+	static Arguments parseArguments(const std::vector<std::string> & argv, bool & showHelp, bool & showVersion);
 
 	static bool parseBool(const std::string & str);
 
