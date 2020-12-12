@@ -10,11 +10,11 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-20.04
             cmake-opts: 
-          - os: windows-latest
+          - os: windows-2019
             cmake-opts: -A x64
-          - os: macOS-latest
+          - os: macos-10.15
             cmake-opts:
     
     runs-on: ${{ matrix.os }}
@@ -23,9 +23,9 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Dependencies
-        if: matrix.os == 'ubuntu-latest'
+        if: startsWith(matrix.os, 'ubuntu')
         shell: bash
-        run: sudo apt-get update -y && sudo apt-get install -yq xorg-dev libgtk-3-dev
+        run: sudo apt-get update -y && sudo apt-get install -yq xorg-dev libgtk-3-dev libasound2-dev
 
       - name: Configure
         shell: bash
