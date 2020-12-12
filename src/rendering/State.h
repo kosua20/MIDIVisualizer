@@ -12,7 +12,7 @@
 #include <array>
 
 #define MIDIVIZ_VERSION_MAJOR 6
-#define MIDIVIZ_VERSION_MINOR 1
+#define MIDIVIZ_VERSION_MINOR 2
 
 #define COLUMN_SIZE 170
 #define EXPORT_COLUMN_SIZE 200
