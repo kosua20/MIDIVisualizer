@@ -59,8 +59,8 @@ public:
 	/// Handle keyboard inputs
 	void keyPressed(int key, int action);
 
-	/// Diretly start recording.
-	void startDirectRecording(const std::string & path, Recorder::Format format, int framerate, int bitrate, bool skipBackground, const glm::vec2 & size);
+	/// Directly start recording.
+	bool startDirectRecording(const std::string & path, Recorder::Format format, int framerate, int bitrate, bool skipBackground, const glm::vec2 & size);
 
 	void setGUIScale(float scale);
 

@@ -288,7 +288,11 @@ int main( int argc, char** argv) {
 					format = Recorder::Format::MPEG4;
 				}
 			}
-			renderer.startDirectRecording(exportPath, format, framerate, bitrate, pngAlpha, glm::vec2(isw, ish));
+			const bool success = renderer.startDirectRecording(exportPath, format, framerate, bitrate, pngAlpha, glm::vec2(isw, ish));
+			if(!success){
+				// Quit.
+				performAction(SystemAction::QUIT, window, frame);
+			}
 		}
 
 		if(fullscreen){

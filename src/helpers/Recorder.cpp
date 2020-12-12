@@ -259,12 +259,29 @@ void Recorder::setSize(const glm::ivec2 & size){
 	_size[1] += _size[1]%2;
 }
 
-void Recorder::setParameters(const std::string & path, Format format, int framerate, int bitrate, bool skipBackground){
+bool Recorder::setParameters(const std::string & path, Format format, int framerate, int bitrate, bool skipBackground){
+	// Check if the format is supported.
+	if(int(format) >= _formats.size()){
+		std::cerr << "[EXPORT]: The requested output format is not supported by this executable. If this is a video format, make sure MIDIVisualizer has been compiled with ffmpeg enabled by checking the output of ./MIDIVisualizer --version" << std::endl;
+		return false;
+	}
+
 	_exportPath = path;
 	_outFormat = format;
 	_exportFramerate = framerate;
 	_bitRate = bitrate;
 	_exportNoBackground = skipBackground;
+
+	if(_outFormat != Format::PNG){
+		// Check that the export path is valid.
+		const std::string & ext = _formats.at(int(_outFormat)).ext;
+		const std::string fullExt = "." + ext;
+		// Append extension if needed.
+		if(_exportPath.size() < 5 || (_exportPath.substr(_exportPath.size()-4) != fullExt)){
+			_exportPath.append(fullExt);
+		}
+	}
+	return true;
 }
 
 bool Recorder::videoExportSupported(){

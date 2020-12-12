@@ -1222,11 +1222,16 @@ void  Renderer::setGUIScale(float scale){
 	ImGui::GetStyle().FrameRounding = 3 * _guiScale;
 }
 
-void Renderer::startDirectRecording(const std::string & path, Recorder::Format format, int framerate, int bitrate, bool skipBackground, const glm::vec2 & size){
-	_recorder.setParameters(path, format, framerate, bitrate, skipBackground);
+bool Renderer::startDirectRecording(const std::string & path, Recorder::Format format, int framerate, int bitrate, bool skipBackground, const glm::vec2 & size){
+	const bool success = _recorder.setParameters(path, format, framerate, bitrate, skipBackground);
+	if(!success){
+		std::cerr << "[EXPORT]: Unable to start direct export." << std::endl;
+		return false;
+	}
 	_recorder.setSize(size);
 	startRecording();
 	_exitAfterRecording = true;
+	return true;
 }
 
 void Renderer::startRecording(){
