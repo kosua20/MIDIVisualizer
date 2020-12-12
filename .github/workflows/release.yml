@@ -14,8 +14,13 @@ jobs:
           - os: ubuntu-20.04
             cmake-opts: -D CMAKE_C_COMPILER=gcc-9 -D CMAKE_CXX_COMPILER=g++-9
             artifact_name: build/MIDIVisualizer
-            asset_name: MIDIVisualizer-ubuntu.zip
+            asset_name: MIDIVisualizer-ubuntu20.zip
             ffmpeg-archive: ffmpeg-ubuntu20-64-static-lgpl.zip
+          - os: ubuntu-18.04
+            cmake-opts: -D CMAKE_C_COMPILER=gcc-7 -D CMAKE_CXX_COMPILER=g++-7
+            artifact_name: build/MIDIVisualizer
+            asset_name: MIDIVisualizer-ubuntu18.zip
+            ffmpeg-archive: ffmpeg-ubuntu18-64-static-lgpl.zip
           - os: windows-2019
             cmake-opts: -A x64
             artifact_name: build/Release/MIDIVisualizer.exe
@@ -35,7 +40,7 @@ jobs:
       - name: Dependencies-ubuntu
         if: startsWith(matrix.os, 'ubuntu')
         shell: bash
-        run: sudo apt-get update -y && sudo apt-get install -yq xorg-dev libgtk-3-dev
+        run: sudo apt-get update -y && sudo apt-get install -yq xorg-dev libgtk-3-dev libasound2-dev
 
       - name: Dependencies-macos
         if: startsWith(matrix.os, 'macos')
