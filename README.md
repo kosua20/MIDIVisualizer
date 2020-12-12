@@ -90,7 +90,7 @@ Depending on the target you chose in Cmake, you will get either a Visual Studio 
 
 ### Dependencies
 
-MIDIVisualizer depends on the [GLFW3 library](http://www.glfw.org) and the [Native File Dialog library](https://github.com/mlabbe/nativefiledialog), both are included in the repository and built along with the main executable. It also optionally relies on [FFMPEG](https://ffmpeg.org) v4.2 for video export. For licensing reasons only MPEG-2 and MPEG-4 exports are supported for now in the release builds.
+MIDIVisualizer depends on the [GLFW3 library](http://www.glfw.org), the [Native File Dialog library](https://github.com/mlabbe/nativefiledialog) and [RtMidi17](https://github.com/jcelerier/RtMidi17/), all included in the repository and built along with the main executable. It also optionally relies on [FFMPEG](https://ffmpeg.org) v4.2 for video export. For licensing reasons only MPEG-2 and MPEG-4 exports are supported for now in the release builds.
 
 On macOS and Windows, no additional dependencies are required. On Linux, you will need to have the following packages installed: `xorg-dev libgtk-3-dev libasound2-dev`, and if you plan on using FFMPEG, `ffmpeg libavcodec-dev libavformat-dev libavdevice-dev`.
 
