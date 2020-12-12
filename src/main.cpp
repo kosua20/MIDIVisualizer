@@ -20,6 +20,7 @@
 void printVersion(){
 	std::cout << "MIDIVisualizer v" << MIDIVIZ_VERSION_MAJOR << "." << MIDIVIZ_VERSION_MINOR << std::endl;
 	std::cout << "* Built on " << __DATE__ << ", at " << __TIME__ << "." << std::endl;
+	std::cout << "* Video export with ffmpeg is " << (Recorder::videoExportSupported() ? "enabled" : "disabled") << "." << std::endl;
 }
 
 void printHelp(){

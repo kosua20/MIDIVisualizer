@@ -267,6 +267,14 @@ void Recorder::setParameters(const std::string & path, Format format, int framer
 	_exportNoBackground = skipBackground;
 }
 
+bool Recorder::videoExportSupported(){
+#ifdef MIDIVIZ_SUPPORT_VIDEO
+	return true;
+#else
+	return false;
+#endif
+}
+
 bool Recorder::initVideo(const std::string & path, Format format, bool verbose){
 #ifdef MIDIVIZ_SUPPORT_VIDEO
 	if(format == Format::PNG){

@@ -53,6 +53,7 @@ public:
 	void setSize(const glm::ivec2 & size);
 
 	void setParameters(const std::string & path, Format format, int framerate, int bitrate, bool skipBackground);
+	static bool videoExportSupported();
 
 private:
 
