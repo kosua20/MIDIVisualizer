@@ -41,7 +41,7 @@ std::string getGLErrorString(GLenum error) {
 int _checkGLError(const char *file, int line){
 	GLenum glErr = glGetError();
 	if (glErr != GL_NO_ERROR){
-		std::cerr << "glError in " << file << " (" << line << ") : " << getGLErrorString(glErr) << std::endl;
+		std::cerr << "[GL]: Error in " << file << " (" << line << ") : " << getGLErrorString(glErr) << std::endl;
 		return 1;
 	}
 	return 0;
@@ -52,7 +52,7 @@ std::string loadStringFromFile(const std::string & filename) {
 	// Open a stream to the file.
 	in.open(filename.c_str());
 	if (!in) {
-		std::cerr << filename + " is not a valid file." << std::endl;
+		std::cerr << "[ERROR]: " << filename + " is not a valid file." << std::endl;
 		return "";
 	}
 	std::stringstream buffer;
@@ -151,7 +151,7 @@ GLuint createGLProgramFromStrings(const std::string & vertexContent, const std::
 		std::vector<char> infoLog((std::max)(infoLogLength, int(1)));
 		glGetProgramInfoLog(id, infoLogLength, NULL, &infoLog[0]);
 		
-		std::cerr << "Failed loading program: " << &infoLog[0] << std::endl;
+		std::cerr << "[GL]: Failed loading program: " << &infoLog[0] << std::endl;
 		return 0;
 	}
 	// We can now clean the shaders objects, by first detaching them
@@ -183,7 +183,7 @@ GLuint loadTexture(const std::string& path, unsigned int channels, bool sRGB){
 	stbi_set_flip_vertically_on_load(true);
 	unsigned char * image = stbi_load(path.c_str(), &imwidth, &imheight, &nChans, channels);
 	if(image == NULL){
-		std::cerr << "[TEXTURE] Unable to load the texture at path " << path << "." << std::endl;
+		std::cerr << "[GL]: Unable to load the texture at path " << path << "." << std::endl;
 		return 0;
 	}
 	stbi_set_flip_vertically_on_load(false);
@@ -221,7 +221,7 @@ GLuint loadTextureArray(const std::vector<std::string>& paths, bool sRGB, int & 
 		unsigned char * image = stbi_load(path.c_str(), &size[0], &size[1], &nChans, 1);
 		if (image == NULL) {
 			// Skip non existent file.
-			std::cerr << "[TEXTURE] " << "Unable to load the texture at path " << path << "." << std::endl;
+			std::cerr << "[GL]: " << "Unable to load the texture at path " << path << "." << std::endl;
 			continue;
 		}
 		images.push_back(image);

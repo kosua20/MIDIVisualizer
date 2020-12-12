@@ -305,7 +305,7 @@ void State::save(const std::string & path){
 	}
 	std::ofstream configFile(outputPath);
 	if(!configFile.is_open()){
-		std::cerr << "Unable to save state to file at path " << outputPath << std::endl;
+		std::cerr << "[CONFIG]: Unable to save state to file at path " << outputPath << std::endl;
 		return;
 	}
 	// Make sure the parameter pointers are up to date.
@@ -369,7 +369,7 @@ void State::save(const std::string & path){
 void State::load(const std::string & path){
 	std::ifstream configFileRaw(path);
 	if(!configFileRaw.is_open()){
-		std::cerr << "Unable to load state from file at path " << path << std::endl;
+		std::cerr << "[CONFIG]: Unable to load state from file at path " << path << std::endl;
 		return;
 	}
 
@@ -392,10 +392,10 @@ void State::load(const std::string & path){
 	configFile >> majVersion >> minVersion;
 	
 	if(majVersion > MIDIVIZ_VERSION_MAJOR || (majVersion == MIDIVIZ_VERSION_MAJOR && minVersion > MIDIVIZ_VERSION_MINOR)){
-		std::cout << "The config is more recent, some settings might be ignored." << std::endl;
+		std::cout << "[CONFIG]: The config is more recent, some settings might be ignored." << std::endl;
 	}
 	if(majVersion < MIDIVIZ_VERSION_MAJOR || (majVersion == MIDIVIZ_VERSION_MAJOR && minVersion < MIDIVIZ_VERSION_MINOR)){
-		std::cout << "The config is older, some newer settings will be left as-is." << std::endl;
+		std::cout << "[CONFIG]: The config is older, some newer settings will be left as-is." << std::endl;
 	}
 
 	// Two options: if we are < 5.0, we use the old positional format.
@@ -417,7 +417,7 @@ void State::load(const Arguments & configArgs){
 	for(const auto & arg : configArgs){
 		const auto & key = arg.first;
 		if(arg.second.empty()){
-			std::cerr << "Missing values for key " << key << "." << std::endl;
+			std::cerr << "[CONFIG]: Missing values for key " << key << "." << std::endl;
 			continue;
 		}
 

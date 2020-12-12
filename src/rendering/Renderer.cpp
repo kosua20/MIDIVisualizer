@@ -1116,7 +1116,7 @@ void Renderer::resizeAndRescale(int width, int height, float scale) {
 	}
 
 	if (_verbose) {
-		std::cout << "[LOG] Resizing to " << width << " x " << height << std::endl;
+		std::cout << "[INFO]: Resizing to " << width << " x " << height << std::endl;
 	}
 	// Update the projection matrix.
 	_camera.screen(width, height, scale);

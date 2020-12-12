@@ -277,7 +277,7 @@ int MIDISceneLive::notesCount() const {
 }
 
 void MIDISceneLive::print() const {
-	std::cout << "Live scene with " << notesCount() << " notes, duration " << duration() << "s." << std::endl;
+	std::cout << "[INFO]: Live scene with " << notesCount() << " notes, duration " << duration() << "s." << std::endl;
 }
 
 rtmidi::midi_in * MIDISceneLive::_sharedMIDIIn = nullptr;

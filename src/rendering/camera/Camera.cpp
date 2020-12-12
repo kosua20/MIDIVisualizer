@@ -38,7 +38,7 @@ void Camera::key(int key, bool flag){
 	} else if(flag && key == GLFW_KEY_R) {
 		reset();
 	} else {
-		std::cout << "Key: " << key << " (" << char(key) << ")." << std::endl;
+		std::cout << "[INPUT]: Key: " << key << " (" << char(key) << ")." << std::endl;
 	}
 }
 

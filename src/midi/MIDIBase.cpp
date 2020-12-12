@@ -55,7 +55,6 @@ MIDIEvent MIDIEvent::readMIDIEvent(const std::vector<char> & buffer, size_t & po
 	MIDIEventType type = static_cast<MIDIEventType>((firstByte & 0xF0) >> 4);
 	/*if (type == ignoreType) {
 		position += positionOffset;
-		std::cout << "but" << std::endl;
 		return MIDIEvent(midiEvent, static_cast<uint8_t>(type), delta, {});
 	}*/
 

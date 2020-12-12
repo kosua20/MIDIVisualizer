@@ -27,7 +27,7 @@ Arguments Configuration::parseArguments(std::istream & configFile){
 		// Split at first space.
 		const std::string::size_type keySep = lineTrim.find_first_of(" \t");
 		if(keySep == std::string::npos){
-			std::cerr << "[CONFIG] Ignoring key " << lineTrim << " without arguments." << std::endl;
+			std::cerr << "[CONFIG]: Ignoring key " << lineTrim << " without arguments." << std::endl;
 			continue;
 		}
 		std::vector<std::string> values;
@@ -81,7 +81,7 @@ Arguments Configuration::parseArguments(const std::vector<std::string> & argv, b
 			++aid;
 		}
 		if(values.empty()) {
-			std::cerr << "No values for key " << arg << std::endl;
+			std::cerr << "[CONFIG]: No values for key " << arg << std::endl;
 			continue;
 		}
 		args[arg] = values;

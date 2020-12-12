@@ -53,7 +53,7 @@ void Recorder::record(const std::shared_ptr<Framebuffer> & frame){
 
 	if(frame->_width != _size[0] || frame->_height != _size[1]){
 		std::cout << std::endl;
-		std::cerr << "Unexpected frame size while recording. Stopping." << std::endl;
+		std::cerr << "[EXPORT]: Unexpected frame size while recording. Stopping." << std::endl;
 		_currentFrame = _framesCount;
 		return;
 	}
@@ -83,7 +83,7 @@ void Recorder::record(const std::shared_ptr<Framebuffer> & frame){
 		const std::string outputFilePath = _exportPath + "/output_" + intString + ".png";
 		unsigned error = lodepng_encode_file( outputFilePath.c_str(), _buffer.data(), width, height, LCT_RGBA, 8);
 		if (error) {
-			std::cerr << "LodePNG error: " << error << ": " << lodepng_error_text(error) << std::endl;
+			std::cerr << "[EXPORT]: PNG error " << error << ": " << lodepng_error_text(error) << std::endl;
 		}
 	} else {
 		// This will do nothing (and is unreachable) if the video module is not present.
@@ -98,7 +98,7 @@ void Recorder::record(const std::shared_ptr<Framebuffer> & frame){
 		const auto endTime	 = std::chrono::high_resolution_clock::now();
 		const long long duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - _startTime).count();
 		std::cout << std::endl;
-		std::cout << "[EXPORT] Export took " << (float(duration) / 1000.0f) << "s." << std::endl;
+		std::cout << "[EXPORT]: Export took " << (float(duration) / 1000.0f) << "s." << std::endl;
 	}
 
 	_currentTime += (1.0f / float(_exportFramerate));
@@ -219,7 +219,8 @@ void Recorder::drawProgress(){
 
 		ImGui::Text("Scene duration: %ds. (+10s. buffer).", int(std::round(_sceneDuration)));
 		ImGui::Text("Framerate: %d fps.", _exportFramerate);
-		ImGui::Text("Destination directory: %s", _exportPath.c_str());
+		ImGui::Text("Destination path: %s", _exportPath.c_str());
+
 		ImGui::Text("Exporting %zu frames at resolution %dx%d...", _framesCount, _size[0], _size[1]);
 
 		const std::string currProg = std::to_string(_currentFrame + 1) + "/" + std::to_string(_framesCount);
@@ -269,23 +270,23 @@ void Recorder::setParameters(const std::string & path, Format format, int framer
 bool Recorder::initVideo(const std::string & path, Format format, bool verbose){
 #ifdef MIDIVIZ_SUPPORT_VIDEO
 	if(format == Format::PNG){
-		std::cerr << "Unable to use PNG format for video." << std::endl;
+		std::cerr << "[EXPORT]: Unable to use PNG format for video." << std::endl;
 		return false;
 	}
 
 	if (verbose) {
-		std::cout << "[LOG] Attempting export at " << _size[0] << " x " << _size[1] << std::endl;
+		std::cout << "[VIDEO]: Attempting export at " << _size[0] << " x " << _size[1] << std::endl;
 	}
 
 	av_log_set_level(verbose ? AV_LOG_VERBOSE : AV_LOG_ERROR);
 
 	// Allocate general context.
 	if(avformat_alloc_output_context2(&_formatCtx, nullptr, nullptr, path.c_str()) < 0 || !_formatCtx){
-		std::cerr << "Unable to create format context." << std::endl;
+		std::cerr << "[VIDEO]: Unable to create format context." << std::endl;
 		return false;
 	}
 	if(_formatCtx->oformat->flags & AVFMT_NOFILE){
-		std::cerr << "Format not associated to a file." << std::endl;
+		std::cerr << "[VIDEO]: Format not associated to a file." << std::endl;
 		return false;
 	}
 
@@ -302,14 +303,14 @@ bool Recorder::initVideo(const std::string & path, Format format, bool verbose){
 	const auto & outFormat = opts.at(format);
 	_codec = avcodec_find_encoder(outFormat.avid);
 	if(!_codec){
-		std::cerr << "Unable to find encoder." << std::endl;
+		std::cerr << "[VIDEO]: Unable to find encoder." << std::endl;
 		return false;
 	}
 
 	// Setup codec context and parameters.
 	_codecCtx = avcodec_alloc_context3(_codec);
 	if(!_codecCtx){
-		std::cerr << "Unable to create encoder context." << std::endl;
+		std::cerr << "[VIDEO]: Unable to create encoder context." << std::endl;
 		return false;
 	}
 	const int tgtW = _size[0] - _size[0]%2;
@@ -327,14 +328,14 @@ bool Recorder::initVideo(const std::string & path, Format format, bool verbose){
 	}
 	AVDictionary * codecParams = nullptr;
 	if(avcodec_open2(_codecCtx, _codec, &codecParams) < 0){
-		std::cerr << "Unable to open encoder." << std::endl;
+		std::cerr << "[VIDEO]: Unable to open encoder." << std::endl;
 		return false;
 	}
 
 	// Setup stream.
 	_stream = avformat_new_stream(_formatCtx, _codec);
 	if(!_stream){
-		std::cerr << "Unable to create stream." << std::endl;
+		std::cerr << "[VIDEO]: Unable to create stream." << std::endl;
 		return false;
 	}
 	_stream->id = _formatCtx->nb_streams - 1;
@@ -342,14 +343,14 @@ bool Recorder::initVideo(const std::string & path, Format format, bool verbose){
 	// Sync parameters.
 	av_dict_free(&codecParams);
 	if(avcodec_parameters_from_context(_stream->codecpar, _codecCtx) < 0){
-		std::cerr << "Unable to transfer parameters from encoder to stream." << std::endl;
+		std::cerr << "[VIDEO]: Unable to transfer parameters from encoder to stream." << std::endl;
 		return false;
 	}
 
 	// Allocate frame.
 	_frame = av_frame_alloc();
 	if(!_frame){
-		std::cerr << "Unable to allocate frame." << std::endl;
+		std::cerr << "[VIDEO]: Unable to allocate frame." << std::endl;
 		return false;
 	}
 	_frame->format = _codecCtx->pix_fmt;
@@ -357,30 +358,30 @@ bool Recorder::initVideo(const std::string & path, Format format, bool verbose){
 	_frame->height = _codecCtx->height;
 	_frame->pts = 0;
 	if(av_frame_get_buffer(_frame, 0) < 0){
-		std::cerr << "Unable to create frame buffer." << std::endl;
+		std::cerr << "[VIDEO]: Unable to create frame buffer." << std::endl;
 		return false;
 	}
 
 	// Open file, write header.
 	if(avio_open(&_formatCtx->pb, path.c_str(), AVIO_FLAG_WRITE) < 0){
-		std::cerr << "Unable to open IO file." << std::endl;
+		std::cerr << "[VIDEO]: Unable to open IO file." << std::endl;
 		return false;
 	}
 	if(avformat_write_header(_formatCtx, nullptr) < 0){
-		std::cerr << "Unable to write header." << std::endl;
+		std::cerr << "[VIDEO]: Unable to write header." << std::endl;
 		return false;
 	}
 	
 	// Create scaling/conversion context.
 	_swsContext = sws_getContext(_size[0], _size[1], AV_PIX_FMT_RGBA, _codecCtx->width, _codecCtx->height, _codecCtx->pix_fmt, SWS_POINT, nullptr, nullptr, nullptr);
 	if(!_swsContext){
-		std::cerr << "Unable to create processing context." << std::endl;
+		std::cerr << "[VIDEO]: Unable to create processing context." << std::endl;
 		return false;
 	}
 
 	// Debug log.
 	if (verbose) {
-		std::cout << "Context infos: " << std::endl;
+		std::cout << "[VIDEO]: Context infos: " << std::endl;
 		av_dump_format(_formatCtx, 0, path.c_str(), 1);
 		std::cout << std::endl;
 	}
@@ -407,7 +408,7 @@ bool Recorder::addFrameToVideo(GLubyte * data){
 			avcodec_send_frame(_codecCtx, _frame);
 		}
 	} else if(res < 0){
-		std::cerr << "Unable to send frame." << std::endl;
+		std::cerr << "[VIDEO]: Unable to send frame." << std::endl;
 		return false;
 	}
 	_frame->pts++;
@@ -448,7 +449,7 @@ bool Recorder::flush(){
 		if(res == AVERROR(EAGAIN) || res == AVERROR_EOF){
 			return true;
 		} else if(res < 0){
-			std::cerr << "Unable to retrieve packet." << std::endl;
+			std::cerr << "[VIDEO]: Unable to retrieve packet." << std::endl;
 			return false;
 		}
 		// Adjust timing for output.
@@ -457,7 +458,7 @@ bool Recorder::flush(){
 		// Write packet.
 		res = av_interleaved_write_frame(_formatCtx, &packet);
 		if(res < 0){
-			std::cerr << "Unable to write frame to file." << std::endl;
+			std::cerr << "[VIDEO]: Unable to write frame to file." << std::endl;
 			return false;
 		}
 	}

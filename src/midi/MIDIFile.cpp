@@ -76,7 +76,7 @@ MIDIFile::MIDIFile(const std::string & filePath){
 
 	bool shouldMerge = false;
 	if(_format == singleTrack && tracksCount > 1){
-		std::cerr << "[WARN]: " << "Too many tracks, will merge all tracks." << std::endl;
+		std::cerr << "[WARNING]: " << "Too many tracks, will merge all tracks." << std::endl;
 		shouldMerge = true;
 	}
 

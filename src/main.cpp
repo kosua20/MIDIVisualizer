@@ -197,11 +197,11 @@ int main( int argc, char** argv) {
 	glfwMakeContextCurrent(window);
 
 	if (gl3wInit()) {
-		std::cerr << "Failed to initialize OpenGL" << std::endl;
+		std::cerr << "[ERROR]: Failed to initialize OpenGL" << std::endl;
 		return -1;
 	}
 	if (!gl3wIsSupported(3, 2)) {
-		std::cerr << "OpenGL 3.2 not supported\n" << std::endl;
+		std::cerr << "[ERROR]: OpenGL 3.2 not supported\n" << std::endl;
 		return -1;
 	}
 
