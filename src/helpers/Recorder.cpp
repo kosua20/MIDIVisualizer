@@ -25,7 +25,8 @@ Recorder::Recorder(){
 		 {"PNG", "png", Recorder::Format::PNG},
 	#ifdef MIDIVIZ_SUPPORT_VIDEO
 		{"MPEG2", "mp4", Recorder::Format::MPEG2},
-		{"MPEG4", "mp4", Recorder::Format::MPEG4}
+		{"MPEG4", "mp4", Recorder::Format::MPEG4},
+		{"PRORES", "mov", Recorder::Format::PRORES}
 	#endif
 	};
 
@@ -141,11 +142,22 @@ bool Recorder::drawGUI(float scale){
 		}
 
 		ImGui::SameLine(scaledColumn);
-		if(_outFormat == Format::PNG){
+
+		ImGui::InputFloat("Postroll", &_postroll, 0.1f, 1.0f, "%.1fs");
+
+		bool lineStarted = false;
+		if(_outFormat == Format::PNG || _outFormat == Format::PRORES){
 			ImGui::Checkbox("Transparent bg.", &_exportNoBackground);
-		} else {
+			lineStarted = true;
+		}
+
+		if(_outFormat != Format::PNG){
+			if(lineStarted){
+				ImGui::SameLine(scaledColumn);
+			}
 			ImGui::InputInt("Rate (Mbps)", &_bitRate);
 		}
+
 		ImGui::PopItemWidth();
 
 
@@ -194,7 +206,7 @@ bool Recorder::drawGUI(float scale){
 
 void Recorder::prepare(float preroll, float duration, float speed){
 	_currentTime = -preroll;
-	_framesCount = int(std::ceil((duration + 10.0f + preroll) * _exportFramerate / speed));
+	_framesCount = int(std::ceil((duration + _postroll + preroll) * _exportFramerate / speed));
 	_currentFrame = _framesCount;
 	_sceneDuration = duration;
 	// Image writing setup.
@@ -217,7 +229,7 @@ void Recorder::drawProgress(){
 	}
 	if(ImGui::BeginPopupModal("Exporting...", NULL, ImGuiWindowFlags_AlwaysAutoResize)){
 
-		ImGui::Text("Scene duration: %ds. (+10s. buffer).", int(std::round(_sceneDuration)));
+		ImGui::Text("Scene duration: %ds.", int(std::round(_sceneDuration)));
 		ImGui::Text("Framerate: %d fps.", _exportFramerate);
 		ImGui::Text("Destination path: %s", _exportPath.c_str());
 
@@ -259,7 +271,7 @@ void Recorder::setSize(const glm::ivec2 & size){
 	_size[1] += _size[1]%2;
 }
 
-bool Recorder::setParameters(const std::string & path, Format format, int framerate, int bitrate, bool skipBackground){
+bool Recorder::setParameters(const std::string & path, Format format, int framerate, int bitrate, float postroll, bool skipBackground){
 	// Check if the format is supported.
 	if(int(format) >= _formats.size()){
 		std::cerr << "[EXPORT]: The requested output format is not supported by this executable. If this is a video format, make sure MIDIVisualizer has been compiled with ffmpeg enabled by checking the output of ./MIDIVisualizer --version" << std::endl;
@@ -271,6 +283,7 @@ bool Recorder::setParameters(const std::string & path, Format format, int framer
 	_exportFramerate = framerate;
 	_bitRate = bitrate;
 	_exportNoBackground = skipBackground;
+	_postroll = postroll;
 
 	if(_outFormat != Format::PNG){
 		// Check that the export path is valid.
@@ -322,6 +335,7 @@ bool Recorder::initVideo(const std::string & path, Format format, bool verbose){
 	static const std::map<Format, InternalCodecOpts> opts = {
 		{Format::MPEG2, {AV_CODEC_ID_MPEG2VIDEO, AV_PIX_FMT_YUV422P}},
 		{Format::MPEG4, {AV_CODEC_ID_MPEG4, AV_PIX_FMT_YUV420P}},
+		{Format::PRORES, {AV_CODEC_ID_PRORES, AV_PIX_FMT_YUVA444P10}},
 	};
 
 	// Setup codec.

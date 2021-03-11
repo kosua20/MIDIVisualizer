@@ -60,7 +60,7 @@ public:
 	void keyPressed(int key, int action);
 
 	/// Directly start recording.
-	bool startDirectRecording(const std::string & path, Recorder::Format format, int framerate, int bitrate, bool skipBackground, const glm::vec2 & size);
+	bool startDirectRecording(const std::string & path, Recorder::Format format, int framerate, int bitrate, float postroll, bool skipBackground, const glm::vec2 & size);
 
 	void setGUIScale(float scale);
 

@@ -39,10 +39,11 @@ void printHelp(){
 
 	const std::vector<std::pair<std::string, std::string>> expOpts = {
 		{"export", "path to the output video (or directory for PNG)"},
-		{"format", "output format (values: PNG, MPEG2, MPEG4)"},
+		{"format", "output format (values: PNG, MPEG2, MPEG4, PRORES)"},
 		{"framerate", "number of frames per second to export (integer)"},
 		{"bitrate", "target video bitrate in Mb (integer)"},
-		{"png-alpha", "use transparent PNG background (1 or 0 to enabled/disable)"},
+		{"postroll", "Postroll time after the track, in seconds (number, default 10.0)"},
+		{"out-alpha", "use transparent output background, only for PNG and PRORES (1 or 0 to enabled/disable)"},
 		{"hide-window", "do not display the window (1 or 0 to enabled/disable)"},
 	};
 
@@ -277,7 +278,11 @@ int main( int argc, char** argv) {
 		if(directRecord){
 			const int framerate = args.count("framerate") > 0 ? Configuration::parseInt(args["framerate"][0]) : 60;
 			const int bitrate = args.count("bitrate") > 0 ? Configuration::parseInt(args["bitrate"][0]) : 40;
-			const bool pngAlpha = args.count("png-alpha") > 0 ? Configuration::parseBool(args["png-alpha"][0]) : false;
+			const float postroll = args.count("postroll") > 0 ? Configuration::parseFloat(args["postroll"][0]) : 10.0f;
+			bool outAlpha = args.count("out-alpha") > 0 ? Configuration::parseBool(args["out-alpha"][0]) : false;
+			// Legacy support.
+			outAlpha = outAlpha || (args.count("png-alpha") > 0 ? Configuration::parseBool(args["png-alpha"][0]) : false);
+
 			const std::string exportPath = args["export"][0];
 			Recorder::Format format = Recorder::Format::PNG;
 			if(args.count("format") > 0){
@@ -286,9 +291,11 @@ int main( int argc, char** argv) {
 					format = Recorder::Format::MPEG2;
 				} else if(formatRaw == "MPEG4"){
 					format = Recorder::Format::MPEG4;
+				} else if(formatRaw == "PRORES"){
+					format = Recorder::Format::PRORES;
 				}
 			}
-			const bool success = renderer.startDirectRecording(exportPath, format, framerate, bitrate, pngAlpha, glm::vec2(isw, ish));
+			const bool success = renderer.startDirectRecording(exportPath, format, framerate, bitrate, postroll, outAlpha, glm::vec2(isw, ish));
 			if(!success){
 				// Quit.
 				performAction(SystemAction::QUIT, window, frame);

@@ -21,7 +21,7 @@ class Recorder {
 public:
 
 	enum class Format : int {
-		PNG = 0, MPEG2 = 1, MPEG4 = 2
+		PNG = 0, MPEG2 = 1, MPEG4 = 2, PRORES = 3
 	};
 
 	Recorder();
@@ -52,7 +52,7 @@ public:
 
 	void setSize(const glm::ivec2 & size);
 
-	bool setParameters(const std::string & path, Format format, int framerate, int bitrate, bool skipBackground);
+	bool setParameters(const std::string & path, Format format, int framerate, int bitrate, float postroll, bool skipBackground);
 
 	static bool videoExportSupported();
 
@@ -81,6 +81,7 @@ private:
 	Format _outFormat = Format::PNG;
 	float _sceneDuration = 0.0f;
 	float _currentTime = 0.0f;
+	float _postroll = 10.0f;
 	int _exportFramerate = 60;
 	int _bitRate = 40;
 	bool _exportNoBackground = false;
