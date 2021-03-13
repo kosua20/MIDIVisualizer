@@ -129,7 +129,8 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 
 		// Handle note events.
 		if(message.is_note_on_or_off()){
-			short note = short(message[1]);
+			const short note = clamp<short>(short(message[1]), 0, 127);
+			const short velocity = clamp<short>(short(message[2]), 0, 127);
 
 			// If the note is currently recording, disable it.
 			if(_activeRecording[note]){
@@ -139,7 +140,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 			}
 
 			// If this is an on event with positive veolcity, start a new note.
-			if(type == rtmidi::message_type::NOTE_ON && message[2] > 0){
+			if(type == rtmidi::message_type::NOTE_ON && velocity > 0){
 
 				const int index = _notesCount % MAX_NOTES_IN_FLIGHT;
 				// Get new note.
@@ -198,7 +199,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 
 		} else if(type == rtmidi::message_type::CONTROL_CHANGE){
 			// Handle pedal.
-			const int rawType = message[1];
+			const int rawType = clamp<int>(message[1], 0, 127);
 			// Skip other CC.
 			if(rawType != 64 && rawType != 66 && rawType != 67 && rawType != 11){
 				continue;
@@ -209,8 +210,9 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 			// Stop the current pedal.
 			pedal = 0.0f;
 			// If non-zero velocity, enable pedal, normalized velocity.
-			if(message[2] > 0){
-				pedal = float(message[2])/127.0f;
+			const short val = clamp<short>(message[2], 0, 127);
+			if(val > 0){
+				pedal = float(val)/127.0f;
 			}
 			// Register new pedal event with updated state.
 			_pedalInfos[float(time)] = Pedals(_pedals);

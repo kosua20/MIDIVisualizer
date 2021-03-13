@@ -55,6 +55,7 @@ size_t MIDITrack::readTrack(const std::vector<char>& buffer, size_t pos){
 				}
 				_instrument = tempName;
 			} else if (event.type == keySignature){
+				// Should be in -7,7
 				keyShift = event.data[0];
 				minorKey = (event.data[1] > 0);
 			}
@@ -99,7 +100,11 @@ void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t uni
 
 		// Handle notes.
 		if(event.type == noteOn || event.type == noteOff){
-			const short noteInd = event.data[1];
+			// Ensure the ID is in 0-127.
+			const short noteInd = clamp<short>(event.data[1], 0, 127);
+			const short velocity = clamp<short>(event.data[2], 0, 127);
+			const short channel = event.data[0];
+
 			if(currentNotes.count(noteInd) > 0){
 				// The current note is already present.
 				const auto & noteTuple = currentNotes[noteInd];
@@ -120,12 +125,12 @@ void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t uni
 			}
 
 			// Check if we have to start a new note.
-			const bool shouldNew = event.type == noteOn && event.data[2] > 0;
+			const bool shouldNew = event.type == noteOn && velocity > 0;
 			if(shouldNew){
-				currentNotes[noteInd] = std::make_tuple(timeInUnits, event.data[2], event.data[0]);
+				currentNotes[noteInd] = std::make_tuple(timeInUnits, velocity, channel);
 			}
 		} else if(event.type == controllerChange){
-			const int rawType = event.data[1];
+			const int rawType = clamp<int>(event.data[1], 0, 127);
 			// Handle only pedal changes.
 			if(rawType != 64 && rawType != 66 && rawType != 67 && rawType != 11){
 				continue;
@@ -151,9 +156,10 @@ void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t uni
 				currentPedals.erase(type);
 			}
 			// Check if we have to start a new press.
-			const bool shouldNew = event.data[2] > 0;
+			const short val = clamp<short>(event.data[2], 0, 127);
+			const bool shouldNew = val > 0;
 			if(shouldNew){
-				currentPedals[type] = std::make_tuple(timeInUnits, event.data[2]);
+				currentPedals[type] = std::make_tuple(timeInUnits, val);
 			}
 
 		}
