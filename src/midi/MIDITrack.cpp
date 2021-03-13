@@ -3,6 +3,23 @@
 #include <algorithm>
 #include "MIDITrack.h"
 
+// We will have to keep track of active notes per-channel.
+struct NoteKey {
+	short index;
+	short channel;
+};
+
+bool operator==(const NoteKey& a, const NoteKey& b){
+	return (a.index == b.index) && (a.channel == b.channel);
+}
+
+namespace std {
+	template<> struct hash<NoteKey> {
+		std::size_t operator()(const NoteKey& n) const noexcept {
+			return ((n.index & 0xFFFF) << 16) | ( n.channel & 0xFFFF);
+		}
+	};
+}
 
 size_t MIDITrack::readTrack(const std::vector<char>& buffer, size_t pos){
 	const size_t backupPos = pos;
@@ -86,8 +103,8 @@ double MIDITrack::extractTempos(std::vector<MIDITempo> & tempos) const {
 
 void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t unitsPerQuarterNote, unsigned int trackId){
 	// Scan events, focusing on the note ON/OFF events.
-	// Keep track of active notes.
-	std::unordered_map<short, std::tuple<size_t, short, short>> currentNotes;
+	// Keep track of active notes for each channel.
+	std::unordered_map<NoteKey, std::tuple<size_t, short, short>> currentNotes;
 	std::unordered_map<PedalType, std::tuple<size_t, short>> currentPedals;
 
 	size_t timeInUnits = 0;
@@ -105,15 +122,15 @@ void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t uni
 			const short velocity = clamp<short>(event.data[2], 0, 127);
 			const short channel = event.data[0];
 
-			if(currentNotes.count(noteInd) > 0){
+			const NoteKey newNote = {noteInd, channel};
+			if(currentNotes.count(newNote) > 0){
 				// The current note is already present.
-				const auto & noteTuple = currentNotes[noteInd];
+				const auto & noteTuple = currentNotes[newNote];
 				// Finish it.
 				const size_t start = std::get<0>(noteTuple);
 				const size_t end = timeInUnits;
 				// Create the final note with timing.
 				// Look for the start and end timestamps using the tempos and their timestamps.
-
 				const auto times = computeNoteTimings(tempos, start, end, unitsPerQuarterNote);
 
 				const short velocity = std::get<1>(noteTuple);
@@ -121,13 +138,13 @@ void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t uni
 				_notes.emplace_back(noteInd, times.first, times.second - times.first, velocity, channel, trackId);
 
 				// Remove note.
-				currentNotes.erase(noteInd);
+				currentNotes.erase(newNote);
 			}
 
 			// Check if we have to start a new note.
 			const bool shouldNew = event.type == noteOn && velocity > 0;
 			if(shouldNew){
-				currentNotes[noteInd] = std::make_tuple(timeInUnits, velocity, channel);
+				currentNotes[newNote] = std::make_tuple(timeInUnits, velocity, channel);
 			}
 		} else if(event.type == controllerChange){
 			const int rawType = clamp<int>(event.data[1], 0, 127);
