@@ -99,10 +99,10 @@ glm::vec2 ResourcesManager::getTextureSizeFor(const std::string & fileName){
 	return glm::vec2(0.0f,0.0f);
 }
 
-std::map<std::string, std::string> ResourcesManager::shadersLibrary = {};
+std::unordered_map<std::string, std::string> ResourcesManager::shadersLibrary = {};
 
-std::map<std::string,  unsigned char*> ResourcesManager::imagesLibrary = {};
+std::unordered_map<std::string,  unsigned char*> ResourcesManager::imagesLibrary = {};
 
-std::map<std::string, glm::vec2> ResourcesManager::imagesSize = {};
+std::unordered_map<std::string, glm::vec2> ResourcesManager::imagesSize = {};
 
-std::map<std::string, GLuint> ResourcesManager::textureLibrary = {};
+std::unordered_map<std::string, GLuint> ResourcesManager::textureLibrary = {};

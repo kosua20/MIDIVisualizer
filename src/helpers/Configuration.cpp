@@ -15,7 +15,7 @@ std::string trim(const std::string & str, const std::string & del) {
 
 Arguments Configuration::parseArguments(std::istream & configFile){
 	// Build arguments list.
-	std::map<std::string, std::vector<std::string>> args;
+	std::unordered_map<std::string, std::vector<std::string>> args;
 	std::string line;
 	// Again, but this time splitting keys from arguments.
 	while(std::getline(configFile, line)){
@@ -53,7 +53,7 @@ Arguments Configuration::parseArguments(std::istream & configFile){
 }
 
 Arguments Configuration::parseArguments(const std::vector<std::string> & argv, bool & showHelp, bool & showVersion){
-	std::map<std::string, std::vector<std::string>> args;
+	std::unordered_map<std::string, std::vector<std::string>> args;
 
 	const size_t argc = argv.size();
 	for(size_t aid = 1; aid < argc;) {

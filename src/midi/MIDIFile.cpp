@@ -165,7 +165,7 @@ void MIDIFile::populateTemposAndSignature(){
 	}
 
 	// Merge all tempos.
-	std::map<size_t, MIDITempo> tempoChanges;
+	std::unordered_map<size_t, MIDITempo> tempoChanges;
 	// Emplace default tempo, will be overwritten as soon as there is an initial tempo event.
 	tempoChanges[0] = MIDITempo(0, 500000);
 	for(const auto & tempo : mixedTempos){

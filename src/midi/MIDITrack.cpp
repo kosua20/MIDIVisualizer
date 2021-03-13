@@ -87,8 +87,8 @@ double MIDITrack::extractTempos(std::vector<MIDITempo> & tempos) const {
 void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t unitsPerQuarterNote, unsigned int trackId){
 	// Scan events, focusing on the note ON/OFF events.
 	// Keep track of active notes.
-	std::map<short, std::tuple<size_t, short, short>> currentNotes;
-	std::map<PedalType, std::tuple<size_t, short>> currentPedals;
+	std::unordered_map<short, std::tuple<size_t, short, short>> currentNotes;
+	std::unordered_map<PedalType, std::tuple<size_t, short>> currentPedals;
 
 	size_t timeInUnits = 0;
 

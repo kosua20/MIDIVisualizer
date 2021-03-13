@@ -50,9 +50,9 @@ int main( int argc, char** argv) {
 	headerFile << "#ifndef DATA_RESOURCES_H" << "\n"
 			   << "#define DATA_RESOURCES_H" << "\n" << "\n"
 			   << "#include <string>" << "\n"
-			   << "#include <map>" << "\n"
+			   << "#include <unordered_map>" << "\n"
 			   << "#include <vector>" << "\n" << "\n"
-			   << "extern const std::map<std::string, std::string> shaders;" << "\n" << "\n";
+			   << "extern const std::unordered_map<std::string, std::string> shaders;" << "\n" << "\n";
 	
 	
 	// Each image has its own cpp + a line in the header file.
@@ -98,7 +98,7 @@ int main( int argc, char** argv) {
 		return 1;
 	}
 	shadersOutput << "#include \"data.h\"" << "\n"
-				<< "const std::map<std::string, std::string> shaders = {\n";
+				<< "const std::unordered_map<std::string, std::string> shaders = {\n";
 	
 	for(size_t sid = 0; sid < shadersToLoad.size(); ++sid){
 		const auto & shaderName = shadersToLoad[sid];

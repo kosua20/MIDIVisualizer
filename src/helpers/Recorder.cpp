@@ -8,7 +8,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include <algorithm>
 
 #ifdef MIDIVIZ_SUPPORT_VIDEO
@@ -332,7 +332,7 @@ bool Recorder::initVideo(const std::string & path, Format format, bool verbose){
 		AVCodecID avid;
 		AVPixelFormat avformat;
 	};
-	static const std::map<Format, InternalCodecOpts> opts = {
+	static const std::unordered_map<Format, InternalCodecOpts> opts = {
 		{Format::MPEG2, {AV_CODEC_ID_MPEG2VIDEO, AV_PIX_FMT_YUV422P}},
 		{Format::MPEG4, {AV_CODEC_ID_MPEG4, AV_PIX_FMT_YUV420P}},
 		{Format::PRORES, {AV_CODEC_ID_PRORES, AV_PIX_FMT_YUVA444P10}},

@@ -8,10 +8,10 @@
 #include <sstream>
 #include <algorithm>
 
-std::map<std::string, State::OptionInfos> State::_sharedInfos;
+std::unordered_map<std::string, State::OptionInfos> State::_sharedInfos;
 
 // Quality names.
-const std::map<std::string, Quality::Level> Quality::names = {
+const std::unordered_map<std::string, Quality::Level> Quality::names = {
 	{ "LOW_RES", Quality::LOW_RES },
 	{ "LOW", Quality::LOW },
 	{ "MEDIUM", Quality::MEDIUM },
@@ -19,7 +19,7 @@ const std::map<std::string, Quality::Level> Quality::names = {
 	{ "HIGH_RES", Quality::HIGH_RES }
 };
 
-const std::map<Quality::Level, Quality> Quality::availables = {
+const std::unordered_map<Quality::Level, Quality> Quality::availables = {
 	{ Quality::LOW_RES, { Quality::LOW_RES, 0.5f, 0.5f, 0.5f}},
 	{ Quality::LOW, { Quality::LOW, 0.5f, 0.5f, 1.0f}},
 	{ Quality::MEDIUM, { Quality::MEDIUM, 0.5f, 1.0f, 1.0f}},

@@ -8,7 +8,7 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <array>
 
 #define MIDIVIZ_VERSION_MAJOR 6
@@ -30,8 +30,8 @@ struct Quality {
 		HIGH_RES
 	};
 	
-	static const std::map<std::string, Level> names;
-	static const std::map<Level, Quality> availables;
+	static const std::unordered_map<std::string, Level> names;
+	static const std::unordered_map<Level, Quality> availables;
 	
 	std::string name = "MEDIUM";
 	float particlesResolution = 0.5f;
@@ -184,12 +184,12 @@ private:
 		OptionInfos(const std::string & adesc, Type atype, const std::array<float, 2> & arange = {0.0f, 0.0f});
 	};
 
-	static std::map<std::string, OptionInfos> _sharedInfos;
-	std::map<std::string, bool*> _boolInfos;
-	std::map<std::string, int*> _intInfos;
-	std::map<std::string, float*> _floatInfos;
-	std::map<std::string, glm::vec3*> _vecInfos;
-	std::map<std::string, std::string*> _stringInfos;
+	static std::unordered_map<std::string, OptionInfos> _sharedInfos;
+	std::unordered_map<std::string, bool*> _boolInfos;
+	std::unordered_map<std::string, int*> _intInfos;
+	std::unordered_map<std::string, float*> _floatInfos;
+	std::unordered_map<std::string, glm::vec3*> _vecInfos;
+	std::unordered_map<std::string, std::string*> _stringInfos;
 
 };
 

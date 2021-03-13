@@ -1,6 +1,6 @@
 #include "MIDIUtils.h"
 
-std::map<MIDIEventType, std::string> MIDIEventTypeName = {
+std::unordered_map<MIDIEventType, std::string> MIDIEventTypeName = {
 	{ noteOff, "noteOff"},
 	{ noteOn, "noteOn"},
 	{ afterTouch, "afterTouch"},
@@ -10,7 +10,7 @@ std::map<MIDIEventType, std::string> MIDIEventTypeName = {
 	{ pitchChange, "pitchChange"}
 };
 
-std::map<MetaEventType, std::string> metaEventTypeName = {
+std::unordered_map<MetaEventType, std::string> metaEventTypeName = {
 	{sequenceNumber, "sequenceNumber"},
 	{textEvent, "textEvent"},
 	{copyrightNotice, "copyrightNotice"},

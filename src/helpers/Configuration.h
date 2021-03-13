@@ -3,10 +3,10 @@
 
 #include <string>
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include <glm/glm.hpp>
 
-typedef std::map<std::string, std::vector<std::string>> Arguments;
+typedef std::unordered_map<std::string, std::vector<std::string>> Arguments;
 
 // Helper to trim characters from both ends of a string.
 std::string trim(const std::string & str, const std::string & del);

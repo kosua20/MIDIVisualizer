@@ -2,7 +2,7 @@
 #define MIDI_UTILS_H
 
 #include <cstdint>
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include <string>
 #include <iostream>
@@ -68,9 +68,9 @@ enum PedalType : uint8_t {
 
 // Debug print data.
 
-extern std::map<MetaEventType, std::string> metaEventTypeName;
+extern std::unordered_map<MetaEventType, std::string> metaEventTypeName;
 
-extern std::map<MIDIEventType, std::string> MIDIEventTypeName;
+extern std::unordered_map<MIDIEventType, std::string> MIDIEventTypeName;
 
 // Keyboard shifts.
 
