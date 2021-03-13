@@ -11,3 +11,4 @@ x64/
 *.xcuserstate
 */xcuserdata/*
 dependencies/
+libs/ffmpeg
