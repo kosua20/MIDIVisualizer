@@ -12,7 +12,7 @@ Score::Score(double secondsPerMeasure){
 	// Load font atlas.
 	GLuint textureId = ResourcesManager::getTextureFor("font");
 
-	ScreenQuad::init(textureId, "background_frag");
+	ScreenQuad::init(textureId, "background_frag", "background_vert");
 	
 	// Load additional data.
 	glUseProgram(_programId);

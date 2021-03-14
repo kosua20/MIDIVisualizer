@@ -14,7 +14,7 @@ public:
 	~ScreenQuad();
 
 	/// Init function
-	void init(GLuint textureId, const std::string & fragName);
+	void init(GLuint textureId, const std::string & fragName, const std::string & vertName = "screenquad_vert");
 
 	void init(const std::string & fragName, const std::string & vertName = "screenquad_vert");
 

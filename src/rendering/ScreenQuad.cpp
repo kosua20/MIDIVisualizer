@@ -11,8 +11,8 @@ ScreenQuad::ScreenQuad(){}
 
 ScreenQuad::~ScreenQuad(){}
 
-void ScreenQuad::init(GLuint textureId, const std::string & fragName){
-	init(fragName);
+void ScreenQuad::init(GLuint textureId, const std::string & fragName, const std::string & vertName){
+	init(fragName, vertName);
 	// Link the texture of the framebuffer for this program.
 	_textureId = textureId;
 	checkGLError();
