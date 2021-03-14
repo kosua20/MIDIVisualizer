@@ -412,7 +412,7 @@ void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::
 	glUseProgram(0);
 }
 
-void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const State::PedalsState & state, float keyboardHeight) {
+void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const State::PedalsState & state, float keyboardHeight, bool horizontalMode) {
 
 	glEnable(GL_BLEND);
 	glUseProgram(_programPedalsId);
@@ -435,8 +435,14 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 
 	glm::vec2 shift = glm::vec2(horizSign, vertSign) * (1.0f - propShift);
 	// If at the bottom, shift above the keyboard.
-	if(mode % 2 == 1){
-		shift[1] += 2.0f * keyboardHeight;
+	if(horizontalMode){
+		if(mode < 2){
+			shift[0] += 2.0f * keyboardHeight;
+		}
+	} else {
+		if(mode % 2 == 1){
+			shift[1] += 2.0f * keyboardHeight;
+		}
 	}
 
 
