@@ -26,6 +26,8 @@ public:
 
 	void setPlayDirection(bool reverse);
 
+	void setOrientation(bool horizontal);
+
 };
 
 #endif

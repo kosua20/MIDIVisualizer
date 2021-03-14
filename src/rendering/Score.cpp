@@ -66,3 +66,9 @@ void Score::setPlayDirection(bool reverse){
 	glUseProgram(0);
 }
 
+void Score::setOrientation(bool horizontal){
+	glUseProgram(_programId);
+	glUniform1i(glGetUniformLocation(_programId, "horizontalMode"), horizontal ? 1 : 0);
+	glUseProgram(0);
+}
+

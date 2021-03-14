@@ -524,6 +524,22 @@ void MIDIScene::setMinMaxKeys(int minKey, int minKeyMajor, int notesCount){
 	glUseProgram(0);
 }
 
+
+void MIDIScene::setOrientation(bool horizontal){
+	const int val = horizontal ? 1 : 0;
+	glUseProgram(_programId);
+	glUniform1i(glGetUniformLocation(_programId, "horizontalMode"), val);
+	glUseProgram(_programFlashesId);
+	glUniform1i(glGetUniformLocation(_programFlashesId, "horizontalMode"), val);
+	glUseProgram(_programKeysId);
+	glUniform1i(glGetUniformLocation(_programKeysId, "horizontalMode"), val);
+	glUseProgram(_programParticulesId);
+	glUniform1i(glGetUniformLocation(_programParticulesId, "horizontalMode"), val);
+	glUseProgram(_programWaveId);
+	glUniform1i(glGetUniformLocation(_programWaveId, "horizontalMode"), val);
+	glUseProgram(0);
+}
+
 void MIDIScene::clean(){
 	glDeleteVertexArrays(1, &_vao);
 	glDeleteVertexArrays(1, &_vaoFlashes);

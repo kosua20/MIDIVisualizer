@@ -35,6 +35,8 @@ public:
 
 	void setMinMaxKeys(int minKey, int minKeyMajor, int notesCount);
 
+	void setOrientation(bool horizontal);
+
 	void resetParticles();
 
 	// Type specific methods.

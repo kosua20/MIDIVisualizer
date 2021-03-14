@@ -389,16 +389,20 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		ImGuiSameLine(COLUMN_SIZE);
 		ImGui::Checkbox("Smoothing", &_state.applyAA);
 
-		if (ImGui::Checkbox("Sync effect colors", &_state.lockParticleColor)) {
-			// If we enable the lock, make sure the colors are synched.
-			synchronizeColors(_state.baseColors);
+		if(ImGui::Checkbox("Horizontal scroll", &_state.horizontalScroll)){
+			_score->setOrientation(_state.horizontalScroll);
+			_scene->setOrientation(_state.horizontalScroll);
 		}
-
 		if(!_liveplay){
 			ImGuiSameLine(COLUMN_SIZE);
 			if(ImGui::Checkbox("Reverse scroll", &_state.reverseScroll)){
 				_score->setPlayDirection(_state.reverseScroll);
 			}
+		}
+
+		if (ImGui::Checkbox("Sync effect colors", &_state.lockParticleColor)) {
+			// If we enable the lock, make sure the colors are synched.
+			synchronizeColors(_state.baseColors);
 		}
 
 		ImGuiPushItemWidth(100);
@@ -1058,6 +1062,9 @@ void Renderer::applyAllSettings() {
 	_scene->setKeyboardSize(_state.keyboard.size);
 	_score->setKeyboardSize(_state.keyboard.size);
 	_score->setPlayDirection(_state.reverseScroll);
+	
+	_score->setOrientation(_state.horizontalScroll);
+	_scene->setOrientation(_state.horizontalScroll);
 
 	updateMinMaxKeys();
 
