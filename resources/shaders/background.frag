@@ -15,6 +15,13 @@ uniform sampler2D screenTexture;
 uniform vec3 textColor = vec3(1.0);
 uniform vec3 linesColor = vec3(1.0);
 uniform bool reverseMode = false;
+uniform bool horizontalMode = false;
+
+
+vec2 flipUVIfNeeded(vec2 inUV){
+	vec2 shiftUV = inUV - 0.5;
+	return horizontalMode ? vec2(shiftUV.y, -shiftUV.x) + 0.5 : inUV;
+}
 
 #define MAJOR_COUNT 75.0
 
@@ -36,7 +43,7 @@ float printDigit(int digit, vec2 uv){
 	}
 	
 	// UV from [0,1] to local tile frame.
-	vec2 localUV = uv * vec2(50.0/256.0,0.5);
+	vec2 localUV = flipUVIfNeeded(uv) * vec2(50.0/256.0,0.5);
 	// Select the digit.
 	vec2 globalUV = vec2( mod(digit,5)*50.0/256.0,digit < 5 ? 0.5 : 0.0);
 	// Combine global and local shifts.
@@ -69,9 +76,13 @@ float printNumber(float num, vec2 position, vec2 uv, vec2 scale){
 	vec2 initialPos = scale*(uv-position);
 	
 	// Get intensity for each digit at the current fragment.
-	float hundred = printDigit(hundredDigit, initialPos);
-	float ten	  =	printDigit(tenDigit,	 initialPos - vec2(scale.x * 0.009,0.0));
-	float unit	  = printDigit(unitDigit,	 initialPos - vec2(scale.x * 0.009 * 2.0,0.0));
+	vec2 shift = horizontalMode ? vec2(0.0, scale.y) : vec2(scale.x, 0.0);
+	shift *= 0.009;
+	float off = horizontalMode ?  3.0 : 0.0;
+
+	float hundred = printDigit(hundredDigit, initialPos + off * shift);
+	float ten	  =	printDigit(tenDigit,	 initialPos + (off - 1.0) * shift);
+	float unit	  = printDigit(unitDigit,	 initialPos + (off - 2.0) * shift);
 	
 	// If hundred digit == 0, hide it.
 	float hundredVisibility = (1.0-step(float(hundredDigit),0.5));
@@ -87,23 +98,32 @@ float printNumber(float num, vec2 position, vec2 uv, vec2 scale){
 void main(){
 	
 	vec4 bgColor = vec4(0.0);
+	vec2 inUV = In.uv;
+
+	float xRatio = horizontalMode ? inverseScreenSize.y : inverseScreenSize.x;
+	float yRatio = horizontalMode ? inverseScreenSize.x : inverseScreenSize.y;
+
 	// Octaves lines.
 	if(useVLines){
 		// send 0 to (minNote)/MAJOR_COUNT
 		// send 1 to (maxNote)/MAJOR_COUNT
 		float a = (notesCount) / MAJOR_COUNT;
 		float b = float(minNoteMajor) / MAJOR_COUNT;
-		float refPos = a * In.uv.x + b;
+		float refPos = a * inUV.x + b;
 
 		for(int i = 0; i < 11; i++){
 			float linePos = octaveLinesPositions[i];
-			float lineIntensity = 0.7 * step(abs(refPos - linePos), inverseScreenSize.x / MAJOR_COUNT * notesCount);
+			float lineIntensity = 0.7 * step(abs(refPos - linePos), xRatio / MAJOR_COUNT * notesCount);
 			bgColor = mix(bgColor, vec4(linesColor, 1.0), lineIntensity);
 		}
 	}
-	
-	vec2 scale = 1.5*vec2(64.0,50.0*inverseScreenSize.x/inverseScreenSize.y);
-	
+
+	float screenRatio = inverseScreenSize.x/inverseScreenSize.y;
+	vec2 scale = 1.5 * vec2(64.0, 50.0 * screenRatio);
+	if(horizontalMode){
+		scale = scale.yx;
+	}
+
 	// Text on the side.
 	int currentMesure = int(floor(time/secondsPerMeasure));
 	// How many mesures do we check.
@@ -114,12 +134,12 @@ void main(){
 		// Compute position of the measure currentMesure+-i.
 		int mesure = currentMesure + (reverseMode ? -1 : 1) * i;
 		vec2 position = vec2(0.005, keyboardHeight + (reverseMode ? -1.0 : 1.0) * (secondsPerMeasure * mesure - time)*mainSpeed*0.5);
-		//position.y *= ;
 
 		// Compute color for the number display, and for the horizontal line.
-		float numberIntensity = useDigits ? printNumber(mesure, position, In.uv, scale) : 0.0;
+		float numberIntensity = useDigits ? printNumber(mesure, position, inUV, scale) : 0.0;
 		bgColor = mix(bgColor, vec4(textColor, 1.0), numberIntensity);
-		float lineIntensity = useHLines ? (0.25*(step(abs(In.uv.y - position.y - 0.5 / scale.y), inverseScreenSize.y))) : 0.0;
+
+		float lineIntensity = useHLines ? (0.25*(step(abs(inUV.y - position.y - 0.5 / scale.y), yRatio))) : 0.0;
 		bgColor = mix(bgColor, vec4(linesColor, 1.0), lineIntensity);
 	}
 	
