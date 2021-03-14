@@ -17,6 +17,7 @@ extern "C" {
 	#include <libavformat/avformat.h>
 	#include <libavformat/avio.h>
 	#include <libswscale/swscale.h>
+	#include <libavutil/opt.h>
 }
 #endif
 
@@ -365,6 +366,17 @@ bool Recorder::initVideo(const std::string & path, Format format, bool verbose){
 	if(_formatCtx->oformat->flags & AVFMT_GLOBALHEADER){
 		_codecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 	}
+
+	// For PRORES, try to be as fast as possible.
+	if(format == Format::PRORES){
+		// Just in case the slowest prores codec is picked, try to configure it for maximum speed
+		// as described in doc (https://ffmpeg.org/ffmpeg-codecs.html#toc-Speed-considerations)
+		//_codecCtx->flags |= AV_CODEC_FLAG_QSCALE;
+		//_codecCtx->global_quality = FF_QP2LAMBDA * 4;
+		av_opt_set_int(_codecCtx->priv_data, "qscale", 4, 0);
+		av_opt_set_int(_codecCtx->priv_data, "bits_per_mb", 8000, 0);
+	}
+
 	AVDictionary * codecParams = nullptr;
 	if(avcodec_open2(_codecCtx, _codec, &codecParams) < 0){
 		std::cerr << "[VIDEO]: Unable to open encoder." << std::endl;
