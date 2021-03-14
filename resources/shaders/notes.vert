@@ -9,6 +9,11 @@ uniform float mainSpeed;
 uniform float minorsWidth = 1.0;
 uniform float keyboardHeight = 0.25;
 uniform bool reverseMode = false;
+uniform bool horizontalMode = false;
+
+vec2 flipIfNeeded(vec2 inPos){
+	return horizontalMode ? vec2(inPos.y, -inPos.x) : inPos;
+}
 
 uniform int minNoteMajor;
 uniform float notesCount;
@@ -48,6 +53,6 @@ void main(){
 	Out.isMinor = id.w;
 	Out.channel = channel;
 	// Output position.
-	gl_Position = vec4(Out.noteSize * v + noteShift, 0.0 , 1.0) ;
+	gl_Position = vec4(flipIfNeeded(Out.noteSize * v + noteShift), 0.0 , 1.0) ;
 	
 }

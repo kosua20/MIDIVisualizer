@@ -13,6 +13,7 @@ uniform vec3 minorColor[CHANNELS_COUNT];
 uniform vec2 inverseScreenSize;
 uniform float colorScale;
 uniform float keyboardHeight = 0.25;
+uniform bool horizontalMode = false;
 
 #define cornerRadius 0.01
 
@@ -22,8 +23,14 @@ out vec4 fragColor;
 void main(){
 	
 	// If lower area of the screen, discard fragment as it should be hidden behind the keyboard.
-	if(gl_FragCoord.y < keyboardHeight/inverseScreenSize.y){
-		discard;
+	if(horizontalMode){
+		if(gl_FragCoord.x < keyboardHeight/inverseScreenSize.x){
+			discard;
+		}
+	} else {
+		if(gl_FragCoord.y < keyboardHeight/inverseScreenSize.y){
+			discard;
+		}
 	}
 	
 	// Rounded corner (super-ellipse equation).

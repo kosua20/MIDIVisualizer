@@ -7,6 +7,11 @@ uniform float keyboardSize;
 uniform float freq;
 uniform float phase;
 uniform float spread;
+uniform bool horizontalMode = false;
+
+vec2 flipIfNeeded(vec2 inPos){
+	return horizontalMode ? vec2(inPos.y, -inPos.x) : inPos;
+}
 
 out INTERFACE {
 	float grad;
@@ -20,6 +25,6 @@ void main(){
 	float waveShift = amplitude * sin(freq * v.x + phase);
 	// Apply wave and translate to put on top of the keyboard.
 	pos += vec2(0.0, waveShift + (-1.0 + 2.0 * keyboardSize));
-	gl_Position = vec4(pos, 0.5, 1.0);
+	gl_Position = vec4(flipIfNeeded(pos), 0.5, 1.0);
 	Out.grad = v.y;
 }

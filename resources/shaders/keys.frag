@@ -18,6 +18,7 @@ uniform vec3 keysColor = vec3(0.0);
 uniform vec3 minorColor[CHANNELS_COUNT];
 uniform vec3 majorColor[CHANNELS_COUNT];
 uniform bool highlightKeys;
+uniform bool horizontalMode = false;
 
 uniform int minNoteMajor;
 uniform float notesCount; // (maxNoteMajor - minNoteMajor + 1)
@@ -51,7 +52,8 @@ void main(){
 	// Active key: activeColor
 
 	// White keys, and separators.
-	float intensity = int(abs(fract(In.uv.x * notesCount)) >= 2.0 * notesCount * inverseScreenSize.x);
+	float widthScaling = horizontalMode ? inverseScreenSize.y : inverseScreenSize.x;
+	float intensity = int(abs(fract(In.uv.x * notesCount)) >= 2.0 * notesCount * widthScaling);
 	
 	// If the current major key is active, the majorColor is specific.
 	int majorId = majorIds[clamp(int(In.uv.x * notesCount) + minNoteMajor, 0, 74)];
