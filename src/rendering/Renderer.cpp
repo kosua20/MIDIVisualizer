@@ -1332,13 +1332,25 @@ void Renderer::updateMinMaxKeys(){
 	if(_state.minKey > _state.maxKey){
 		std::swap(_state.minKey, _state.maxKey);
 	}
+
+	// Force edges to align with a major key.
+	int realMinKey = _state.minKey;
+	if(noteIsMinor[_state.minKey % 12]){
+		realMinKey -= 1;
+	}
+
+	int realMaxKey = _state.maxKey;
+	if(noteIsMinor[_state.maxKey % 12]){
+		realMaxKey += 1;
+	}
+
 	// Convert to "major" only indices.
-	const int minKeyMaj = (_state.minKey/12) * 7 + noteShift[_state.minKey % 12];
-	const int maxKeyMaj = (_state.maxKey/12) * 7 + noteShift[_state.maxKey % 12];
+	const int minKeyMaj = (_state.minKey/12) * 7 + noteShift[realMinKey % 12];
+	const int maxKeyMaj = (_state.maxKey/12) * 7 + noteShift[realMaxKey % 12];
 	const int noteCount = (maxKeyMaj - minKeyMaj + 1);
 
-	_scene->setMinMaxKeys(_state.minKey, minKeyMaj, noteCount);
-	_score->setMinMaxKeys(_state.minKey, minKeyMaj, noteCount);
+	_scene->setMinMaxKeys(realMinKey, minKeyMaj, noteCount);
+	_score->setMinMaxKeys(realMinKey, minKeyMaj, noteCount);
 }
 
 
