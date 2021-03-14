@@ -137,6 +137,7 @@ public:
 	bool showWave;
 	bool applyAA;
 	bool reverseScroll;
+	bool horizontalScroll;
 
 	std::array<int, 16> layersMap; ///< Location of each layer.
 

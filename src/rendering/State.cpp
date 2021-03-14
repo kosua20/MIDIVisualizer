@@ -177,6 +177,7 @@ void State::defineOptions(){
 
 	_sharedInfos["smooth"] = {"Apply anti-aliasing to smooth all lines", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["scroll-reverse"] = {"Notes scroll from bottom to top instead of the opposite", OptionInfos::Type::BOOLEAN};
+	_sharedInfos["scroll-horizontal"] = {"Notes scroll from right to left when enabled", OptionInfos::Type::BOOLEAN};
 
 	// Paths.
 	_sharedInfos["bg-img-path"] = {"Path to an image on disk to use as background", OptionInfos::Type::PATH};
@@ -292,6 +293,7 @@ void State::updateOptions(){
 
 	_boolInfos["smooth"] = &applyAA;
 	_boolInfos["scroll-reverse"] = &reverseScroll;
+	_boolInfos["scroll-horizontal"] = &horizontalScroll;
 
 	_stringInfos["bg-img-path"] = &background.imagePath;
 	_stringInfos["particles-paths"] = &particles.imagePaths;
@@ -584,6 +586,7 @@ void State::reset(){
 
 	applyAA = false;
 	reverseScroll = false;
+	horizontalScroll = false;
 }
 
 void State::load(std::istream & configFile, int majVersion, int minVersion){
