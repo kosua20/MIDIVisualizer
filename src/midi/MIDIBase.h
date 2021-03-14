@@ -65,6 +65,7 @@ struct MIDITempo {
 struct ActiveNoteInfos {
 	float start = 1000000.0f;
 	float duration = 0.0f;
+	float velocity = 64.0f;
 	int set = -1;
 	bool enabled = false;
 };

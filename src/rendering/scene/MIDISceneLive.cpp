@@ -139,7 +139,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 				// Duration has already been updated above.
 			}
 
-			// If this is an on event with positive veolcity, start a new note.
+			// If this is an on event with positive velocity, start a new note.
 			if(type == rtmidi::message_type::NOTE_ON && velocity > 0){
 
 				const int index = _notesCount % MAX_NOTES_IN_FLIGHT;
@@ -172,6 +172,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 				for(auto & particle : _particles){
 					if(particle.note < 0){
 						// Update with new note parameter.
+						//const float durationTweak = 3.0f - float(velocity) / 127.0f * 2.5f;
 						particle.duration = 10.0f; // Fixed value.
 						particle.start = newNote.start;
 						particle.note = note;

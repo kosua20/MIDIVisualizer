@@ -206,10 +206,12 @@ void MIDITrack::getNotesActive(ActiveNotesArray & actives, double time) const {
 	for(size_t i = 0; i < count; ++i){
 		auto& note = _notes[i];
 		if(note.start <= time && note.start+note.duration >= time){
-			actives[note.note].enabled = true;
-			actives[note.note].duration = float(note.duration);
-			actives[note.note].start = float(note.start);
-			actives[note.note].set = note.set;
+			auto & actNote = actives[note.note];
+			actNote.enabled = true;
+			actNote.duration = float(note.duration);
+			actNote.start = float(note.start);
+			actNote.set = note.set;
+			actNote.velocity = float(note.velocity);
 		}
 	}
 }

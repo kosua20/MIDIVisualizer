@@ -84,6 +84,7 @@ void MIDISceneFile::updatesActiveNotes(double time, double speed){
 			for(auto & particle : _particles){
 				if(particle.note < 0){
 					// Update with new note parameter.
+					//const float durationTweak = 3.0f - note.velocity / 127.0f * 2.5f;
 					particle.duration = (std::max)(note.duration*2.0f, note.duration + 1.2f);
 					particle.start = note.start;
 					particle.note = i;
