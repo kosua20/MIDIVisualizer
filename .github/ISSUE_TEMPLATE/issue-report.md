@@ -8,7 +8,7 @@ assignees: ''
 ---
 
 Thank you for your interest in MIDIVisualizer, and thank you for reporting issues!
-Don't forget to check the [troubleshooting section](https://github.com/kosua20/MIDIVisualizer/blob/master/README.md#troubleshooting), there might be information related to your issue. Don't forget to also check if other people have reported a similar issue on the [dedicated page](https://github.com/kosua20/MIDIVisualizer/issues). Finally, make sure that you are using the latest version listed on the [releases page](https://github.com/kosua20/MIDIVisualizer/releases)
+Don't forget to check the [troubleshooting section](https://github.com/kosua20/MIDIVisualizer/blob/master/README.md#troubleshooting), there might be information related to your issue. Don't forget to also check if other people have reported a similar issue on the [dedicated page](https://github.com/kosua20/MIDIVisualizer/issues). Finally, make sure that you are using the latest version listed on the [releases page](https://github.com/kosua20/MIDIVisualizer/releases).
 
 Please help me pinpoint (and hopefully fix) the issue more quickly by filling in the information below.
 If you are not sure about some of the details asked below, don't worry, you can leave them blank.
