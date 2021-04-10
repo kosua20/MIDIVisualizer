@@ -11,7 +11,8 @@
 enum class SetMode : int {
 	CHANNEL = 0,
 	TRACK = 1,
-	KEY = 2
+	SPLIT = 2,
+	KEY = 3
 };
 
 struct SetOptions {

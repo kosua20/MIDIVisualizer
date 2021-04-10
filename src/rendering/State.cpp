@@ -148,7 +148,7 @@ void State::defineOptions(){
 	_sharedInfos["colors-per-set"].category = OptionInfos::Category::SETS;
 
 	_sharedInfos["sets-mode"] = {"How should notes be grouped into sets", OptionInfos::Type::OTHER};
-	_sharedInfos["sets-mode"].values = "per-channel: 0, per-track: 1, based on a key separator: 2";
+	_sharedInfos["sets-mode"].values = "per-channel: 0, per-track: 1, split based on a key separator: 2, per-key: 3";
 	_sharedInfos["sets-mode"].category = OptionInfos::Category::SETS;
 
 	_sharedInfos["sets-separator-key"] = {"If notes are grouped in two sets, defines the key where the split should happen", OptionInfos::Type::KEY, {0.0f, 127.0f}};

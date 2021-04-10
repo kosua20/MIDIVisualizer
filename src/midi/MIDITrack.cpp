@@ -318,8 +318,10 @@ void MIDITrack::updateSets(const SetOptions & options){
 			note.set = int(note.channel);
 		} else if(options.mode == SetMode::TRACK){
 			note.set = int(note.track);
-		} else if(options.mode == SetMode::KEY){
+		} else if(options.mode == SetMode::SPLIT){
 			note.set = note.note < options.key ? 0 : 1;
+		} else if(options.mode == SetMode::KEY){
+			note.set = noteShift[note.note%12];
 		} else {
 			note.set = 0;
 		}

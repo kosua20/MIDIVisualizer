@@ -1028,15 +1028,17 @@ void Renderer::showSets(){
 	if(ImGui::BeginPopup("Note sets options")){
 		ImGui::Text("Decide how notes should be grouped in multiple sets");
 		ImGui::Text("(to which you can assign different key/effects colors).");
-		ImGui::Text("This can be based on the MIDI channel, the track or by");
+		ImGui::Text("This can be based on the MIDI channel, the track, by key, or by");
 		ImGui::Text("separating notes that are lower or higher than a given key.");
 
 		bool shouldUpdate = false;
 		shouldUpdate = ImGui::RadioButton("Channel", (int*)(&_state.setOptions.mode), int(SetMode::CHANNEL)) || shouldUpdate;
-		ImGuiSameLine(120);
+		ImGuiSameLine(90);
 		shouldUpdate = ImGui::RadioButton("Track", (int*)(&_state.setOptions.mode), int(SetMode::TRACK)) || shouldUpdate;
-		ImGuiSameLine(2*120);
+		ImGuiSameLine(2*90);
 		shouldUpdate = ImGui::RadioButton("Key", (int*)(&_state.setOptions.mode), int(SetMode::KEY)) || shouldUpdate;
+		ImGuiSameLine(3*90);
+		shouldUpdate = ImGui::RadioButton("Split", (int*)(&_state.setOptions.mode), int(SetMode::SPLIT)) || shouldUpdate;
 		ImGuiSameLine();
 
 		ImGuiPushItemWidth(100);

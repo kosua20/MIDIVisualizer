@@ -6,6 +6,7 @@
 
 #include "../../helpers/ProgramUtilities.h"
 #include "../../helpers/ResourcesManager.h"
+#include "../../midi/MIDIUtils.h"
 
 #include "MIDISceneLive.h"
 
@@ -46,8 +47,10 @@ void MIDISceneLive::updateSet(GPUNote & note, int channel, const SetOptions & op
 	if(options.mode == SetMode::CHANNEL){
 		// Restore channel from backup vector.
 		note.set = float(int(channel) % CHANNELS_COUNT);
+	} else if(options.mode == SetMode::SPLIT){
+		note.set = (int(note.note) < options.key ? 0.0f : 1.0f);
 	} else if(options.mode == SetMode::KEY){
-		note.set = (note.note < options.key ? 0.0f : 1.0f);
+		note.set = float(noteShift[int(note.note) % 12]);
 	} else {
 		note.set = 0.0f;
 	}
