@@ -16,6 +16,13 @@
 #include <algorithm>
 #include <fstream>
 
+#include <fluidsynth.h>
+
+fluid_settings_t* fssettings;
+fluid_synth_t* fssynth;
+fluid_player_t* fsplayer;
+fluid_audio_driver_t* fsadriver;
+
 
 bool ImGuiSliderPercent(const char* label, float* v, float v_min, float v_max){
 	float tmp = (*v) * 100.0f;
@@ -126,15 +133,31 @@ Renderer::Renderer(int winW, int winH, bool fullscreen) {
 
 	_score.reset(new Score(2.0f));
 	_scene.reset(new MIDISceneEmpty());
+
+
+
+	fssettings = new_fluid_settings();
+	fssynth = new_fluid_synth(fssettings);
+	fsplayer = new_fluid_player(fssynth);
+	fluid_synth_sfload(fssynth, "/Users/simon/Developer/graphics/MIDIVisualizer/build/Release/VintageDreamsWaves-v2.sf2", 1);
 }
 
-Renderer::~Renderer() {}
+Renderer::~Renderer() {
+
+	fluid_player_join(fsplayer);
+	delete_fluid_audio_driver(fsadriver);
+	delete_fluid_player(fsplayer);
+	delete_fluid_synth(fssynth);
+	delete_fluid_settings(fssettings);
+}
 
 bool Renderer::loadFile(const std::string &midiFilePath) {
 	std::shared_ptr<MIDIScene> scene(nullptr);
 
 	try {
 		scene = std::make_shared<MIDISceneFile>(midiFilePath, _state.setOptions);
+		fluid_player_add(fsplayer, midiFilePath.c_str());
+		fsadriver = new_fluid_audio_driver(fssettings, fssynth);
 	} catch(...){
 		// Failed to load.
 		return false;
@@ -1149,6 +1172,11 @@ void Renderer::keyPressed(int key, int action) {
 		if (key == GLFW_KEY_P) {
 			_shouldPlay = !_shouldPlay;
 			_timerStart = DEBUG_SPEED * float(glfwGetTime()) - _timer;
+			if(_shouldPlay){
+				fluid_player_play(fsplayer);
+			} else {
+				fluid_player_stop(fsplayer);
+			}
 		}
 		else if (key == GLFW_KEY_R) {
 			reset();

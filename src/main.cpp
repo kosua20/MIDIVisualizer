@@ -14,6 +14,8 @@
 #include <iostream>
 #include <algorithm>
 
+#include <fluidsynth.h>
+
 #define INITIAL_SIZE_WIDTH 1280
 #define INITIAL_SIZE_HEIGHT 600
 

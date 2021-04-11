@@ -36,6 +36,9 @@ find_package(OpenGL REQUIRED)
 # Add FFMPEG if available
 find_package(FFMPEG)
 
+# Add Fluidsynth
+find_package(Fluidsynth)
+
 ## Projects
 
 # Helper packager
@@ -152,6 +155,14 @@ if(FFMPEG_FOUND)
 	target_include_directories(MIDIVisualizer PRIVATE ${FFMPEG_INCLUDE_DIRS})
 	target_link_libraries(MIDIVisualizer PRIVATE ${FFMPEG_LIBRARIES})
 	target_compile_definitions(MIDIVisualizer PRIVATE ${FFMPEG_DEFINITIONS})
+endif()
+
+if(Fluidsynth_FOUND)
+	message(STATUS "Fluidsynth found, enabling audio output.")
+	target_compile_definitions(MIDIVisualizer PRIVATE MIDIVIZ_SUPPORT_AUDIO)
+	target_include_directories(MIDIVisualizer PRIVATE ${Fluidsynth_INCLUDE_DIRS})
+	target_link_libraries(MIDIVisualizer PRIVATE ${Fluidsynth_LIBRARIES})
+	target_compile_definitions(MIDIVisualizer PRIVATE ${Fluidsynth_DEFINITIONS})
 endif()
 
 # On Windows, the icon is directly included in the executable.
