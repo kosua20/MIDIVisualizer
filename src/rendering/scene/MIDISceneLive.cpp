@@ -150,6 +150,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 				auto & newNote = _notes[index];
 				newNote.start = float(time);
 				newNote.duration = 0.0f;
+				newNote.note = note;			//Pass original note to updateSet()
 				// Save the original channel.
 				_notesInfos[index].channel = message.get_channel();
 				// Compute set according to current setting.
