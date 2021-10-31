@@ -111,7 +111,7 @@ void State::defineOptions(){
 	_sharedInfos["preroll"] = {"Preroll time in seconds before starting to play", OptionInfos::Type::FLOAT};
 	_sharedInfos["scroll-speed"] = {"Playback speed", OptionInfos::Type::FLOAT};
 	_sharedInfos["bg-img-opacity"] = {"Background opacity", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
-	_sharedInfos["fadeout-notes"] = {"Notes fadeout at the top", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos["fadeout-notes"] = {"Notes fade-out at the edge of the screen", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
 
 	// Colors.
 	_sharedInfos["color-major"] = {"Major notes color", OptionInfos::Type::COLOR};
