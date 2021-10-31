@@ -76,6 +76,39 @@ void Recorder::record(const std::shared_ptr<Framebuffer> & frame){
 						 _buffer.begin() + bottom);
 	}
 
+	// Cancel alpha premultiplication if requested.
+	if(_exportNoBackground && _cancelPremultiply){
+		for (int y = 0; y < height; ++y) {
+			for (int x = 0; x < width; ++x) {
+				const int baseInd = (y * width + x) * 4;
+				const float a = float(_buffer[baseInd + 3]) / 255.0f;
+				if(a == 0.0){
+					continue;
+				}
+				float r = float(_buffer[baseInd + 0]) / 255.0f;
+				float g = float(_buffer[baseInd + 1]) / 255.0f;
+				float b = float(_buffer[baseInd + 2]) / 255.0f;
+				r = glm::clamp(r / a, 0.0f, 1.0f);
+				g = glm::clamp(g / a, 0.0f, 1.0f);
+				b = glm::clamp(b / a, 0.0f, 1.0f);
+				_buffer[baseInd + 0] = GLubyte(255.0f * r);
+				_buffer[baseInd + 1] = GLubyte(255.0f * g);
+				_buffer[baseInd + 2] = GLubyte(255.0f * b);
+			}
+		}
+	}
+
+	// Erase alpha channel if exporting opaque image.
+	if(!_exportNoBackground){
+		for (int y = 0; y < height; ++y) {
+			for (int x = 0; x < width; ++x) {
+				const int baseInd = (y * width + x) * 4;
+				_buffer[baseInd + 3] = 255;
+			}
+		}
+	}
+
+
 	if(_outFormat == Format::PNG){
 		// Write to disk.
 		std::string intString = std::to_string(_currentFrame);
@@ -83,10 +116,31 @@ void Recorder::record(const std::shared_ptr<Framebuffer> & frame){
 			intString = "0" + intString;
 		}
 		const std::string outputFilePath = _exportPath + "/output_" + intString + ".png";
-		unsigned error = lodepng_encode_file( outputFilePath.c_str(), _buffer.data(), width, height, LCT_RGBA, 8);
-		if (error) {
+		// LodePNG encoding settings.
+		LodePNGState state;
+		lodepng_state_init(&state);
+		state.info_raw.colortype = LCT_RGBA;
+		state.info_raw.bitdepth = 8;
+		state.info_png.color.colortype = _exportNoBackground ? LCT_RGBA : LCT_RGB;
+		state.info_png.color.bitdepth = 8;
+
+		// Encode
+		unsigned char* outBuffer = nullptr;
+		size_t outBufferSize = 0;
+		lodepng_encode(&outBuffer, &outBufferSize, _buffer.data(), width, height, &state);
+		unsigned int error = state.error;
+		lodepng_state_cleanup(&state);
+
+		// Save
+		if(!error){
+			error = lodepng_save_file(outBuffer, outBufferSize, outputFilePath.c_str());
+		}
+		free(outBuffer);
+
+		if(error){
 			std::cerr << "[EXPORT]: PNG error " << error << ": " << lodepng_error_text(error) << std::endl;
 		}
+
 	} else {
 		// This will do nothing (and is unreachable) if the video module is not present.
 		addFrameToVideo(_buffer.data());
@@ -157,6 +211,9 @@ bool Recorder::drawGUI(float scale){
 				ImGui::SameLine(scaledColumn);
 			}
 			ImGui::InputInt("Rate (Mbps)", &_bitRate);
+		}
+		if((_outFormat == Format::PNG || _outFormat == Format::PRORES) && _exportNoBackground){
+			ImGui::Checkbox("Fix premultiply", &_cancelPremultiply);
 		}
 
 		ImGui::PopItemWidth();
@@ -272,7 +329,7 @@ void Recorder::setSize(const glm::ivec2 & size){
 	_size[1] += _size[1]%2;
 }
 
-bool Recorder::setParameters(const std::string & path, Format format, int framerate, int bitrate, float postroll, bool skipBackground){
+bool Recorder::setParameters(const std::string & path, Format format, int framerate, int bitrate, float postroll, bool skipBackground, bool fixPremultiply){
 	// Check if the format is supported.
 	if(int(format) >= _formats.size()){
 		std::cerr << "[EXPORT]: The requested output format is not supported by this executable. If this is a video format, make sure MIDIVisualizer has been compiled with ffmpeg enabled by checking the output of ./MIDIVisualizer --version" << std::endl;
@@ -284,6 +341,7 @@ bool Recorder::setParameters(const std::string & path, Format format, int framer
 	_exportFramerate = framerate;
 	_bitRate = bitrate;
 	_exportNoBackground = skipBackground;
+	_cancelPremultiply = fixPremultiply;
 	_postroll = postroll;
 
 	if(_outFormat != Format::PNG){

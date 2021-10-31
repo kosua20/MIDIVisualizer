@@ -351,7 +351,7 @@ void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const C
 	// Need alpha blending.
 	glEnable(GL_BLEND);
 
-	glBlendFunc(GL_ONE, GL_ONE);
+	glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
 	// Update the flags buffer accordingly.
 	glBindBuffer(GL_ARRAY_BUFFER, _flagsBufferId);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, _actives.size()*sizeof(int) ,&(_actives[0]));
@@ -378,7 +378,8 @@ void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const C
 	glBindVertexArray(0);
 	glUseProgram(0);
 	glDisable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
 }
 
 void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::vec3 & keyColor, const ColorArray & majorColors, const ColorArray & minorColors, bool highlightKeys) {
@@ -476,7 +477,8 @@ void MIDIScene::drawWaves(float time, const glm::vec2 & invScreenSize, const Sta
 
 	glEnable(GL_BLEND);
 	glUseProgram(_programWaveId);
-	glBlendFunc(GL_ONE, GL_ONE);
+	glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
+
 	// Uniforms setup.
 	const GLuint colorId = glGetUniformLocation(_programWaveId, "waveColor");
 	const GLuint opacityId = glGetUniformLocation(_programWaveId, "waveOpacity");
@@ -510,7 +512,7 @@ void MIDIScene::drawWaves(float time, const glm::vec2 & invScreenSize, const Sta
 
 	glBindVertexArray(0);
 	glUseProgram(0);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
 	glDisable(GL_BLEND);
 }
 

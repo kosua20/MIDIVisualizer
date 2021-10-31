@@ -52,7 +52,7 @@ public:
 
 	void setSize(const glm::ivec2 & size);
 
-	bool setParameters(const std::string & path, Format format, int framerate, int bitrate, float postroll, bool skipBackground);
+	bool setParameters(const std::string & path, Format format, int framerate, int bitrate, float postroll, bool skipBackground, bool fixPremultiply);
 
 	static bool videoExportSupported();
 
@@ -85,6 +85,7 @@ private:
 	int _exportFramerate = 60;
 	int _bitRate = 40;
 	bool _exportNoBackground = false;
+	bool _cancelPremultiply = false;
 
 	// Video context ptrs if available.
 	AVFormatContext * _formatCtx = nullptr;
