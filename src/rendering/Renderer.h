@@ -161,7 +161,8 @@ private:
 	Camera _camera;
 	
 	std::shared_ptr<Framebuffer> _particlesFramebuffer;
-	std::shared_ptr<Framebuffer> _blurFramebuffer;
+	std::shared_ptr<Framebuffer> _blurFramebuffer0;
+	std::shared_ptr<Framebuffer> _blurFramebuffer1;
 	std::shared_ptr<Framebuffer> _renderFramebuffer;
 	std::shared_ptr<Framebuffer> _finalFramebuffer;
 

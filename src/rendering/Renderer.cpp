@@ -57,7 +57,9 @@ Renderer::Renderer(int winW, int winH, bool fullscreen) {
 	const glm::ivec2 renderSize = _camera.renderSize();
 	_particlesFramebuffer = std::shared_ptr<Framebuffer>(new Framebuffer(renderSize[0], renderSize[1],
 		GL_RGBA, GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
-	_blurFramebuffer = std::shared_ptr<Framebuffer>(new Framebuffer(renderSize[0], renderSize[1],
+	_blurFramebuffer0 = std::shared_ptr<Framebuffer>(new Framebuffer(renderSize[0], renderSize[1],
+		GL_RGBA, GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
+	_blurFramebuffer1 = std::shared_ptr<Framebuffer>(new Framebuffer(renderSize[0], renderSize[1],
 		GL_RGBA, GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
 	_renderFramebuffer = std::shared_ptr<Framebuffer>(new Framebuffer(renderSize[0], renderSize[1],
 	GL_RGBA, GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
@@ -260,7 +262,7 @@ void Renderer::blurPrepass() {
 	// Set viewport.
 	glViewport(0, 0, _particlesFramebuffer->_width, _particlesFramebuffer->_height);
 	// Draw blurred particles from previous frames.
-	_passthrough.draw(_blurFramebuffer->textureId(), _timer);
+	_passthrough.draw(_blurFramebuffer1->textureId(), _timer);
 	if (_state.showParticles) {
 		// Draw the new particles.
 		_scene->drawParticles(_timer, invSizeB, _state.particles, true);
@@ -272,12 +274,20 @@ void Renderer::blurPrepass() {
 
 	_particlesFramebuffer->unbind();
 
-	// Bind blur framebuffer.
-	_blurFramebuffer->bind();
-	glViewport(0, 0, _blurFramebuffer->_width, _blurFramebuffer->_height);
-	// Perform box blur on result from particles pass.
-	_blurringScreen.draw(_timer);
-	_blurFramebuffer->unbind();
+	// Perform blur on result from particles pass.
+	// We re-use the 'time' uniform to denote if this is the vertical or horizontal pass.
+	// Horizontal pass
+	const glm::vec2 invBlurSize0 = 1.0f / glm::vec2(_particlesFramebuffer->_width, _particlesFramebuffer->_height);
+	glViewport(0, 0, _blurFramebuffer0->_width, _blurFramebuffer0->_height);
+	_blurFramebuffer0->bind();
+	_blurringScreen.draw(_particlesFramebuffer->textureId(), 0.0f, invBlurSize0);
+	_blurFramebuffer0->unbind();
+	// Vertical pass
+	const glm::vec2 invBlurSize1 = 1.0f / glm::vec2(_blurFramebuffer0->_width, _blurFramebuffer0->_height);
+	glViewport(0, 0, _blurFramebuffer1->_width, _blurFramebuffer1->_height);
+	_blurFramebuffer1->bind();
+	_blurringScreen.draw(_blurFramebuffer0->textureId(), 1.0f, invBlurSize1);
+	_blurFramebuffer1->unbind();
 
 }
 
@@ -299,7 +309,7 @@ void Renderer::drawBackgroundImage(const glm::vec2 &) {
 
 void Renderer::drawBlur(const glm::vec2 &) {
 	glEnable(GL_BLEND);
-	_passthrough.draw(_blurFramebuffer->textureId(), _timer);
+	_passthrough.draw(_blurFramebuffer1->textureId(), _timer);
 	glDisable(GL_BLEND);
 }
 
@@ -1075,9 +1085,12 @@ void Renderer::applyAllSettings() {
 	_particlesFramebuffer->bind();
 	glClear(GL_COLOR_BUFFER_BIT);
 	_particlesFramebuffer->unbind();
-	_blurFramebuffer->bind();
+	_blurFramebuffer0->bind();
 	glClear(GL_COLOR_BUFFER_BIT);
-	_blurFramebuffer->unbind();
+	_blurFramebuffer0->unbind();
+	_blurFramebuffer1->bind();
+	glClear(GL_COLOR_BUFFER_BIT);
+	_blurFramebuffer1->unbind();
 	glUseProgram(_blurringScreen.programId());
 	GLuint id2 = glGetUniformLocation(_blurringScreen.programId(), "attenuationFactor");
 	glUniform1f(id2, _state.attenuation);
@@ -1101,7 +1114,8 @@ void Renderer::clean() {
 	_backgroundTexture.clean();
 	_fxaa.clean();
 	_particlesFramebuffer->clean();
-	_blurFramebuffer->clean();
+	_blurFramebuffer0->clean();
+	_blurFramebuffer1->clean();
 	_finalFramebuffer->clean();
 	_renderFramebuffer->clean();
 }
@@ -1137,7 +1151,8 @@ void Renderer::updateSizes(){
 	const auto &currentQuality = Quality::availables.at(_state.quality);
 	const glm::vec2 baseRes(_camera.renderSize());
 	_particlesFramebuffer->resize(currentQuality.particlesResolution * baseRes);
-	_blurFramebuffer->resize(currentQuality.blurResolution * baseRes);
+	_blurFramebuffer0->resize(currentQuality.blurResolution * baseRes);
+	_blurFramebuffer1->resize(currentQuality.blurResolution * baseRes);
 	_renderFramebuffer->resize(currentQuality.finalResolution * baseRes);
 	_finalFramebuffer->resize(currentQuality.finalResolution * baseRes);
 	_recorder.setSize(glm::ivec2(_finalFramebuffer->_width, _finalFramebuffer->_height));
@@ -1273,7 +1288,9 @@ void Renderer::startRecording(){
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	_particlesFramebuffer->bind();
 	glClear(GL_COLOR_BUFFER_BIT);
-	_blurFramebuffer->bind();
+	_blurFramebuffer0->bind();
+	glClear(GL_COLOR_BUFFER_BIT);
+	_blurFramebuffer1->bind();
 	glClear(GL_COLOR_BUFFER_BIT);
 	_renderFramebuffer->bind();
 	glClear(GL_COLOR_BUFFER_BIT);
