@@ -63,6 +63,9 @@ void ScreenQuad::init(const std::string & fragName, const std::string & vertName
 	glUniform1i(texUniID, 0);
 	glUseProgram(0);
 	checkGLError();
+
+	_screenId = glGetUniformLocation(_programId, "inverseScreenSize");
+	_timeId = glGetUniformLocation(_programId, "time");
 }
 
 void ScreenQuad::draw(float time) {
@@ -80,8 +83,7 @@ void ScreenQuad::draw(GLuint texId, float time) {
 	// Select the program (and shaders).
 	glUseProgram(_programId);
 
-	GLuint timeID = glGetUniformLocation(_programId, "time");
-	glUniform1f(timeID, time);
+	glUniform1f(_timeId, time);
 
 	// Active screen texture.
 	glActiveTexture(GL_TEXTURE0);
@@ -103,8 +105,7 @@ void ScreenQuad::draw(GLuint texid, float time, glm::vec2 invScreenSize) {
 	glUseProgram(_programId);
 
 	// Inverse screen size uniform.
-	GLuint screenId = glGetUniformLocation(_programId, "inverseScreenSize");
-	glUniform2fv(screenId, 1, &(invScreenSize[0]));
+	glUniform2fv(_screenId, 1, &(invScreenSize[0]));
 
 	draw(texid, time);
 }
