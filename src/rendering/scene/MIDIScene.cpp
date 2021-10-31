@@ -246,9 +246,12 @@ void MIDIScene::setParticlesParameters(const float speed, const float expansion)
 	glUseProgram(0);
 }
 
-void MIDIScene::setKeyboardSize(float keyboardHeight){
+void MIDIScene::setKeyboardSizeAndFadeout(float keyboardHeight, float fadeOut){
+	const float fadeOutFinal = keyboardHeight + (1.0f - keyboardHeight) * (1.0f - fadeOut);
+
 	glUseProgram(_programId);
 	glUniform1f(glGetUniformLocation(_programId, "keyboardHeight"), keyboardHeight);
+	glUniform1f(glGetUniformLocation(_programId, "fadeOut"), fadeOutFinal);
 	glUseProgram(_programParticulesId);
 	glUniform1f(glGetUniformLocation(_programParticulesId, "keyboardHeight"), keyboardHeight);
 	glUseProgram(_programKeysId);

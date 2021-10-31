@@ -120,6 +120,7 @@ public:
 	float flashSize; ///< Size of flashes.
 	float prerollTime; ///< Preroll time.
 	float scrollSpeed; ///< Playback speed.
+	float notesFadeOut; ///< Notes fade out at the top.
 
 	int minKey; ///< The lowest key to display.
 	int maxKey; ///< The highest key to display.

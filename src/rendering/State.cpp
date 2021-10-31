@@ -111,6 +111,7 @@ void State::defineOptions(){
 	_sharedInfos["preroll"] = {"Preroll time in seconds before starting to play", OptionInfos::Type::FLOAT};
 	_sharedInfos["scroll-speed"] = {"Playback speed", OptionInfos::Type::FLOAT};
 	_sharedInfos["bg-img-opacity"] = {"Background opacity", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos["fadeout-notes"] = {"Notes fadeout at the top", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
 
 	// Colors.
 	_sharedInfos["color-major"] = {"Major notes color", OptionInfos::Type::COLOR};
@@ -250,6 +251,7 @@ void State::updateOptions(){
 	_floatInfos["preroll"] = &prerollTime;
 	_floatInfos["scroll-speed"] = &scrollSpeed;
 	_floatInfos["bg-img-opacity"] = &background.imageAlpha;
+	_floatInfos["fadeout-notes"] = &notesFadeOut;
 	_vecInfos["color-bg"] = &background.color;
 	_vecInfos["color-keyboard-major"] = &keyboard.majorColor[0];
 	_vecInfos["color-keyboard-minor"] = &keyboard.minorColor[0];
@@ -557,6 +559,7 @@ void State::reset(){
 	quality = Quality::MEDIUM;
 	prerollTime = 1.0f;
 	scrollSpeed = 1.0f;
+	notesFadeOut = 0.0f;
 	keyboard.highlightKeys = true;
 	keyboard.customKeyColors = false;
 	keyboard.size = 0.25f;

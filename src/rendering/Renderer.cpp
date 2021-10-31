@@ -328,7 +328,9 @@ void Renderer::drawKeyboard(const glm::vec2 & invSize) {
 }
 
 void Renderer::drawNotes(const glm::vec2 & invSize) {
+	glEnable(GL_BLEND);
 	_scene->drawNotes(_timer * _state.scrollSpeed, invSize, _state.baseColors, _state.minorColors, _state.reverseScroll, false);
+	glDisable(GL_BLEND);
 }
 
 void Renderer::drawFlashes(const glm::vec2 & invSize) {
@@ -477,8 +479,15 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 				}
 				showSets();
 			}
-		}
 
+			ImGuiPushItemWidth(100);
+			if(ImGui::SliderFloat("Fadeout", &_state.notesFadeOut, 0.0f, 1.0f)){
+				_state.notesFadeOut = glm::clamp(_state.notesFadeOut, 0.0f, 1.0f);
+				_scene->setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notesFadeOut);
+			}
+			ImGui::PopItemWidth();
+
+		}
 
 		if (_state.showFlashes && ImGui::CollapsingHeader("Flashes##HEADER")) {
 
@@ -742,7 +751,7 @@ void Renderer::showKeyboardOptions(){
 	ImGuiPushItemWidth(100);
 	if(ImGuiSliderPercent("Height##Keys", &_state.keyboard.size, 0.0f, 1.0f)){
 		_state.keyboard.size = (std::min)((std::max)(_state.keyboard.size, 0.0f), 1.0f);
-		_scene->setKeyboardSize(_state.keyboard.size);
+		_scene->setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notesFadeOut);
 		_score->setKeyboardSize(_state.keyboard.size);
 	}
 	ImGui::PopItemWidth();
@@ -1071,7 +1080,7 @@ void Renderer::applyAllSettings() {
 	_scene->setParticlesParameters(_state.particles.speed, _state.particles.expansion);
 	_score->setDisplay(_state.background.digits, _state.background.hLines, _state.background.vLines);
 	_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
-	_scene->setKeyboardSize(_state.keyboard.size);
+	_scene->setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notesFadeOut);
 	_score->setKeyboardSize(_state.keyboard.size);
 	_score->setPlayDirection(_state.reverseScroll);
 	

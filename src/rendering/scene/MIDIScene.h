@@ -31,7 +31,7 @@ public:
 
 	void setParticlesParameters(const float speed, const float expansion);
 
-	void setKeyboardSize(float keyboardHeight);
+	void setKeyboardSizeAndFadeout(float keyboardHeight, float fadeOut);
 
 	void setMinMaxKeys(int minKey, int minKeyMajor, int notesCount);
 
