@@ -31,8 +31,9 @@ void printHelp(){
 		{"midi", "path to a MIDI file to load"},
 		{"config", "path to a configuration INI file"},
 		{"size", "dimensions of the window (--size W H)"},
-		{"fullscreen", "start in fullscreen (1 or 0 to enabled/disable)"},
+		{"fullscreen", "start in fullscreen (1 or 0 to enable/disable)"},
 		{"gui-size", "GUI text and button scaling (number, default 1.0)"},
+		{"win-alpha", "use transparent output for the window (1 or 0 to enable/disable)"},
 		{"help", "display this help message"},
 		{"version", "display the executable version and configuration"},
 	};
@@ -43,9 +44,9 @@ void printHelp(){
 		{"framerate", "number of frames per second to export (integer)"},
 		{"bitrate", "target video bitrate in Mb (integer)"},
 		{"postroll", "Postroll time after the track, in seconds (number, default 10.0)"},
-		{"out-alpha", "use transparent output background, only for PNG and PRORES (1 or 0 to enabled/disable)"},
-		{"fix-premultiply", "cancel alpha premultiplication, only when out-alpha is enabled (1 or 0 to enabled/disable)"},
-		{"hide-window", "do not display the window (1 or 0 to enabled/disable)"},
+		{"out-alpha", "use transparent output background, only for PNG and PRORES (1 or 0 to enable/disable)"},
+		{"fix-premultiply", "cancel alpha premultiplication, only when out-alpha is enabled (1 or 0 to enable/disable)"},
+		{"hide-window", "do not display the window (1 or 0 to enable/disable)"},
 	};
 
 	std::cout << "---- Infos ---- MIDIVisualizer v" << MIDIVIZ_VERSION_MAJOR << "." << MIDIVIZ_VERSION_MINOR << " --------" << std::endl
@@ -199,6 +200,11 @@ int main( int argc, char** argv) {
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 	}
 
+	// Window transparency.
+	if(args.count("win-alpha") > 0 && Configuration::parseBool(args["win-alpha"][0])){
+		glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
+	}
+	
 	// Create a window with a given size. Width and height are macros as we will need them again.
 	GLFWwindow* window = glfwCreateWindow(isw, ish,"MIDI Visualizer", NULL, NULL);
 	if (!window) {
@@ -206,6 +212,8 @@ int main( int argc, char** argv) {
 		glfwTerminate();
 		return 2;
 	}
+	// Check if transparency was successfully enabled.
+	bool transparentWindow = glfwGetWindowAttrib(window, GLFW_TRANSPARENT_FRAMEBUFFER) == GLFW_TRUE;
 
 	// Bind the OpenGL context and the new window.
 	glfwMakeContextCurrent(window);
@@ -225,7 +233,7 @@ int main( int argc, char** argv) {
 		// Setup resources.
 		ResourcesManager::loadResources();
 		// Create the renderer.
-		Renderer renderer(isw, ish, fullscreen);
+		Renderer renderer(isw, ish, fullscreen, transparentWindow);
 
 		// Load midi file if specified by command-line.
 		// Check if a path is given in argument.

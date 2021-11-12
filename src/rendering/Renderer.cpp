@@ -31,12 +31,14 @@ SystemAction::SystemAction(SystemAction::Type act) {
 	data = glm::ivec4(0);
 }
 
-Renderer::Renderer(int winW, int winH, bool fullscreen) {
+Renderer::Renderer(int winW, int winH, bool fullscreen, bool transparentWindow) {
 	_showGUI = true;
 	_showDebug = false;
 
 	_fullscreen = fullscreen;
 	_windowSize = glm::ivec2(winW, winH);
+
+	_forceTransparency = transparentWindow;
 
 	// GL options
 	glEnable(GL_CULL_FACE);
@@ -188,7 +190,7 @@ SystemAction Renderer::draw(float currentTime) {
 	_timer = _shouldPlay ? (currentTime - _timerStart) : _timer;
 
 	// Render scene and blit, with GUI on top if needed.
-	drawScene(false);
+	drawScene(_forceTransparency);
 
 	glViewport(0, 0, GLsizei(_backbufferSize[0]), GLsizei(_backbufferSize[1]));
 	_passthrough.draw(_finalFramebuffer->textureId(), _timer);
@@ -1077,7 +1079,7 @@ void Renderer::showSets(){
 
 void Renderer::applyBackgroundColor(){
 	// Clear all buffers with this color.
-	glClearColor(_state.background.color[0], _state.background.color[1], _state.background.color[2], 1.0f);
+	glClearColor(_state.background.color[0], _state.background.color[1], _state.background.color[2], _forceTransparency ? 0.0f : 1.0f);
 	_particlesFramebuffer->bind();
 	glClear(GL_COLOR_BUFFER_BIT);
 	_particlesFramebuffer->unbind();
