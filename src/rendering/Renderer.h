@@ -128,6 +128,8 @@ private:
 
 	void showSets();
 
+	void applyBackgroundColor();
+
 	void applyAllSettings();
 	
 	void reset();

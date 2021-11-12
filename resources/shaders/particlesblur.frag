@@ -6,6 +6,7 @@ in INTERFACE {
 
 uniform sampler2D screenTexture;
 uniform vec2 inverseScreenSize;
+uniform vec3 backgroundColor = vec3(0.0);
 uniform float attenuationFactor = 0.99;
 uniform float time;
 
@@ -35,6 +36,6 @@ void main(){
 	vec4 color = blur(In.uv, time > 0.5);
 
 	// Include decay for fade out.
-	fragColor = mix(vec4(0.0), color, attenuationFactor);
+	fragColor = mix(vec4(backgroundColor, 0.0), color, attenuationFactor);
 	
 }

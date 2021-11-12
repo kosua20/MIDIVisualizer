@@ -861,8 +861,12 @@ void Renderer::showScoreOptions(){
 
 void Renderer::showBackgroundOptions(){
 	ImGuiPushItemWidth(25);
+	const glm::vec3 oldColor(_state.background.color);
 	ImGui::ColorEdit3("Color##Background", &_state.background.color[0],
 		ImGuiColorEditFlags_NoInputs);
+	if(oldColor != _state.background.color){
+		applyBackgroundColor();
+	}
 	ImGui::PopItemWidth();
 	ImGuiSameLine(COLUMN_SIZE);
 	ImGuiPushItemWidth(100);
@@ -1071,6 +1075,25 @@ void Renderer::showSets(){
 	}
 }
 
+void Renderer::applyBackgroundColor(){
+	// Clear all buffers with this color.
+	glClearColor(_state.background.color[0], _state.background.color[1], _state.background.color[2], 1.0f);
+	_particlesFramebuffer->bind();
+	glClear(GL_COLOR_BUFFER_BIT);
+	_particlesFramebuffer->unbind();
+	_blurFramebuffer0->bind();
+	glClear(GL_COLOR_BUFFER_BIT);
+	_blurFramebuffer0->unbind();
+	_blurFramebuffer1->bind();
+	glClear(GL_COLOR_BUFFER_BIT);
+	_blurFramebuffer1->unbind();
+	// Update parameter.
+	glUseProgram(_blurringScreen.programId());
+	GLuint id3 = glGetUniformLocation(_blurringScreen.programId(), "backgroundColor");
+	glUniform3fv(id3, 1, &_state.background.color[0]);
+	glUseProgram(0);
+}
+
 void Renderer::applyAllSettings() {
 	// Apply all modifications.
 
@@ -1090,16 +1113,7 @@ void Renderer::applyAllSettings() {
 	updateMinMaxKeys();
 
 	// Reset buffers.
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	_particlesFramebuffer->bind();
-	glClear(GL_COLOR_BUFFER_BIT);
-	_particlesFramebuffer->unbind();
-	_blurFramebuffer0->bind();
-	glClear(GL_COLOR_BUFFER_BIT);
-	_blurFramebuffer0->unbind();
-	_blurFramebuffer1->bind();
-	glClear(GL_COLOR_BUFFER_BIT);
-	_blurFramebuffer1->unbind();
+	applyBackgroundColor();
 	glUseProgram(_blurringScreen.programId());
 	GLuint id2 = glGetUniformLocation(_blurringScreen.programId(), "attenuationFactor");
 	glUniform1f(id2, _state.attenuation);
@@ -1294,7 +1308,7 @@ void Renderer::startRecording(){
 	_backbufferSize = backBufferSize;
 
 	// Reset buffers.
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClearColor(_state.background.color[0], _state.background.color[1], _state.background.color[2], 1.0f);
 	_particlesFramebuffer->bind();
 	glClear(GL_COLOR_BUFFER_BIT);
 	_blurFramebuffer0->bind();
