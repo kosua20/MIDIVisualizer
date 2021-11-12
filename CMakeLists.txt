@@ -76,6 +76,7 @@ set(LibSources
 	"src/libs/imgui/imgui_impl_opengl3.cpp"
 	"src/libs/imgui/imgui_impl_opengl3.h"
 	"src/libs/imgui/imgui_internal.h"
+	"src/libs/imgui/imgui_tables.cpp"
 	"src/libs/imgui/imgui_widgets.cpp"
 	"src/libs/imgui/imstb_rectpack.h"
 	"src/libs/imgui/imstb_textedit.h"
