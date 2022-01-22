@@ -46,13 +46,6 @@ void MIDIScene::renderSetup(){
 	glBindBuffer(GL_ARRAY_BUFFER, _flagsBufferId);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(int) * 128, NULL, GL_DYNAMIC_DRAW);
 
-	_uboKeyboard = 0;
-	glGenBuffers(1, &_uboKeyboard);
-	glBindBuffer(GL_UNIFORM_BUFFER, _uboKeyboard);
-	glBufferData(GL_UNIFORM_BUFFER, sizeof(int) * 128, NULL, GL_DYNAMIC_DRAW);
-	glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-
 	// Programs.
 
 	// Notes shaders.
@@ -386,10 +379,6 @@ void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const C
 }
 
 void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::vec3 & keyColor, const ColorArray & majorColors, const ColorArray & minorColors, bool highlightKeys) {
-	// Upload active keys data.
-	glBindBuffer(GL_UNIFORM_BUFFER, _uboKeyboard);
-	glBufferSubData(GL_UNIFORM_BUFFER, 0, _actives.size() * sizeof(int), &(_actives[0]));
-	//glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 	glUseProgram(_programKeysId);
 
@@ -399,14 +388,13 @@ void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::
 	const GLuint majorId = glGetUniformLocation(_programKeysId, "majorColor");
 	const GLuint minorId = glGetUniformLocation(_programKeysId, "minorColor");
 	const GLuint highId = glGetUniformLocation(_programKeysId, "highlightKeys");
+	const GLuint activesId = glGetUniformLocation(_programKeysId, "actives");
 	glUniform2fv(screenId1, 1, &(invScreenSize[0]));
 	glUniform3fv(colorId, 1, &(keyColor[0]));
 	glUniform3fv(majorId, GLsizei(majorColors.size()), &(majorColors[0][0]));
 	glUniform3fv(minorId, GLsizei(minorColors.size()), &(minorColors[0][0]));
 	glUniform1i(highId, int(highlightKeys));
-
-	glBindBuffer(GL_UNIFORM_BUFFER, _uboKeyboard);
-	glBindBufferBase(GL_UNIFORM_BUFFER, 0, _uboKeyboard);
+	glUniform1iv(activesId, GLsizei(_actives.size()), &(_actives[0]));
 
 	// Draw the geometry.
 	glBindVertexArray(_vaoKeyboard);
