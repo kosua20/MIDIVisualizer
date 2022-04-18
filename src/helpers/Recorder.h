@@ -89,7 +89,7 @@ private:
 
 	// Video context ptrs if available.
 	AVFormatContext * _formatCtx = nullptr;
-	AVCodec * _codec = nullptr;
+	const AVCodec * _codec = nullptr;
 	AVCodecContext * _codecCtx = nullptr;
 	AVStream * _stream = nullptr;
 	AVFrame * _frame = nullptr;
