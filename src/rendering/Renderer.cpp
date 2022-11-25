@@ -31,14 +31,12 @@ SystemAction::SystemAction(SystemAction::Type act) {
 	data = glm::ivec4(0);
 }
 
-Renderer::Renderer(int winW, int winH, bool fullscreen, bool transparentWindow) {
+Renderer::Renderer(int winW, int winH, bool fullscreen, bool supportTransparency) : _supportTransparency(supportTransparency) {
 	_showGUI = true;
 	_showDebug = false;
 
 	_fullscreen = fullscreen;
 	_windowSize = glm::ivec2(winW, winH);
-
-	_forceTransparency = transparentWindow;
 
 	// GL options
 	glEnable(GL_CULL_FACE);
@@ -190,13 +188,14 @@ SystemAction Renderer::draw(float currentTime) {
 	_timer = _shouldPlay ? (currentTime - _timerStart) : _timer;
 
 	// Render scene and blit, with GUI on top if needed.
-	drawScene(_forceTransparency);
+	const bool transparentBackground = _useTransparency && _supportTransparency;
+	drawScene(transparentBackground);
 
 	glViewport(0, 0, GLsizei(_backbufferSize[0]), GLsizei(_backbufferSize[1]));
 	_passthrough.draw(_finalFramebuffer->textureId(), _timer);
 
 	SystemAction action = SystemAction::NONE;
-	if (_showGUI) {
+	if(_showGUI){
 		action = drawGUI(currentTime);
 	}
 
@@ -320,7 +319,9 @@ void Renderer::drawParticles(const glm::vec2 & invSize) {
 }
 
 void Renderer::drawScore(const glm::vec2 & invSize) {
+	glEnable(GL_BLEND);
 	_score->draw(_timer * _state.scrollSpeed, invSize);
+	glDisable(GL_BLEND);
 }
 
 void Renderer::drawKeyboard(const glm::vec2 & invSize) {
@@ -641,6 +642,11 @@ SystemAction Renderer::showTopButtons(double currentTime){
 				action.data[0] = _windowSize[0];
 				action.data[1] = _windowSize[1];
 			}
+		}
+
+		if(_supportTransparency)
+		{
+			ImGui::Checkbox("Transparent", &_useTransparency);
 		}
 
 		ImGui::EndPopup();
@@ -1079,7 +1085,7 @@ void Renderer::showSets(){
 
 void Renderer::applyBackgroundColor(){
 	// Clear all buffers with this color.
-	glClearColor(_state.background.color[0], _state.background.color[1], _state.background.color[2], _forceTransparency ? 0.0f : 1.0f);
+	glClearColor(_state.background.color[0], _state.background.color[1], _state.background.color[2], _useTransparency && _supportTransparency ? 0.0f : 1.0f);
 	_particlesFramebuffer->bind();
 	glClear(GL_COLOR_BUFFER_BIT);
 	_particlesFramebuffer->unbind();
@@ -1310,7 +1316,7 @@ void Renderer::startRecording(){
 	_backbufferSize = backBufferSize;
 
 	// Reset buffers.
-	glClearColor(_state.background.color[0], _state.background.color[1], _state.background.color[2], 1.0f);
+	glClearColor(_state.background.color[0], _state.background.color[1], _state.background.color[2], _recorder.isTransparent() ? 0.0f : 1.0f);
 	_particlesFramebuffer->bind();
 	glClear(GL_COLOR_BUFFER_BIT);
 	_blurFramebuffer0->bind();

@@ -34,7 +34,7 @@ class Renderer {
 
 public:
 
-	Renderer(int winW, int winH, bool fullscreen, bool transparentWindow);
+	Renderer(int winW, int winH, bool fullscreen, bool supportTransparency);
 
 	~Renderer();
 	
@@ -184,7 +184,8 @@ private:
 	bool _exitAfterRecording = false;
 	bool _fullscreen = false;
 	bool _liveplay = false;
-	bool _forceTransparency = false;
+	bool _useTransparency = false;
+	const bool _supportTransparency;
 };
 
 #endif

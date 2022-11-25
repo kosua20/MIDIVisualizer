@@ -33,7 +33,7 @@ void printHelp(){
 		{"size", "dimensions of the window (--size W H)"},
 		{"fullscreen", "start in fullscreen (1 or 0 to enable/disable)"},
 		{"gui-size", "GUI text and button scaling (number, default 1.0)"},
-		{"win-alpha", "use transparent output for the window (1 or 0 to enable/disable)"},
+		{"no-transparent", "prevent transparent output for the window (1 or 0 to enable/disable)"},
 		{"help", "display this help message"},
 		{"version", "display the executable version and configuration"},
 	};
@@ -134,7 +134,7 @@ void performAction(SystemAction action, GLFWwindow * window, glm::ivec4 & frame)
 			break;
 		case SystemAction::FIX_SIZE:
 			glfwSetWindowAttrib(window, GLFW_RESIZABLE, GLFW_FALSE);
-			// This is for recording, to go as fast as possible on the GPU size.
+			// This is for recording, to go as fast as possible on the GPU side.
 			glfwSwapInterval(0);
 			break;
 		case SystemAction::FREE_SIZE:
@@ -201,10 +201,9 @@ int main( int argc, char** argv) {
 	}
 
 	// Window transparency.
-	if(args.count("win-alpha") > 0 && Configuration::parseBool(args["win-alpha"][0])){
-		glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
-	}
-	
+	const bool tryTransparent = args.count("no-transparent") == 0 || !Configuration::parseBool(args["no-transparent"][0]);
+	glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, tryTransparent ? GLFW_TRUE : GLFW_FALSE);
+
 	// Create a window with a given size. Width and height are macros as we will need them again.
 	GLFWwindow* window = glfwCreateWindow(isw, ish,"MIDI Visualizer", NULL, NULL);
 	if (!window) {
