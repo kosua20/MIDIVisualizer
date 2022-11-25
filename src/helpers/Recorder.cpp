@@ -399,7 +399,7 @@ bool Recorder::initVideo(const std::string & path, Format format, bool verbose){
 
 	// Setup codec.
 	const auto & outFormat = opts.at(format);
-	_codec = avcodec_find_encoder(outFormat.avid);
+	auto _codec = avcodec_find_encoder(outFormat.avid);
 	if(!_codec){
 		std::cerr << "[VIDEO]: Unable to find encoder." << std::endl;
 		return false;
