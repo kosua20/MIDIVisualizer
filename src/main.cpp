@@ -3,6 +3,7 @@
 #include "helpers/ProgramUtilities.h"
 #include "helpers/Configuration.h"
 #include "helpers/ResourcesManager.h"
+#include "helpers/ImGuiStyle.h"
 
 #include "rendering/Renderer.h"
 
@@ -225,7 +226,8 @@ int main( int argc, char** argv) {
 		std::cerr << "[ERROR]: OpenGL 3.2 not supported\n" << std::endl;
 		return -1;
 	}
-
+	// The font should be maintained alive until the atlas is built.
+	ImFontConfig font;
 	// We need a scope to ensure the renderer is deleted before the OpenGL context is destroyed.
 	{
 
@@ -242,8 +244,10 @@ int main( int argc, char** argv) {
 
 		// Setup ImGui for interface.
 		ImGui::CreateContext();
-		ImGuiIO& io = ImGui::GetIO();
-		io.IniFilename = NULL;
+
+		ImGui::configureFont(font);
+		ImGui::configureStyle();
+		
 		ImGui_ImplGlfw_InitForOpenGL(window, false);
 		ImGui_ImplOpenGL3_Init("#version 330");
 

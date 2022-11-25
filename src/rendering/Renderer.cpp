@@ -1,5 +1,6 @@
 #include "../helpers/ProgramUtilities.h"
 #include "../helpers/ResourcesManager.h"
+#include "../helpers/ImGuiStyle.h"
 #include <cstring>
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui/imgui.h>
@@ -415,7 +416,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			}
 		}
 
-		if (ImGui::Checkbox("Sync effect colors", &_state.lockParticleColor)) {
+		if (ImGui::Checkbox("Use the same color everywhere", &_state.lockParticleColor)) {
 			// If we enable the lock, make sure the colors are synched.
 			synchronizeColors(_state.baseColors);
 		}
@@ -652,7 +653,7 @@ SystemAction Renderer::showTopButtons(double currentTime){
 		ImGui::EndPopup();
 	}
 
-	ImGuiSameLine(340);
+	ImGuiSameLine(360);
 	ImGui::TextDisabled("(?)");
 	if (ImGui::IsItemHovered()) {
 		ImGui::BeginTooltip();
@@ -1267,11 +1268,10 @@ void Renderer::setState(const State & state){
 	}
 }
 
-
 void  Renderer::setGUIScale(float scale){
 	_guiScale = std::max(0.25f, scale);
 	ImGui::GetStyle() = ImGuiStyle();
-	ImGui::StyleColorsDark();
+	ImGui::configureStyle();
 	ImGui::GetIO().FontGlobalScale = _guiScale;
 	ImGui::GetStyle().ScaleAllSizes(_guiScale);
 	ImGui::GetStyle().FrameRounding = 3 * _guiScale;

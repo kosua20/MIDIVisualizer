@@ -98,6 +98,8 @@ set(Sources
 	"src/helpers/Recorder.h"
 	"src/helpers/Configuration.cpp"
 	"src/helpers/Configuration.h"
+	"src/helpers/ImGuiStyle.cpp"
+	"src/helpers/ImGuiStyle.h"
 	"src/midi/MIDIFile.cpp"
 	"src/midi/MIDIFile.h"
 	"src/midi/MIDITrack.cpp"
