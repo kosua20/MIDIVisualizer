@@ -10,7 +10,6 @@
 #include <vector>
 #include <unordered_map>
 #include <algorithm>
-#include <thread>
 
 #ifdef MIDIVIZ_SUPPORT_VIDEO
 extern "C" {

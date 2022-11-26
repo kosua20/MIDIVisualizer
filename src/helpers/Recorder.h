@@ -8,6 +8,7 @@
 #include <memory>
 #include <chrono>
 #include <mutex>
+#include <thread>
 
 // This is highly experimental and untested for now.
 // #define FFMPEG_USE_THREADS
