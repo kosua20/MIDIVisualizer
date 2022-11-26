@@ -197,13 +197,15 @@ void Recorder::record(const std::shared_ptr<Framebuffer> & frame){
 		_savingThreads[buffIndex] = std::thread(writePNGToPath, &_savingBuffers[buffIndex], _size, _exportNoBackground, _cancelPremultiply, outputFilePath);
 
 	} else {
-		_frames[buffIndex]->pts = _currentFrame;
 		// This will do nothing (and is unreachable) if the video module is not present.
+#ifdef MIDIVIZ_SUPPORT_VIDEO
+		_frames[buffIndex]->pts = _currentFrame;
 		// This could be multithreaded similarly to the PNG case, but the ffmepg flush needs to be threadsafe.
 #ifdef FFMPEG_USE_THREADS
 		_savingThreads[buffIndex] = std::thread(writeFrameToVideo, &_savingBuffers[buffIndex], _size, _exportNoBackground, _cancelPremultiply, _frames[buffIndex], _swsContexts[buffIndex], _codecCtx, this);
 #else
 		writeFrameToVideo( &_savingBuffers[buffIndex], _size, _exportNoBackground, _cancelPremultiply, _frames[buffIndex], _swsContexts[buffIndex], _codecCtx, this);
+#endif
 #endif
 	}
 
