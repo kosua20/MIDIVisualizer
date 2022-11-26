@@ -7,6 +7,10 @@
 #include <vector>
 #include <memory>
 #include <chrono>
+#include <mutex>
+
+// This is highly experimental and untested for now.
+// #define FFMPEG_USE_THREADS
 
 // Forward declare FFmpeg objects in all cases.
 struct AVFormatContext;
@@ -36,6 +40,8 @@ public:
 
 	void start(bool verbose);
 
+	bool flush();
+
 	void drawProgress();
 	
 	bool isRecording() const;
@@ -64,8 +70,6 @@ private:
 	
 	void endVideo();
 
-	bool flush();
-
 	struct CodecOpts {
 		std::string name;
 		std::string ext;
@@ -73,7 +77,9 @@ private:
 	};
 	
 	std::vector<CodecOpts> _formats;
-	std::vector<GLubyte> _buffer;
+	std::vector<std::vector<GLubyte>> _savingBuffers;
+	std::vector<std::thread> _savingThreads;
+	
 	std::string _exportPath;
 	glm::ivec2 _size {0, 0};
 	size_t _framesCount = 0;
@@ -92,8 +98,11 @@ private:
 	const AVCodec * _codec = nullptr;
 	AVCodecContext * _codecCtx = nullptr;
 	AVStream * _stream = nullptr;
-	AVFrame * _frame = nullptr;
-	SwsContext * _swsContext = nullptr;
+	std::vector<AVFrame *> _frames;
+	std::vector<SwsContext *> _swsContexts;
+#ifdef FFMPEG_USE_THREADS
+	std::mutex _streamMutex;
+#endif
 
 	std::chrono::time_point<std::chrono::high_resolution_clock> _startTime;
 };

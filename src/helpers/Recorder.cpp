@@ -10,6 +10,7 @@
 #include <vector>
 #include <unordered_map>
 #include <algorithm>
+#include <thread>
 
 #ifdef MIDIVIZ_SUPPORT_VIDEO
 extern "C" {
@@ -20,6 +21,107 @@ extern "C" {
 	#include <libavutil/opt.h>
 }
 #endif
+
+// Helpers for multithreading.
+
+void convertImageInPlace(std::vector<GLubyte>& buffer, const glm::ivec2 size, bool exportNoBackground, bool cancelPremultiply){
+
+	// Copy and flip rows.
+	int width = size[0];
+	int height = size[1];
+
+	for (int y = 0; y < height/2; ++y) {
+	   const int top = y * width * 4;
+	   const int topNext = (y+1) * width * 4;
+	   const int bottom = (height - y - 1) * width * 4;
+	   std::swap_ranges(buffer.begin() + top, buffer.begin() + topNext, buffer.begin() + bottom);
+	}
+
+	// Cancel alpha premultiplication if requested.
+	if(exportNoBackground && cancelPremultiply){
+		for (int y = 0; y < height; ++y) {
+			for (int x = 0; x < width; ++x) {
+				const int baseInd = (y * width + x) * 4;
+				const float a = float(buffer[baseInd + 3]) / 255.0f;
+				if(a == 0.0){
+					continue;
+				}
+				float r = float(buffer[baseInd + 0]) / 255.0f;
+				float g = float(buffer[baseInd + 1]) / 255.0f;
+				float b = float(buffer[baseInd + 2]) / 255.0f;
+				r = glm::clamp(r / a, 0.0f, 1.0f);
+				g = glm::clamp(g / a, 0.0f, 1.0f);
+				b = glm::clamp(b / a, 0.0f, 1.0f);
+				buffer[baseInd + 0] = GLubyte(255.0f * r);
+				buffer[baseInd + 1] = GLubyte(255.0f * g);
+				buffer[baseInd + 2] = GLubyte(255.0f * b);
+			}
+		}
+	}
+
+	// Erase alpha channel if exporting opaque image.
+	if(!exportNoBackground){
+		for (int y = 0; y < height; ++y) {
+			for (int x = 0; x < width; ++x) {
+				const int baseInd = (y * width + x) * 4;
+				buffer[baseInd + 3] = 255;
+			}
+		}
+	}
+}
+
+void writePNGToPath(std::vector<GLubyte>* buffer, const glm::ivec2 size, bool exportNoBackground, bool cancelPremultiply, const std::string outputFilePath){
+
+	convertImageInPlace(*buffer, size, exportNoBackground, cancelPremultiply);
+
+	// LodePNG encoding settings.
+	LodePNGState state;
+	lodepng_state_init(&state);
+	state.info_raw.colortype = LCT_RGBA;
+	state.info_raw.bitdepth = 8;
+	state.info_png.color.colortype = exportNoBackground ? LCT_RGBA : LCT_RGB;
+	state.info_png.color.bitdepth = 8;
+
+	// Encode
+	unsigned char* outBuffer = nullptr;
+	size_t outBufferSize = 0;
+	lodepng_encode(&outBuffer, &outBufferSize, buffer->data(), size[0], size[1], &state);
+	unsigned int error = state.error;
+	lodepng_state_cleanup(&state);
+
+	// Save
+	if(!error){
+		error = lodepng_save_file(outBuffer, outBufferSize, outputFilePath.c_str());
+	}
+	free(outBuffer);
+
+	if(error){
+		std::cerr << "[EXPORT]: PNG error " << error << ": " << lodepng_error_text(error) << std::endl;
+	}
+}
+
+void writeFrameToVideo(std::vector<GLubyte>* buffer, const glm::ivec2 size, bool exportNoBackground, bool cancelPremultiply, AVFrame* frame, SwsContext* swsContext, AVCodecContext* codecCtx, Recorder* recorder){
+#ifdef MIDIVIZ_SUPPORT_VIDEO
+	convertImageInPlace(*buffer, size, exportNoBackground, cancelPremultiply);
+
+	unsigned char * srcs[AV_NUM_DATA_POINTERS] = {0};
+	int strides[AV_NUM_DATA_POINTERS] = {0};
+	srcs[0] = (unsigned char *)buffer->data();
+	strides[0] = int(size[0] * 4);
+	// Rescale and convert to the proper output layout.
+	sws_scale(swsContext, srcs, strides, 0, size[1], frame->data, frame->linesize);
+	// Send frame.
+	const int res = avcodec_send_frame(codecCtx, frame);
+	if(res == AVERROR(EAGAIN)){
+		// Unavailable right now, should flush and retry.
+		if(recorder->flush()){
+			avcodec_send_frame(codecCtx, frame);
+		}
+	} else if(res < 0){
+		std::cerr << "[VIDEO]: Unable to send frame " << (frame->pts + 1) << "." << std::endl;
+	}
+#endif
+}
 
 Recorder::Recorder(){
 	_formats = {
@@ -39,6 +141,18 @@ Recorder::Recorder(){
 			avcodec_register_all();
 		#endif
 	#endif
+
+	// This implements a very basic thread pool.
+	// Each thread has its reserved data (buffer, frame, context) allocated and is the only
+	// one allowed to use them, apart from the main thread when spawning tasks.
+	// This is supposed to be safe by designed (the main thread will join the thread it want to use beforehand)
+	// but is not very flexible and requires duplication of data/contexts.
+	int numThreads = std::thread::hardware_concurrency();
+	int poolSize = glm::clamp(numThreads - 1, 2, 8);
+	_savingBuffers.resize(poolSize);
+	_savingThreads.resize(poolSize);
+	_frames.resize(poolSize, nullptr);
+	_swsContexts.resize(poolSize, nullptr);
 }
 
 Recorder::~Recorder(){
@@ -47,7 +161,10 @@ Recorder::~Recorder(){
 
 void Recorder::record(const std::shared_ptr<Framebuffer> & frame){
 
-	std::cout << "\r[EXPORT]: Processing frame " << (_currentFrame + 1) << "/" << _framesCount << "." << std::flush;
+	const unsigned int displayCurrentFrame = _currentFrame + 1;
+	if((displayCurrentFrame == 1) || (displayCurrentFrame % 10 == 0)){
+		std::cout << "\r[EXPORT]: Processing frame " << displayCurrentFrame << "/" << _framesCount << "." << std::flush;
+	}
 
 	// Make sure rendering is complete.
 	glFinish();
@@ -55,59 +172,20 @@ void Recorder::record(const std::shared_ptr<Framebuffer> & frame){
 
 	if(frame->_width != _size[0] || frame->_height != _size[1]){
 		std::cout << std::endl;
-		std::cerr << "[EXPORT]: Unexpected frame size while recording. Stopping." << std::endl;
+		std::cerr << "[EXPORT]: Unexpected frame size while recording, at frame " << displayCurrentFrame << ". Stopping." << std::endl;
 		_currentFrame = _framesCount;
 		return;
 	}
 
+	const unsigned int buffIndex = _currentFrame % _savingThreads.size();
+	// Make sure the thread we want to work on is available.
+	if(_savingThreads[buffIndex].joinable())
+		_savingThreads[buffIndex].join();
+
 	// Readback.
 	frame->bind();
-	glReadPixels(0, 0, (GLsizei)_size[0], (GLsizei)_size[1], GL_RGBA, GL_UNSIGNED_BYTE, &_buffer[0]);
+	glReadPixels(0, 0, (GLsizei)_size[0], (GLsizei)_size[1], GL_RGBA, GL_UNSIGNED_BYTE, _savingBuffers[buffIndex].data());
 	frame->unbind();
-
-	// Copy and flip rows.
-	const int width = _size[0];
-	const int height = _size[1];
-	for (int y = 0; y < height / 2; ++y) {
-		const int top = y * width * 4;
-		const int topNext = (y+1) * width * 4;
-		const int bottom = (height - y - 1) * width * 4;
-		std::swap_ranges(_buffer.begin() + top, _buffer.begin() + topNext,
-						 _buffer.begin() + bottom);
-	}
-
-	// Cancel alpha premultiplication if requested.
-	if(_exportNoBackground && _cancelPremultiply){
-		for (int y = 0; y < height; ++y) {
-			for (int x = 0; x < width; ++x) {
-				const int baseInd = (y * width + x) * 4;
-				const float a = float(_buffer[baseInd + 3]) / 255.0f;
-				if(a == 0.0){
-					continue;
-				}
-				float r = float(_buffer[baseInd + 0]) / 255.0f;
-				float g = float(_buffer[baseInd + 1]) / 255.0f;
-				float b = float(_buffer[baseInd + 2]) / 255.0f;
-				r = glm::clamp(r / a, 0.0f, 1.0f);
-				g = glm::clamp(g / a, 0.0f, 1.0f);
-				b = glm::clamp(b / a, 0.0f, 1.0f);
-				_buffer[baseInd + 0] = GLubyte(255.0f * r);
-				_buffer[baseInd + 1] = GLubyte(255.0f * g);
-				_buffer[baseInd + 2] = GLubyte(255.0f * b);
-			}
-		}
-	}
-
-	// Erase alpha channel if exporting opaque image.
-	if(!_exportNoBackground){
-		for (int y = 0; y < height; ++y) {
-			for (int x = 0; x < width; ++x) {
-				const int baseInd = (y * width + x) * 4;
-				_buffer[baseInd + 3] = 255;
-			}
-		}
-	}
-
 
 	if(_outFormat == Format::PNG){
 		// Write to disk.
@@ -116,41 +194,32 @@ void Recorder::record(const std::shared_ptr<Framebuffer> & frame){
 			intString = "0" + intString;
 		}
 		const std::string outputFilePath = _exportPath + "/output_" + intString + ".png";
-		// LodePNG encoding settings.
-		LodePNGState state;
-		lodepng_state_init(&state);
-		state.info_raw.colortype = LCT_RGBA;
-		state.info_raw.bitdepth = 8;
-		state.info_png.color.colortype = _exportNoBackground ? LCT_RGBA : LCT_RGB;
-		state.info_png.color.bitdepth = 8;
-
-		// Encode
-		unsigned char* outBuffer = nullptr;
-		size_t outBufferSize = 0;
-		lodepng_encode(&outBuffer, &outBufferSize, _buffer.data(), width, height, &state);
-		unsigned int error = state.error;
-		lodepng_state_cleanup(&state);
-
-		// Save
-		if(!error){
-			error = lodepng_save_file(outBuffer, outBufferSize, outputFilePath.c_str());
-		}
-		free(outBuffer);
-
-		if(error){
-			std::cerr << "[EXPORT]: PNG error " << error << ": " << lodepng_error_text(error) << std::endl;
-		}
+		// Move the conversion and writing to a background thread.
+		_savingThreads[buffIndex] = std::thread(writePNGToPath, &_savingBuffers[buffIndex], _size, _exportNoBackground, _cancelPremultiply, outputFilePath);
 
 	} else {
+		_frames[buffIndex]->pts = _currentFrame;
 		// This will do nothing (and is unreachable) if the video module is not present.
-		addFrameToVideo(_buffer.data());
-		if(_currentFrame + 1 == _framesCount){
-			endVideo();
-		}
+		// This could be multithreaded similarly to the PNG case, but the ffmepg flush needs to be threadsafe.
+#ifdef FFMPEG_USE_THREADS
+		_savingThreads[buffIndex] = std::thread(writeFrameToVideo, &_savingBuffers[buffIndex], _size, _exportNoBackground, _cancelPremultiply, _frames[buffIndex], _swsContexts[buffIndex], _codecCtx, this);
+#else
+		writeFrameToVideo( &_savingBuffers[buffIndex], _size, _exportNoBackground, _cancelPremultiply, _frames[buffIndex], _swsContexts[buffIndex], _codecCtx, this);
+#endif
 	}
 
 	// Flush log.
 	if(_currentFrame + 1 == _framesCount){
+		// Wait for all export tasks to finish.
+		for(auto& thread : _savingThreads){
+			if(thread.joinable())
+				thread.join();
+		}
+		// End the video stream if needed.
+		if(_outFormat != Format::PNG){
+			endVideo();
+		}
+		// Log result timing.
 		const auto endTime	 = std::chrono::high_resolution_clock::now();
 		const long long duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - _startTime).count();
 		std::cout << std::endl;
@@ -268,8 +337,10 @@ void Recorder::prepare(float preroll, float duration, float speed){
 	_currentFrame = _framesCount;
 	_sceneDuration = duration;
 	// Image writing setup.
-	_buffer.resize(_size[0] * _size[1] * 4);
-
+	const size_t dataSize = _size[0] * _size[1] * 4;
+	for(unsigned int i = 0; i < _savingBuffers.size(); ++i){
+		_savingBuffers[i].resize(dataSize);
+	}
 }
 
 void Recorder::start(bool verbose) {
@@ -279,6 +350,10 @@ void Recorder::start(bool verbose) {
 		initVideo(_exportPath, _outFormat, verbose);
 	}
 	_startTime = std::chrono::high_resolution_clock::now();
+
+	for(unsigned int i = 0; i < _savingThreads.size(); ++i){
+		_savingThreads[i] = std::thread();
+	}
 }
 
 void Recorder::drawProgress(){
@@ -413,6 +488,9 @@ bool Recorder::initVideo(const std::string & path, Format format, bool verbose){
 	}
 	const int tgtW = _size[0] - _size[0]%2;
 	const int tgtH = _size[1] - _size[1]%2;
+#ifdef FFMPEG_USE_THREADS
+	_codecCtx->thread_count = _savingThreads.size();
+#endif
 	_codecCtx->codec_id = outFormat.avid;
 	_codecCtx->width = tgtW;
 	_codecCtx->height = tgtH;
@@ -456,19 +534,22 @@ bool Recorder::initVideo(const std::string & path, Format format, bool verbose){
 		return false;
 	}
 
-	// Allocate frame.
-	_frame = av_frame_alloc();
-	if(!_frame){
-		std::cerr << "[VIDEO]: Unable to allocate frame." << std::endl;
-		return false;
-	}
-	_frame->format = _codecCtx->pix_fmt;
-	_frame->width = _codecCtx->width;
-	_frame->height = _codecCtx->height;
-	_frame->pts = 0;
-	if(av_frame_get_buffer(_frame, 0) < 0){
-		std::cerr << "[VIDEO]: Unable to create frame buffer." << std::endl;
-		return false;
+	// Allocate frames.
+	for(unsigned int i = 0; i < _frames.size(); ++i){
+		AVFrame* frame = av_frame_alloc();
+		if(!frame){
+			std::cerr << "[VIDEO]: Unable to allocate frame." << std::endl;
+			return false;
+		}
+		frame->format = _codecCtx->pix_fmt;
+		frame->width = _codecCtx->width;
+		frame->height = _codecCtx->height;
+		frame->pts = 0;
+		if(av_frame_get_buffer(frame, 0) < 0){
+			std::cerr << "[VIDEO]: Unable to create frame buffer." << std::endl;
+			return false;
+		}
+		_frames[i] = frame;
 	}
 
 	// Open file, write header.
@@ -482,10 +563,12 @@ bool Recorder::initVideo(const std::string & path, Format format, bool verbose){
 	}
 	
 	// Create scaling/conversion context.
-	_swsContext = sws_getContext(_size[0], _size[1], AV_PIX_FMT_RGBA, _codecCtx->width, _codecCtx->height, _codecCtx->pix_fmt, SWS_POINT, nullptr, nullptr, nullptr);
-	if(!_swsContext){
-		std::cerr << "[VIDEO]: Unable to create processing context." << std::endl;
-		return false;
+	for(unsigned int i = 0; i < _swsContexts.size(); ++i){
+		_swsContexts[i] = sws_getContext(_size[0], _size[1], AV_PIX_FMT_RGBA, _codecCtx->width, _codecCtx->height, _codecCtx->pix_fmt, SWS_POINT, nullptr, nullptr, nullptr);
+		if(!_swsContexts[i]){
+			std::cerr << "[VIDEO]: Unable to create processing context." << std::endl;
+			return false;
+		}
 	}
 
 	// Debug log.
@@ -501,32 +584,6 @@ bool Recorder::initVideo(const std::string & path, Format format, bool verbose){
 
 }
 
-bool Recorder::addFrameToVideo(GLubyte * data){
-#ifdef MIDIVIZ_SUPPORT_VIDEO
-	unsigned char * srcs[AV_NUM_DATA_POINTERS] = {0};
-	int strides[AV_NUM_DATA_POINTERS] = {0};
-	srcs[0] = (unsigned char *)data;
-	strides[0] = int(_size[0] * 4);
-	// Rescale and convert to the proper output layout.
-	sws_scale(_swsContext, srcs, strides, 0, _size[1], _frame->data, _frame->linesize);
-	// Send frame.
-	const int res = avcodec_send_frame(_codecCtx, _frame);
-	if(res == AVERROR(EAGAIN)){
-		// Unavailable right now, should flush and retry.
-		if(flush()){
-			avcodec_send_frame(_codecCtx, _frame);
-		}
-	} else if(res < 0){
-		std::cerr << "[VIDEO]: Unable to send frame." << std::endl;
-		return false;
-	}
-	_frame->pts++;
-	return true;
-#else
-	return false;
-#endif
-}
-
 void Recorder::endVideo(){
 #ifdef MIDIVIZ_SUPPORT_VIDEO
 	avcodec_send_frame(_codecCtx, nullptr);
@@ -534,21 +591,30 @@ void Recorder::endVideo(){
 	av_write_trailer(_formatCtx);
 	avio_closep(&_formatCtx->pb);
 	avcodec_free_context(&_codecCtx);
-	av_frame_free(&_frame);
-	sws_freeContext(_swsContext);
+	for(unsigned int i = 0; i < _frames.size(); ++i){
+		av_frame_free(&_frames[i]);
+		_frames[i] = nullptr;
+	}
+	for(unsigned int i = 0; i < _swsContexts.size(); ++i){
+		sws_freeContext(_swsContexts[i]);
+		_swsContexts[i] = nullptr;
+	}
+
 	avformat_free_context(_formatCtx);
 
 	_formatCtx = nullptr;
-	_codec= nullptr;
-	_codecCtx= nullptr;
-	_stream= nullptr;
-	_frame= nullptr;
-	_swsContext= nullptr;
+	_codec = nullptr;
+	_codecCtx = nullptr;
+	_stream = nullptr;
 #endif
 }
 
 bool Recorder::flush(){
 #ifdef MIDIVIZ_SUPPORT_VIDEO
+	// When multithreading, lock as we use the stream and contexts in a sequential way.
+#ifdef FFMPEG_USE_THREADS
+	const std::lock_guard<std::mutex> lock(_streamMutex);
+#endif
 	// Keep flushing.
 	while(true){
 		AVPacket packet = {0};
