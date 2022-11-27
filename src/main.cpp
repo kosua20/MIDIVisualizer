@@ -4,6 +4,7 @@
 #include "helpers/Configuration.h"
 #include "helpers/ResourcesManager.h"
 #include "helpers/ImGuiStyle.h"
+#include "helpers/System.h"
 
 #include "rendering/Renderer.h"
 
@@ -134,13 +135,22 @@ void performAction(SystemAction action, GLFWwindow * window, glm::ivec4 & frame)
 
 int main( int argc, char** argv) {
 
-	const std::string internalConfigPath = "midiviz_internal.settings";
-
 	// Initialize glfw, which will create and setup an OpenGL context.
 	if (!glfwInit()) {
 		std::cerr << "[ERROR]: could not start GLFW3" << std::endl;
 		return 2;
 	}
+	
+	// Retrieve the settings directory for all applications.
+	std::string applicationDataPath = System::getApplicationDataDirectory();
+	if(!applicationDataPath.empty()){
+		// If this is not the working directory, make sure it exists.
+		System::createDirectory(applicationDataPath);
+		// And create a subdirectory for MIDIVisualizer.
+		applicationDataPath += "/MIDIVisualizer/";
+		System::createDirectory(applicationDataPath);
+	}
+	const std::string internalConfigPath = applicationDataPath + Configuration::defaultName();
 
 	// This has to be called after glfwInit for the working dir to be OK on macOS.
 	Configuration config(internalConfigPath, std::vector<std::string>(argv, argv+argc));
