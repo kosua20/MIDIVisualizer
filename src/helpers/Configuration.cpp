@@ -33,7 +33,14 @@ Configuration::Configuration(const std::string& path, const std::vector<std::str
 	// Attempt to load arguments from file.
 	Arguments argsFromFile;
 	std::ifstream configFile = System::openInputFile(path);
-	if(configFile.is_open()){
+	if(!configFile.is_open()){
+		std::cerr << "[CONFIG]: Could not load internal configuration from " << path << ". Attempting to load default configuration from working directory." << std::endl;
+		configFile = System::openInputFile(defaultName());
+		if(!configFile.is_open()){
+			std::cerr << "[CONFIG]: No default file either, it's probably a first launch." << std::endl;
+		}
+	}
+	if(configFile){
 		argsFromFile = parseArguments(configFile);
 		configFile.close();
 	}
@@ -207,7 +214,12 @@ Arguments Configuration::parseArguments(const std::vector<std::string> & argv){
 void Configuration::save(const std::string& path){
 	std::ofstream outFile = System::openOutputFile(path);
 	if(!outFile.is_open()){
-		return;
+		std::cerr << "[CONFIG]: Could not save internal configuration to " << path << ", attempting to save in working dir." << std::endl;
+		outFile = System::openOutputFile(defaultName());
+		if(!outFile.is_open()){
+			std::cerr << "[CONFIG]: Unable to save in working dir either, cancelling." << std::endl;
+			return;
+		}
 	}
 
 	// File options
@@ -306,4 +318,8 @@ glm::vec3 Configuration::parseVec3(const std::vector<std::string> & strs){
 		vec[int(i)] = parseFloat(strs[i]);
 	}
 	return vec;
+}
+
+std::string Configuration::defaultName(){
+	return "midiviz_internal.settings";
 }

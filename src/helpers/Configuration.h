@@ -56,6 +56,8 @@ public:
 
 	static void printHelp();
 
+	static std::string defaultName();
+	
 public:
 
 	// General settings (will be saved)
