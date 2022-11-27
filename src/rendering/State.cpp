@@ -369,13 +369,15 @@ void State::save(const std::string & path){
 	configFile << std::endl;
 
 	configFile.close();
+
+	_filePath = outputPath;
 }
 
-void State::load(const std::string & path){
+bool State::load(const std::string & path){
 	std::ifstream configFileRaw = System::openInputFile(path);
 	if(!configFileRaw.is_open()){
 		std::cerr << "[CONFIG]: Unable to load state from file at path " << path << std::endl;
-		return;
+		return false;
 	}
 
 	// Now that we support comments we need to be able to skip them without large code modifications below.
@@ -413,6 +415,8 @@ void State::load(const std::string & path){
 		load(args);
 	}
 
+	_filePath = path;
+	return true;
 }
 
 void State::load(const Arguments & configArgs){
@@ -496,6 +500,8 @@ void State::load(const Arguments & configArgs){
 		keyboard.majorColor[cid] = keyboard.majorColor[0];
 		keyboard.minorColor[cid] = keyboard.minorColor[0];
 	}
+
+	// Don't erase the file path.
 }
 
 void State::synchronizeChannels(){
@@ -507,6 +513,10 @@ void State::synchronizeChannels(){
 		keyboard.majorColor[cid] = keyboard.majorColor[0];
 		keyboard.minorColor[cid] = keyboard.minorColor[0];
 	}
+}
+
+const std::string& State::filePath() const {
+	return _filePath;
 }
 
 void State::reset(){
@@ -591,6 +601,8 @@ void State::reset(){
 	applyAA = false;
 	reverseScroll = false;
 	horizontalScroll = false;
+
+	_filePath = "";
 }
 
 void State::load(std::istream & configFile, int majVersion, int minVersion){

@@ -18,8 +18,9 @@ MIDISceneFile::~MIDISceneFile(){}
 
 MIDISceneFile::MIDISceneFile(const std::string & midiFilePath, const SetOptions & options) : MIDIScene() {
 
+	_filePath = midiFilePath;
 	// MIDI processing.
-	_midiFile = MIDIFile(midiFilePath);
+	_midiFile = MIDIFile(_filePath);
 
 	updateSets(options);
 
@@ -116,4 +117,8 @@ int MIDISceneFile::notesCount() const {
 
 void MIDISceneFile::print() const {
 	_midiFile.print();
+}
+
+const std::string& MIDISceneFile::filePath() const {
+	return _filePath;
 }

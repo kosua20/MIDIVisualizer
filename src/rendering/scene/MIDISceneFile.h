@@ -26,9 +26,12 @@ public:
 
 	void print() const;
 
+	const std::string& filePath() const;
+
 private:
 
 	MIDIFile _midiFile;
+	std::string _filePath;
 	double _previousTime = 0.0;
 	
 };

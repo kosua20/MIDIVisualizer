@@ -144,7 +144,7 @@ public:
 
 	State();
 
-	void load(const std::string & path);
+	bool load(const std::string & path);
 
 	void load(const Arguments & configArgs);
 
@@ -153,6 +153,8 @@ public:
 	void reset();
 
 	void synchronizeChannels();
+
+	const std::string& filePath() const;
 
 	static size_t helpText(std::string & configOpts, std::string & setsOpts);
 
@@ -192,6 +194,7 @@ private:
 	std::unordered_map<std::string, float*> _floatInfos;
 	std::unordered_map<std::string, glm::vec3*> _vecInfos;
 	std::unordered_map<std::string, std::string*> _stringInfos;
+	std::string _filePath;
 
 };
 
