@@ -270,13 +270,13 @@ void Configuration::printHelp(){
 
 	std::cout << std::endl << "* General options: " << std::endl;
 	for(const auto & opt : genOpts){
-		const std::string pad(std::max(int(alignSize) - int(opt.first.size()), 0), ' ');
+		const std::string pad((std::max)(int(alignSize) - int(opt.first.size()), 0), ' ');
 		std::cout << "--" << opt.first << pad << opt.second << std::endl;
 	}
 
 	std::cout << std::endl << "* Export options: (--export path is mandatory)" << std::endl;
 	for(const auto & opt : expOpts){
-		const std::string pad(std::max(int(alignSize) - int(opt.first.size()), 0), ' ');
+		const std::string pad((std::max)(int(alignSize) - int(opt.first.size()), 0), ' ');
 		std::cout << "--" << opt.first << pad << opt.second << std::endl;
 	}
 

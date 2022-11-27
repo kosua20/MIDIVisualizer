@@ -135,7 +135,7 @@ inline double computeUnitsDuration(int tempo, size_t time, uint16_t unitsPerQuar
 
 template <typename T>
 T clamp(T x, T a, T b) {
-	return std::min(std::max(x, a), b);
+	return (std::min)((std::max)(x, a), b);
 }
 
 

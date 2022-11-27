@@ -364,7 +364,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		// Detail text.
 		const int nCount = _scene->notesCount();
 		const double duration = _scene->duration();
-		const int speed = int(std::round(double(nCount)/std::max(0.001, duration)));
+		const int speed = int(std::round(double(nCount)/(std::max)(0.001, duration)));
 		ImGui::Text("Notes: %d, duration: %.1fs, speed: %d notes/s", nCount, duration, speed);
 
 		ImGui::Separator();
@@ -440,7 +440,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		if(!_liveplay){
 			ImGuiSameLine(COLUMN_SIZE);
 			if(ImGui::SliderFloat("Speed", &_state.scrollSpeed, 0.1f, 5.0f, "%.1fx")){
-				_state.scrollSpeed = std::max(0.01f, _state.scrollSpeed);
+				_state.scrollSpeed = (std::max)(0.01f, _state.scrollSpeed);
 			}
 		}
 		ImGui::PopItemWidth();
@@ -458,8 +458,8 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			ImGui::PopItemWidth();
 
 			if (smw0) {
-				_state.scale = std::max(_state.scale, 0.01f);
-				_state.background.minorsWidth = std::min(std::max(_state.background.minorsWidth, 0.1f), 1.0f);
+				_state.scale = (std::max)(_state.scale, 0.01f);
+				_state.background.minorsWidth = glm::clamp(_state.background.minorsWidth, 0.1f, 1.0f);
 				_scene->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
 				_score->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
 			}
@@ -682,7 +682,7 @@ void Renderer::showParticleOptions(){
 
 	ImGuiPushItemWidth(100);
 	if (ImGui::InputFloat("Size##particles", &_state.particles.scale, 1.0f, 10.0f, "%.0fpx")) {
-		_state.particles.scale = std::max(1.0f, _state.particles.scale);
+		_state.particles.scale = (std::max)(1.0f, _state.particles.scale);
 	}
 
 	const bool mp0 = ImGui::InputFloat("Speed", &_state.particles.speed, 0.01f, 1.0f, "%.2fx");
@@ -690,7 +690,7 @@ void Renderer::showParticleOptions(){
 	const bool mp1 = ImGui::InputFloat("Spread", &_state.particles.expansion, 0.1f, 5.0f, "%.1fx");
 
 	if (ImGui::SliderInt("Count", &_state.particles.count, 1, 512)) {
-		_state.particles.count = std::min(std::max(_state.particles.count, 1), 512);
+		_state.particles.count = glm::clamp(_state.particles.count, 1, 512);
 	}
 
 	ImGui::PopItemWidth();
@@ -762,7 +762,7 @@ void Renderer::showKeyboardOptions(){
 
 	ImGuiPushItemWidth(100);
 	if(ImGuiSliderPercent("Height##Keys", &_state.keyboard.size, 0.0f, 1.0f)){
-		_state.keyboard.size = (std::min)((std::max)(_state.keyboard.size, 0.0f), 1.0f);
+		_state.keyboard.size = glm::clamp(_state.keyboard.size, 0.0f, 1.0f);
 		_scene->setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notesFadeOut);
 		_score->setKeyboardSize(_state.keyboard.size);
 	}
@@ -805,11 +805,11 @@ void Renderer::showPedalOptions(){
 	ImGui::Combo("Location", (int*)&_state.pedals.location, "Top left\0Bottom left\0Top right\0Bottom right\0");
 
 	if(ImGuiSliderPercent("Opacity##Pedals", &_state.pedals.opacity, 0.0f, 1.0f)){
-		_state.pedals.opacity = std::min(std::max(_state.pedals.opacity, 0.0f), 1.0f);
+		_state.pedals.opacity = glm::clamp(_state.pedals.opacity, 0.0f, 1.0f);
 	}
 	ImGuiSameLine(COLUMN_SIZE);
 	if(ImGuiSliderPercent("Size##Pedals", &_state.pedals.size, 0.05f, 0.5f)){
-		_state.pedals.size = std::min(std::max(_state.pedals.size, 0.05f), 0.5f);
+		_state.pedals.size = glm::clamp(_state.pedals.size, 0.05f, 0.5f);
 	}
 	ImGui::PopItemWidth();
 
@@ -830,7 +830,7 @@ void Renderer::showWaveOptions(){
 	ImGui::SliderFloat("Frequency##Waves", &_state.waves.frequency, 0.0f, 5.0f, "%.2fx");
 
 	if(ImGuiSliderPercent("Opacity##Waves", &_state.waves.opacity, 0.0f, 1.0f)){
-		_state.waves.opacity = std::min(std::max(_state.waves.opacity, 0.0f), 1.0f);
+		_state.waves.opacity = glm::clamp(_state.waves.opacity, 0.0f, 1.0f);
 	}
 	ImGui::PopItemWidth();
 
@@ -841,7 +841,7 @@ void Renderer::showBlurOptions(){
 	ImGuiSameLine(COLUMN_SIZE);
 	ImGuiPushItemWidth(100);
 	if (ImGui::SliderFloat("Fading", &_state.attenuation, 0.0f, 1.0f)) {
-		_state.attenuation = std::min(1.0f, std::max(0.0f, _state.attenuation));
+		_state.attenuation = glm::clamp(_state.attenuation, 0.0f, 1.0f);
 		glUseProgram(_blurringScreen.programId());
 		const GLuint id1 = glGetUniformLocation(_blurringScreen.programId(), "attenuationFactor");
 		glUniform1f(id1, _state.attenuation);
@@ -884,7 +884,7 @@ void Renderer::showBackgroundOptions(){
 	ImGuiPushItemWidth(100);
 
 	if (ImGuiSliderPercent("Opacity##Background", &_state.background.imageAlpha, 0.0f, 1.0f)) {
-		_state.background.imageAlpha = std::min(std::max(_state.background.imageAlpha, 0.0f), 1.0f);
+		_state.background.imageAlpha = glm::clamp(_state.background.imageAlpha, 0.0f, 1.0f);
 	}
 
 	ImGui::PopItemWidth();
@@ -1273,7 +1273,7 @@ void Renderer::setState(const State & state){
 }
 
 void  Renderer::setGUIScale(float scale){
-	_guiScale = std::max(0.25f, scale);
+	_guiScale = (std::max)(0.25f, scale);
 	ImGui::GetStyle() = ImGuiStyle();
 	ImGui::configureStyle();
 	ImGui::GetIO().FontGlobalScale = _guiScale;

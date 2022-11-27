@@ -109,8 +109,8 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 		note.duration = float(time - double(note.start));
 		_actives[nid] = int(note.set);
 		// Keep track of which region was modified.
-		minUpdated = std::min(minUpdated, noteId);
-		maxUpdated = std::max(maxUpdated, noteId);
+		minUpdated = (std::min)(minUpdated, noteId);
+		maxUpdated = (std::max)(maxUpdated, noteId);
 	}
 
 	// Restore pedals to the last known state.
@@ -169,8 +169,8 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 				_notesInfos[index].note = note;
 
 				// Keep track of which region was modified.
-				minUpdated = std::min(minUpdated, int(index));
-				maxUpdated = std::max(maxUpdated, int(index));
+				minUpdated = (std::min)(minUpdated, int(index));
+				maxUpdated = (std::max)(maxUpdated, int(index));
 
 				// Find an available particles system and update it with the note parameters.
 				for(auto & particle : _particles){
@@ -268,7 +268,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 	_dataBufferSubsize = std::min(MAX_NOTES_IN_FLIGHT, _notesCount);
 	// Update timings.
 	_previousTime = time;
-	_maxTime = std::max(time, _maxTime);
+	_maxTime = (std::max)(time, _maxTime);
 }
 
 double MIDISceneLive::duration() const {

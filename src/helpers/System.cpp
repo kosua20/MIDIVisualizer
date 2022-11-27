@@ -9,6 +9,7 @@
 #	include <sys/stat.h>
 #else
 # 	undef APIENTRY
+#	define NOMINMAX
 #	include <Windows.h>
 #endif
 

@@ -110,7 +110,7 @@ MIDIFile::MIDIFile(const std::string & filePath){
 		std::vector<MIDINote> notes;
 		track.getNotes(notes, NoteType::ALL);
 		for(const auto & note : notes){
-			_duration = std::max(_duration, note.start + note.duration);
+			_duration = (std::max)(_duration, note.start + note.duration);
 		}
 		_count += int(notes.size());
 	}

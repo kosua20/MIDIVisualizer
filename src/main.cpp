@@ -49,7 +49,7 @@ void drop_callback(GLFWwindow* window, int count, const char** paths){
 	Renderer *renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
 	bool loadedMIDI = false;
 	bool loadedConfig = false;
-	for(uint i = 0; i < count; ++i){
+	for(unsigned int i = 0; i < count; ++i){
 		std::string path(paths[i]);
 		if(path.empty()){
 			continue;
