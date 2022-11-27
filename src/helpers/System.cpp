@@ -2,15 +2,22 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <cstdlib>
 
 #include <GLFW/glfw3.h>
 
-#ifndef _WIN32
-#	include <sys/stat.h>
+#ifdef _WIN32
+#undef APIENTRY
+#define NOMINMAX
+#include <windows.h>
+#include <shlobj.h>
 #else
-# 	undef APIENTRY
-#	define NOMINMAX
-#	include <Windows.h>
+#include <sys/stat.h>
+#endif
+
+#ifdef __APPLE__
+#include <sysdir.h>
+#include <CoreFoundation/CoreFoundation.h>
 #endif
 
 // On Windows, we can notify both AMD and Nvidia drivers that we prefer discrete GPUs.
@@ -21,6 +28,20 @@ extern "C" {
 	// See https://docs.nvidia.com/gameworks/content/technologies/desktop/optimus.htm
 	_declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
 }
+#endif
+
+#ifdef _WIN32
+
+bool System::createDirectory(const std::string & directory) {
+	return CreateDirectoryW(widen(directory), nullptr) != 0;
+}
+
+#else
+
+bool System::createDirectory(const std::string & directory) {
+	return mkdir(directory.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) == 0;
+}
+
 #endif
 
 void System::ping() {
@@ -88,6 +109,49 @@ std::ofstream System::openOutputFile(const std::string& path, bool binary){
 	auto flags = binary ? std::ios::binary|std::ios::out : std::ios::out;
 	std::ofstream file(path.c_str(), flags);
 	return file;
+}
+
+#endif
+
+#ifdef _WIN32
+
+std::string System::getApplicationDataDirectory(){
+	// %APPDATA%
+	PWSTR pathData = nullptr;
+	HRESULT res = SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, NULL, &pathData);
+
+	std::string path;
+	if(res == S_OK){
+		path = narrow(pathData);
+	}
+	CoTaskMemFree(pathData);
+	return path;
+}
+
+#elif defined(__APPLE__)
+
+std::string System::getApplicationDataDirectory(){
+	// ~/Library/Application Support/
+	// Enumerate.
+	sysdir_search_path_enumeration_state state = sysdir_start_search_path_enumeration(SYSDIR_DIRECTORY_APPLICATION_SUPPORT, SYSDIR_DOMAIN_MASK_USER);
+	char pathBuffer[PATH_MAX];
+	while((state = sysdir_get_next_search_path_enumeration(state, pathBuffer))){
+		const std::string path(pathBuffer);
+		if(!path.empty()){
+			return path;
+		}
+	}
+	return "";
+}
+#else
+
+std::string System::getApplicationDataDirectory(){
+	// $HOME/.config/
+	const char* envHome = std::getenv("HOME");
+	if(envHome){
+		return std::string(envHome) + "/.config/";
+	}
+	return "";
 }
 
 #endif
