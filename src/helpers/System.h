@@ -10,14 +10,6 @@
 class System {
 public:
 
-	/** Create a directory.
-		 \param directory the path to the directory to create
-		 \return true if the creation is successful.
-		 \note If the directory already exists, it will fail.
-		 \warning This function will not create intermediate directories.
-		 */
-	static bool createDirectory(const std::string & directory);
-
 	/** Notify the user by sending a 'Bell' signal. */
 	static void ping();
 	
@@ -35,6 +27,14 @@ public:
 
 	static std::ofstream openOutputFile(const std::string& path, bool binary = false);
 
+	/** Create a directory.
+		 \param directory the path to the directory to create
+		 \return true if the creation is successful.
+		 \note If the directory already exists, it will fail.
+		 \warning This function will not create intermediate directories.
+		 */
+	static bool createDirectory(const std::string & directory);
+	
 	static std::string getApplicationDataDirectory();
 	
 };

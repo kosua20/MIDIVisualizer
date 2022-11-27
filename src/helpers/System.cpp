@@ -30,20 +30,6 @@ extern "C" {
 }
 #endif
 
-#ifdef _WIN32
-
-bool System::createDirectory(const std::string & directory) {
-	return CreateDirectoryW(widen(directory), nullptr) != 0;
-}
-
-#else
-
-bool System::createDirectory(const std::string & directory) {
-	return mkdir(directory.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) == 0;
-}
-
-#endif
-
 void System::ping() {
 	std::cout << '\a' << std::endl;
 }
@@ -81,6 +67,13 @@ std::string narrow(wchar_t * str) {
 	return res;
 }
 
+bool System::createDirectory(const std::string & directory) {
+	wchar_t* str = widen(path);
+	const bool success = CreateDirectoryW(str, nullptr) != 0;
+	delete[] str;
+	return success;
+}
+
 std::ifstream System::openInputFile(const std::string& path, bool binary){
 	wchar_t* str = widen(path);
 	auto flags = binary ? std::ios::binary|std::ios::in : std::ios::in;
@@ -98,6 +91,10 @@ std::ofstream System::openOutputFile(const std::string& path, bool binary){
 }
 
 #else
+
+bool System::createDirectory(const std::string & directory) {
+	return mkdir(directory.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) == 0;
+}
 
 std::ifstream System::openInputFile(const std::string& path, bool binary){
 	auto flags = binary ? std::ios::binary|std::ios::in : std::ios::in;
