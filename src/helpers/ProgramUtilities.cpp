@@ -1,4 +1,5 @@
 #include "ProgramUtilities.h"
+#include "../helpers/System.h"
 
 #include <iostream>
 #include <fstream>
@@ -48,10 +49,9 @@ int _checkGLError(const char *file, int line){
 }
 
 std::string loadStringFromFile(const std::string & filename) {
-	std::ifstream in;
 	// Open a stream to the file.
-	in.open(filename.c_str());
-	if (!in) {
+	std::ifstream in = System::openInputFile(filename);
+	if(!in) {
 		std::cerr << "[ERROR]: " << filename + " is not a valid file." << std::endl;
 		return "";
 	}

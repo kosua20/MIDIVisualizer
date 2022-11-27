@@ -100,6 +100,8 @@ set(Sources
 	"src/helpers/Configuration.h"
 	"src/helpers/ImGuiStyle.cpp"
 	"src/helpers/ImGuiStyle.h"
+	"src/helpers/System.cpp"
+	"src/helpers/System.h"
 	"src/midi/MIDIFile.cpp"
 	"src/midi/MIDIFile.h"
 	"src/midi/MIDITrack.cpp"

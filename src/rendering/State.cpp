@@ -2,6 +2,7 @@
 #include "State.h"
 #include "scene/MIDIScene.h"
 #include "../helpers/ResourcesManager.h"
+#include "../helpers/System.h"
 
 #include <iostream>
 #include <fstream>
@@ -307,7 +308,7 @@ void State::save(const std::string & path){
 	if (path.size() > 4 && path.substr(path.size() - 4, 4) != ".ini") {
 		outputPath += ".ini";
 	}
-	std::ofstream configFile(outputPath);
+	std::ofstream configFile = System::openOutputFile(outputPath);
 	if(!configFile.is_open()){
 		std::cerr << "[CONFIG]: Unable to save state to file at path " << outputPath << std::endl;
 		return;
@@ -371,7 +372,7 @@ void State::save(const std::string & path){
 }
 
 void State::load(const std::string & path){
-	std::ifstream configFileRaw(path);
+	std::ifstream configFileRaw = System::openInputFile(path);
 	if(!configFileRaw.is_open()){
 		std::cerr << "[CONFIG]: Unable to load state from file at path " << path << std::endl;
 		return;
