@@ -68,7 +68,7 @@ std::string narrow(wchar_t * str) {
 }
 
 bool System::createDirectory(const std::string & directory) {
-	wchar_t* str = widen(path);
+	wchar_t* str = widen(directory);
 	const bool success = CreateDirectoryW(str, nullptr) != 0;
 	delete[] str;
 	return success;
