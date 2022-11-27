@@ -64,6 +64,8 @@ public:
 
 	void setGUIScale(float scale);
 
+	void updateConfiguration(Configuration& config);
+
 private:
 	
 

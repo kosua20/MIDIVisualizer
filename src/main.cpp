@@ -240,6 +240,11 @@ int main( int argc, char** argv) {
 			glfwPollEvents();
 
 		}
+		// Refresh and save global settings.
+		renderer.updateConfiguration(config);
+		glfwGetWindowPos(window, &config.windowPos[0], &config.windowPos[1]);
+		glfwGetWindowSize(window, &config.windowSize[0], &config.windowSize[1]);
+		config.save(internalConfigPath);
 
 		ImGui_ImplOpenGL3_Shutdown();
 		ImGui_ImplGlfw_Shutdown();

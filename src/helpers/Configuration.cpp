@@ -204,6 +204,32 @@ Arguments Configuration::parseArguments(const std::vector<std::string> & argv){
 	return args;
 }
 
+void Configuration::save(const std::string& path){
+	std::ofstream outFile = System::openOutputFile(path);
+	if(!outFile.is_open()){
+		return;
+	}
+
+	// File options
+	if(!lastMidiPath.empty()){
+		outFile << "midi " << lastMidiPath << "\n";
+	}
+	if(!lastConfigPath.empty()){
+		outFile << "config " << lastConfigPath << "\n";
+	}
+
+	// Window options
+	outFile << "size " << windowSize[0] << " " << windowSize[1] << "\n";
+	outFile << "position " << windowPos[0] << " " << windowPos[1] << "\n";
+	outFile << "gui-size " << guiScale << "\n";
+	outFile << "fullscreen " << fullscreen << "\n";
+	outFile << "hide-window " << hideWindow << "\n";
+	outFile << "forbid-transparency " << preventTransparency << "\n";
+	outFile << "transparency " << useTransparency << "\n";
+
+	outFile.close();
+}
+
 void Configuration::printVersion(){
 	std::cout << "MIDIVisualizer v" << MIDIVIZ_VERSION_MAJOR << "." << MIDIVIZ_VERSION_MINOR << std::endl;
 	std::cout << "* Built on " << __DATE__ << ", at " << __TIME__ << "." << std::endl;

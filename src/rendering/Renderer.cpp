@@ -1282,6 +1282,20 @@ void  Renderer::setGUIScale(float scale){
 }
 
 
+void Renderer::updateConfiguration(Configuration& config){
+	config.fullscreen = _fullscreen;
+	config.useTransparency = _useTransparency;
+	config.guiScale = _guiScale;
+	// Settings file.
+	config.lastConfigPath = _state.filePath();
+	// MIDI File.
+	std::shared_ptr<MIDISceneFile> fileScene = std::dynamic_pointer_cast<MIDISceneFile>(_scene);
+	if(fileScene){
+		config.lastMidiPath = fileScene->filePath();
+	}
+	// TODO: dynamic scene.
+}
+
 bool Renderer::startDirectRecording(const Export& exporting, const glm::vec2 & size){
 	const bool success = _recorder.setParameters(exporting);
 	if(!success){

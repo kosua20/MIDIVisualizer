@@ -35,6 +35,7 @@ public:
 
 	Configuration(const std::string& path, const std::vector<std::string>& argv);
 
+	void save(const std::string& path);
 
 	const Arguments& args() const { return _args; }
 
