@@ -41,6 +41,45 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
 	ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
 }
 
+void drop_callback(GLFWwindow* window, int count, const char** paths){
+	if(count == 0){
+		return;
+	}
+
+	Renderer *renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
+	bool loadedMIDI = false;
+	bool loadedConfig = false;
+	for(uint i = 0; i < count; ++i){
+		std::string path(paths[i]);
+		if(path.empty()){
+			continue;
+		}
+		const std::string::size_type pos = path.rfind('.');
+		if(pos == std::string::npos){
+			continue;
+		}
+		if(pos == path.size() - 1){
+			continue;
+		}
+		const std::string extension = path.substr(pos + 1);
+		// Determine path file type.
+		const bool isMIDI = extension == "mid" || extension == "midi";
+		const bool isConfig = extension == "ini" || extension == "config";
+		// Attempt to load MIDI if not already loaded.
+		if(!loadedMIDI && isMIDI){
+			loadedMIDI = renderer->loadFile(path);
+		}
+		// Attempt to load state if not already loaded.
+		if(!loadedConfig && isConfig){
+			State newState;
+			loadedConfig = newState.load(path);
+			if(loadedConfig){
+				renderer->setState(newState);
+			}
+		}
+	}
+}
+
 /// Perform system window action.
 
 void performAction(SystemAction action, GLFWwindow * window, glm::ivec4 & frame){
@@ -190,6 +229,7 @@ int main( int argc, char** argv) {
 		glfwSetKeyCallback(window,key_callback);
 		glfwSetScrollCallback(window,scroll_callback);
 		glfwSetCharCallback(window, ImGui_ImplGlfw_CharCallback);
+		glfwSetDropCallback(window, drop_callback);
 		glfwSwapInterval(1);
 
 		// On HiDPI screens, we might have to initially resize the framebuffers size.
