@@ -32,12 +32,15 @@ SystemAction::SystemAction(SystemAction::Type act) {
 	data = glm::ivec4(0);
 }
 
-Renderer::Renderer(int winW, int winH, bool fullscreen, bool supportTransparency) : _supportTransparency(supportTransparency) {
+Renderer::Renderer(const Configuration& config) :
+	_supportTransparency(!config.preventTransparency) {
+
 	_showGUI = true;
 	_showDebug = false;
 
-	_fullscreen = fullscreen;
-	_windowSize = glm::ivec2(winW, winH);
+	_fullscreen = config.fullscreen;
+	_windowSize = config.windowSize;
+	_useTransparency = config.useTransparency && _supportTransparency;
 
 	// GL options
 	glEnable(GL_CULL_FACE);
@@ -51,8 +54,8 @@ Renderer::Renderer(int winW, int winH, bool fullscreen, bool supportTransparency
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-	_camera.screen(winW, winH, 1.0f);
-	_backbufferSize = glm::vec2(winW, winH);
+	_camera.screen(config.windowSize[0], config.windowSize[1], 1.0f);
+	_backbufferSize = glm::vec2(config.windowSize);
 
 	// Setup framebuffers, size does not really matter as we expect a resize event just after.
 	const glm::ivec2 renderSize = _camera.renderSize();
@@ -189,8 +192,7 @@ SystemAction Renderer::draw(float currentTime) {
 	_timer = _shouldPlay ? (currentTime - _timerStart) : _timer;
 
 	// Render scene and blit, with GUI on top if needed.
-	const bool transparentBackground = _useTransparency && _supportTransparency;
-	drawScene(transparentBackground);
+	drawScene(_useTransparency);
 
 	glViewport(0, 0, GLsizei(_backbufferSize[0]), GLsizei(_backbufferSize[1]));
 	_passthrough.draw(_finalFramebuffer->textureId(), _timer);
@@ -645,9 +647,10 @@ SystemAction Renderer::showTopButtons(double currentTime){
 			}
 		}
 
-		if(_supportTransparency)
-		{
-			ImGui::Checkbox("Transparent", &_useTransparency);
+		if(_supportTransparency) {
+			if(ImGui::Checkbox("Transparent", &_useTransparency)){
+				_useTransparency = _useTransparency && _supportTransparency;
+			}
 		}
 
 		ImGui::EndPopup();
@@ -937,8 +940,9 @@ void Renderer::showBottomButtons(){
 		nfdchar_t *outPath = NULL;
 		nfdresult_t result = NFD_OpenDialog("ini", NULL, &outPath);
 		if (result == NFD_OKAY) {
-			_state.load(std::string(outPath));
-			setState(_state);
+			if(_state.load(std::string(outPath))){
+				setState(_state);
+			}
 		}
 	}
 	ImGuiSameLine();
@@ -1086,7 +1090,7 @@ void Renderer::showSets(){
 
 void Renderer::applyBackgroundColor(){
 	// Clear all buffers with this color.
-	glClearColor(_state.background.color[0], _state.background.color[1], _state.background.color[2], _useTransparency && _supportTransparency ? 0.0f : 1.0f);
+	glClearColor(_state.background.color[0], _state.background.color[1], _state.background.color[2], _useTransparency ? 0.0f : 1.0f);
 	_particlesFramebuffer->bind();
 	glClear(GL_COLOR_BUFFER_BIT);
 	_particlesFramebuffer->unbind();
@@ -1277,8 +1281,9 @@ void  Renderer::setGUIScale(float scale){
 	ImGui::GetStyle().FrameRounding = 3 * _guiScale;
 }
 
-bool Renderer::startDirectRecording(const std::string & path, Recorder::Format format, int framerate, int bitrate, float postroll, bool skipBackground, bool fixPremultiply, const glm::vec2 & size){
-	const bool success = _recorder.setParameters(path, format, framerate, bitrate, postroll, skipBackground, fixPremultiply);
+
+bool Renderer::startDirectRecording(const Export& exporting, const glm::vec2 & size){
+	const bool success = _recorder.setParameters(exporting);
 	if(!success){
 		std::cerr << "[EXPORT]: Unable to start direct export." << std::endl;
 		return false;

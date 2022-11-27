@@ -124,11 +124,11 @@ void writeFrameToVideo(std::vector<GLubyte>* buffer, const glm::ivec2 size, bool
 
 Recorder::Recorder(){
 	_formats = {
-		 {"PNG", "png", Recorder::Format::PNG},
+		 {"PNG", "png", Export::Format::PNG},
 	#ifdef MIDIVIZ_SUPPORT_VIDEO
-		{"MPEG2", "mp4", Recorder::Format::MPEG2},
-		{"MPEG4", "mp4", Recorder::Format::MPEG4},
-		{"PRORES", "mov", Recorder::Format::PRORES}
+		{"MPEG2", "mp4", Export::Format::MPEG2},
+		{"MPEG4", "mp4", Export::Format::MPEG4},
+		{"PRORES", "mov", Export::Format::PRORES}
 	#endif
 	};
 
@@ -186,15 +186,15 @@ void Recorder::record(const std::shared_ptr<Framebuffer> & frame){
 	glReadPixels(0, 0, (GLsizei)_size[0], (GLsizei)_size[1], GL_RGBA, GL_UNSIGNED_BYTE, _savingBuffers[buffIndex].data());
 	frame->unbind();
 
-	if(_outFormat == Format::PNG){
+	if(_config.format == Export::Format::PNG){
 		// Write to disk.
 		std::string intString = std::to_string(_currentFrame);
 		while (intString.size() < std::ceil(std::log10(float(_framesCount)))) {
 			intString = "0" + intString;
 		}
-		const std::string outputFilePath = _exportPath + "/output_" + intString + ".png";
+		const std::string outputFilePath = _config.path + "/output_" + intString + ".png";
 		// Move the conversion and writing to a background thread.
-		_savingThreads[buffIndex] = std::thread(writePNGToPath, &_savingBuffers[buffIndex], _size, _exportNoBackground, _cancelPremultiply, outputFilePath);
+		_savingThreads[buffIndex] = std::thread(writePNGToPath, &_savingBuffers[buffIndex], _size,  _config.alphaBackground, _config.fixPremultiply, outputFilePath);
 
 	} else {
 		// This will do nothing (and is unreachable) if the video module is not present.
@@ -202,9 +202,9 @@ void Recorder::record(const std::shared_ptr<Framebuffer> & frame){
 		_frames[buffIndex]->pts = _currentFrame;
 		// This could be multithreaded similarly to the PNG case, but the ffmepg flush needs to be threadsafe.
 #ifdef FFMPEG_USE_THREADS
-		_savingThreads[buffIndex] = std::thread(writeFrameToVideo, &_savingBuffers[buffIndex], _size, _exportNoBackground, _cancelPremultiply, _frames[buffIndex], _swsContexts[buffIndex], _codecCtx, this);
+		_savingThreads[buffIndex] = std::thread(writeFrameToVideo, &_savingBuffers[buffIndex], _size,  _config.alphaBackground, _config.fixPremultiply, _frames[buffIndex], _swsContexts[buffIndex], _codecCtx, this);
 #else
-		writeFrameToVideo( &_savingBuffers[buffIndex], _size, _exportNoBackground, _cancelPremultiply, _frames[buffIndex], _swsContexts[buffIndex], _codecCtx, this);
+		writeFrameToVideo( &_savingBuffers[buffIndex], _size, _config.alphaBackground, _config.fixPremultiply, _frames[buffIndex], _swsContexts[buffIndex], _codecCtx, this);
 #endif
 #endif
 	}
@@ -217,7 +217,7 @@ void Recorder::record(const std::shared_ptr<Framebuffer> & frame){
 				thread.join();
 		}
 		// End the video stream if needed.
-		if(_outFormat != Format::PNG){
+		if(_config.format != Export::Format::PNG){
 			endVideo();
 		}
 		// Log result timing.
@@ -227,7 +227,7 @@ void Recorder::record(const std::shared_ptr<Framebuffer> & frame){
 		std::cout << "[EXPORT]: Export took " << (float(duration) / 1000.0f) << "s." << std::endl;
 	}
 
-	_currentTime += (1.0f / float(_exportFramerate));
+	_currentTime += (1.0f / float(_config.framerate));
 	++_currentFrame;
 }
 
@@ -240,14 +240,14 @@ bool Recorder::drawGUI(float scale){
 		const float scaledColumn = scale * EXPORT_COLUMN_SIZE;
 
 		// Dropdown list.
-		if(ImGui::BeginCombo("Format", _formats[int(_outFormat)].name.c_str())){
+		if(ImGui::BeginCombo("Format", _formats[int(_config.format)].name.c_str())){
 			for(size_t i = 0; i < _formats.size(); ++i){
 				ImGui::PushID((void*)(intptr_t)i);
 
 				const auto & form = _formats[i];
-				const bool selected = form.format == _outFormat;
+				const bool selected = form.format == _config.format;
 				if(ImGui::Selectable(form.name.c_str(), selected)){
-					_outFormat = form.format;
+					_config.format = form.format;
 				}
 				if(selected){
 					ImGui::SetItemDefaultFocus();
@@ -259,7 +259,7 @@ bool Recorder::drawGUI(float scale){
 
 		// Extra options.
 		ImGui::SameLine(scaledColumn);
-		ImGui::InputInt("Framerate", &_exportFramerate);
+		ImGui::InputInt("Framerate", &_config.framerate);
 
 		if(ImGui::InputInt2("Export size", &_size[0])){
 			_size[0] += _size[0] % 2;
@@ -268,22 +268,22 @@ bool Recorder::drawGUI(float scale){
 
 		ImGui::SameLine(scaledColumn);
 
-		ImGui::InputFloat("Postroll", &_postroll, 0.1f, 1.0f, "%.1fs");
+		ImGui::InputFloat("Postroll", &_config.postroll, 0.1f, 1.0f, "%.1fs");
 
 		bool lineStarted = false;
-		if(_outFormat == Format::PNG || _outFormat == Format::PRORES){
-			ImGui::Checkbox("Transparent bg.", &_exportNoBackground);
+		if(_config.format == Export::Format::PNG || _config.format == Export::Format::PRORES){
+			ImGui::Checkbox("Transparent bg.", &_config.alphaBackground);
 			lineStarted = true;
 		}
 
-		if(_outFormat != Format::PNG){
+		if(_config.format != Export::Format::PNG){
 			if(lineStarted){
 				ImGui::SameLine(scaledColumn);
 			}
-			ImGui::InputInt("Rate (Mbps)", &_bitRate);
+			ImGui::InputInt("Rate (Mbps)", &_config.bitrate);
 		}
-		if((_outFormat == Format::PNG || _outFormat == Format::PRORES) && _exportNoBackground){
-			ImGui::Checkbox("Fix premultiply", &_cancelPremultiply);
+		if((_config.format == Export::Format::PNG || _config.format == Export::Format::PRORES) && _config.alphaBackground){
+			ImGui::Checkbox("Fix premultiply", &_config.fixPremultiply);
 		}
 
 		ImGui::PopItemWidth();
@@ -296,29 +296,29 @@ bool Recorder::drawGUI(float scale){
 		}
 		
 		ImGui::SameLine(scaledColumn);
-		const std::string exportType = _outFormat == Format::PNG ? "images" : "video";
+		const std::string exportType = _config.format == Export::Format::PNG ? "images" : "video";
 		const std::string exportButtonName = "Save " + exportType + " to...";
 
 		if (ImGui::Button(exportButtonName.c_str(), buttonSize)) {
 			// Read arguments.
 			nfdchar_t *outPath = NULL;
 
-			if(_outFormat == Format::PNG){
+			if(_config.format == Export::Format::PNG){
 				nfdresult_t result = NFD_PickFolder(NULL, &outPath);
 				if(result == NFD_OKAY) {
-					_exportPath = std::string(outPath);
+					_config.path = std::string(outPath);
 					shouldStart = true;
 					ImGui::CloseCurrentPopup();
 				}
 			} else {
-				const std::string & ext = _formats.at(int(_outFormat)).ext;
+				const std::string & ext = _formats.at(int(_config.format)).ext;
 				nfdresult_t result = NFD_SaveDialog(ext.c_str(), NULL, &outPath);
 				if(result == NFD_OKAY) {
-					_exportPath = std::string(outPath);
+					_config.path = std::string(outPath);
 					const std::string fullExt = "." + ext;
 					// Append extension if needed.
-					if(_exportPath.size() < 5 || (_exportPath.substr(_exportPath.size()-4) != fullExt)){
-						_exportPath.append(fullExt);
+					if(_config.path.size() < 5 || (_config.path.substr(_config.path.size()-4) != fullExt)){
+						_config.path.append(fullExt);
 					}
 					shouldStart = true;
 					ImGui::CloseCurrentPopup();
@@ -334,7 +334,7 @@ bool Recorder::drawGUI(float scale){
 
 void Recorder::prepare(float preroll, float duration, float speed){
 	_currentTime = -preroll;
-	_framesCount = int(std::ceil((duration + _postroll + preroll) * _exportFramerate / speed));
+	_framesCount = int(std::ceil((duration + _config.postroll + preroll) * _config.framerate / speed));
 	_currentFrame = _framesCount;
 	_sceneDuration = duration;
 	// Image writing setup.
@@ -347,8 +347,8 @@ void Recorder::prepare(float preroll, float duration, float speed){
 void Recorder::start(bool verbose) {
 	_currentFrame = 0;
 
-	if (_outFormat != Format::PNG) {
-		initVideo(_exportPath, _outFormat, verbose);
+	if (_config.format != Export::Format::PNG) {
+		initVideo(_config.path, _config.format, verbose);
 	}
 	_startTime = std::chrono::high_resolution_clock::now();
 
@@ -364,8 +364,8 @@ void Recorder::drawProgress(){
 	if(ImGui::BeginPopupModal("Exporting...", NULL, ImGuiWindowFlags_AlwaysAutoResize)){
 
 		ImGui::Text("Scene duration: %ds.", int(std::round(_sceneDuration)));
-		ImGui::Text("Framerate: %d fps.", _exportFramerate);
-		ImGui::Text("Destination path: %s", _exportPath.c_str());
+		ImGui::Text("Framerate: %d fps.", _config.framerate);
+		ImGui::Text("Destination path: %s", _config.path.c_str());
 
 		ImGui::Text("Exporting %zu frames at resolution %dx%d...", _framesCount, _size[0], _size[1]);
 
@@ -380,7 +380,7 @@ bool Recorder::isRecording() const {
 }
 
 bool Recorder::isTransparent() const {
-	return _exportNoBackground;
+	return _config.alphaBackground;
 }
 
 float Recorder::currentTime() const {
@@ -405,28 +405,22 @@ void Recorder::setSize(const glm::ivec2 & size){
 	_size[1] += _size[1]%2;
 }
 
-bool Recorder::setParameters(const std::string & path, Format format, int framerate, int bitrate, float postroll, bool skipBackground, bool fixPremultiply){
+bool Recorder::setParameters(const Export& exporting){
 	// Check if the format is supported.
-	if(int(format) >= _formats.size()){
+	if(int(exporting.format) >= _formats.size()){
 		std::cerr << "[EXPORT]: The requested output format is not supported by this executable. If this is a video format, make sure MIDIVisualizer has been compiled with ffmpeg enabled by checking the output of ./MIDIVisualizer --version" << std::endl;
 		return false;
 	}
+	_config = exporting;
+	
 
-	_exportPath = path;
-	_outFormat = format;
-	_exportFramerate = framerate;
-	_bitRate = bitrate;
-	_exportNoBackground = skipBackground;
-	_cancelPremultiply = fixPremultiply;
-	_postroll = postroll;
-
-	if(_outFormat != Format::PNG){
+	if(_config.format != Export::Format::PNG){
 		// Check that the export path is valid.
-		const std::string & ext = _formats.at(int(_outFormat)).ext;
+		const std::string & ext = _formats.at(int(_config.format)).ext;
 		const std::string fullExt = "." + ext;
 		// Append extension if needed.
-		if(_exportPath.size() < 5 || (_exportPath.substr(_exportPath.size()-4) != fullExt)){
-			_exportPath.append(fullExt);
+		if(_config.path.size() < 5 || (_config.path.substr(_config.path.size()-4) != fullExt)){
+			_config.path.append(fullExt);
 		}
 	}
 	return true;
@@ -440,9 +434,9 @@ bool Recorder::videoExportSupported(){
 #endif
 }
 
-bool Recorder::initVideo(const std::string & path, Format format, bool verbose){
+bool Recorder::initVideo(const std::string & path, Export::Format format, bool verbose){
 #ifdef MIDIVIZ_SUPPORT_VIDEO
-	if(format == Format::PNG){
+	if(format == Export::Format::PNG){
 		std::cerr << "[EXPORT]: Unable to use PNG format for video." << std::endl;
 		return false;
 	}
@@ -467,10 +461,10 @@ bool Recorder::initVideo(const std::string & path, Format format, bool verbose){
 		AVCodecID avid;
 		AVPixelFormat avformat;
 	};
-	static const std::unordered_map<Format, InternalCodecOpts> opts = {
-		{Format::MPEG2, {AV_CODEC_ID_MPEG2VIDEO, AV_PIX_FMT_YUV422P}},
-		{Format::MPEG4, {AV_CODEC_ID_MPEG4, AV_PIX_FMT_YUV420P}},
-		{Format::PRORES, {AV_CODEC_ID_PRORES, AV_PIX_FMT_YUVA444P10}},
+	static const std::unordered_map<Export::Format, InternalCodecOpts> opts = {
+		{Export::Format::MPEG2, {AV_CODEC_ID_MPEG2VIDEO, AV_PIX_FMT_YUV422P}},
+		{Export::Format::MPEG4, {AV_CODEC_ID_MPEG4, AV_PIX_FMT_YUV420P}},
+		{Export::Format::PRORES, {AV_CODEC_ID_PRORES, AV_PIX_FMT_YUVA444P10}},
 	};
 
 	// Setup codec.
@@ -495,17 +489,17 @@ bool Recorder::initVideo(const std::string & path, Format format, bool verbose){
 	_codecCtx->codec_id = outFormat.avid;
 	_codecCtx->width = tgtW;
 	_codecCtx->height = tgtH;
-	_codecCtx->time_base = {1, _exportFramerate };
-	_codecCtx->framerate = { _exportFramerate, 1};
+	_codecCtx->time_base = {1, _config.framerate };
+	_codecCtx->framerate = { _config.framerate, 1};
 	_codecCtx->gop_size = 10;
 	_codecCtx->pix_fmt = outFormat.avformat;
-	_codecCtx->bit_rate = _bitRate*1000000;
+	_codecCtx->bit_rate = _config.bitrate * 1000000;
 	if(_formatCtx->oformat->flags & AVFMT_GLOBALHEADER){
 		_codecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 	}
 
 	// For PRORES, try to be as fast as possible.
-	if(format == Format::PRORES){
+	if(format == Export::Format::PRORES){
 		// Just in case the slowest prores codec is picked, try to configure it for maximum speed
 		// as described in doc (https://ffmpeg.org/ffmpeg-codecs.html#toc-Speed-considerations)
 		//_codecCtx->flags |= AV_CODEC_FLAG_QSCALE;
@@ -527,7 +521,7 @@ bool Recorder::initVideo(const std::string & path, Format format, bool verbose){
 		return false;
 	}
 	_stream->id = _formatCtx->nb_streams - 1;
-	_stream->time_base = {1, _exportFramerate };
+	_stream->time_base = {1, _config.framerate };
 	// Sync parameters.
 	av_dict_free(&codecParams);
 	if(avcodec_parameters_from_context(_stream->codecpar, _codecCtx) < 0){

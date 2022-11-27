@@ -3,6 +3,7 @@
 
 #include <gl3w/gl3w.h>
 #include "../rendering/Framebuffer.h"
+#include "../helpers/Configuration.h"
 #include <string>
 #include <vector>
 #include <memory>
@@ -24,10 +25,6 @@ struct SwsContext;
 class Recorder {
 
 public:
-
-	enum class Format : int {
-		PNG = 0, MPEG2 = 1, MPEG4 = 2, PRORES = 3
-	};
 
 	Recorder();
 
@@ -59,13 +56,13 @@ public:
 
 	void setSize(const glm::ivec2 & size);
 
-	bool setParameters(const std::string & path, Format format, int framerate, int bitrate, float postroll, bool skipBackground, bool fixPremultiply);
+	bool setParameters(const Export& exporting);
 
 	static bool videoExportSupported();
 
 private:
 
-	bool initVideo(const std::string & path, Format format, bool verbose);
+	bool initVideo(const std::string & path, Export::Format format, bool verbose);
 
 	bool addFrameToVideo(GLubyte * data);
 	
@@ -74,25 +71,19 @@ private:
 	struct CodecOpts {
 		std::string name;
 		std::string ext;
-		Recorder::Format format;
+		Export::Format format;
 	};
 	
 	std::vector<CodecOpts> _formats;
 	std::vector<std::vector<GLubyte>> _savingBuffers;
 	std::vector<std::thread> _savingThreads;
-	
-	std::string _exportPath;
+
+	Export _config;
 	glm::ivec2 _size {0, 0};
 	size_t _framesCount = 0;
 	size_t _currentFrame = 0;
-	Format _outFormat = Format::PNG;
 	float _sceneDuration = 0.0f;
 	float _currentTime = 0.0f;
-	float _postroll = 10.0f;
-	int _exportFramerate = 60;
-	int _bitRate = 40;
-	bool _exportNoBackground = false;
-	bool _cancelPremultiply = false;
 
 	// Video context ptrs if available.
 	AVFormatContext * _formatCtx = nullptr;

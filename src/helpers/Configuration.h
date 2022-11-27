@@ -11,14 +11,37 @@ typedef std::unordered_map<std::string, std::vector<std::string>> Arguments;
 // Helper to trim characters from both ends of a string.
 std::string trim(const std::string & str, const std::string & del);
 
+std::string join(const std::vector<std::string>& strs, const std::string& delim);
+
+struct Export {
+
+	enum class Format : int {
+		   PNG = 0, MPEG2 = 1, MPEG4 = 2, PRORES = 3
+	};
+
+	std::string path;
+	Format format = Format::PNG;
+	float postroll = 10.0f;
+	int framerate = 60;
+	int bitrate = 40;
+	bool fixPremultiply = false;
+	bool alphaBackground = false;
+
+};
+
 class Configuration {
 
 public:
 
+	Configuration(const std::string& path, const std::vector<std::string>& argv);
+
+
+	const Arguments& args() const { return _args; }
+
 	static Arguments parseArguments(std::istream & configFile);
 
 	/** Will filter arguments without values. */
-	static Arguments parseArguments(const std::vector<std::string> & argv, bool & showHelp, bool & showVersion);
+	static Arguments parseArguments(const std::vector<std::string> & argv);
 
 	static bool parseBool(const std::string & str);
 
@@ -28,8 +51,31 @@ public:
 
 	static glm::vec3 parseVec3(const std::vector<std::string> & strs);
 
+	static void printVersion();
+
+	static void printHelp();
+
+public:
+
+	// General settings (will be saved)
+	std::string lastMidiPath;
+	std::string lastConfigPath;
+	glm::ivec2 windowSize = { 1280, 600 };
+	glm::ivec2 windowPos = {100, 100};
+	float guiScale = 1.0f;
+	bool fullscreen = false;
+	bool hideWindow = false;
+	bool preventTransparency = false;
+	bool useTransparency = false;
+	bool showVersion = false;
+	bool showHelp = false;
+
+	// Export settings (won't be saved)
+	Export exporting;
+
 private:
 
+	Arguments _args;
 
 };
 

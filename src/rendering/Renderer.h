@@ -34,7 +34,7 @@ class Renderer {
 
 public:
 
-	Renderer(int winW, int winH, bool fullscreen, bool supportTransparency);
+	Renderer(const Configuration& config);
 
 	~Renderer();
 	
@@ -60,7 +60,7 @@ public:
 	void keyPressed(int key, int action);
 
 	/// Directly start recording.
-	bool startDirectRecording(const std::string & path, Recorder::Format format, int framerate, int bitrate, float postroll, bool skipBackground, bool fixPremultiply, const glm::vec2 & size);
+	bool startDirectRecording(const Export& exporting, const glm::vec2 & size);
 
 	void setGUIScale(float scale);
 
