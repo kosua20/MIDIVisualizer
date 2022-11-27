@@ -143,11 +143,14 @@ int main( int argc, char** argv) {
 	
 	// Retrieve the settings directory for all applications.
 	std::string applicationDataPath = System::getApplicationDataDirectory();
+	// If this is not empty (ie the working directory), be a good citizen
+	// and save config in a subdirectory belonging to MIDIVisualizer.
 	if(!applicationDataPath.empty()){
-		// If this is not the working directory, make sure it exists.
+		// We also need to make sure the directory exist.
 		System::createDirectory(applicationDataPath);
 		// And create a subdirectory for MIDIVisualizer.
-		applicationDataPath += "/MIDIVisualizer/";
+		applicationDataPath += "MIDIVisualizer/";
+		// Idem.
 		System::createDirectory(applicationDataPath);
 	}
 	const std::string internalConfigPath = applicationDataPath + Configuration::defaultName();
