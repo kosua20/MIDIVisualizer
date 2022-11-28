@@ -5,6 +5,8 @@
 #include "../midi/MIDIFile.h"
 #include "../State.h"
 
+#include <fstream>
+
 class MIDIScene {
 
 public:
@@ -52,6 +54,8 @@ public:
 	virtual int notesCount() const = 0;
 
 	virtual void print() const = 0;
+
+	virtual void save(std::ofstream& file) const = 0;
 
 	virtual ~MIDIScene();
 
@@ -140,6 +144,8 @@ public:
 	int notesCount() const;
 
 	void print() const;
+
+	void save(std::ofstream& file) const;
 
 	~MIDISceneEmpty();
 

@@ -25,6 +25,8 @@ public:
 	int notesCount() const;
 
 	void print() const;
+	
+	void save(std::ofstream& file) const;
 
 	const std::string& filePath() const;
 

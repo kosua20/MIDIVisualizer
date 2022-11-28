@@ -604,6 +604,10 @@ void MIDISceneEmpty::print() const {
 
 }
 
+void MIDISceneEmpty::save(std::ofstream& file) const {
+
+}
+
 MIDISceneEmpty::~MIDISceneEmpty(){
 
 }

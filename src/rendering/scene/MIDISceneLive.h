@@ -29,6 +29,8 @@ public:
 
 	void print() const;
 
+	void save(std::ofstream& file) const;
+
 	static const std::vector<std::string> & availablePorts();
 
 private:
@@ -45,11 +47,12 @@ private:
 	std::array<int, 128> _activeIds;
 	std::array<bool, 128> _activeRecording;
 	std::map<float, Pedals> _pedalInfos;
+	std::vector<rtmidi::message> _allMessages;
 
 	double _previousTime = 0.0;
 	double _maxTime = 0.0;
 	double _signature = 4.0/4.0;
-	double _secondsPerMeasure;
+	double _secondsPerMeasure = 1.0;
 	int _notesCount = 0;
 	int _tempo = 500000;
 	SetOptions _currentSetOption;

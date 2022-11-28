@@ -10,6 +10,8 @@
 
 #include "MIDISceneLive.h"
 
+#include <rtmidi17/writer.hpp>
+
 
 #ifdef _WIN32
 #undef MIN
@@ -33,11 +35,11 @@ MIDISceneLive::MIDISceneLive(int port) : MIDIScene(){
 		shared().open_virtual_port("MIDIVisualizer virtual input");
 	}
 
-
 	_activeIds.fill(-1);
 	_activeRecording.fill(false);
 	_notes.resize(MAX_NOTES_IN_FLIGHT);
 	_notesInfos.resize(MAX_NOTES_IN_FLIGHT);
+	_allMessages.reserve(MAX_NOTES_IN_FLIGHT);
 	_secondsPerMeasure = computeMeasureDuration(_tempo, _signature);
 	_pedalInfos[-10000.0f] = Pedals();
 	upload(_notes);
@@ -127,6 +129,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 			// End of the queue.
 			break;
 		}
+		_allMessages.push_back(message);
 
 		const auto type = message.get_message_type();
 
@@ -285,6 +288,23 @@ int MIDISceneLive::notesCount() const {
 
 void MIDISceneLive::print() const {
 	std::cout << "[INFO]: Live scene with " << notesCount() << " notes, duration " << duration() << "s." << std::endl;
+}
+
+void MIDISceneLive::save(std::ofstream& file) const {
+
+	// micro s / measure = (micro s / qnote) * (clock / qnote)^-1 * (clock / beat) * (beat / measure)
+	// measure duration = tempo * (qnote / beat) * signature
+	// (ticks) = tempo * signature / measure duration
+	const size_t ticks = ((double)_tempo * (_signature / _secondsPerMeasure));
+	const double ticksPerSecond = _signature / _secondsPerMeasure;
+
+	rtmidi::writer writer(ticks);
+	writer.add_track();
+	for(unsigned int i = 0; i < _allMessages.size(); ++i){
+		const auto& message = _allMessages[i];
+		writer.add_event(ticksPerSecond * message.timestamp, 0, message);
+	}
+	writer.write(file);
 }
 
 rtmidi::midi_in * MIDISceneLive::_sharedMIDIIn = nullptr;

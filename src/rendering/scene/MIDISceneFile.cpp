@@ -119,6 +119,17 @@ void MIDISceneFile::print() const {
 	_midiFile.print();
 }
 
+void MIDISceneFile::save(std::ofstream& file) const {
+	// Do it the dumb way.
+	std::ifstream input(_filePath);
+	if(input.is_open() && file.is_open()){
+		std::copy(std::istreambuf_iterator<char>(input),
+				  std::istreambuf_iterator<char>(),
+				  std::ostream_iterator<char>(file));
+	}
+	input.close();
+}
+
 const std::string& MIDISceneFile::filePath() const {
 	return _filePath;
 }
