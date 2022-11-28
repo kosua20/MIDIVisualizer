@@ -1,6 +1,7 @@
 #include "../helpers/ProgramUtilities.h"
 #include "../helpers/ResourcesManager.h"
 #include "../helpers/ImGuiStyle.h"
+#include "../helpers/System.h"
 #include <cstring>
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui/imgui.h>
@@ -370,7 +371,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		ImGui::Separator();
 		
 		// Load button.
-		if (ImGui::Button("Load MIDI file...")) {
+		if(ImGui::Button("Load MIDI file...")) {
 			// Read arguments.
 			nfdchar_t *outPath = NULL;
 			nfdresult_t result = NFD_OpenDialog(NULL, NULL, &outPath);
@@ -394,6 +395,21 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			}
 			showDevices();
 		}
+		const bool emptyScene = std::dynamic_pointer_cast<MIDISceneEmpty>(_scene) != nullptr;
+		if(!emptyScene)
+		{
+			if(ImGui::Button("Export MIDI file...")) {
+				nfdchar_t *savePath = NULL;
+				nfdresult_t result = NFD_SaveDialog("mid", NULL, &savePath);
+				if (result == NFD_OKAY && savePath != nullptr) {
+					std::ofstream outFile = System::openOutputFile(std::string(savePath), true);
+					_scene->save(outFile);
+					outFile.close();
+				}
+			}
+		}
+
+		ImGuiSameLine(COLUMN_SIZE);
 
 		ImGui::Separator();
 
@@ -418,7 +434,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			}
 		}
 
-		if (ImGui::Checkbox("Use the same color everywhere", &_state.lockParticleColor)) {
+		if (ImGui::Checkbox("Use the same color for all effects", &_state.lockParticleColor)) {
 			// If we enable the lock, make sure the colors are synched.
 			synchronizeColors(_state.baseColors);
 		}
