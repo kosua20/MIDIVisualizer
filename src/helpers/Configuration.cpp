@@ -105,6 +105,9 @@ Configuration::Configuration(const std::string& path, const std::vector<std::str
 			if(name == "config" && vals.size() >= 1){
 			   lastConfigPath = join(vals, " ");
 			}
+			if(name == "device" && vals.size() >= 1){
+				lastMidiDevice = vals[0];
+			}
 		}
 		// Export options
 		{
@@ -229,6 +232,9 @@ void Configuration::save(const std::string& path){
 	if(!lastConfigPath.empty()){
 		outFile << "config " << lastConfigPath << "\n";
 	}
+	if(!lastMidiDevice.empty()){
+		outFile << "device " << lastMidiDevice << "\n";
+	}
 
 	// Window options
 	outFile << "size " << windowSize[0] << " " << windowSize[1] << "\n";
@@ -254,6 +260,7 @@ void Configuration::printHelp(){
 
 	const std::vector<std::pair<std::string, std::string>> genOpts = {
 		{"midi", "path to a MIDI file to load"},
+		{"device", "name of a MIDI device to start a live session to (or VIRTUAL to act as a virtual device)"},
 		{"config", "path to a configuration INI file"},
 		{"size", "dimensions of the window (--size W H)"},
 		{"position", "position of the window (--position X Y)"},

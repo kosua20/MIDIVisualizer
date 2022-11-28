@@ -169,7 +169,7 @@ bool Renderer::connectDevice(const std::string& deviceName) {
 	}
 
 	if(_selectedPort == -1){
-		if(deviceName != "@VIRTUAL"){
+		if(deviceName != VIRTUAL_DEVICE_NAME){
 			std::cerr << "[MIDI] Unable to connect to device named " << deviceName << "." << std::endl;
 			return false;
 		}
@@ -1328,6 +1328,10 @@ void  Renderer::setGUIScale(float scale){
 
 
 void Renderer::updateConfiguration(Configuration& config){
+	// Reset
+	config.lastMidiPath = "";
+	config.lastMidiDevice = "";
+	// General settings
 	config.fullscreen = _fullscreen;
 	config.useTransparency = _useTransparency;
 	config.guiScale = _guiScale;
@@ -1338,7 +1342,11 @@ void Renderer::updateConfiguration(Configuration& config){
 	if(fileScene){
 		config.lastMidiPath = fileScene->filePath();
 	}
-	// TODO: dynamic scene.
+	// MIDI device.
+	std::shared_ptr<MIDISceneLive> liveScene = std::dynamic_pointer_cast<MIDISceneLive>(_scene);
+	if(liveScene){
+		config.lastMidiDevice = liveScene->deviceName();
+	}
 }
 
 bool Renderer::startDirectRecording(const Export& exporting, const glm::vec2 & size){

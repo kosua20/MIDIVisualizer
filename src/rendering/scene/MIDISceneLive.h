@@ -9,7 +9,7 @@
 #include <rtmidi17/rtmidi17.hpp>
 #include <map>
 
-#define VIRTUAL_DEVICE_NAME "@VIRTUAL"
+#define VIRTUAL_DEVICE_NAME "VIRTUAL"
 
 class MIDISceneLive : public MIDIScene {
 

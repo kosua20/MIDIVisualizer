@@ -231,6 +231,10 @@ int main( int argc, char** argv) {
 		if(!config.lastConfigPath.empty()){
 			state.load(config.lastConfigPath);
 		}
+		// Connect to MIDI device if specified.
+		if(!config.lastMidiDevice.empty()){
+			renderer.connectDevice(config.lastMidiDevice);
+		}
 
 		// Apply any extra display argument on top of the existing config.
 		state.load(config.args());
