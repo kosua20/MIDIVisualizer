@@ -11,8 +11,8 @@
 #include <unordered_map>
 #include <array>
 
-#define MIDIVIZ_VERSION_MAJOR 6
-#define MIDIVIZ_VERSION_MINOR 5
+#define MIDIVIZ_VERSION_MAJOR 7
+#define MIDIVIZ_VERSION_MINOR 0
 
 #define COLUMN_SIZE 170
 #define EXPORT_COLUMN_SIZE 200
