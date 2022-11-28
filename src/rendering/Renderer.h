@@ -40,6 +40,8 @@ public:
 	
 	bool loadFile(const std::string & midiFilePath);
 
+	bool connectDevice(const std::string & deviceName);
+
 	void setState(const State & state);
 	
 	/// Draw function

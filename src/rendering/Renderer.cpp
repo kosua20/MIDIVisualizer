@@ -137,7 +137,7 @@ Renderer::Renderer(const Configuration& config) :
 
 Renderer::~Renderer() {}
 
-bool Renderer::loadFile(const std::string &midiFilePath) {
+bool Renderer::loadFile(const std::string& midiFilePath) {
 	std::shared_ptr<MIDIScene> scene(nullptr);
 
 	try {
@@ -155,6 +155,35 @@ bool Renderer::loadFile(const std::string &midiFilePath) {
 	_scene = scene;
 	_score = std::make_shared<Score>(_scene->secondsPerMeasure());
 	applyAllSettings();
+	return true;
+}
+
+bool Renderer::connectDevice(const std::string& deviceName) {
+	std::shared_ptr<MIDIScene> scene(nullptr);
+
+	const auto & devices = MIDISceneLive::availablePorts(true);
+	for(int i = 0; i < devices.size(); ++i){
+		if(devices[i] == deviceName){
+			_selectedPort = i;
+		}
+	}
+
+	if(_selectedPort == -1){
+		if(deviceName != "@VIRTUAL"){
+			std::cerr << "[MIDI] Unable to connect to device named " << deviceName << "." << std::endl;
+			return false;
+		}
+	}
+
+	_scene = std::make_shared<MIDISceneLive>(_selectedPort);
+	_timer = 0.0f;
+	_shouldPlay = true;
+	_state.reverseScroll = true;
+	_state.scrollSpeed = 1.0f;
+	_liveplay = true;
+	_score = std::make_shared<Score>(_scene->secondsPerMeasure());
+	applyAllSettings();
+
 	return true;
 }
 
