@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
+#include <iterator>
 
 #include "../../helpers/ProgramUtilities.h"
 #include "../../helpers/ResourcesManager.h"
