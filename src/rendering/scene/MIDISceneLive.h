@@ -9,6 +9,8 @@
 #include <rtmidi17/rtmidi17.hpp>
 #include <map>
 
+#define VIRTUAL_DEVICE_NAME "@VIRTUAL"
+
 class MIDISceneLive : public MIDIScene {
 
 public:
@@ -31,8 +33,10 @@ public:
 
 	void save(std::ofstream& file) const;
 
-	static const std::vector<std::string> & availablePorts();
+	const std::string& deviceName() const;
 
+	static const std::vector<std::string> & availablePorts(bool force = false);
+	
 private:
 
 	struct NoteInfos {
@@ -56,6 +60,7 @@ private:
 	int _notesCount = 0;
 	int _tempo = 500000;
 	SetOptions _currentSetOption;
+	std::string _deviceName;
 
 	static rtmidi::midi_in & shared();
 

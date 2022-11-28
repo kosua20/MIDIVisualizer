@@ -31,8 +31,10 @@ MIDISceneLive::MIDISceneLive(int port) : MIDIScene(){
 	}
 	if(port >= 0){
 		shared().open_port(port, "MIDIVisualizer input");
+		_deviceName = _availablePorts[port];
 	} else {
 		shared().open_virtual_port("MIDIVisualizer virtual input");
+		_deviceName = VIRTUAL_DEVICE_NAME;
 	}
 
 	_activeIds.fill(-1);
@@ -43,6 +45,7 @@ MIDISceneLive::MIDISceneLive(int port) : MIDIScene(){
 	_secondsPerMeasure = computeMeasureDuration(_tempo, _signature);
 	_pedalInfos[-10000.0f] = Pedals();
 	upload(_notes);
+
 }
 
 void MIDISceneLive::updateSet(GPUNote & note, int channel, const SetOptions & options){
@@ -307,6 +310,10 @@ void MIDISceneLive::save(std::ofstream& file) const {
 	writer.write(file);
 }
 
+const std::string& MIDISceneLive::deviceName() const {
+	return _deviceName;
+}
+
 rtmidi::midi_in * MIDISceneLive::_sharedMIDIIn = nullptr;
 std::vector<std::string> MIDISceneLive::_availablePorts;
 int MIDISceneLive::_refreshIndex = 0;
@@ -318,8 +325,8 @@ rtmidi::midi_in & MIDISceneLive::shared(){
 	return *_sharedMIDIIn;
 }
 
-const std::vector<std::string> & MIDISceneLive::availablePorts(){
-	if(_refreshIndex == 0){
+const std::vector<std::string> & MIDISceneLive::availablePorts(bool force){
+	if((_refreshIndex == 0) || force){
 		const int portCount = shared().get_port_count();
 		_availablePorts.resize(portCount);
 
