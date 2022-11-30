@@ -231,14 +231,15 @@ int main( int argc, char** argv) {
 		if(!config.lastConfigPath.empty()){
 			state.load(config.lastConfigPath);
 		}
-		// Connect to MIDI device if specified.
-		if(!config.lastMidiDevice.empty()){
-			renderer.connectDevice(config.lastMidiDevice);
-		}
-
 		// Apply any extra display argument on top of the existing config.
 		state.load(config.args());
 		renderer.setState(state);
+
+		// Connect to MIDI device if specified. We do it after setting the state because there are constraints on the scroll direction when recording.
+		// But we don't want to force reverse-scroll when playing back a recorded liveplay.
+		if(!config.lastMidiDevice.empty()){
+			renderer.connectDevice(config.lastMidiDevice);
+		}
 
 		// Define utility pointer for callbacks (can be obtained back from inside the callbacks).
 		glfwSetWindowUserPointer(window, &renderer);

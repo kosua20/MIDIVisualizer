@@ -160,7 +160,8 @@ bool Renderer::loadFile(const std::string& midiFilePath) {
 
 bool Renderer::connectDevice(const std::string& deviceName) {
 	std::shared_ptr<MIDIScene> scene(nullptr);
-
+	_selectedPort = -1;
+	
 	const auto & devices = MIDISceneLive::availablePorts(true);
 	for(int i = 0; i < devices.size(); ++i){
 		if(devices[i] == deviceName){
@@ -177,7 +178,8 @@ bool Renderer::connectDevice(const std::string& deviceName) {
 
 	_scene = std::make_shared<MIDISceneLive>(_selectedPort);
 	_timer = 0.0f;
-	_shouldPlay = true;
+	// Don't start immediately
+	// _shouldPlay = true;
 	_state.reverseScroll = true;
 	_state.scrollSpeed = 1.0f;
 	_liveplay = true;
