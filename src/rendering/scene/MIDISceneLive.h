@@ -6,7 +6,7 @@
 #include "../State.h"
 #include "MIDIScene.h"
 
-#include <rtmidi17/rtmidi17.hpp>
+#include <libremidi/libremidi.hpp>
 #include <map>
 
 #define VIRTUAL_DEVICE_NAME "VIRTUAL"
@@ -51,7 +51,7 @@ private:
 	std::array<int, 128> _activeIds;
 	std::array<bool, 128> _activeRecording;
 	std::map<float, Pedals> _pedalInfos;
-	std::vector<rtmidi::message> _allMessages;
+	std::vector<libremidi::message> _allMessages;
 
 	double _previousTime = 0.0;
 	double _maxTime = 0.0;
@@ -62,9 +62,9 @@ private:
 	SetOptions _currentSetOption;
 	std::string _deviceName;
 
-	static rtmidi::midi_in & shared();
+	static libremidi::midi_in & shared();
 
-	static rtmidi::midi_in * _sharedMIDIIn;
+	static libremidi::midi_in * _sharedMIDIIn;
 	static std::vector<std::string> _availablePorts;
 	static int _refreshIndex;
 

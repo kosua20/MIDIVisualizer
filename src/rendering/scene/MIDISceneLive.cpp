@@ -10,7 +10,7 @@
 
 #include "MIDISceneLive.h"
 
-#include <rtmidi17/writer.hpp>
+#include <libremidi/writer.hpp>
 
 
 #ifdef _WIN32
@@ -149,7 +149,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 			}
 
 			// If this is an on event with positive velocity, start a new note.
-			if(type == rtmidi::message_type::NOTE_ON && velocity > 0){
+			if(type == libremidi::message_type::NOTE_ON && velocity > 0){
 
 				const int index = _notesCount % MAX_NOTES_IN_FLIGHT;
 				// Get new note.
@@ -197,18 +197,18 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 
 		} else if(message.is_meta_event()){
 			// Handle tempo and signature changes.
-			const rtmidi::meta_event_type metaType = message.get_meta_event_type();
+			const libremidi::meta_event_type metaType = message.get_meta_event_type();
 
-			if(metaType == rtmidi::meta_event_type::TIME_SIGNATURE){
 				_signature = double(message[3]) / double(std::pow(2, short(message[4])));
 				_secondsPerMeasure = computeMeasureDuration(_tempo, _signature);
+			if(metaType == libremidi::meta_event_type::TIME_SIGNATURE){
 
-			} else if(metaType == rtmidi::meta_event_type::TEMPO_CHANGE){
+			} else if(metaType == libremidi::meta_event_type::TEMPO_CHANGE){
 				_tempo = int(((message[3] & 0xFF) << 16) | ((message[4] & 0xFF) << 8) | (message[5] & 0xFF));
 				_secondsPerMeasure = computeMeasureDuration(_tempo, _signature);
 			}
 
-		} else if(type == rtmidi::message_type::CONTROL_CHANGE){
+		} else if(type == libremidi::message_type::CONTROL_CHANGE){
 			// Handle pedal.
 			const int rawType = clamp<int>(message[1], 0, 127);
 			// Skip other CC.
@@ -314,13 +314,13 @@ const std::string& MIDISceneLive::deviceName() const {
 	return _deviceName;
 }
 
-rtmidi::midi_in * MIDISceneLive::_sharedMIDIIn = nullptr;
+libremidi::midi_in * MIDISceneLive::_sharedMIDIIn = nullptr;
 std::vector<std::string> MIDISceneLive::_availablePorts;
 int MIDISceneLive::_refreshIndex = 0;
 
-rtmidi::midi_in & MIDISceneLive::shared(){
+libremidi::midi_in & MIDISceneLive::shared(){
 	if(_sharedMIDIIn == nullptr){
-		_sharedMIDIIn = new rtmidi::midi_in(rtmidi::API::UNSPECIFIED, "MIDIVisualizer");
+		_sharedMIDIIn = new libremidi::midi_in(libremidi::API::UNSPECIFIED, "MIDIVisualizer");
 	}
 	return *_sharedMIDIIn;
 }

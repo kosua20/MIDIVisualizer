@@ -23,12 +23,12 @@ add_subdirectory(libs/glfw/)
 # Add NativeFileDialog
 add_subdirectory(libs/nfd/)
 
-# Add RtMidi17
-set(RTMIDI17_HEADER_ONLY OFF CACHE BOOL "" FORCE)
-set(RTMIDI17_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(RTMIDI17_NO_WINUWP ON CACHE BOOL "" FORCE)
-add_definitions(-DRTMIDI17_NO_BOOST)
-add_subdirectory(libs/rtmidi17/)
+# Add libremidi
+set(LIBREMIDI_HEADER_ONLY OFF CACHE BOOL "" FORCE)
+set(LIBREMIDI_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(LIBREMIDI_NO_WINUWP ON CACHE BOOL "" FORCE)
+add_definitions(-DLIBREMIDI_NO_BOOST)
+add_subdirectory(libs/libremidi/)
 
 # Add OpenGL
 find_package(OpenGL REQUIRED)
@@ -147,7 +147,7 @@ source_group(TREE ${PROJECT_SOURCE_DIR}/resources FILES ${Shaders})
 add_executable(MIDIVisualizer ${LibSources} ${Sources} ${Shaders})
 
 target_include_directories(MIDIVisualizer PRIVATE src/libs/ src/helpers/)
-target_link_libraries(MIDIVisualizer PRIVATE nfd glfw RtMidi17 ${GLFW_LIBRARIES} ${OPENGL_gl_LIBRARY})
+target_link_libraries(MIDIVisualizer PRIVATE nfd glfw libremidi ${GLFW_LIBRARIES} ${OPENGL_gl_LIBRARY})
 add_dependencies(MIDIVisualizer Packaging)
 
 # Add dependency to FFmpeg if available.
