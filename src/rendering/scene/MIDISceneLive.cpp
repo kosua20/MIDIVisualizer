@@ -36,6 +36,7 @@ MIDISceneLive::MIDISceneLive(int port) : MIDIScene(){
 		shared().open_virtual_port("MIDIVisualizer virtual input");
 		_deviceName = VIRTUAL_DEVICE_NAME;
 	}
+	shared().ignore_types(true, true, true);
 
 	_activeIds.fill(-1);
 	_activeRecording.fill(false);
@@ -111,7 +112,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 		}
 		const int noteId = _activeIds[nid];
 		GPUNote & note = _notes[noteId];
-		note.duration = float(time - double(note.start));
+		note.duration = (std::max)(float(time - double(note.start)), 0.0f);
 		_actives[nid] = int(note.set);
 		// Keep track of which region was modified.
 		minUpdated = (std::min)(minUpdated, noteId);
@@ -242,7 +243,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 
 		auto& note = _notes[i];
 		// Ignore notes that ended at this frame.
-		float noteEnd = note.start+note.duration;
+		float noteEnd = note.start + note.duration;
 		if(noteEnd > _previousTime && noteEnd <= time){
 			continue;
 		}
