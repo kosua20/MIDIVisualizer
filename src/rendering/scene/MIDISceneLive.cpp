@@ -42,7 +42,7 @@ MIDISceneLive::MIDISceneLive(int port) : MIDIScene(){
 	_notes.resize(MAX_NOTES_IN_FLIGHT);
 	_notesInfos.resize(MAX_NOTES_IN_FLIGHT);
 	_allMessages.reserve(MAX_NOTES_IN_FLIGHT);
-	_secondsPerMeasure = computeMeasureDuration(_tempo, _signature);
+	_secondsPerMeasure = computeMeasureDuration(_tempo, _signatureNum / _signatureDenom);
 	_pedalInfos[-10000.0f] = Pedals();
 	upload(_notes);
 
@@ -199,13 +199,14 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 			// Handle tempo and signature changes.
 			const libremidi::meta_event_type metaType = message.get_meta_event_type();
 
-				_signature = double(message[3]) / double(std::pow(2, short(message[4])));
-				_secondsPerMeasure = computeMeasureDuration(_tempo, _signature);
 			if(metaType == libremidi::meta_event_type::TIME_SIGNATURE){
+				_signatureNum = double(message[3]);
+				_signatureDenom = double(std::pow(2, short(message[4])));
+				_secondsPerMeasure = computeMeasureDuration(_tempo, _signatureNum / _signatureDenom);
 
 			} else if(metaType == libremidi::meta_event_type::TEMPO_CHANGE){
 				_tempo = int(((message[3] & 0xFF) << 16) | ((message[4] & 0xFF) << 8) | (message[5] & 0xFF));
-				_secondsPerMeasure = computeMeasureDuration(_tempo, _signature);
+				_secondsPerMeasure = computeMeasureDuration(_tempo, _signatureNum / _signatureDenom);
 			}
 
 		} else if(type == libremidi::message_type::CONTROL_CHANGE){
@@ -295,14 +296,20 @@ void MIDISceneLive::print() const {
 
 void MIDISceneLive::save(std::ofstream& file) const {
 
-	// micro s / measure = (micro s / qnote) * (clock / qnote)^-1 * (clock / beat) * (beat / measure)
-	// measure duration = tempo * (qnote / beat) * signature
-	// (ticks) = tempo * signature / measure duration
-	const size_t ticks = ((double)_tempo * (_signature / _secondsPerMeasure));
-	const double ticksPerSecond = _signature / _secondsPerMeasure;
+	const double tickDurationInUs = double(_tempo) / 60.0;
+	const double ticksPerSecond = 1000000.0f / tickDurationInUs;
+	const double ticksPerMeasure = ticksPerSecond * _secondsPerMeasure;
+	const double quarterNotesPerMeasure = _signatureNum / _signatureDenom * 4.0;
+	const size_t ticksPerQuarterNote = ticksPerMeasure / quarterNotesPerMeasure ;
 
-	rtmidi::writer writer(ticks);
-	writer.add_track();
+	libremidi::writer writer;
+	writer.ticksPerQuarterNote = ticksPerQuarterNote;
+	writer.tracks.resize(1);
+	writer.add_event(0, 0, libremidi::meta_events::tempo(_tempo));
+	writer.add_event(0, 0, libremidi::meta_events::time_signature(int(_signatureNum), int(_signatureDenom)));
+	writer.add_event(0, 0, libremidi::meta_events::key_signature(1, false));
+
+
 	for(unsigned int i = 0; i < _allMessages.size(); ++i){
 		const auto& message = _allMessages[i];
 		writer.add_event(ticksPerSecond * message.timestamp, 0, message);

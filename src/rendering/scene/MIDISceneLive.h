@@ -55,7 +55,8 @@ private:
 
 	double _previousTime = 0.0;
 	double _maxTime = 0.0;
-	double _signature = 4.0/4.0;
+	double _signatureNum = 4.0;
+	double _signatureDenom = 4.0;
 	double _secondsPerMeasure = 1.0;
 	int _notesCount = 0;
 	int _tempo = 500000;
