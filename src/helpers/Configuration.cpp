@@ -106,7 +106,7 @@ Configuration::Configuration(const std::string& path, const std::vector<std::str
 			   lastConfigPath = join(vals, " ");
 			}
 			if(name == "device" && vals.size() >= 1){
-				lastMidiDevice = vals[0];
+				lastMidiDevice = join(vals, " ");
 			}
 		}
 		// Export options
