@@ -151,8 +151,6 @@ void MIDIScene::renderSetup(){
 	// We load the indices data
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
 	glBindVertexArray(0);
-	const GLuint uboLoc = glGetUniformBlockIndex(_programKeysId, "ActiveNotes");
-	glUniformBlockBinding(_programKeysId, uboLoc, 0);
 
 	// Pedals setup.
 	_programPedalsId = createGLProgramFromStrings(ResourcesManager::getStringForShader("pedal_vert"), ResourcesManager::getStringForShader("pedal_frag"));
