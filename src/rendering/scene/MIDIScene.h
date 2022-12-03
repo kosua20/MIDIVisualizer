@@ -116,7 +116,6 @@ private:
 	GLuint _texParticles;
 
 	GLuint _vaoKeyboard;
-	GLuint _uboKeyboard;
 
 	GLuint _vaoPedals;
 	size_t _countPedals;
