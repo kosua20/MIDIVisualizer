@@ -426,7 +426,8 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			}
 			showDevices();
 		}
-		const bool emptyScene = std::dynamic_pointer_cast<MIDISceneEmpty>(_scene) != nullptr;
+
+		/*const bool emptyScene = std::dynamic_pointer_cast<MIDISceneEmpty>(_scene) != nullptr;
 		if(!emptyScene)
 		{
 			if(ImGui::Button("Export MIDI file...")) {
@@ -441,6 +442,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		}
 
 		ImGuiSameLine(COLUMN_SIZE);
+		*/
 
 		ImGui::Separator();
 
@@ -521,17 +523,6 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 
 			ImGuiSameLine(COLUMN_SIZE);
 
-			if(ImGui::Checkbox("Per-set colors", &_state.perChannelColors)){
-				if(!_state.perChannelColors){
-					_state.synchronizeChannels();
-				}
-			}
-			if(_state.perChannelColors){
-				if(ImGui::Button("Define sets...")){
-					ImGui::OpenPopup("Note sets options");
-				}
-				showSets();
-			}
 
 			ImGuiPushItemWidth(100);
 			if(ImGui::SliderFloat("Fadeout", &_state.notesFadeOut, 0.0f, 1.0f)){
@@ -539,6 +530,21 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 				_scene->setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notesFadeOut);
 			}
 			ImGui::PopItemWidth();
+
+			if(ImGui::Checkbox("Per-set colors", &_state.perChannelColors)){
+				if(!_state.perChannelColors){
+					_state.synchronizeChannels();
+				}
+			}
+
+			if(_state.perChannelColors){
+				ImGuiSameLine(COLUMN_SIZE);
+				if(ImGui::Button("Define sets...")){
+					ImGui::OpenPopup("Note sets options");
+				}
+				showSets();
+			}
+
 
 		}
 
