@@ -427,7 +427,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			showDevices();
 		}
 
-		/*const bool emptyScene = std::dynamic_pointer_cast<MIDISceneEmpty>(_scene) != nullptr;
+		const bool emptyScene = std::dynamic_pointer_cast<MIDISceneEmpty>(_scene) != nullptr;
 		if(!emptyScene)
 		{
 			if(ImGui::Button("Export MIDI file...")) {
@@ -440,9 +440,6 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 				}
 			}
 		}
-
-		ImGuiSameLine(COLUMN_SIZE);
-		*/
 
 		ImGui::Separator();
 
