@@ -15,7 +15,7 @@ class MIDISceneLive : public MIDIScene {
 
 public:
 
-	MIDISceneLive(int port);
+	MIDISceneLive(int port, bool verbose);
 
 	void updateSets(const SetOptions & options);
 
@@ -58,10 +58,13 @@ private:
 	double _signatureNum = 4.0;
 	double _signatureDenom = 4.0;
 	double _secondsPerMeasure = 1.0;
+	double _lastMessageTime = 0.0;
+
 	int _notesCount = 0;
 	int _tempo = 500000;
 	SetOptions _currentSetOption;
 	std::string _deviceName;
+	bool _verbose = false;
 
 	static libremidi::midi_in & shared();
 

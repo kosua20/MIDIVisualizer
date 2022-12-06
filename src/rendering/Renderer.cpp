@@ -176,7 +176,7 @@ bool Renderer::connectDevice(const std::string& deviceName) {
 		}
 	}
 
-	_scene = std::make_shared<MIDISceneLive>(_selectedPort);
+	_scene = std::make_shared<MIDISceneLive>(_selectedPort, _verbose);
 	_timer = 0.0f;
 	// Don't start immediately
 	// _shouldPlay = true;
@@ -1067,7 +1067,7 @@ void Renderer::showDevices(){
 		ImGuiSameLine();
 
 		if(ImGui::SmallButton("start virtual device")){
-			_scene = std::make_shared<MIDISceneLive>(-1);
+			_scene = std::make_shared<MIDISceneLive>(-1, _verbose);
 			starting = true;
 		}
 		if(ImGui::IsItemHovered()){
@@ -1093,7 +1093,7 @@ void Renderer::showDevices(){
 		if(!devices.empty()){
 			ImGuiSameLine(EXPORT_COLUMN_SIZE);
 			if(ImGui::Button("Start", buttonSize)){
-				_scene = std::make_shared<MIDISceneLive>(_selectedPort);
+				_scene = std::make_shared<MIDISceneLive>(_selectedPort, _verbose);
 				starting = true;
 			}
 		}

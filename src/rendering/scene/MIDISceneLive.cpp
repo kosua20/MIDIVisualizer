@@ -24,7 +24,9 @@ MIDISceneLive::~MIDISceneLive(){
 	shared().close_port();
 }
 
-MIDISceneLive::MIDISceneLive(int port) : MIDIScene(){
+MIDISceneLive::MIDISceneLive(int port, bool verbose) : MIDIScene() {
+	_verbose = verbose;
+	
 	// For now we use the same MIDI in instance for everything.
 	if(shared().is_port_open()){
 		shared().close_port();
@@ -142,6 +144,10 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 			const short note = clamp<short>(short(message[1]), 0, 127);
 			const short velocity = clamp<short>(short(message[2]), 0, 127);
 
+			if(_verbose){
+				std::cout << "Note: " << int(note) << " " << int(velocity) << " " << (type == libremidi::message_type::NOTE_ON ? "on" : "off")<< "(" << message.timestamp << ")\n";
+			}
+
 			// If the note is currently recording, disable it.
 			if(_activeRecording[note]){
 				_activeRecording[note] = false;
@@ -205,14 +211,31 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 				_signatureDenom = double(std::pow(2, short(message[4])));
 				_secondsPerMeasure = computeMeasureDuration(_tempo, _signatureNum / _signatureDenom);
 
+				if(_verbose){
+					std::cout << "Signature: " << _signatureNum << "/" << _signatureDenom << " " <<  _secondsPerMeasure << "(" << message.timestamp << ")\n";
+				}
+
 			} else if(metaType == libremidi::meta_event_type::TEMPO_CHANGE){
 				_tempo = int(((message[3] & 0xFF) << 16) | ((message[4] & 0xFF) << 8) | (message[5] & 0xFF));
 				_secondsPerMeasure = computeMeasureDuration(_tempo, _signatureNum / _signatureDenom);
+				if(_verbose){
+					std::cout << "Tempo: " << _tempo << " " <<  _secondsPerMeasure << "(" << message.timestamp << ")\n";
+				}
+			} else {
+				if(_verbose){
+					std::cout << "Meta: " << "other (" << message.timestamp << ")\n";
+				}
 			}
 
 		} else if(type == libremidi::message_type::CONTROL_CHANGE){
+
 			// Handle pedal.
 			const int rawType = clamp<int>(message[1], 0, 127);
+
+			if(_verbose){
+				std::cout << "Control: " << rawType << "(" << message.timestamp << ")\n";
+			}
+
 			// Skip other CC.
 			if(rawType != 64 && rawType != 66 && rawType != 67 && rawType != 11){
 				continue;
@@ -229,6 +252,9 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 			}
 			// Register new pedal event with updated state.
 			_pedalInfos[float(time)] = Pedals(_pedals);
+		} else {
+
+			std::cout << "Other (" << message.timestamp << ")\n";
 		}
 
 	}
@@ -302,6 +328,10 @@ void MIDISceneLive::save(std::ofstream& file) const {
 	const double ticksPerMeasure = ticksPerSecond * _secondsPerMeasure;
 	const double quarterNotesPerMeasure = _signatureNum / _signatureDenom * 4.0;
 	const size_t ticksPerQuarterNote = ticksPerMeasure / quarterNotesPerMeasure ;
+
+	if(_verbose){
+		std::cout << "Saving recording using " << unitsPerSecond << " units per second, containing " << _allMessages.size() << " messages." << std::endl;
+	}
 
 	libremidi::writer writer;
 	writer.ticksPerQuarterNote = ticksPerQuarterNote;
