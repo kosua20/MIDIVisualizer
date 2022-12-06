@@ -135,8 +135,13 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 			// End of the queue.
 			break;
 		}
-		_allMessages.push_back(message);
 
+		// Store delta to last message.
+		message.timestamp = time - _lastMessageTime;
+		_lastMessageTime = time;
+
+		// Store message for saving.
+		_allMessages.push_back(message);
 		const auto type = message.get_message_type();
 
 		// Handle note events.
@@ -323,27 +328,27 @@ void MIDISceneLive::print() const {
 
 void MIDISceneLive::save(std::ofstream& file) const {
 
-	const double tickDurationInUs = double(_tempo) / 60.0;
-	const double ticksPerSecond = 1000000.0f / tickDurationInUs;
-	const double ticksPerMeasure = ticksPerSecond * _secondsPerMeasure;
+	const double quarterNotesPerSecond = 1000000.0 / double(_tempo);
 	const double quarterNotesPerMeasure = _signatureNum / _signatureDenom * 4.0;
-	const size_t ticksPerQuarterNote = ticksPerMeasure / quarterNotesPerMeasure ;
+	const double unitsPerQuarterNote = 960.0;
+	const double unitsPerSecond = unitsPerQuarterNote * quarterNotesPerSecond;
 
 	if(_verbose){
 		std::cout << "Saving recording using " << unitsPerSecond << " units per second, containing " << _allMessages.size() << " messages." << std::endl;
 	}
 
 	libremidi::writer writer;
-	writer.ticksPerQuarterNote = ticksPerQuarterNote;
+	writer.ticksPerQuarterNote = int(unitsPerQuarterNote);
+
 	writer.tracks.resize(1);
+	// Set an initial tempo/signature at t=0 so that the first 'real' message delta is correct.
 	writer.add_event(0, 0, libremidi::meta_events::tempo(_tempo));
 	writer.add_event(0, 0, libremidi::meta_events::time_signature(int(_signatureNum), int(_signatureDenom)));
 	writer.add_event(0, 0, libremidi::meta_events::key_signature(1, false));
 
-
 	for(unsigned int i = 0; i < _allMessages.size(); ++i){
 		const auto& message = _allMessages[i];
-		writer.add_event(ticksPerSecond * message.timestamp, 0, message);
+		writer.add_event(message.timestamp * unitsPerSecond, 0, message);
 	}
 	writer.write(file);
 }
