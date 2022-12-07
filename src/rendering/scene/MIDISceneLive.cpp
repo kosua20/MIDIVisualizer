@@ -258,8 +258,9 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 			// Register new pedal event with updated state.
 			_pedalInfos[float(time)] = Pedals(_pedals);
 		} else {
-
-			std::cout << "Other (" << message.timestamp << ")\n";
+			if(_verbose){
+				std::cout << "Other (" << message.timestamp << ")\n";
+			}
 		}
 
 	}
@@ -329,7 +330,6 @@ void MIDISceneLive::print() const {
 void MIDISceneLive::save(std::ofstream& file) const {
 
 	const double quarterNotesPerSecond = 1000000.0 / double(_tempo);
-	const double quarterNotesPerMeasure = _signatureNum / _signatureDenom * 4.0;
 	const double unitsPerQuarterNote = 960.0;
 	const double unitsPerSecond = unitsPerQuarterNote * quarterNotesPerSecond;
 
