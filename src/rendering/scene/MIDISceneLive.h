@@ -44,6 +44,11 @@ private:
 		short channel;
 	};
 
+	struct MIDIFrame {
+		std::vector<libremidi::message> messages;
+		double timestamp;
+	};
+
 	static void updateSet(GPUNote & note, int channel, const SetOptions & options);
 
 	std::vector<GPUNote> _notes;
@@ -51,14 +56,13 @@ private:
 	std::array<int, 128> _activeIds;
 	std::array<bool, 128> _activeRecording;
 	std::map<float, Pedals> _pedalInfos;
-	std::vector<libremidi::message> _allMessages;
+	std::vector<MIDIFrame> _allMessages;
 
 	double _previousTime = 0.0;
 	double _maxTime = 0.0;
 	double _signatureNum = 4.0;
 	double _signatureDenom = 4.0;
 	double _secondsPerMeasure = 1.0;
-	double _lastMessageTime = 0.0;
 
 	int _notesCount = 0;
 	int _tempo = 500000;

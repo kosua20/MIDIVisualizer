@@ -129,6 +129,10 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 	}
 
 	// Process new events.
+	MIDIFrame frame;
+	frame.timestamp = time;
+	frame.messages.reserve(8);
+
 	while(true){
 		auto message = shared().get_message();
 		if(message.size() == 0){
@@ -136,14 +140,10 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 			break;
 		}
 
-		// Store delta to last message.
-		message.timestamp = time - _lastMessageTime;
-		_lastMessageTime = time;
-
 		// Store message for saving.
-		_allMessages.push_back(message);
-		const auto type = message.get_message_type();
+		frame.messages.push_back(message);
 
+		const auto type = message.get_message_type();
 		// Handle note events.
 		if(message.is_note_on_or_off()){
 			const short note = clamp<short>(short(message[1]), 0, 127);
@@ -264,6 +264,10 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 		}
 
 	}
+	// Insert all messages treated this frame in a new frame.
+	if(!frame.messages.empty()){
+		_allMessages.push_back(std::move(frame));
+	}
 
 	// Update completed notes.
 	for(size_t i = 0; i < _dataBufferSubsize; ++i){
@@ -337,18 +341,47 @@ void MIDISceneLive::save(std::ofstream& file) const {
 		std::cout << "Saving recording using " << unitsPerSecond << " units per second, containing " << _allMessages.size() << " messages." << std::endl;
 	}
 
+	// Make a copy of all messages and sort it.
+	std::vector<MIDIFrame> allMessages(_allMessages);
+	// Start by sorting the frames
+	std::sort(allMessages.begin(), allMessages.end(), [](const MIDIFrame& a, const MIDIFrame& b){
+		return a.timestamp < b.timestamp;
+	});
+
+	// For each frame, update all messages timestamp.
+	double currentTime = 0.0;
+
+	for(MIDIFrame& frame : allMessages){
+		// Skip empty frames (should not exist), don't udpate the timing.
+		if(frame.messages.empty()){
+			continue;
+		}
+		// First message should have a real delta to the last existing message.
+		frame.messages[0].timestamp = frame.timestamp - currentTime;
+		// All others are 0 as they happen at the same time.
+		const size_t messageCount = frame.messages.size();
+		for(size_t mid = 1; mid < messageCount; ++mid){
+			frame.messages[mid].timestamp = 0.0;
+		}
+		// If two consecutive frames have the same timestamp, all deltas of the second frame will be set to 0.
+		currentTime = frame.timestamp;
+	}
+
+	// Start a file with one track.
 	libremidi::writer writer;
 	writer.ticksPerQuarterNote = int(unitsPerQuarterNote);
-
 	writer.tracks.resize(1);
+
 	// Set an initial tempo/signature at t=0 so that the first 'real' message delta is correct.
 	writer.add_event(0, 0, libremidi::meta_events::tempo(_tempo));
 	writer.add_event(0, 0, libremidi::meta_events::time_signature(int(_signatureNum), int(_signatureDenom)));
 	writer.add_event(0, 0, libremidi::meta_events::key_signature(1, false));
 
-	for(unsigned int i = 0; i < _allMessages.size(); ++i){
-		const auto& message = _allMessages[i];
-		writer.add_event(message.timestamp * unitsPerSecond, 0, message);
+	// Write all messages.
+	for(const MIDIFrame& frame : allMessages){
+		for(const libremidi::message& message : frame.messages){
+			writer.add_event(message.timestamp * unitsPerSecond, 0, message);
+		}
 	}
 	writer.write(file);
 }
