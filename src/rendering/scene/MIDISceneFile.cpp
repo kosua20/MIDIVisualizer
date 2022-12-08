@@ -43,7 +43,7 @@ void MIDISceneFile::updateSets(const SetOptions & options){
 		data.back().start = float(note.start);
 		data.back().duration = float(note.duration);
 		data.back().isMinor = 0.0f;
-		data.back().set = float(note.set % CHANNELS_COUNT);
+		data.back().set = float(note.set);
 	}
 
 	std::vector<MIDINote> notesm;
@@ -54,7 +54,7 @@ void MIDISceneFile::updateSets(const SetOptions & options){
 		data.back().start = float(note.start);
 		data.back().duration = float(note.duration);
 		data.back().isMinor =  1.0f;
-		data.back().set = float(note.set % CHANNELS_COUNT);
+		data.back().set = float(note.set);
 	}
 	// Upload to the GPU.
 	upload(data);
@@ -78,8 +78,7 @@ void MIDISceneFile::updatesActiveNotes(double time, double speed){
 	_midiFile.getNotesActive(actives, time, 0);
 	for(int i = 0; i < 128; ++i){
 		const auto & note = actives[i];
-		const int clamped = note.set % CHANNELS_COUNT;
-		_actives[i] = note.enabled ? clamped : -1;
+		_actives[i] = note.enabled ? note.set : -1;
 		// Check if the note was triggered at this frame.
 		if(note.start > _previousTime && note.start <= time){
 			// Find an available particles system and update it with the note parameters.
@@ -90,7 +89,7 @@ void MIDISceneFile::updatesActiveNotes(double time, double speed){
 					particle.duration = (std::max)(note.duration*2.0f, note.duration + 1.2f);
 					particle.start = note.start;
 					particle.note = i;
-					particle.set = clamped;
+					particle.set = note.set;
 					particle.elapsed = 0.0f;
 					break;
 				}

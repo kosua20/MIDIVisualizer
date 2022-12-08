@@ -2,7 +2,8 @@
 #define State_h
 
 #include "../helpers/Configuration.h"
-#include "../midi/MIDIUtils.h"
+//#include "../midi/MIDIUtils.h"
+#include "SetOptions.h"
 
 #include <gl3w/gl3w.h>
 #include <glm/glm.hpp>
@@ -16,8 +17,6 @@
 
 #define COLUMN_SIZE 170
 #define EXPORT_COLUMN_SIZE 200
-
-#define CHANNELS_COUNT 8
 
 typedef std::array<glm::vec3, CHANNELS_COUNT> ColorArray;
 

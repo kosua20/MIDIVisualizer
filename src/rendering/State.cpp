@@ -409,6 +409,7 @@ bool State::load(const std::string & path){
 	// Else we use the key-value format, similar to command line.
 	if(majVersion < 5){
 		load(configFile, majVersion, minVersion);
+		// No set options.
 	} else {
 		// Build arguments list.
 		const Arguments args = Configuration::parseArguments(configFile);
@@ -502,6 +503,9 @@ void State::load(const Arguments & configArgs){
 	}
 
 	// Don't erase the file path.
+	
+	// Rebuild internal data.
+	setOptions.rebuild();
 }
 
 void State::synchronizeChannels(){

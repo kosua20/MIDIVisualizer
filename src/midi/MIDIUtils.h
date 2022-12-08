@@ -8,17 +8,7 @@
 #include <iostream>
 #include <array>
 
-enum class SetMode : int {
-	CHANNEL = 0,
-	TRACK = 1,
-	SPLIT = 2,
-	KEY = 3
-};
-
-struct SetOptions {
-	SetMode mode = SetMode::CHANNEL;
-	int key = 64;
-};
+struct SetOptions;
 
 enum MIDIType : uint16_t {
 	singleTrack = 0,

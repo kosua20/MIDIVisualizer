@@ -1274,6 +1274,7 @@ void Renderer::reset() {
 
 void Renderer::setState(const State & state){
 	_state = state;
+	_state.setOptions.rebuild();
 
 	// Update toggles.
 	_layers[Layer::BGTEXTURE].toggle = &_state.background.image;

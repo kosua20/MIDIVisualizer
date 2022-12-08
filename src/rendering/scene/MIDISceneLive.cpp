@@ -51,25 +51,14 @@ MIDISceneLive::MIDISceneLive(int port, bool verbose) : MIDIScene() {
 
 }
 
-void MIDISceneLive::updateSet(GPUNote & note, int channel, const SetOptions & options){
-	if(options.mode == SetMode::CHANNEL){
-		// Restore channel from backup vector.
-		note.set = float(int(channel) % CHANNELS_COUNT);
-	} else if(options.mode == SetMode::SPLIT){
-		note.set = (int(note.note) < options.key ? 0.0f : 1.0f);
-	} else if(options.mode == SetMode::KEY){
-		note.set = float(noteShift[int(note.note) % 12]);
-	} else {
-		note.set = 0.0f;
-	}
-}
-
 void MIDISceneLive::updateSets(const SetOptions & options){
 	_currentSetOption = options;
 	
 	for(size_t nid = 0; nid < _notesCount; ++nid){
 		auto & note = _notes[nid];
-		updateSet(note, _notesInfos[nid].channel, _currentSetOption);
+		// Restore channel from note infos.
+		const int set = _currentSetOption.apply(int(note.note), _notesInfos[nid].channel, 0, note.start);
+		note.set = float(set);
 	}
 	upload(_notes);
 }
@@ -168,11 +157,12 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 				auto & newNote = _notes[index];
 				newNote.start = float(time);
 				newNote.duration = 0.0f;
-				newNote.note = note;			//Pass original note to updateSet()
+				newNote.note = note;
 				// Save the original channel.
 				_notesInfos[index].channel = message.get_channel();
 				// Compute set according to current setting.
-				updateSet(newNote, _notesInfos[index].channel, _currentSetOption);
+				const int set = _currentSetOption.apply(int(newNote.note), _notesInfos[index].channel, 0, newNote.start);
+				newNote.set = float(set);
 				_actives[note] = int(newNote.set);
 				// Activate recording of the key.
 				_activeRecording[note] = true;

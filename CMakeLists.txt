@@ -126,6 +126,8 @@ set(Sources
 	"src/rendering/ScreenQuad.h"
 	"src/rendering/State.cpp"
 	"src/rendering/State.h"
+	"src/rendering/SetOptions.cpp"
+	"src/rendering/SetOptions.h"
 	"src/rendering/camera/Camera.cpp"
 	"src/rendering/camera/Camera.h"
 	"src/rendering/camera/Keyboard.cpp"
