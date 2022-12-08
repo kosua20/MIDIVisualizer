@@ -1131,7 +1131,14 @@ void Renderer::showSets(){
 		shouldUpdate = ImGui::Combo("##key", &_state.setOptions.key, midiKeysString) || shouldUpdate;
 		ImGui::PopItemWidth();
 
+		shouldUpdate = ImGui::RadioButton("List", (int*)(&_state.setOptions.mode), int(SetMode::LIST)) || shouldUpdate;
+		ImGuiSameLine();
+		if(ImGui::Button("Configure...")){
+			// Show panel, let edit, close and apply when quitting.
+		}
+
 		if(shouldUpdate){
+			_state.setOptions.rebuild();
 			_scene->updateSets(_state.setOptions);
 		}
 		ImGui::EndPopup();
