@@ -36,6 +36,10 @@ struct SetOptions {
 
 	int apply(int note, int channel, int track, double start) const;
 
+	std::string toKeysString() const;
+
+	void fromKeysString(const std::string& str);
+
 private:
 
 	std::array<KeyFrames, CHANNELS_COUNT> _keysPerSet;
