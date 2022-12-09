@@ -17,14 +17,17 @@ enum class SetMode : int {
 struct SetOptions {
 
 	struct KeyFrame {
-		double time;
-		int key;
+		double time = 0.0;
+		int set = 0;
+		int key = 64;
+
+
 	};
 
 	using KeyFrames = std::vector<KeyFrame>;
 
 	SetMode mode = SetMode::CHANNEL;
-	std::array<KeyFrames, CHANNELS_COUNT> keys;
+	std::vector<KeyFrame> keys;
 	int key = 64;
 
 	SetOptions();
@@ -35,8 +38,13 @@ struct SetOptions {
 
 private:
 
+	std::array<KeyFrames, CHANNELS_COUNT> _keysPerSet;
 	int _firstNonEmptySet = CHANNELS_COUNT;
 	int _lastNonEmptySet = -1;
 };
+
+inline bool operator <(const SetOptions::KeyFrame& a, const SetOptions::KeyFrame& b){
+	return a.time < b.time;
+}
 
 #endif

@@ -10,18 +10,23 @@ SetOptions::SetOptions(){
 }
 
 void SetOptions::rebuild(){
-	_firstNonEmptySet = keys.size();
+	// Reset
+	_firstNonEmptySet = CHANNELS_COUNT;
 	_lastNonEmptySet = -1;
+	for(unsigned int sid = 0; sid < CHANNELS_COUNT; ++sid){
+		_keysPerSet[sid].clear();
+		_keysPerSet[sid].reserve(keys.size());
+	}
 
-	for(unsigned int i = 0; i < keys.size(); ++i){
-		KeyFrames& frames = keys[i];
-		std::sort(frames.begin(), frames.end(), [](const KeyFrame& a, const KeyFrame& b){
-			return a.time < b.time;
-		});
-		if(!frames.empty()){
-			_firstNonEmptySet = (std::min)(_firstNonEmptySet, int(i));
-			_lastNonEmptySet  = (std::max)( _lastNonEmptySet, int(i));
-		}
+	// Sort reference keys.
+	std::sort(keys.begin(), keys.end());
+
+	for(const KeyFrame& key : keys){
+		// Insert in subset, they are already sorted.
+		_keysPerSet[key.set].push_back(key);
+		// Keep track of bounds.
+		_firstNonEmptySet = (std::min)(_firstNonEmptySet, key.set);
+		_lastNonEmptySet  = (std::max)( _lastNonEmptySet, key.set);
 	}
 }
 
@@ -40,7 +45,7 @@ int SetOptions::apply(int note, int channel, int track, double start) const {
 			// For each channel, find the corresponding key, and test
 			int sid = _firstNonEmptySet;
 			for(; sid <= _lastNonEmptySet; ++sid){
-				const int keyCount = int(keys[sid].size());
+				const int keyCount = int(_keysPerSet[sid].size());
 				if(keyCount == 0){
 					// Ignore this set.
 					continue;
@@ -48,13 +53,13 @@ int SetOptions::apply(int note, int channel, int track, double start) const {
 				// TODO: binary search instead.
 				int kid = 0;
 				for( ; kid < keyCount; ++kid){
-					if(start < keys[sid][kid].time){
+					if(start < _keysPerSet[sid][kid].time){
 						// We found the key after.
 						break;
 					}
 				}
 				kid = (std::max)(0, kid - 1);
-				if(note < keys[sid][kid].key){
+				if(note < _keysPerSet[sid][kid].key){
 					break;
 				}
 
