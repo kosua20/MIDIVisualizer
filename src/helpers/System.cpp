@@ -184,3 +184,14 @@ std::string System::getApplicationDataDirectory(){
 
 #endif
 
+std::string System::loadStringFromFile(const std::string& path){
+	std::ifstream file = System::openInputFile(path, false);
+	if(!file.is_open()){
+		return "";
+	}
+	std::stringstream buffer;
+	buffer << file.rdbuf();
+	const std::string str = buffer.str();
+	file.close();
+	return str;
+}
