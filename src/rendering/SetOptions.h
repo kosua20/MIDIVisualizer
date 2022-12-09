@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <array>
+#include <string>
 
 #define CHANNELS_COUNT 8
 
