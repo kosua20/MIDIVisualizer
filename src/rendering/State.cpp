@@ -131,6 +131,8 @@ void State::defineOptions(){
 	_sharedInfos["quality"].values = "values: LOW_RES, LOW, MEDIUM, HIGH, HIGH_RES";
 	_sharedInfos["layers"] = {"Active layers indices, from background to foreground", OptionInfos::Type::OTHER};
 	_sharedInfos["layers"].values = "values: bg-color: 0, bg-texture: 1, blur: 2, score: 3, keyboard: 4, particles: 5, notes: 6, flashes: 7, pedal: 8, wave: 9";
+	_sharedInfos["sets-separator-keyframes"] = {"Sets of keyframes for dynamic separators", OptionInfos::Type::OTHER};
+	_sharedInfos["sets-separator-keyframes"].values = "values: space-separated triplets time,key,set";
 
 	for(size_t cid = 1; cid < CHANNELS_COUNT; ++cid){
 		const std::string num = std::to_string(cid);
@@ -368,6 +370,10 @@ void State::save(const std::string & path){
 	}
 	configFile << std::endl;
 
+	configFile << std::endl << "# " << _sharedInfos["sets-separator-keyframes"].description << " (";
+	configFile << _sharedInfos["sets-separator-keyframes"].values << ")" << std::endl;
+	configFile << "sets-separator-keyframes: " << setOptions.toKeysString() << std::endl;
+
 	configFile.close();
 
 	_filePath = outputPath;
@@ -444,6 +450,16 @@ void State::load(const Arguments & configArgs){
 			for(size_t id = 0; id < bound; ++id){
 				layersMap[id] = Configuration::parseInt(arg.second[id]);
 			}
+			continue;
+		}
+
+		if(key == "sets-separator-keyframes"){
+			std::string str = arg.second[0];
+			for(size_t tid = 1; tid < arg.second.size(); ++tid){
+				str.append(" ");
+				str.append(arg.second[tid]);
+			}
+			setOptions.fromKeysString(str);
 			continue;
 		}
 
