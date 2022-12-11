@@ -28,6 +28,7 @@ public:
 	static std::ofstream openOutputFile(const std::string& path, bool binary = false);
 
 	static std::string loadStringFromFile(const std::string& path);
+	static void writeStringToFile(const std::string& path, const std::string& content);
 
 	/** Create a directory.
 		 \param directory the path to the directory to create

@@ -195,3 +195,11 @@ std::string System::loadStringFromFile(const std::string& path){
 	file.close();
 	return str;
 }
+
+void System::writeStringToFile(const std::string& path, const std::string& content){
+	std::ofstream file = System::openOutputFile(path, false);
+	if(file.is_open()){
+		file << content << std::endl;
+		file.close();
+	}
+}
