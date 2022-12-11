@@ -132,6 +132,8 @@ private:
 
 	void showSets();
 
+	void showSetEditor();
+
 	void applyBackgroundColor();
 
 	void applyAllSettings();
@@ -154,6 +156,7 @@ private:
 
 	State _state;
 	std::array<Layer, Layer::COUNT> _layers;
+	SetOptions _backupSetOptions;
 
 	float _timer = 0.0f;
 	float _timerStart = 0.0f;
@@ -185,6 +188,7 @@ private:
 	unsigned int _shouldQuit = 0;
 	int _selectedPort = 0;
 	bool _showLayers = false;
+	bool _showSetListEditor = false;
 	bool _exitAfterRecording = false;
 	bool _fullscreen = false;
 	bool _liveplay = false;

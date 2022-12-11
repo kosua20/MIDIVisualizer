@@ -397,7 +397,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		const int nCount = _scene->notesCount();
 		const double duration = _scene->duration();
 		const int speed = int(std::round(double(nCount)/(std::max)(0.001, duration)));
-		ImGui::Text("Notes: %d, duration: %.1fs, speed: %d notes/s", nCount, duration, speed);
+		ImGui::Text("Time: %.2f, notes: %d, duration: %.1fs, speed: %d notes/s", _timer * _state.scrollSpeed, nCount, duration, speed);
 
 		ImGui::Separator();
 		
@@ -606,6 +606,10 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 
 	if(_showLayers){
 		showLayers();
+	}
+
+	if(_showSetListEditor){
+		showSetEditor();
 	}
 
 	if(_shouldQuit != 0){
@@ -1123,18 +1127,20 @@ void Renderer::showSets(){
 		shouldUpdate = ImGui::RadioButton("Track", (int*)(&_state.setOptions.mode), int(SetMode::TRACK)) || shouldUpdate;
 		ImGuiSameLine(2*90);
 		shouldUpdate = ImGui::RadioButton("Key", (int*)(&_state.setOptions.mode), int(SetMode::KEY)) || shouldUpdate;
-		ImGuiSameLine(3*90);
+
 		shouldUpdate = ImGui::RadioButton("Split", (int*)(&_state.setOptions.mode), int(SetMode::SPLIT)) || shouldUpdate;
 		ImGuiSameLine();
-
 		ImGuiPushItemWidth(100);
 		shouldUpdate = ImGui::Combo("##key", &_state.setOptions.key, midiKeysString) || shouldUpdate;
 		ImGui::PopItemWidth();
 
+		ImGuiSameLine(2*90);
 		shouldUpdate = ImGui::RadioButton("List", (int*)(&_state.setOptions.mode), int(SetMode::LIST)) || shouldUpdate;
 		ImGuiSameLine();
 		if(ImGui::Button("Configure...")){
-			// Show panel, let edit, close and apply when quitting.
+			_showSetListEditor = true;
+			_backupSetOptions = _state.setOptions;
+			ImGui::CloseCurrentPopup();
 		}
 
 		if(shouldUpdate){
@@ -1142,6 +1148,34 @@ void Renderer::showSets(){
 			_scene->updateSets(_state.setOptions);
 		}
 		ImGui::EndPopup();
+	}
+
+}
+
+void Renderer::showSetEditor(){
+
+	bool refreshSetOptions = false;
+
+	// Initial window position.
+	const ImVec2 & screenSize = ImGui::GetIO().DisplaySize;
+	ImGui::SetNextWindowPos(ImVec2(screenSize.x * 0.5f, screenSize.y * 0.1f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.0f));
+	ImGui::SetNextWindowSize({360, 360}, ImGuiCond_FirstUseEver);
+
+	if(ImGui::Begin("Set List Editor", &_showSetListEditor)){
+		// Actions
+		if(!_showSetListEditor){
+			// If we are exiting, refresh the existing set.
+			refreshSetOptions = true;
+		}
+	}
+	ImGui::End();
+
+	// If refresh is needed, ensure the set options are rebuilt and the scene udpated for live preview.
+	if(refreshSetOptions){
+		_state.setOptions.rebuild();
+		if(_scene){
+			_scene->updateSets(_state.setOptions);
+		}
 	}
 }
 
@@ -1282,7 +1316,8 @@ void Renderer::reset() {
 void Renderer::setState(const State & state){
 	_state = state;
 	_state.setOptions.rebuild();
-
+	_backupSetOptions = _state.setOptions;
+	
 	// Update toggles.
 	_layers[Layer::BGTEXTURE].toggle = &_state.background.image;
 	_layers[Layer::BLUR].toggle = &_state.showBlur;
