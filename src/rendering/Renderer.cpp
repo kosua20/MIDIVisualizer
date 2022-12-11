@@ -528,13 +528,13 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			}
 			ImGui::PopItemWidth();
 
-			if(ImGui::Checkbox("Per-set colors", &_state.perChannelColors)){
-				if(!_state.perChannelColors){
-					_state.synchronizeChannels();
+			if(ImGui::Checkbox("Per-set colors", &_state.perSetColors)){
+				if(!_state.perSetColors){
+					_state.synchronizeSets();
 				}
 			}
 
-			if(_state.perChannelColors){
+			if(_state.perSetColors){
 				ImGuiSameLine(COLUMN_SIZE);
 				if(ImGui::Button("Define sets...")){
 					ImGui::OpenPopup("Note sets options");
@@ -643,7 +643,7 @@ void Renderer::synchronizeColors(const ColorArray & colors){
 		return;
 	}
 
-	for(size_t cid = 0; cid < CHANNELS_COUNT; ++cid){
+	for(size_t cid = 0; cid < SETS_COUNT; ++cid){
 		_state.baseColors[cid] = _state.particles.colors[cid] = _state.minorColors[cid] = _state.flashColors[cid] = colors[cid];
 	}
 
@@ -1453,7 +1453,7 @@ void Renderer::startRecording(){
 }
 
 bool Renderer::channelColorEdit(const char * name, const char * displayName, ColorArray & colors){
-	if(!_state.perChannelColors){
+	if(!_state.perSetColors){
 		// If locked, display color sink.
 		ImGuiPushItemWidth(25);
 		const bool inter = ImGui::ColorEdit3(name, &colors[0][0], ImGuiColorEditFlags_NoInputs);

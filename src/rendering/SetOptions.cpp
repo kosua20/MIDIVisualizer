@@ -12,9 +12,9 @@ SetOptions::SetOptions(){
 
 void SetOptions::rebuild(){
 	// Reset
-	_firstNonEmptySet = CHANNELS_COUNT;
+	_firstNonEmptySet = SETS_COUNT;
 	_lastNonEmptySet = -1;
-	for(unsigned int sid = 0; sid < CHANNELS_COUNT; ++sid){
+	for(unsigned int sid = 0; sid < SETS_COUNT; ++sid){
 		_keysPerSet[sid].clear();
 		_keysPerSet[sid].reserve(keys.size());
 	}
@@ -34,13 +34,13 @@ void SetOptions::rebuild(){
 int SetOptions::apply(int note, int channel, int track, double start) const {
 	switch(mode){
 		case SetMode::CHANNEL:
-			return channel % CHANNELS_COUNT;
+			return channel % SETS_COUNT;
 		case SetMode::TRACK:
-			return track % CHANNELS_COUNT;
+			return track % SETS_COUNT;
 		case SetMode::SPLIT:
 			return note < key ? 0 : 1;
 		case SetMode::KEY:
-			return noteShift[note % 12] % CHANNELS_COUNT;
+			return noteShift[note % 12] % SETS_COUNT;
 		case SetMode::LIST:
 		{
 			// For each channel, find the corresponding key, and test
@@ -65,7 +65,7 @@ int SetOptions::apply(int note, int channel, int track, double start) const {
 				}
 
 			}
-			return glm::clamp(sid, _firstNonEmptySet, _lastNonEmptySet + 1) % CHANNELS_COUNT;
+			return glm::clamp(sid, _firstNonEmptySet, _lastNonEmptySet + 1) % SETS_COUNT;
 		}
 		default:
 			assert(false);

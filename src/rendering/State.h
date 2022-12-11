@@ -18,7 +18,7 @@
 #define COLUMN_SIZE 170
 #define EXPORT_COLUMN_SIZE 200
 
-typedef std::array<glm::vec3, CHANNELS_COUNT> ColorArray;
+typedef std::array<glm::vec3, SETS_COUNT> ColorArray;
 
 struct Quality {
 	enum Level : int {
@@ -132,7 +132,7 @@ public:
 	bool showNotes;
 	bool showScore;
 	bool showKeyboard;
-	bool perChannelColors;
+	bool perSetColors;
 	bool showPedal;
 	bool showWave;
 	bool applyAA;
@@ -151,7 +151,7 @@ public:
 	
 	void reset();
 
-	void synchronizeChannels();
+	void synchronizeSets();
 
 	const std::string& filePath() const;
 

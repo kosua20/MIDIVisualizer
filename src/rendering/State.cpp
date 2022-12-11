@@ -131,10 +131,10 @@ void State::defineOptions(){
 	_sharedInfos["quality"].values = "values: LOW_RES, LOW, MEDIUM, HIGH, HIGH_RES";
 	_sharedInfos["layers"] = {"Active layers indices, from background to foreground", OptionInfos::Type::OTHER};
 	_sharedInfos["layers"].values = "values: bg-color: 0, bg-texture: 1, blur: 2, score: 3, keyboard: 4, particles: 5, notes: 6, flashes: 7, pedal: 8, wave: 9";
-	_sharedInfos["sets-separator-keyframes"] = {"Sets of keyframes for dynamic separators", OptionInfos::Type::OTHER};
-	_sharedInfos["sets-separator-keyframes"].values = "values: space-separated triplets time,key,set";
+	_sharedInfos["sets-separator-control-points"] = {"Sets of control points for dynamic set asignment", OptionInfos::Type::OTHER};
+	_sharedInfos["sets-separator-control-points"].values = "values: space-separated triplets time,key,set";
 
-	for(size_t cid = 1; cid < CHANNELS_COUNT; ++cid){
+	for(size_t cid = 1; cid < SETS_COUNT; ++cid){
 		const std::string num = std::to_string(cid);
 		_sharedInfos["color-major-" + num] = {"Major notes color for set " + num, OptionInfos::Type::COLOR};
 		_sharedInfos["color-particles-" + num] = {"Particles color for set " + num, OptionInfos::Type::COLOR};
@@ -233,7 +233,7 @@ void State::updateOptions(){
 	_boolInfos["show-blur"] = &showBlur;
 	_boolInfos["show-blur-notes"] = &showBlurNotes;
 	_boolInfos["lock-colors"] = &lockParticleColor;
-	_boolInfos["colors-per-set"] = &perChannelColors;
+	_boolInfos["colors-per-set"] = &perSetColors;
 	_boolInfos["show-horiz-lines"] = &background.hLines;
 	_boolInfos["show-vert-lines"] = &background.vLines;
 	_boolInfos["show-numbers"] = &background.digits;
@@ -370,9 +370,9 @@ void State::save(const std::string & path){
 	}
 	configFile << std::endl;
 
-	configFile << std::endl << "# " << _sharedInfos["sets-separator-keyframes"].description << " (";
-	configFile << _sharedInfos["sets-separator-keyframes"].values << ")" << std::endl;
-	configFile << "sets-separator-keyframes: " << setOptions.toKeysString(" ") << std::endl;
+	configFile << std::endl << "# " << _sharedInfos["sets-separator-control-points"].description << " (";
+	configFile << _sharedInfos["sets-separator-control-points"].values << ")" << std::endl;
+	configFile << "sets-separator-control-points: " << setOptions.toKeysString(" ") << std::endl;
 
 	configFile.close();
 
@@ -453,7 +453,7 @@ void State::load(const Arguments & configArgs){
 			continue;
 		}
 
-		if(key == "sets-separator-keyframes"){
+		if(key == "sets-separator-control-points"){
 			std::string str = arg.second[0];
 			for(size_t tid = 1; tid < arg.second.size(); ++tid){
 				str.append(" ");
@@ -524,8 +524,8 @@ void State::load(const Arguments & configArgs){
 	setOptions.rebuild();
 }
 
-void State::synchronizeChannels(){
-	for(size_t cid = 1; cid < CHANNELS_COUNT; ++cid){
+void State::synchronizeSets(){
+	for(size_t cid = 1; cid < SETS_COUNT; ++cid){
 		baseColors[cid] = baseColors[0];
 		minorColors[cid] = minorColors[0];
 		flashColors[cid] = flashColors[0];
@@ -541,7 +541,7 @@ const std::string& State::filePath() const {
 
 void State::reset(){
 
-	for(size_t cid = 0; cid < CHANNELS_COUNT; ++cid){
+	for(size_t cid = 0; cid < SETS_COUNT; ++cid){
 		baseColors[cid] = 1.35f * glm::vec3(0.57f,0.19f,0.98f);
 		minorColors[cid] = 0.8f * baseColors[0];
 		flashColors[cid] = baseColors[0];
@@ -562,7 +562,7 @@ void State::reset(){
 	showBlur = true;
 	showBlurNotes = false;
 	lockParticleColor = false; // Changed in 7.0
-	perChannelColors = false;
+	perSetColors = false;
 	showNotes = true;
 	showScore = true;
 	showKeyboard = true;
@@ -715,7 +715,7 @@ void State::load(std::istream & configFile, int majVersion, int minVersion){
 	}
 
 	// Ensure synchronization of all channels colors.
-	synchronizeChannels();
+	synchronizeSets();
 
 	pedals.color = baseColors[0];
 	waves.color = baseColors[0];

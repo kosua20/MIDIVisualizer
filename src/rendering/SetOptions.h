@@ -5,7 +5,7 @@
 #include <array>
 #include <string>
 
-#define CHANNELS_COUNT 8
+#define SETS_COUNT 8
 
 enum class SetMode : int {
 	CHANNEL = 0,
@@ -43,8 +43,8 @@ struct SetOptions {
 
 private:
 
-	std::array<KeyFrames, CHANNELS_COUNT> _keysPerSet;
-	int _firstNonEmptySet = CHANNELS_COUNT;
+	std::array<KeyFrames, SETS_COUNT> _keysPerSet;
+	int _firstNonEmptySet = SETS_COUNT;
 	int _lastNonEmptySet = -1;
 };
 
