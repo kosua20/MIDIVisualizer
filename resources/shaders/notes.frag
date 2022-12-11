@@ -1,5 +1,5 @@
 #version 330
-#define CHANNELS_COUNT 8
+#define SETS_COUNT 8
 
 in INTERFACE {
 	vec2 uv;
@@ -8,8 +8,8 @@ in INTERFACE {
 	float channel;
 } In;
 
-uniform vec3 baseColor[CHANNELS_COUNT];
-uniform vec3 minorColor[CHANNELS_COUNT];
+uniform vec3 baseColor[SETS_COUNT];
+uniform vec3 minorColor[SETS_COUNT];
 uniform vec2 inverseScreenSize;
 uniform float colorScale;
 uniform float keyboardHeight = 0.25;

@@ -4,14 +4,14 @@ in INTERFACE {
 	vec2 uv;
 } In ;
 
-#define CHANNELS_COUNT 8
+#define SETS_COUNT 8
 #define MAJOR_COUNT 75
 
 uniform vec2 inverseScreenSize;
 uniform float minorsWidth = 1.0;
 uniform vec3 keysColor = vec3(0.0);
-uniform vec3 minorColor[CHANNELS_COUNT];
-uniform vec3 majorColor[CHANNELS_COUNT];
+uniform vec3 minorColor[SETS_COUNT];
+uniform vec3 majorColor[SETS_COUNT];
 uniform bool highlightKeys;
 uniform bool horizontalMode = false;
 uniform int actives[128];
