@@ -1154,6 +1154,12 @@ void Renderer::showSets(){
 
 void Renderer::showSetEditor(){
 
+	const unsigned int colWidth = 80;
+	const unsigned int colButtonWidth = 50;
+	const float offset = 8;
+
+	// For editing.
+	static SetOptions::KeyFrame newKey;
 	bool refreshSetOptions = false;
 
 	// Initial window position.
@@ -1162,6 +1168,129 @@ void Renderer::showSetEditor(){
 	ImGui::SetNextWindowSize({360, 360}, ImGuiCond_FirstUseEver);
 
 	if(ImGui::Begin("Set List Editor", &_showSetListEditor)){
+
+		// Header
+		ImGui::Text("Control points will determine which range of notes belong to each set at a given time. All notes below the given key will be assigned to the specified set (except if a set with a lower number is defined). Control points will kept being applied until a new one is encountered for the set.");
+
+		// Load/save as CSV.
+		if(ImGui::Button("Save control points...")){
+			nfdchar_t *savePath = NULL;
+			nfdresult_t result = NFD_SaveDialog("csv", NULL, &savePath);
+			if (result == NFD_OKAY) {
+				const std::string content = _state.setOptions.toKeysString("\n");
+				System::writeStringToFile(std::string(savePath), content);
+			}
+		}
+		ImGuiSameLine();
+		if(ImGui::Button("Load control points...")){
+			// Read arguments.
+			nfdchar_t *outPath = NULL;
+			nfdresult_t result = NFD_OpenDialog("csv", NULL, &outPath);
+			if (result == NFD_OKAY) {
+				const std::string str = System::loadStringFromFile(std::string(outPath));
+				_state.setOptions.fromKeysString(str);
+			}
+			refreshSetOptions = true;
+		}
+		ImGuiSameLine();
+		// Just restore the last backup.
+		if(ImGui::Button("Reset")){
+			_state.setOptions = _backupSetOptions;
+			refreshSetOptions = true;
+		}
+		ImGui::Separator();
+
+		// List of existing keys.
+		// Keep some room at the bottom for the "new key" section.
+		ImVec2 listSize = ImGui::GetContentRegionAvail();
+		listSize.y -= 1.5 * ImGui::GetTextLineHeightWithSpacing();
+
+		if(ImGui::BeginTable("#List", 4, ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX |  ImGuiTableFlags_BordersH, listSize)){
+			const size_t rowCount = _state.setOptions.keys.size();
+
+			// Header
+			ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
+			ImGui::TableSetupColumn("Time", ImGuiTableColumnFlags_WidthFixed, _guiScale * colWidth);
+			ImGui::TableSetupColumn("Key", ImGuiTableColumnFlags_WidthFixed, _guiScale * colWidth);
+			ImGui::TableSetupColumn("Set", ImGuiTableColumnFlags_WidthFixed, _guiScale * colWidth);
+			ImGui::TableSetupColumn("Remove", ImGuiTableColumnFlags_NoHeaderLabel | ImGuiTableColumnFlags_WidthFixed, colButtonWidth);
+			ImGui::TableHeadersRow();
+
+			int removeIndex = -1;
+
+			for(size_t row = 0u; row < rowCount; ++row){
+
+				SetOptions::KeyFrame& key = _state.setOptions.keys[row];
+
+				ImGui::TableNextColumn();
+				ImGui::PushID(row);
+
+				ImGuiPushItemWidth(colWidth);
+				if(ImGui::InputDouble("##Time", &key.time, 0, 0, "%.3fs")){
+					key.time = (std::max)(key.time, 0.0);
+				}
+				// Postpone update until we are not focused anymore (else rows will jump around).
+				if(ImGui::IsItemDeactivatedAfterEdit()){
+					refreshSetOptions = true;
+				}
+				ImGui::PopItemWidth();
+
+				ImGui::TableNextColumn();
+				ImGuiPushItemWidth(colWidth);
+				if(ImGui::Combo("##Key", &key.key, midiKeysString)){
+					refreshSetOptions = true;
+				}
+				ImGui::PopItemWidth();
+
+				ImGui::TableNextColumn();
+				ImGuiPushItemWidth(colWidth);
+				// It is simpler to use a combo here (no weird focus issues when sorting rows).
+				if(ImGui::Combo("##Set", &key.set, " 0\0 1\0 2\0 3\0 4\0 5\0 6\0 7\0\0")){
+					refreshSetOptions = true;
+				}
+				ImGui::PopItemWidth();
+
+				ImGui::TableNextColumn();
+				if(ImGui::Button("x")){
+					removeIndex = int(row);
+				}
+
+				ImGui::PopID();
+			}
+
+			ImGui::EndTable();
+
+			// Remove after displaying the table.
+			if(removeIndex >= 0){
+				_state.setOptions.keys.erase(_state.setOptions.keys.begin() + removeIndex);
+				refreshSetOptions = true;
+			}
+		}
+
+		// Section to add a new key.
+		// Mimic the inputs and size/alignment of the table items.
+		ImGuiPushItemWidth(colWidth);
+		if(ImGui::InputDouble("##Time", &newKey.time, 0, 0, "%.3fs")){
+			newKey.time = (std::max)(0.0, newKey.time);
+		}
+		ImGui::PopItemWidth();
+		ImGuiSameLine(colWidth + 2 * offset);
+		ImGuiPushItemWidth(colWidth);
+		ImGui::Combo("##Key", &newKey.key, midiKeysString);
+		ImGui::PopItemWidth();
+
+		ImGuiSameLine(2 * colWidth + 3 * offset);
+		ImGuiPushItemWidth(colWidth);
+		ImGui::Combo("##Set", &newKey.set, " 0\0 1\0 2\0 3\0 4\0 5\0 6\0 7\0\0");
+		ImGui::PopItemWidth();
+
+		ImGuiSameLine(3 * colWidth + 4 * offset);
+		if(ImGui::Button("Add")){
+			auto insert = std::upper_bound(_state.setOptions.keys.begin(), _state.setOptions.keys.end(), newKey);
+			_state.setOptions.keys.insert(insert, newKey);
+			refreshSetOptions = true;
+		}
+
 		// Actions
 		if(!_showSetListEditor){
 			// If we are exiting, refresh the existing set.
