@@ -75,10 +75,10 @@ int SetOptions::apply(int note, int channel, int track, double start) const {
 }
 
 
-std::string SetOptions::toKeysString() const {
+std::string SetOptions::toKeysString(const std::string& separator) const {
 	std::stringstream str;
 	for(const KeyFrame& key : keys){
-		str << key.time << "," << key.key << "," << key.set << " ";
+		str << key.time << "," << key.key << "," << key.set << separator;
 	}
 	return str.str();
 }
@@ -100,7 +100,15 @@ std::vector<std::string> split(const std::string & str, const std::string & deli
 }
 
 void SetOptions::fromKeysString(const std::string& str){
-	std::vector<std::string> tokens = split(str, " ", true);
+	// Merge all lines.
+	std::string oneLineStr = str;
+	for(size_t cid = 0; cid < str.size(); ++cid){
+		if(oneLineStr[cid] == '\n' || oneLineStr[cid] == '\r'){
+			oneLineStr[cid] = ' ';
+		}
+	}
+	
+	std::vector<std::string> tokens = split(oneLineStr, " ", true);
 	if(tokens.empty()){
 		return;
 	}

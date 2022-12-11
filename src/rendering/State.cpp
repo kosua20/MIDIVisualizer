@@ -372,7 +372,7 @@ void State::save(const std::string & path){
 
 	configFile << std::endl << "# " << _sharedInfos["sets-separator-keyframes"].description << " (";
 	configFile << _sharedInfos["sets-separator-keyframes"].values << ")" << std::endl;
-	configFile << "sets-separator-keyframes: " << setOptions.toKeysString() << std::endl;
+	configFile << "sets-separator-keyframes: " << setOptions.toKeysString(" ") << std::endl;
 
 	configFile.close();
 
@@ -561,7 +561,7 @@ void State::reset(){
 	showFlashes = true;
 	showBlur = true;
 	showBlurNotes = false;
-	lockParticleColor = true;
+	lockParticleColor = false; // Changed in 7.0
 	perChannelColors = false;
 	showNotes = true;
 	showScore = true;

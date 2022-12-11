@@ -37,7 +37,7 @@ struct SetOptions {
 
 	int apply(int note, int channel, int track, double start) const;
 
-	std::string toKeysString() const;
+	std::string toKeysString(const std::string& separator) const;
 
 	void fromKeysString(const std::string& str);
 
