@@ -1160,7 +1160,6 @@ void Renderer::showSetEditor(){
 
 	// For editing.
 	static SetOptions::KeyFrame newKey;
-	bool refreshSetOptions = false;
 
 	// Initial window position.
 	const ImVec2 & screenSize = ImGui::GetIO().DisplaySize;
@@ -1169,8 +1168,10 @@ void Renderer::showSetEditor(){
 
 	if(ImGui::Begin("Set List Editor", &_showSetListEditor)){
 
+		bool refreshSetOptions = false;
+
 		// Header
-		ImGui::Text("Control points will determine which range of notes belong to each set at a given time. All notes below the given key will be assigned to the specified set (except if a set with a lower number is defined). Control points will kept being applied until a new one is encountered for the set.");
+		ImGui::TextWrapped("Control points will determine which range of notes belong to each set at a given time. All notes below the given key will be assigned to the specified set (except if a set with a lower number is defined). Control points will kept being applied until a new one is encountered for the set.");
 
 		// Load/save as CSV.
 		if(ImGui::Button("Save control points...")){
@@ -1296,16 +1297,56 @@ void Renderer::showSetEditor(){
 			// If we are exiting, refresh the existing set.
 			refreshSetOptions = true;
 		}
+
+		// If refresh is needed, ensure the set options are rebuilt and the scene udpated for live preview.
+		if(refreshSetOptions){
+			_state.setOptions.rebuild();
+			if(_scene){
+				_scene->updateSets(_state.setOptions);
+			}
+		}
+
+		if(_showDebug){
+			const double time = _timer * _state.scrollSpeed;
+
+			std::array<int, SETS_COUNT> firstNoteInSet;
+			std::array<int, SETS_COUNT> lastNoteInSet;
+			firstNoteInSet.fill(-1);
+			lastNoteInSet.fill(128);
+			int lastSet = -1;
+			for(int nid = 0; nid < 128; ++nid){
+				int newSet = _state.setOptions.apply(nid, 0, 0, time);
+				if(newSet != lastSet){
+					if(lastSet >= 0){
+						lastNoteInSet[lastSet] = nid - 1;
+					}
+					firstNoteInSet[newSet] = nid;
+					lastSet = newSet;
+				}
+			}
+			ImGui::Separator();
+			ImGui::Text("Debug: ");
+			ImGuiSameLine();
+			ImGui::TextDisabled("(press D to hide)");
+			ImGui::Text("At time %.3fs: ", time);
+
+			for(unsigned int sid = 0; sid < SETS_COUNT; ++sid){
+				int firstNote = firstNoteInSet[sid];
+				int lastNote = lastNoteInSet[sid];
+
+				if((firstNote != -1) || (lastNote != 128)){
+					firstNote = glm::clamp(firstNote, 0, 127);
+					lastNote  = glm::clamp(lastNote, 0, 127);
+
+					ImGui::Text("* Set %u contains notes from %s to %s", sid, midiKeysStrings[firstNote], midiKeysStrings[lastNote]);
+				}
+			}
+
+		}
 	}
 	ImGui::End();
 
-	// If refresh is needed, ensure the set options are rebuilt and the scene udpated for live preview.
-	if(refreshSetOptions){
-		_state.setOptions.rebuild();
-		if(_scene){
-			_scene->updateSets(_state.setOptions);
-		}
-	}
+
 }
 
 void Renderer::applyBackgroundColor(){
