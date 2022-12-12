@@ -24,24 +24,30 @@ You can also run the executable from the command-line, specifying a midi file an
 	
 ### General options
 
-	--midi              path to a MIDI file to load
-	--config            path to a configuration INI file
-	--size              dimensions of the window (--size W H)
-	--fullscreen        start in fullscreen (1 or 0 to enabled/disable)
-	--gui-size          GUI text and button scaling (number, default 1.0)
-	--version           display the current version and build information
-	--help              display a detailed help of all options
-	
+	--midi                             path to a MIDI file to load
+	--device                           name of a MIDI device to start a live session to (or VIRTUAL to act as a virtual device)
+	--config                           path to a configuration INI file
+	--size                             dimensions of the window (--size W H)
+	--position                         position of the window (--position X Y)
+	--fullscreen                       start in fullscreen (1 or 0 to enable/disable)
+	--gui-size                         GUI text and button scaling (number, default 1.0)
+	--transparency                     enable transparent window background if supported (1 or 0 to enable/disable)
+	--forbid-transparency              prevent transparent window background(1 or 0 to enable/disable)
+	--help                             display a detailed help of all options
+	--version                          display the current version and build information
+
 ### Export options
 If you want to directly export a video/images, `--export ...` is mandatory. You can completely hide the application window using `--hide-window`.
 
-	--export            path to the output video (or directory for PNG)
-	--format            output format (values: PNG, MPEG2, MPEG4)
-	--framerate         number of frames per second to export (integer)
-	--bitrate           target video bitrate in Mb (integer)
-	--png-alpha         use transparent PNG background (1 or 0 to enabled/disable)
-	--hide-window       do not display the window (1 or 0 to enabled/disable)
-	
+	--export                           path to the output video (or directory for PNG)
+	--format                           output format (values: PNG, MPEG2, MPEG4, PRORES)
+	--framerate                        number of frames per second to export (integer)
+	--bitrate                          target video bitrate in Mb (integer)
+	--postroll                         Postroll time after the track, in seconds (number, default 10.0)
+	--out-alpha                        use transparent output background, only for PNG and PRORES (1 or 0 to enable/disable)
+	--fix-premultiply                  cancel alpha premultiplication, only when out-alpha is enabled (1 or 0 to enable/disable)
+	--hide-window                      do not display the window (1 or 0 to enable/disable)
+
 ### Configuration options
 If display options are given, they will override those specified in the configuration file. Almost every option available in the GUI can be specified on the command line, refer to the detailed help for a complete list (`./MIDIVisualizer --help`). Options include:
 
