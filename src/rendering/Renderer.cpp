@@ -470,12 +470,12 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		}
 
 		ImGuiPushItemWidth(100);
-		if(ImGui::Combo("Min key", &_state.minKey, midiKeysString)){
+		if(ImGui::Combo("Min key", &_state.minKey, midiKeysStrings, 128)){
 			updateMinMaxKeys();
 		}
 
 		ImGuiSameLine(COLUMN_SIZE);
-		if(ImGui::Combo("Max key", &_state.maxKey, midiKeysString)){
+		if(ImGui::Combo("Max key", &_state.maxKey, midiKeysStrings, 128)){
 			updateMinMaxKeys();
 		}
 
@@ -1131,7 +1131,7 @@ void Renderer::showSets(){
 		shouldUpdate = ImGui::RadioButton("Split", (int*)(&_state.setOptions.mode), int(SetMode::SPLIT)) || shouldUpdate;
 		ImGuiSameLine();
 		ImGuiPushItemWidth(100);
-		shouldUpdate = ImGui::Combo("##key", &_state.setOptions.key, midiKeysString) || shouldUpdate;
+		shouldUpdate = ImGui::Combo("##key", &_state.setOptions.key, midiKeysStrings, 128) || shouldUpdate;
 		ImGui::PopItemWidth();
 
 		ImGuiSameLine(2*90);
@@ -1237,7 +1237,7 @@ void Renderer::showSetEditor(){
 
 				ImGui::TableNextColumn();
 				ImGuiPushItemWidth(colWidth);
-				if(ImGui::Combo("##Key", &key.key, midiKeysString)){
+				if(ImGui::Combo("##Key", &key.key, midiKeysStrings, 128)){
 					refreshSetOptions = true;
 				}
 				ImGui::PopItemWidth();
@@ -1276,7 +1276,7 @@ void Renderer::showSetEditor(){
 		ImGui::PopItemWidth();
 		ImGuiSameLine(colWidth + 2 * offset);
 		ImGuiPushItemWidth(colWidth);
-		ImGui::Combo("##Key", &newKey.key, midiKeysString);
+		ImGui::Combo("##Key", &newKey.key, midiKeysStrings, 128);
 		ImGui::PopItemWidth();
 
 		ImGuiSameLine(2 * colWidth + 3 * offset);

@@ -69,7 +69,7 @@ extern const std::array<bool, 12> noteIsMinor;
 
 extern const std::array<short, 12> noteShift;
 
-extern const char midiKeysString[];
+extern const char* midiKeysStrings[];
 
 // Read data.
 
