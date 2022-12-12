@@ -628,6 +628,8 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			ImGuiSameLine(COLUMN_SIZE);
 			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.1f, 0.1f, 1.0f));
 			if(ImGui::Button("Yes", buttonSize)){
+				ImGui::PopStyleColor();
+				ImGui::EndPopup();
 				return SystemAction::QUIT;
 			}
 			ImGui::PopStyleColor();

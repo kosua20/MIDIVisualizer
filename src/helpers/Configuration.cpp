@@ -46,7 +46,7 @@ Configuration::Configuration(const std::string& path, const std::vector<std::str
 	}
 
 	// Also load arguments from command line.
-	Arguments argsFromCommand = parseArguments(argv);
+	Arguments argsFromCommand = parseArguments(argv, true);
 
 	// Merge both: the command line has priority over the file.
 	_args = argsFromFile;
@@ -182,7 +182,7 @@ Arguments Configuration::parseArguments(std::istream & configFile){
 	return args;
 }
 
-Arguments Configuration::parseArguments(const std::vector<std::string> & argv){
+Arguments Configuration::parseArguments(const std::vector<std::string> & argv, bool allowEmpty){
 	std::unordered_map<std::string, std::vector<std::string>> args;
 
 	const size_t argc = argv.size();
@@ -205,7 +205,7 @@ Arguments Configuration::parseArguments(const std::vector<std::string> & argv){
 			values.emplace_back(argv[aid]);
 			++aid;
 		}
-		if(values.empty()) {
+		if(values.empty() && !allowEmpty) {
 			std::cerr << "[CONFIG]: No values for key " << arg << std::endl;
 			continue;
 		}
@@ -267,7 +267,7 @@ void Configuration::printHelp(){
 		{"fullscreen", "start in fullscreen (1 or 0 to enable/disable)"},
 		{"gui-size", "GUI text and button scaling (number, default 1.0)"},
 		{"transparency", "enable transparent window background if supported (1 or 0 to enable/disable)"},
-		{"forbid-transparency", "prevent transparent window background(1 or 0 to enable/disable)"},
+		{"forbid-transparency", "prevent transparent window background (1 or 0 to enable/disable)"},
 		{"help", "display this help message"},
 		{"version", "display the executable version and configuration"},
 	};
