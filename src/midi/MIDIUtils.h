@@ -8,17 +8,7 @@
 #include <iostream>
 #include <array>
 
-enum class SetMode : int {
-	CHANNEL = 0,
-	TRACK = 1,
-	SPLIT = 2,
-	KEY = 3
-};
-
-struct SetOptions {
-	SetMode mode = SetMode::CHANNEL;
-	int key = 64;
-};
+struct SetOptions;
 
 enum MIDIType : uint16_t {
 	singleTrack = 0,
@@ -79,7 +69,7 @@ extern const std::array<bool, 12> noteIsMinor;
 
 extern const std::array<short, 12> noteShift;
 
-extern const char midiKeysString[];
+extern const char* midiKeysStrings[];
 
 // Read data.
 
@@ -135,7 +125,7 @@ inline double computeUnitsDuration(int tempo, size_t time, uint16_t unitsPerQuar
 
 template <typename T>
 T clamp(T x, T a, T b) {
-	return std::min(std::max(x, a), b);
+	return (std::min)((std::max)(x, a), b);
 }
 
 

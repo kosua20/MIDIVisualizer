@@ -1,7 +1,9 @@
+#include "MIDITrack.h"
+
 #include <tuple>
 #include <cmath>
 #include <algorithm>
-#include "MIDITrack.h"
+#include "../rendering/SetOptions.h"
 
 // We will have to keep track of active notes per-channel.
 struct NoteKey {
@@ -314,16 +316,6 @@ std::pair<double, double> MIDITrack::computeNoteTimings(const std::vector<MIDITe
 
 void MIDITrack::updateSets(const SetOptions & options){
 	for(auto & note : _notes){
-		if(options.mode == SetMode::CHANNEL){
-			note.set = int(note.channel);
-		} else if(options.mode == SetMode::TRACK){
-			note.set = int(note.track);
-		} else if(options.mode == SetMode::SPLIT){
-			note.set = note.note < options.key ? 0 : 1;
-		} else if(options.mode == SetMode::KEY){
-			note.set = noteShift[note.note%12];
-		} else {
-			note.set = 0;
-		}
+		note.set = options.apply(note.note, note.channel, note.track, note.start);
 	}
 }

@@ -23,12 +23,12 @@ add_subdirectory(libs/glfw/)
 # Add NativeFileDialog
 add_subdirectory(libs/nfd/)
 
-# Add RtMidi17
-set(RTMIDI17_HEADER_ONLY OFF CACHE BOOL "" FORCE)
-set(RTMIDI17_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(RTMIDI17_NO_WINUWP ON CACHE BOOL "" FORCE)
-add_definitions(-DRTMIDI17_NO_BOOST)
-add_subdirectory(libs/rtmidi17/)
+# Add libremidi
+set(LIBREMIDI_HEADER_ONLY OFF CACHE BOOL "" FORCE)
+set(LIBREMIDI_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(LIBREMIDI_NO_WINUWP ON CACHE BOOL "" FORCE)
+add_definitions(-DLIBREMIDI_NO_BOOST)
+add_subdirectory(libs/libremidi/)
 
 # Add OpenGL
 find_package(OpenGL REQUIRED)
@@ -79,6 +79,7 @@ set(LibSources
 	"src/libs/imgui/imgui_impl_opengl3.cpp"
 	"src/libs/imgui/imgui_impl_opengl3.h"
 	"src/libs/imgui/imgui_internal.h"
+	"src/libs/imgui/imgui_tables.cpp"
 	"src/libs/imgui/imgui_widgets.cpp"
 	"src/libs/imgui/imstb_rectpack.h"
 	"src/libs/imgui/imstb_textedit.h"
@@ -100,6 +101,10 @@ set(Sources
 	"src/helpers/Recorder.h"
 	"src/helpers/Configuration.cpp"
 	"src/helpers/Configuration.h"
+	"src/helpers/ImGuiStyle.cpp"
+	"src/helpers/ImGuiStyle.h"
+	"src/helpers/System.cpp"
+	"src/helpers/System.h"
 	"src/midi/MIDIFile.cpp"
 	"src/midi/MIDIFile.h"
 	"src/midi/MIDITrack.cpp"
@@ -124,6 +129,8 @@ set(Sources
 	"src/rendering/ScreenQuad.h"
 	"src/rendering/State.cpp"
 	"src/rendering/State.h"
+	"src/rendering/SetOptions.cpp"
+	"src/rendering/SetOptions.h"
 	"src/rendering/camera/Camera.cpp"
 	"src/rendering/camera/Camera.h"
 	"src/rendering/camera/Keyboard.cpp"
@@ -145,7 +152,7 @@ source_group(TREE ${PROJECT_SOURCE_DIR}/resources FILES ${Shaders})
 add_executable(MIDIVisualizer ${LibSources} ${Sources} ${Shaders})
 
 target_include_directories(MIDIVisualizer PRIVATE src/libs/ src/helpers/)
-target_link_libraries(MIDIVisualizer PRIVATE nfd glfw RtMidi17 ${GLFW_LIBRARIES} ${OPENGL_gl_LIBRARY})
+target_link_libraries(MIDIVisualizer PRIVATE nfd glfw libremidi ${GLFW_LIBRARIES} ${OPENGL_gl_LIBRARY})
 add_dependencies(MIDIVisualizer Packaging)
 
 # Add dependency to FFmpeg if available.

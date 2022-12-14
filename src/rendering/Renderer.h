@@ -34,11 +34,13 @@ class Renderer {
 
 public:
 
-	Renderer(int winW, int winH, bool fullscreen);
+	Renderer(const Configuration& config);
 
 	~Renderer();
 	
 	bool loadFile(const std::string & midiFilePath);
+
+	bool connectDevice(const std::string & deviceName);
 
 	void setState(const State & state);
 	
@@ -60,9 +62,11 @@ public:
 	void keyPressed(int key, int action);
 
 	/// Directly start recording.
-	bool startDirectRecording(const std::string & path, Recorder::Format format, int framerate, int bitrate, float postroll, bool skipBackground, const glm::vec2 & size);
+	bool startDirectRecording(const Export& exporting, const glm::vec2 & size);
 
 	void setGUIScale(float scale);
+
+	void updateConfiguration(Configuration& config);
 
 private:
 	
@@ -128,6 +132,10 @@ private:
 
 	void showSets();
 
+	void showSetEditor();
+
+	void applyBackgroundColor();
+
 	void applyAllSettings();
 	
 	void reset();
@@ -148,6 +156,7 @@ private:
 
 	State _state;
 	std::array<Layer, Layer::COUNT> _layers;
+	SetOptions _backupSetOptions;
 
 	float _timer = 0.0f;
 	float _timerStart = 0.0f;
@@ -161,7 +170,8 @@ private:
 	Camera _camera;
 	
 	std::shared_ptr<Framebuffer> _particlesFramebuffer;
-	std::shared_ptr<Framebuffer> _blurFramebuffer;
+	std::shared_ptr<Framebuffer> _blurFramebuffer0;
+	std::shared_ptr<Framebuffer> _blurFramebuffer1;
 	std::shared_ptr<Framebuffer> _renderFramebuffer;
 	std::shared_ptr<Framebuffer> _finalFramebuffer;
 
@@ -178,9 +188,12 @@ private:
 	unsigned int _shouldQuit = 0;
 	int _selectedPort = 0;
 	bool _showLayers = false;
+	bool _showSetListEditor = false;
 	bool _exitAfterRecording = false;
 	bool _fullscreen = false;
 	bool _liveplay = false;
+	bool _useTransparency = false;
+	const bool _supportTransparency;
 };
 
 #endif

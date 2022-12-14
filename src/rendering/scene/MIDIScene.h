@@ -5,6 +5,8 @@
 #include "../midi/MIDIFile.h"
 #include "../State.h"
 
+#include <fstream>
+
 class MIDIScene {
 
 public:
@@ -31,7 +33,7 @@ public:
 
 	void setParticlesParameters(const float speed, const float expansion);
 
-	void setKeyboardSize(float keyboardHeight);
+	void setKeyboardSizeAndFadeout(float keyboardHeight, float fadeOut);
 
 	void setMinMaxKeys(int minKey, int minKeyMajor, int notesCount);
 
@@ -52,6 +54,8 @@ public:
 	virtual int notesCount() const = 0;
 
 	virtual void print() const = 0;
+
+	virtual void save(std::ofstream& file) const = 0;
 
 	virtual ~MIDIScene();
 
@@ -112,7 +116,6 @@ private:
 	GLuint _texParticles;
 
 	GLuint _vaoKeyboard;
-	GLuint _uboKeyboard;
 
 	GLuint _vaoPedals;
 	size_t _countPedals;
@@ -140,6 +143,8 @@ public:
 	int notesCount() const;
 
 	void print() const;
+
+	void save(std::ofstream& file) const;
 
 	~MIDISceneEmpty();
 

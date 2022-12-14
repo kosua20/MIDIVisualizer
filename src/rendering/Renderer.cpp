@@ -1,5 +1,7 @@
 #include "../helpers/ProgramUtilities.h"
 #include "../helpers/ResourcesManager.h"
+#include "../helpers/ImGuiStyle.h"
+#include "../helpers/System.h"
 #include <cstring>
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui/imgui.h>
@@ -38,12 +40,15 @@ SystemAction::SystemAction(SystemAction::Type act) {
 	data = glm::ivec4(0);
 }
 
-Renderer::Renderer(int winW, int winH, bool fullscreen) {
+Renderer::Renderer(const Configuration& config) :
+	_supportTransparency(!config.preventTransparency) {
+
 	_showGUI = true;
 	_showDebug = false;
 
-	_fullscreen = fullscreen;
-	_windowSize = glm::ivec2(winW, winH);
+	_fullscreen = config.fullscreen;
+	_windowSize = config.windowSize;
+	_useTransparency = config.useTransparency && _supportTransparency;
 
 	// GL options
 	glEnable(GL_CULL_FACE);
@@ -51,20 +56,22 @@ Renderer::Renderer(int winW, int winH, bool fullscreen) {
 	glCullFace(GL_BACK);
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
 	glBlendEquation(GL_FUNC_ADD);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-	_camera.screen(winW, winH, 1.0f);
-	_backbufferSize = glm::vec2(winW, winH);
+	_camera.screen(config.windowSize[0], config.windowSize[1], 1.0f);
+	_backbufferSize = glm::vec2(config.windowSize);
 
 	// Setup framebuffers, size does not really matter as we expect a resize event just after.
 	const glm::ivec2 renderSize = _camera.renderSize();
 	_particlesFramebuffer = std::shared_ptr<Framebuffer>(new Framebuffer(renderSize[0], renderSize[1],
 		GL_RGBA, GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
-	_blurFramebuffer = std::shared_ptr<Framebuffer>(new Framebuffer(renderSize[0], renderSize[1],
+	_blurFramebuffer0 = std::shared_ptr<Framebuffer>(new Framebuffer(renderSize[0], renderSize[1],
+		GL_RGBA, GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
+	_blurFramebuffer1 = std::shared_ptr<Framebuffer>(new Framebuffer(renderSize[0], renderSize[1],
 		GL_RGBA, GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
 	_renderFramebuffer = std::shared_ptr<Framebuffer>(new Framebuffer(renderSize[0], renderSize[1],
 	GL_RGBA, GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE));
@@ -151,7 +158,7 @@ Renderer::~Renderer() {
 	delete_fluid_settings(fssettings);
 }
 
-bool Renderer::loadFile(const std::string &midiFilePath) {
+bool Renderer::loadFile(const std::string& midiFilePath) {
 	std::shared_ptr<MIDIScene> scene(nullptr);
 
 	try {
@@ -171,6 +178,37 @@ bool Renderer::loadFile(const std::string &midiFilePath) {
 	_scene = scene;
 	_score = std::make_shared<Score>(_scene->secondsPerMeasure());
 	applyAllSettings();
+	return true;
+}
+
+bool Renderer::connectDevice(const std::string& deviceName) {
+	std::shared_ptr<MIDIScene> scene(nullptr);
+	_selectedPort = -1;
+	
+	const auto & devices = MIDISceneLive::availablePorts(true);
+	for(int i = 0; i < devices.size(); ++i){
+		if(devices[i] == deviceName){
+			_selectedPort = i;
+		}
+	}
+
+	if(_selectedPort == -1){
+		if(deviceName != VIRTUAL_DEVICE_NAME){
+			std::cerr << "[MIDI] Unable to connect to device named " << deviceName << "." << std::endl;
+			return false;
+		}
+	}
+
+	_scene = std::make_shared<MIDISceneLive>(_selectedPort, _verbose);
+	_timer = 0.0f;
+	// Don't start immediately
+	// _shouldPlay = true;
+	_state.reverseScroll = true;
+	_state.scrollSpeed = 1.0f;
+	_liveplay = true;
+	_score = std::make_shared<Score>(_scene->secondsPerMeasure());
+	applyAllSettings();
+
 	return true;
 }
 
@@ -209,13 +247,13 @@ SystemAction Renderer::draw(float currentTime) {
 	_timer = _shouldPlay ? (currentTime - _timerStart) : _timer;
 
 	// Render scene and blit, with GUI on top if needed.
-	drawScene(false);
+	drawScene(_useTransparency);
 
 	glViewport(0, 0, GLsizei(_backbufferSize[0]), GLsizei(_backbufferSize[1]));
 	_passthrough.draw(_finalFramebuffer->textureId(), _timer);
 
 	SystemAction action = SystemAction::NONE;
-	if (_showGUI) {
+	if(_showGUI){
 		action = drawGUI(currentTime);
 	}
 
@@ -283,7 +321,7 @@ void Renderer::blurPrepass() {
 	// Set viewport.
 	glViewport(0, 0, _particlesFramebuffer->_width, _particlesFramebuffer->_height);
 	// Draw blurred particles from previous frames.
-	_passthrough.draw(_blurFramebuffer->textureId(), _timer);
+	_passthrough.draw(_blurFramebuffer1->textureId(), _timer);
 	if (_state.showParticles) {
 		// Draw the new particles.
 		_scene->drawParticles(_timer, invSizeB, _state.particles, true);
@@ -295,12 +333,20 @@ void Renderer::blurPrepass() {
 
 	_particlesFramebuffer->unbind();
 
-	// Bind blur framebuffer.
-	_blurFramebuffer->bind();
-	glViewport(0, 0, _blurFramebuffer->_width, _blurFramebuffer->_height);
-	// Perform box blur on result from particles pass.
-	_blurringScreen.draw(_timer);
-	_blurFramebuffer->unbind();
+	// Perform blur on result from particles pass.
+	// We re-use the 'time' uniform to denote if this is the vertical or horizontal pass.
+	// Horizontal pass
+	const glm::vec2 invBlurSize0 = 1.0f / glm::vec2(_particlesFramebuffer->_width, _particlesFramebuffer->_height);
+	glViewport(0, 0, _blurFramebuffer0->_width, _blurFramebuffer0->_height);
+	_blurFramebuffer0->bind();
+	_blurringScreen.draw(_particlesFramebuffer->textureId(), 0.0f, invBlurSize0);
+	_blurFramebuffer0->unbind();
+	// Vertical pass
+	const glm::vec2 invBlurSize1 = 1.0f / glm::vec2(_blurFramebuffer0->_width, _blurFramebuffer0->_height);
+	glViewport(0, 0, _blurFramebuffer1->_width, _blurFramebuffer1->_height);
+	_blurFramebuffer1->bind();
+	_blurringScreen.draw(_blurFramebuffer0->textureId(), 1.0f, invBlurSize1);
+	_blurFramebuffer1->unbind();
 
 }
 
@@ -322,7 +368,7 @@ void Renderer::drawBackgroundImage(const glm::vec2 &) {
 
 void Renderer::drawBlur(const glm::vec2 &) {
 	glEnable(GL_BLEND);
-	_passthrough.draw(_blurFramebuffer->textureId(), _timer);
+	_passthrough.draw(_blurFramebuffer1->textureId(), _timer);
 	glDisable(GL_BLEND);
 }
 
@@ -331,7 +377,9 @@ void Renderer::drawParticles(const glm::vec2 & invSize) {
 }
 
 void Renderer::drawScore(const glm::vec2 & invSize) {
+	glEnable(GL_BLEND);
 	_score->draw(_timer * _state.scrollSpeed, invSize);
+	glDisable(GL_BLEND);
 }
 
 void Renderer::drawKeyboard(const glm::vec2 & invSize) {
@@ -341,7 +389,9 @@ void Renderer::drawKeyboard(const glm::vec2 & invSize) {
 }
 
 void Renderer::drawNotes(const glm::vec2 & invSize) {
+	glEnable(GL_BLEND);
 	_scene->drawNotes(_timer * _state.scrollSpeed, invSize, _state.baseColors, _state.minorColors, _state.reverseScroll, false);
+	glDisable(GL_BLEND);
 }
 
 void Renderer::drawFlashes(const glm::vec2 & invSize) {
@@ -369,13 +419,13 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		// Detail text.
 		const int nCount = _scene->notesCount();
 		const double duration = _scene->duration();
-		const int speed = int(std::round(double(nCount)/std::max(0.001, duration)));
-		ImGui::Text("Notes: %d, duration: %.1fs, speed: %d notes/s", nCount, duration, speed);
+		const int speed = int(std::round(double(nCount)/(std::max)(0.001, duration)));
+		ImGui::Text("Time: %.2f, notes: %d, duration: %.1fs, speed: %d notes/s", _timer * _state.scrollSpeed, nCount, duration, speed);
 
 		ImGui::Separator();
 		
 		// Load button.
-		if (ImGui::Button("Load MIDI file...")) {
+		if(ImGui::Button("Load MIDI file...")) {
 			// Read arguments.
 			nfdchar_t *outPath = NULL;
 			nfdresult_t result = NFD_OpenDialog(NULL, NULL, &outPath);
@@ -398,6 +448,20 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 				ImGui::OpenPopup("Devices");
 			}
 			showDevices();
+		}
+
+		const bool emptyScene = std::dynamic_pointer_cast<MIDISceneEmpty>(_scene) != nullptr;
+		if(!emptyScene)
+		{
+			if(ImGui::Button("Export MIDI file...")) {
+				nfdchar_t *savePath = NULL;
+				nfdresult_t result = NFD_SaveDialog("mid", NULL, &savePath);
+				if (result == NFD_OKAY && savePath != nullptr) {
+					std::ofstream outFile = System::openOutputFile(std::string(savePath), true);
+					_scene->save(outFile);
+					outFile.close();
+				}
+			}
 		}
 
 		ImGui::Separator();
@@ -423,18 +487,18 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			}
 		}
 
-		if (ImGui::Checkbox("Sync effect colors", &_state.lockParticleColor)) {
+		if (ImGui::Checkbox("Use the same color for all effects", &_state.lockParticleColor)) {
 			// If we enable the lock, make sure the colors are synched.
 			synchronizeColors(_state.baseColors);
 		}
 
 		ImGuiPushItemWidth(100);
-		if(ImGui::Combo("Min key", &_state.minKey, midiKeysString)){
+		if(ImGui::Combo("Min key", &_state.minKey, midiKeysStrings, 128)){
 			updateMinMaxKeys();
 		}
 
 		ImGuiSameLine(COLUMN_SIZE);
-		if(ImGui::Combo("Max key", &_state.maxKey, midiKeysString)){
+		if(ImGui::Combo("Max key", &_state.maxKey, midiKeysStrings, 128)){
 			updateMinMaxKeys();
 		}
 
@@ -445,7 +509,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		if(!_liveplay){
 			ImGuiSameLine(COLUMN_SIZE);
 			if(ImGui::SliderFloat("Speed", &_state.scrollSpeed, 0.1f, 5.0f, "%.1fx")){
-				_state.scrollSpeed = std::max(0.01f, _state.scrollSpeed);
+				_state.scrollSpeed = (std::max)(0.01f, _state.scrollSpeed);
 			}
 		}
 		ImGui::PopItemWidth();
@@ -463,8 +527,8 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			ImGui::PopItemWidth();
 
 			if (smw0) {
-				_state.scale = std::max(_state.scale, 0.01f);
-				_state.background.minorsWidth = std::min(std::max(_state.background.minorsWidth, 0.1f), 1.0f);
+				_state.scale = (std::max)(_state.scale, 0.01f);
+				_state.background.minorsWidth = glm::clamp(_state.background.minorsWidth, 0.1f, 1.0f);
 				_scene->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
 				_score->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
 			}
@@ -479,19 +543,30 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 
 			ImGuiSameLine(COLUMN_SIZE);
 
-			if(ImGui::Checkbox("Per-set colors", &_state.perChannelColors)){
-				if(!_state.perChannelColors){
-					_state.synchronizeChannels();
+
+			ImGuiPushItemWidth(100);
+			if(ImGui::SliderFloat("Fadeout", &_state.notesFadeOut, 0.0f, 1.0f)){
+				_state.notesFadeOut = glm::clamp(_state.notesFadeOut, 0.0f, 1.0f);
+				_scene->setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notesFadeOut);
+			}
+			ImGui::PopItemWidth();
+
+			if(ImGui::Checkbox("Per-set colors", &_state.perSetColors)){
+				if(!_state.perSetColors){
+					_state.synchronizeSets();
 				}
 			}
-			if(_state.perChannelColors){
+
+			if(_state.perSetColors){
+				ImGuiSameLine(COLUMN_SIZE);
 				if(ImGui::Button("Define sets...")){
 					ImGui::OpenPopup("Note sets options");
 				}
 				showSets();
 			}
-		}
 
+
+		}
 
 		if (_state.showFlashes && ImGui::CollapsingHeader("Flashes##HEADER")) {
 
@@ -556,6 +631,10 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		showLayers();
 	}
 
+	if(_showSetListEditor){
+		showSetEditor();
+	}
+
 	if(_shouldQuit != 0){
 		// We should only open the popup once.
 		if(_shouldQuit == 1){
@@ -572,6 +651,8 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			ImGuiSameLine(COLUMN_SIZE);
 			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.1f, 0.1f, 1.0f));
 			if(ImGui::Button("Yes", buttonSize)){
+				ImGui::PopStyleColor();
+				ImGui::EndPopup();
 				return SystemAction::QUIT;
 			}
 			ImGui::PopStyleColor();
@@ -587,7 +668,7 @@ void Renderer::synchronizeColors(const ColorArray & colors){
 		return;
 	}
 
-	for(size_t cid = 0; cid < CHANNELS_COUNT; ++cid){
+	for(size_t cid = 0; cid < SETS_COUNT; ++cid){
 		_state.baseColors[cid] = _state.particles.colors[cid] = _state.minorColors[cid] = _state.flashColors[cid] = colors[cid];
 	}
 
@@ -645,10 +726,16 @@ SystemAction Renderer::showTopButtons(double currentTime){
 			}
 		}
 
+		if(_supportTransparency) {
+			if(ImGui::Checkbox("Transparent", &_useTransparency)){
+				_useTransparency = _useTransparency && _supportTransparency;
+			}
+		}
+
 		ImGui::EndPopup();
 	}
 
-	ImGuiSameLine(340);
+	ImGuiSameLine(360);
 	ImGui::TextDisabled("(?)");
 	if (ImGui::IsItemHovered()) {
 		ImGui::BeginTooltip();
@@ -674,7 +761,7 @@ void Renderer::showParticleOptions(){
 
 	ImGuiPushItemWidth(100);
 	if (ImGui::InputFloat("Size##particles", &_state.particles.scale, 1.0f, 10.0f, "%.0fpx")) {
-		_state.particles.scale = std::max(1.0f, _state.particles.scale);
+		_state.particles.scale = (std::max)(1.0f, _state.particles.scale);
 	}
 
 	const bool mp0 = ImGui::InputFloat("Speed", &_state.particles.speed, 0.01f, 1.0f, "%.2fx");
@@ -682,7 +769,7 @@ void Renderer::showParticleOptions(){
 	const bool mp1 = ImGui::InputFloat("Spread", &_state.particles.expansion, 0.1f, 5.0f, "%.1fx");
 
 	if (ImGui::SliderInt("Count", &_state.particles.count, 1, 512)) {
-		_state.particles.count = std::min(std::max(_state.particles.count, 1), 512);
+		_state.particles.count = glm::clamp(_state.particles.count, 1, 512);
 	}
 
 	ImGui::PopItemWidth();
@@ -754,8 +841,8 @@ void Renderer::showKeyboardOptions(){
 
 	ImGuiPushItemWidth(100);
 	if(ImGuiSliderPercent("Height##Keys", &_state.keyboard.size, 0.0f, 1.0f)){
-		_state.keyboard.size = (std::min)((std::max)(_state.keyboard.size, 0.0f), 1.0f);
-		_scene->setKeyboardSize(_state.keyboard.size);
+		_state.keyboard.size = glm::clamp(_state.keyboard.size, 0.0f, 1.0f);
+		_scene->setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notesFadeOut);
 		_score->setKeyboardSize(_state.keyboard.size);
 	}
 	ImGui::PopItemWidth();
@@ -797,11 +884,11 @@ void Renderer::showPedalOptions(){
 	ImGui::Combo("Location", (int*)&_state.pedals.location, "Top left\0Bottom left\0Top right\0Bottom right\0");
 
 	if(ImGuiSliderPercent("Opacity##Pedals", &_state.pedals.opacity, 0.0f, 1.0f)){
-		_state.pedals.opacity = std::min(std::max(_state.pedals.opacity, 0.0f), 1.0f);
+		_state.pedals.opacity = glm::clamp(_state.pedals.opacity, 0.0f, 1.0f);
 	}
 	ImGuiSameLine(COLUMN_SIZE);
 	if(ImGuiSliderPercent("Size##Pedals", &_state.pedals.size, 0.05f, 0.5f)){
-		_state.pedals.size = std::min(std::max(_state.pedals.size, 0.05f), 0.5f);
+		_state.pedals.size = glm::clamp(_state.pedals.size, 0.05f, 0.5f);
 	}
 	ImGui::PopItemWidth();
 
@@ -822,7 +909,7 @@ void Renderer::showWaveOptions(){
 	ImGui::SliderFloat("Frequency##Waves", &_state.waves.frequency, 0.0f, 5.0f, "%.2fx");
 
 	if(ImGuiSliderPercent("Opacity##Waves", &_state.waves.opacity, 0.0f, 1.0f)){
-		_state.waves.opacity = std::min(std::max(_state.waves.opacity, 0.0f), 1.0f);
+		_state.waves.opacity = glm::clamp(_state.waves.opacity, 0.0f, 1.0f);
 	}
 	ImGui::PopItemWidth();
 
@@ -833,7 +920,7 @@ void Renderer::showBlurOptions(){
 	ImGuiSameLine(COLUMN_SIZE);
 	ImGuiPushItemWidth(100);
 	if (ImGui::SliderFloat("Fading", &_state.attenuation, 0.0f, 1.0f)) {
-		_state.attenuation = std::min(1.0f, std::max(0.0f, _state.attenuation));
+		_state.attenuation = glm::clamp(_state.attenuation, 0.0f, 1.0f);
 		glUseProgram(_blurringScreen.programId());
 		const GLuint id1 = glGetUniformLocation(_blurringScreen.programId(), "attenuationFactor");
 		glUniform1f(id1, _state.attenuation);
@@ -865,14 +952,18 @@ void Renderer::showScoreOptions(){
 
 void Renderer::showBackgroundOptions(){
 	ImGuiPushItemWidth(25);
+	const glm::vec3 oldColor(_state.background.color);
 	ImGui::ColorEdit3("Color##Background", &_state.background.color[0],
 		ImGuiColorEditFlags_NoInputs);
+	if(oldColor != _state.background.color){
+		applyBackgroundColor();
+	}
 	ImGui::PopItemWidth();
 	ImGuiSameLine(COLUMN_SIZE);
 	ImGuiPushItemWidth(100);
 
 	if (ImGuiSliderPercent("Opacity##Background", &_state.background.imageAlpha, 0.0f, 1.0f)) {
-		_state.background.imageAlpha = std::min(std::max(_state.background.imageAlpha, 0.0f), 1.0f);
+		_state.background.imageAlpha = glm::clamp(_state.background.imageAlpha, 0.0f, 1.0f);
 	}
 
 	ImGui::PopItemWidth();
@@ -928,8 +1019,9 @@ void Renderer::showBottomButtons(){
 		nfdchar_t *outPath = NULL;
 		nfdresult_t result = NFD_OpenDialog("ini", NULL, &outPath);
 		if (result == NFD_OKAY) {
-			_state.load(std::string(outPath));
-			setState(_state);
+			if(_state.load(std::string(outPath))){
+				setState(_state);
+			}
 		}
 	}
 	ImGuiSameLine();
@@ -1001,7 +1093,7 @@ void Renderer::showDevices(){
 		ImGuiSameLine();
 
 		if(ImGui::SmallButton("start virtual device")){
-			_scene = std::make_shared<MIDISceneLive>(-1);
+			_scene = std::make_shared<MIDISceneLive>(-1, _verbose);
 			starting = true;
 		}
 		if(ImGui::IsItemHovered()){
@@ -1027,7 +1119,7 @@ void Renderer::showDevices(){
 		if(!devices.empty()){
 			ImGuiSameLine(EXPORT_COLUMN_SIZE);
 			if(ImGui::Button("Start", buttonSize)){
-				_scene = std::make_shared<MIDISceneLive>(_selectedPort);
+				_scene = std::make_shared<MIDISceneLive>(_selectedPort, _verbose);
 				starting = true;
 			}
 		}
@@ -1060,19 +1152,245 @@ void Renderer::showSets(){
 		shouldUpdate = ImGui::RadioButton("Track", (int*)(&_state.setOptions.mode), int(SetMode::TRACK)) || shouldUpdate;
 		ImGuiSameLine(2*90);
 		shouldUpdate = ImGui::RadioButton("Key", (int*)(&_state.setOptions.mode), int(SetMode::KEY)) || shouldUpdate;
-		ImGuiSameLine(3*90);
+
 		shouldUpdate = ImGui::RadioButton("Split", (int*)(&_state.setOptions.mode), int(SetMode::SPLIT)) || shouldUpdate;
 		ImGuiSameLine();
-
 		ImGuiPushItemWidth(100);
-		shouldUpdate = ImGui::Combo("##key", &_state.setOptions.key, midiKeysString) || shouldUpdate;
+		shouldUpdate = ImGui::Combo("##key", &_state.setOptions.key, midiKeysStrings, 128) || shouldUpdate;
 		ImGui::PopItemWidth();
 
+		ImGuiSameLine(2*90);
+		shouldUpdate = ImGui::RadioButton("List", (int*)(&_state.setOptions.mode), int(SetMode::LIST)) || shouldUpdate;
+		ImGuiSameLine();
+		if(ImGui::Button("Configure...")){
+			_showSetListEditor = true;
+			_backupSetOptions = _state.setOptions;
+			ImGui::CloseCurrentPopup();
+		}
+
 		if(shouldUpdate){
+			_state.setOptions.rebuild();
 			_scene->updateSets(_state.setOptions);
 		}
 		ImGui::EndPopup();
 	}
+
+}
+
+void Renderer::showSetEditor(){
+
+	const unsigned int colWidth = 80;
+	const unsigned int colButtonWidth = 50;
+	const float offset = 8;
+
+	// For editing.
+	static SetOptions::KeyFrame newKey;
+
+	// Initial window position.
+	const ImVec2 & screenSize = ImGui::GetIO().DisplaySize;
+	ImGui::SetNextWindowPos(ImVec2(screenSize.x * 0.5f, screenSize.y * 0.1f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.0f));
+	ImGui::SetNextWindowSize({360, 360}, ImGuiCond_FirstUseEver);
+
+	if(ImGui::Begin("Set List Editor", &_showSetListEditor)){
+
+		bool refreshSetOptions = false;
+
+		// Header
+		ImGui::TextWrapped("Control points will determine which range of notes belong to each set at a given time. All notes below the given key will be assigned to the specified set (except if a set with a lower number is defined). Control points will kept being applied until a new one is encountered for the set.");
+
+		// Load/save as CSV.
+		if(ImGui::Button("Save control points...")){
+			nfdchar_t *savePath = NULL;
+			nfdresult_t result = NFD_SaveDialog("csv", NULL, &savePath);
+			if (result == NFD_OKAY) {
+				const std::string content = _state.setOptions.toKeysString("\n");
+				System::writeStringToFile(std::string(savePath), content);
+			}
+		}
+		ImGuiSameLine();
+		if(ImGui::Button("Load control points...")){
+			// Read arguments.
+			nfdchar_t *outPath = NULL;
+			nfdresult_t result = NFD_OpenDialog("csv", NULL, &outPath);
+			if (result == NFD_OKAY) {
+				const std::string str = System::loadStringFromFile(std::string(outPath));
+				_state.setOptions.fromKeysString(str);
+			}
+			refreshSetOptions = true;
+		}
+		ImGuiSameLine();
+		// Just restore the last backup.
+		if(ImGui::Button("Reset")){
+			_state.setOptions = _backupSetOptions;
+			refreshSetOptions = true;
+		}
+		ImGui::Separator();
+
+		// List of existing keys.
+		// Keep some room at the bottom for the "new key" section.
+		ImVec2 listSize = ImGui::GetContentRegionAvail();
+		listSize.y -= 1.5 * ImGui::GetTextLineHeightWithSpacing();
+
+		if(ImGui::BeginTable("#List", 4, ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX |  ImGuiTableFlags_BordersH, listSize)){
+			const size_t rowCount = _state.setOptions.keys.size();
+
+			// Header
+			ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
+			ImGui::TableSetupColumn("Time", ImGuiTableColumnFlags_WidthFixed, _guiScale * colWidth);
+			ImGui::TableSetupColumn("Key", ImGuiTableColumnFlags_WidthFixed, _guiScale * colWidth);
+			ImGui::TableSetupColumn("Set", ImGuiTableColumnFlags_WidthFixed, _guiScale * colWidth);
+			ImGui::TableSetupColumn("Remove", ImGuiTableColumnFlags_NoHeaderLabel | ImGuiTableColumnFlags_WidthFixed, colButtonWidth);
+			ImGui::TableHeadersRow();
+
+			int removeIndex = -1;
+
+			for(size_t row = 0u; row < rowCount; ++row){
+
+				SetOptions::KeyFrame& key = _state.setOptions.keys[row];
+
+				ImGui::TableNextColumn();
+				ImGui::PushID(row);
+
+				ImGuiPushItemWidth(colWidth);
+				if(ImGui::InputDouble("##Time", &key.time, 0, 0, "%.3fs")){
+					key.time = (std::max)(key.time, 0.0);
+				}
+				// Postpone update until we are not focused anymore (else rows will jump around).
+				if(ImGui::IsItemDeactivatedAfterEdit()){
+					refreshSetOptions = true;
+				}
+				ImGui::PopItemWidth();
+
+				ImGui::TableNextColumn();
+				ImGuiPushItemWidth(colWidth);
+				if(ImGui::Combo("##Key", &key.key, midiKeysStrings, 128)){
+					refreshSetOptions = true;
+				}
+				ImGui::PopItemWidth();
+
+				ImGui::TableNextColumn();
+				ImGuiPushItemWidth(colWidth);
+				// It is simpler to use a combo here (no weird focus issues when sorting rows).
+				if(ImGui::Combo("##Set", &key.set, " 0\0 1\0 2\0 3\0 4\0 5\0 6\0 7\0\0")){
+					refreshSetOptions = true;
+				}
+				ImGui::PopItemWidth();
+
+				ImGui::TableNextColumn();
+				if(ImGui::Button("x")){
+					removeIndex = int(row);
+				}
+
+				ImGui::PopID();
+			}
+
+			ImGui::EndTable();
+
+			// Remove after displaying the table.
+			if(removeIndex >= 0){
+				_state.setOptions.keys.erase(_state.setOptions.keys.begin() + removeIndex);
+				refreshSetOptions = true;
+			}
+		}
+
+		// Section to add a new key.
+		// Mimic the inputs and size/alignment of the table items.
+		ImGuiPushItemWidth(colWidth);
+		if(ImGui::InputDouble("##Time", &newKey.time, 0, 0, "%.3fs")){
+			newKey.time = (std::max)(0.0, newKey.time);
+		}
+		ImGui::PopItemWidth();
+		ImGuiSameLine(colWidth + 2 * offset);
+		ImGuiPushItemWidth(colWidth);
+		ImGui::Combo("##Key", &newKey.key, midiKeysStrings, 128);
+		ImGui::PopItemWidth();
+
+		ImGuiSameLine(2 * colWidth + 3 * offset);
+		ImGuiPushItemWidth(colWidth);
+		ImGui::Combo("##Set", &newKey.set, " 0\0 1\0 2\0 3\0 4\0 5\0 6\0 7\0\0");
+		ImGui::PopItemWidth();
+
+		ImGuiSameLine(3 * colWidth + 4 * offset);
+		if(ImGui::Button("Add")){
+			auto insert = std::upper_bound(_state.setOptions.keys.begin(), _state.setOptions.keys.end(), newKey);
+			_state.setOptions.keys.insert(insert, newKey);
+			refreshSetOptions = true;
+		}
+
+		// Actions
+		if(!_showSetListEditor){
+			// If we are exiting, refresh the existing set.
+			refreshSetOptions = true;
+		}
+
+		// If refresh is needed, ensure the set options are rebuilt and the scene udpated for live preview.
+		if(refreshSetOptions){
+			_state.setOptions.rebuild();
+			if(_scene){
+				_scene->updateSets(_state.setOptions);
+			}
+		}
+
+		if(_showDebug){
+			const double time = _timer * _state.scrollSpeed;
+
+			std::array<int, SETS_COUNT> firstNoteInSet;
+			std::array<int, SETS_COUNT> lastNoteInSet;
+			firstNoteInSet.fill(-1);
+			lastNoteInSet.fill(128);
+			int lastSet = -1;
+			for(int nid = 0; nid < 128; ++nid){
+				int newSet = _state.setOptions.apply(nid, 0, 0, time);
+				if(newSet != lastSet){
+					if(lastSet >= 0){
+						lastNoteInSet[lastSet] = nid - 1;
+					}
+					firstNoteInSet[newSet] = nid;
+					lastSet = newSet;
+				}
+			}
+			ImGui::Separator();
+			ImGui::Text("Debug: ");
+			ImGuiSameLine();
+			ImGui::TextDisabled("(press D to hide)");
+			ImGui::Text("At time %.3fs: ", time);
+
+			for(unsigned int sid = 0; sid < SETS_COUNT; ++sid){
+				int firstNote = firstNoteInSet[sid];
+				int lastNote = lastNoteInSet[sid];
+
+				if((firstNote != -1) || (lastNote != 128)){
+					firstNote = glm::clamp(firstNote, 0, 127);
+					lastNote  = glm::clamp(lastNote, 0, 127);
+
+					ImGui::Text("* Set %u contains notes from %s to %s", sid, midiKeysStrings[firstNote], midiKeysStrings[lastNote]);
+				}
+			}
+
+		}
+	}
+	ImGui::End();
+
+
+}
+
+void Renderer::applyBackgroundColor(){
+	// Clear all buffers with this color.
+	glClearColor(_state.background.color[0], _state.background.color[1], _state.background.color[2], _useTransparency ? 0.0f : 1.0f);
+	_particlesFramebuffer->bind();
+	glClear(GL_COLOR_BUFFER_BIT);
+	_particlesFramebuffer->unbind();
+	_blurFramebuffer0->bind();
+	glClear(GL_COLOR_BUFFER_BIT);
+	_blurFramebuffer0->unbind();
+	_blurFramebuffer1->bind();
+	glClear(GL_COLOR_BUFFER_BIT);
+	_blurFramebuffer1->unbind();
+	// Update parameter.
+	glUseProgram(_blurringScreen.programId());
+	GLuint id3 = glGetUniformLocation(_blurringScreen.programId(), "backgroundColor");
+	glUniform3fv(id3, 1, &_state.background.color[0]);
+	glUseProgram(0);
 }
 
 void Renderer::applyAllSettings() {
@@ -1084,7 +1402,7 @@ void Renderer::applyAllSettings() {
 	_scene->setParticlesParameters(_state.particles.speed, _state.particles.expansion);
 	_score->setDisplay(_state.background.digits, _state.background.hLines, _state.background.vLines);
 	_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
-	_scene->setKeyboardSize(_state.keyboard.size);
+	_scene->setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notesFadeOut);
 	_score->setKeyboardSize(_state.keyboard.size);
 	_score->setPlayDirection(_state.reverseScroll);
 	
@@ -1094,13 +1412,7 @@ void Renderer::applyAllSettings() {
 	updateMinMaxKeys();
 
 	// Reset buffers.
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	_particlesFramebuffer->bind();
-	glClear(GL_COLOR_BUFFER_BIT);
-	_particlesFramebuffer->unbind();
-	_blurFramebuffer->bind();
-	glClear(GL_COLOR_BUFFER_BIT);
-	_blurFramebuffer->unbind();
+	applyBackgroundColor();
 	glUseProgram(_blurringScreen.programId());
 	GLuint id2 = glGetUniformLocation(_blurringScreen.programId(), "attenuationFactor");
 	glUniform1f(id2, _state.attenuation);
@@ -1124,7 +1436,8 @@ void Renderer::clean() {
 	_backgroundTexture.clean();
 	_fxaa.clean();
 	_particlesFramebuffer->clean();
-	_blurFramebuffer->clean();
+	_blurFramebuffer0->clean();
+	_blurFramebuffer1->clean();
 	_finalFramebuffer->clean();
 	_renderFramebuffer->clean();
 }
@@ -1160,7 +1473,8 @@ void Renderer::updateSizes(){
 	const auto &currentQuality = Quality::availables.at(_state.quality);
 	const glm::vec2 baseRes(_camera.renderSize());
 	_particlesFramebuffer->resize(currentQuality.particlesResolution * baseRes);
-	_blurFramebuffer->resize(currentQuality.blurResolution * baseRes);
+	_blurFramebuffer0->resize(currentQuality.blurResolution * baseRes);
+	_blurFramebuffer1->resize(currentQuality.blurResolution * baseRes);
 	_renderFramebuffer->resize(currentQuality.finalResolution * baseRes);
 	_finalFramebuffer->resize(currentQuality.finalResolution * baseRes);
 	_recorder.setSize(glm::ivec2(_finalFramebuffer->_width, _finalFramebuffer->_height));
@@ -1201,7 +1515,9 @@ void Renderer::reset() {
 
 void Renderer::setState(const State & state){
 	_state = state;
-
+	_state.setOptions.rebuild();
+	_backupSetOptions = _state.setOptions;
+	
 	// Update toggles.
 	_layers[Layer::BGTEXTURE].toggle = &_state.background.image;
 	_layers[Layer::BLUR].toggle = &_state.showBlur;
@@ -1249,18 +1565,40 @@ void Renderer::setState(const State & state){
 	}
 }
 
-
 void  Renderer::setGUIScale(float scale){
-	_guiScale = std::max(0.25f, scale);
+	_guiScale = (std::max)(0.25f, scale);
 	ImGui::GetStyle() = ImGuiStyle();
-	ImGui::StyleColorsDark();
+	ImGui::configureStyle();
 	ImGui::GetIO().FontGlobalScale = _guiScale;
 	ImGui::GetStyle().ScaleAllSizes(_guiScale);
 	ImGui::GetStyle().FrameRounding = 3 * _guiScale;
 }
 
-bool Renderer::startDirectRecording(const std::string & path, Recorder::Format format, int framerate, int bitrate, float postroll, bool skipBackground, const glm::vec2 & size){
-	const bool success = _recorder.setParameters(path, format, framerate, bitrate, postroll, skipBackground);
+
+void Renderer::updateConfiguration(Configuration& config){
+	// Reset
+	config.lastMidiPath = "";
+	config.lastMidiDevice = "";
+	// General settings
+	config.fullscreen = _fullscreen;
+	config.useTransparency = _useTransparency;
+	config.guiScale = _guiScale;
+	// Settings file.
+	config.lastConfigPath = _state.filePath();
+	// MIDI File.
+	std::shared_ptr<MIDISceneFile> fileScene = std::dynamic_pointer_cast<MIDISceneFile>(_scene);
+	if(fileScene){
+		config.lastMidiPath = fileScene->filePath();
+	}
+	// MIDI device.
+	std::shared_ptr<MIDISceneLive> liveScene = std::dynamic_pointer_cast<MIDISceneLive>(_scene);
+	if(liveScene){
+		config.lastMidiDevice = liveScene->deviceName();
+	}
+}
+
+bool Renderer::startDirectRecording(const Export& exporting, const glm::vec2 & size){
+	const bool success = _recorder.setParameters(exporting);
 	if(!success){
 		std::cerr << "[EXPORT]: Unable to start direct export." << std::endl;
 		return false;
@@ -1298,10 +1636,12 @@ void Renderer::startRecording(){
 	_backbufferSize = backBufferSize;
 
 	// Reset buffers.
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClearColor(_state.background.color[0], _state.background.color[1], _state.background.color[2], _recorder.isTransparent() ? 0.0f : 1.0f);
 	_particlesFramebuffer->bind();
 	glClear(GL_COLOR_BUFFER_BIT);
-	_blurFramebuffer->bind();
+	_blurFramebuffer0->bind();
+	glClear(GL_COLOR_BUFFER_BIT);
+	_blurFramebuffer1->bind();
 	glClear(GL_COLOR_BUFFER_BIT);
 	_renderFramebuffer->bind();
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -1313,7 +1653,7 @@ void Renderer::startRecording(){
 }
 
 bool Renderer::channelColorEdit(const char * name, const char * displayName, ColorArray & colors){
-	if(!_state.perChannelColors){
+	if(!_state.perSetColors){
 		// If locked, display color sink.
 		ImGuiPushItemWidth(25);
 		const bool inter = ImGui::ColorEdit3(name, &colors[0][0], ImGuiColorEditFlags_NoInputs);

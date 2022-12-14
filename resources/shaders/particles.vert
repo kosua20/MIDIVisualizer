@@ -1,11 +1,11 @@
 #version 330
-#define CHANNELS_COUNT 8
+#define SETS_COUNT 8
 
 layout(location = 0) in vec2 v;
 
 uniform float time;
 uniform float scale;
-uniform vec3 baseColor[CHANNELS_COUNT];
+uniform vec3 baseColor[SETS_COUNT];
 uniform vec2 inverseScreenSize;
 uniform sampler2D textureParticles;
 uniform vec2 inverseTextureSize;

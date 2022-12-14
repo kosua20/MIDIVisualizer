@@ -25,10 +25,15 @@ public:
 	int notesCount() const;
 
 	void print() const;
+	
+	void save(std::ofstream& file) const;
+
+	const std::string& filePath() const;
 
 private:
 
 	MIDIFile _midiFile;
+	std::string _filePath;
 	double _previousTime = 0.0;
 	
 };

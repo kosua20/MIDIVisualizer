@@ -4,21 +4,17 @@ in INTERFACE {
 	vec2 uv;
 } In ;
 
-
-layout(std140) uniform ActiveNotes {
-	ivec4 actives[32];
-};
-
-#define CHANNELS_COUNT 8
+#define SETS_COUNT 8
 #define MAJOR_COUNT 75
 
 uniform vec2 inverseScreenSize;
 uniform float minorsWidth = 1.0;
 uniform vec3 keysColor = vec3(0.0);
-uniform vec3 minorColor[CHANNELS_COUNT];
-uniform vec3 majorColor[CHANNELS_COUNT];
+uniform vec3 minorColor[SETS_COUNT];
+uniform vec3 majorColor[SETS_COUNT];
 uniform bool highlightKeys;
 uniform bool horizontalMode = false;
+uniform int actives[128];
 
 uniform int minNoteMajor;
 uniform float notesCount; // (maxNoteMajor - minNoteMajor + 1)
@@ -41,10 +37,6 @@ vec2 minorShift(int id){
 out vec4 fragColor;
 
 
-int isIdActive(int id){
-	return actives[id/4][id%4];
-}
-
 void main(){
 	// White keys: white
 	// Black keys: keyColor
@@ -57,7 +49,7 @@ void main(){
 	
 	// If the current major key is active, the majorColor is specific.
 	int majorId = majorIds[clamp(int(In.uv.x * notesCount) + minNoteMajor, 0, 74)];
-	int cidMajor = isIdActive(majorId);
+	int cidMajor = actives[majorId];
 	vec3 backColor = (highlightKeys && cidMajor >= 0) ? majorColor[cidMajor] : vec3(1.0);
 
 	vec3 frontColor = keysColor;
@@ -80,7 +72,7 @@ void main(){
 			//float roundEdge = (1.0 - exp(50.0 * (-In.uv.y + 0.4)))*1.1;
 			//intensity += smoothstep(roundEdge - 0.1, roundEdge + 0.1, localUv);
 			//intensity = clamp(intensity, 0.0, 1.0);
-			int cidMinor = isIdActive(minorId);
+			int cidMinor = actives[minorId];
 			if(highlightKeys && cidMinor >= 0){
 				frontColor = minorColor[cidMinor];
 			}

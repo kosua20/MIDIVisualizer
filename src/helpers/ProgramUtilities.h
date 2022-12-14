@@ -15,9 +15,6 @@ std::string getGLErrorString(GLenum error);
 /// Check if any OpenGL error has been detected and log it.
 int _checkGLError(const char *file, int line);
 
-/// Return the content of a text file at the given path, as a string.
-std::string loadStringFromFile(const std::string & path);
-
 /// Load a shader of the given type from a string
 GLuint loadShader(const std::string & prog, GLuint type);
 

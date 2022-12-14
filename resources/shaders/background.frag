@@ -143,11 +143,5 @@ void main(){
 		bgColor = mix(bgColor, vec4(linesColor, 1.0), lineIntensity);
 	}
 	
-	if(all(equal(bgColor.xyz, vec3(0.0)))){
-		// Transparent background.
-		discard;
-	}
-	
 	fragColor = bgColor;
-	
 }

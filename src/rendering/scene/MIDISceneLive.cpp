@@ -10,6 +10,8 @@
 
 #include "MIDISceneLive.h"
 
+#include <libremidi/writer.hpp>
+
 
 #ifdef _WIN32
 #undef MIN
@@ -22,38 +24,31 @@ MIDISceneLive::~MIDISceneLive(){
 	shared().close_port();
 }
 
-MIDISceneLive::MIDISceneLive(int port) : MIDIScene(){
+MIDISceneLive::MIDISceneLive(int port, bool verbose) : MIDIScene() {
+	_verbose = verbose;
+	
 	// For now we use the same MIDI in instance for everything.
 	if(shared().is_port_open()){
 		shared().close_port();
 	}
 	if(port >= 0){
 		shared().open_port(port, "MIDIVisualizer input");
+		_deviceName = _availablePorts[port];
 	} else {
 		shared().open_virtual_port("MIDIVisualizer virtual input");
+		_deviceName = VIRTUAL_DEVICE_NAME;
 	}
-
+	shared().ignore_types(true, true, true);
 
 	_activeIds.fill(-1);
 	_activeRecording.fill(false);
 	_notes.resize(MAX_NOTES_IN_FLIGHT);
 	_notesInfos.resize(MAX_NOTES_IN_FLIGHT);
-	_secondsPerMeasure = computeMeasureDuration(_tempo, _signature);
+	_allMessages.reserve(MAX_NOTES_IN_FLIGHT);
+	_secondsPerMeasure = computeMeasureDuration(_tempo, _signatureNum / _signatureDenom);
 	_pedalInfos[-10000.0f] = Pedals();
 	upload(_notes);
-}
 
-void MIDISceneLive::updateSet(GPUNote & note, int channel, const SetOptions & options){
-	if(options.mode == SetMode::CHANNEL){
-		// Restore channel from backup vector.
-		note.set = float(int(channel) % CHANNELS_COUNT);
-	} else if(options.mode == SetMode::SPLIT){
-		note.set = (int(note.note) < options.key ? 0.0f : 1.0f);
-	} else if(options.mode == SetMode::KEY){
-		note.set = float(noteShift[int(note.note) % 12]);
-	} else {
-		note.set = 0.0f;
-	}
 }
 
 void MIDISceneLive::updateSets(const SetOptions & options){
@@ -61,7 +56,9 @@ void MIDISceneLive::updateSets(const SetOptions & options){
 	
 	for(size_t nid = 0; nid < _notesCount; ++nid){
 		auto & note = _notes[nid];
-		updateSet(note, _notesInfos[nid].channel, _currentSetOption);
+		// Restore channel from note infos.
+		const int set = _currentSetOption.apply(int(note.note), _notesInfos[nid].channel, 0, note.start);
+		note.set = float(set);
 	}
 	upload(_notes);
 }
@@ -106,11 +103,11 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 		}
 		const int noteId = _activeIds[nid];
 		GPUNote & note = _notes[noteId];
-		note.duration = float(time - double(note.start));
+		note.duration = (std::max)(float(time - double(note.start)), 0.0f);
 		_actives[nid] = int(note.set);
 		// Keep track of which region was modified.
-		minUpdated = std::min(minUpdated, noteId);
-		maxUpdated = std::max(maxUpdated, noteId);
+		minUpdated = (std::min)(minUpdated, noteId);
+		maxUpdated = (std::max)(maxUpdated, noteId);
 	}
 
 	// Restore pedals to the last known state.
@@ -121,6 +118,10 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 	}
 
 	// Process new events.
+	MIDIFrame frame;
+	frame.timestamp = time;
+	frame.messages.reserve(8);
+
 	while(true){
 		auto message = shared().get_message();
 		if(message.size() == 0){
@@ -128,12 +129,18 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 			break;
 		}
 
-		const auto type = message.get_message_type();
+		// Store message for saving.
+		frame.messages.push_back(message);
 
+		const auto type = message.get_message_type();
 		// Handle note events.
 		if(message.is_note_on_or_off()){
 			const short note = clamp<short>(short(message[1]), 0, 127);
 			const short velocity = clamp<short>(short(message[2]), 0, 127);
+
+			if(_verbose){
+				std::cout << "Note: " << int(note) << " " << int(velocity) << " " << (type == libremidi::message_type::NOTE_ON ? "on" : "off")<< "(" << message.timestamp << ")\n";
+			}
 
 			// If the note is currently recording, disable it.
 			if(_activeRecording[note]){
@@ -143,17 +150,19 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 			}
 
 			// If this is an on event with positive velocity, start a new note.
-			if(type == rtmidi::message_type::NOTE_ON && velocity > 0){
+			if(type == libremidi::message_type::NOTE_ON && velocity > 0){
 
 				const int index = _notesCount % MAX_NOTES_IN_FLIGHT;
 				// Get new note.
 				auto & newNote = _notes[index];
 				newNote.start = float(time);
 				newNote.duration = 0.0f;
+				newNote.note = note;
 				// Save the original channel.
 				_notesInfos[index].channel = message.get_channel();
 				// Compute set according to current setting.
-				updateSet(newNote, _notesInfos[index].channel, _currentSetOption);
+				const int set = _currentSetOption.apply(int(newNote.note), _notesInfos[index].channel, 0, newNote.start);
+				newNote.set = float(set);
 				_actives[note] = int(newNote.set);
 				// Activate recording of the key.
 				_activeRecording[note] = true;
@@ -168,8 +177,8 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 				_notesInfos[index].note = note;
 
 				// Keep track of which region was modified.
-				minUpdated = std::min(minUpdated, int(index));
-				maxUpdated = std::max(maxUpdated, int(index));
+				minUpdated = (std::min)(minUpdated, int(index));
+				maxUpdated = (std::max)(maxUpdated, int(index));
 
 				// Find an available particles system and update it with the note parameters.
 				for(auto & particle : _particles){
@@ -190,20 +199,38 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 
 		} else if(message.is_meta_event()){
 			// Handle tempo and signature changes.
-			const rtmidi::meta_event_type metaType = message.get_meta_event_type();
+			const libremidi::meta_event_type metaType = message.get_meta_event_type();
 
-			if(metaType == rtmidi::meta_event_type::TIME_SIGNATURE){
-				_signature = double(message[3]) / double(std::pow(2, short(message[4])));
-				_secondsPerMeasure = computeMeasureDuration(_tempo, _signature);
+			if(metaType == libremidi::meta_event_type::TIME_SIGNATURE){
+				_signatureNum = double(message[3]);
+				_signatureDenom = double(std::pow(2, short(message[4])));
+				_secondsPerMeasure = computeMeasureDuration(_tempo, _signatureNum / _signatureDenom);
 
-			} else if(metaType == rtmidi::meta_event_type::TEMPO_CHANGE){
+				if(_verbose){
+					std::cout << "Signature: " << _signatureNum << "/" << _signatureDenom << " " <<  _secondsPerMeasure << "(" << message.timestamp << ")\n";
+				}
+
+			} else if(metaType == libremidi::meta_event_type::TEMPO_CHANGE){
 				_tempo = int(((message[3] & 0xFF) << 16) | ((message[4] & 0xFF) << 8) | (message[5] & 0xFF));
-				_secondsPerMeasure = computeMeasureDuration(_tempo, _signature);
+				_secondsPerMeasure = computeMeasureDuration(_tempo, _signatureNum / _signatureDenom);
+				if(_verbose){
+					std::cout << "Tempo: " << _tempo << " " <<  _secondsPerMeasure << "(" << message.timestamp << ")\n";
+				}
+			} else {
+				if(_verbose){
+					std::cout << "Meta: " << "other (" << message.timestamp << ")\n";
+				}
 			}
 
-		} else if(type == rtmidi::message_type::CONTROL_CHANGE){
+		} else if(type == libremidi::message_type::CONTROL_CHANGE){
+
 			// Handle pedal.
 			const int rawType = clamp<int>(message[1], 0, 127);
+
+			if(_verbose){
+				std::cout << "Control: " << rawType << "(" << message.timestamp << ")\n";
+			}
+
 			// Skip other CC.
 			if(rawType != 64 && rawType != 66 && rawType != 67 && rawType != 11){
 				continue;
@@ -220,8 +247,16 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 			}
 			// Register new pedal event with updated state.
 			_pedalInfos[float(time)] = Pedals(_pedals);
+		} else {
+			if(_verbose){
+				std::cout << "Other (" << message.timestamp << ")\n";
+			}
 		}
 
+	}
+	// Insert all messages treated this frame in a new frame.
+	if(!frame.messages.empty()){
+		_allMessages.push_back(std::move(frame));
 	}
 
 	// Update completed notes.
@@ -234,7 +269,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 
 		auto& note = _notes[i];
 		// Ignore notes that ended at this frame.
-		float noteEnd = note.start+note.duration;
+		float noteEnd = note.start + note.duration;
 		if(noteEnd > _previousTime && noteEnd <= time){
 			continue;
 		}
@@ -267,7 +302,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 	_dataBufferSubsize = std::min(MAX_NOTES_IN_FLIGHT, _notesCount);
 	// Update timings.
 	_previousTime = time;
-	_maxTime = std::max(time, _maxTime);
+	_maxTime = (std::max)(time, _maxTime);
 }
 
 double MIDISceneLive::duration() const {
@@ -286,19 +321,78 @@ void MIDISceneLive::print() const {
 	std::cout << "[INFO]: Live scene with " << notesCount() << " notes, duration " << duration() << "s." << std::endl;
 }
 
-rtmidi::midi_in * MIDISceneLive::_sharedMIDIIn = nullptr;
+void MIDISceneLive::save(std::ofstream& file) const {
+
+	const double quarterNotesPerSecond = 1000000.0 / double(_tempo);
+	const double unitsPerQuarterNote = 960.0;
+	const double unitsPerSecond = unitsPerQuarterNote * quarterNotesPerSecond;
+
+	if(_verbose){
+		std::cout << "Saving recording using " << unitsPerSecond << " units per second, containing " << _allMessages.size() << " messages." << std::endl;
+	}
+
+	// Make a copy of all messages and sort it.
+	std::vector<MIDIFrame> allMessages(_allMessages);
+	// Start by sorting the frames
+	std::sort(allMessages.begin(), allMessages.end(), [](const MIDIFrame& a, const MIDIFrame& b){
+		return a.timestamp < b.timestamp;
+	});
+
+	// For each frame, update all messages timestamp.
+	double currentTime = 0.0;
+
+	for(MIDIFrame& frame : allMessages){
+		// Skip empty frames (should not exist), don't udpate the timing.
+		if(frame.messages.empty()){
+			continue;
+		}
+		// First message should have a real delta to the last existing message.
+		frame.messages[0].timestamp = frame.timestamp - currentTime;
+		// All others are 0 as they happen at the same time.
+		const size_t messageCount = frame.messages.size();
+		for(size_t mid = 1; mid < messageCount; ++mid){
+			frame.messages[mid].timestamp = 0.0;
+		}
+		// If two consecutive frames have the same timestamp, all deltas of the second frame will be set to 0.
+		currentTime = frame.timestamp;
+	}
+
+	// Start a file with one track.
+	libremidi::writer writer;
+	writer.ticksPerQuarterNote = int(unitsPerQuarterNote);
+	writer.tracks.resize(1);
+
+	// Set an initial tempo/signature at t=0 so that the first 'real' message delta is correct.
+	writer.add_event(0, 0, libremidi::meta_events::tempo(_tempo));
+	writer.add_event(0, 0, libremidi::meta_events::time_signature(int(_signatureNum), int(_signatureDenom)));
+	writer.add_event(0, 0, libremidi::meta_events::key_signature(1, false));
+
+	// Write all messages.
+	for(const MIDIFrame& frame : allMessages){
+		for(const libremidi::message& message : frame.messages){
+			writer.add_event(message.timestamp * unitsPerSecond, 0, message);
+		}
+	}
+	writer.write(file);
+}
+
+const std::string& MIDISceneLive::deviceName() const {
+	return _deviceName;
+}
+
+libremidi::midi_in * MIDISceneLive::_sharedMIDIIn = nullptr;
 std::vector<std::string> MIDISceneLive::_availablePorts;
 int MIDISceneLive::_refreshIndex = 0;
 
-rtmidi::midi_in & MIDISceneLive::shared(){
+libremidi::midi_in & MIDISceneLive::shared(){
 	if(_sharedMIDIIn == nullptr){
-		_sharedMIDIIn = new rtmidi::midi_in(rtmidi::API::UNSPECIFIED, "MIDIVisualizer");
+		_sharedMIDIIn = new libremidi::midi_in(libremidi::API::UNSPECIFIED, "MIDIVisualizer");
 	}
 	return *_sharedMIDIIn;
 }
 
-const std::vector<std::string> & MIDISceneLive::availablePorts(){
-	if(_refreshIndex == 0){
+const std::vector<std::string> & MIDISceneLive::availablePorts(bool force){
+	if((_refreshIndex == 0) || force){
 		const int portCount = shared().get_port_count();
 		_availablePorts.resize(portCount);
 

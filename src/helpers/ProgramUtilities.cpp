@@ -1,4 +1,5 @@
 #include "ProgramUtilities.h"
+#include "../helpers/System.h"
 
 #include <iostream>
 #include <fstream>
@@ -47,23 +48,6 @@ int _checkGLError(const char *file, int line){
 	return 0;
 }
 
-std::string loadStringFromFile(const std::string & filename) {
-	std::ifstream in;
-	// Open a stream to the file.
-	in.open(filename.c_str());
-	if (!in) {
-		std::cerr << "[ERROR]: " << filename + " is not a valid file." << std::endl;
-		return "";
-	}
-	std::stringstream buffer;
-	// Read the stream in a buffer.
-	buffer << in.rdbuf();
-	// Create a string based on the content of the buffer.
-	std::string line = buffer.str();
-	in.close();
-	return line;
-}
-
 GLuint loadShader(const std::string & prog, GLuint type){
 	GLuint id;
 	// Create shader object.
@@ -101,12 +85,12 @@ GLuint loadShader(const std::string & prog, GLuint type){
 
 GLuint createGLProgram(const std::string & vertexPath, const std::string & fragmentPath, const std::string & geometryPath){
 	
-	std::string vertexCode = loadStringFromFile(vertexPath);
-	std::string fragmentCode = loadStringFromFile(fragmentPath);
+	std::string vertexCode = System::loadStringFromFile(vertexPath);
+	std::string fragmentCode = System::loadStringFromFile(fragmentPath);
 	std::string geometryCode = "";
 	
 	if(!geometryPath.empty()) {
-		geometryCode = loadStringFromFile(geometryPath);
+		geometryCode = System::loadStringFromFile(geometryPath);
 	}
 	
 	return createGLProgramFromStrings(vertexCode, fragmentCode, geometryCode);

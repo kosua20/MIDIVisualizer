@@ -1,5 +1,5 @@
 #version 330
-#define CHANNELS_COUNT 8
+#define SETS_COUNT 8
 
 
 in INTERFACE {
@@ -10,7 +10,7 @@ in INTERFACE {
 
 uniform sampler2D textureFlash;
 uniform float time;
-uniform vec3 baseColor[CHANNELS_COUNT];
+uniform vec3 baseColor[SETS_COUNT];
 
 #define numberSprites 8.0
 

@@ -40,6 +40,8 @@ private:
 	GLuint _vao;
 	GLuint _ebo;
 	GLuint _textureId;
+	GLuint _timeId;
+	GLuint _screenId;
 	
 	size_t _count;
 

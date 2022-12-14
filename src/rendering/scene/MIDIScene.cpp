@@ -46,13 +46,6 @@ void MIDIScene::renderSetup(){
 	glBindBuffer(GL_ARRAY_BUFFER, _flagsBufferId);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(int) * 128, NULL, GL_DYNAMIC_DRAW);
 
-	_uboKeyboard = 0;
-	glGenBuffers(1, &_uboKeyboard);
-	glBindBuffer(GL_UNIFORM_BUFFER, _uboKeyboard);
-	glBufferData(GL_UNIFORM_BUFFER, sizeof(int) * 128, NULL, GL_DYNAMIC_DRAW);
-	glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-
 	// Programs.
 
 	// Notes shaders.
@@ -158,8 +151,6 @@ void MIDIScene::renderSetup(){
 	// We load the indices data
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
 	glBindVertexArray(0);
-	const GLuint uboLoc = glGetUniformBlockIndex(_programKeysId, "ActiveNotes");
-	glUniformBlockBinding(_programKeysId, uboLoc, 0);
 
 	// Pedals setup.
 	_programPedalsId = createGLProgramFromStrings(ResourcesManager::getStringForShader("pedal_vert"), ResourcesManager::getStringForShader("pedal_frag"));
@@ -246,9 +237,12 @@ void MIDIScene::setParticlesParameters(const float speed, const float expansion)
 	glUseProgram(0);
 }
 
-void MIDIScene::setKeyboardSize(float keyboardHeight){
+void MIDIScene::setKeyboardSizeAndFadeout(float keyboardHeight, float fadeOut){
+	const float fadeOutFinal = keyboardHeight + (1.0f - keyboardHeight) * (1.0f - fadeOut);
+
 	glUseProgram(_programId);
 	glUniform1f(glGetUniformLocation(_programId, "keyboardHeight"), keyboardHeight);
+	glUniform1f(glGetUniformLocation(_programId, "fadeOut"), fadeOutFinal);
 	glUseProgram(_programParticulesId);
 	glUniform1f(glGetUniformLocation(_programParticulesId, "keyboardHeight"), keyboardHeight);
 	glUseProgram(_programKeysId);
@@ -351,7 +345,7 @@ void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const C
 	// Need alpha blending.
 	glEnable(GL_BLEND);
 
-	glBlendFunc(GL_ONE, GL_ONE);
+	glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
 	// Update the flags buffer accordingly.
 	glBindBuffer(GL_ARRAY_BUFFER, _flagsBufferId);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, _actives.size()*sizeof(int) ,&(_actives[0]));
@@ -378,14 +372,11 @@ void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const C
 	glBindVertexArray(0);
 	glUseProgram(0);
 	glDisable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
 }
 
 void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::vec3 & keyColor, const ColorArray & majorColors, const ColorArray & minorColors, bool highlightKeys) {
-	// Upload active keys data.
-	glBindBuffer(GL_UNIFORM_BUFFER, _uboKeyboard);
-	glBufferSubData(GL_UNIFORM_BUFFER, 0, _actives.size() * sizeof(int), &(_actives[0]));
-	//glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 	glUseProgram(_programKeysId);
 
@@ -395,14 +386,13 @@ void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::
 	const GLuint majorId = glGetUniformLocation(_programKeysId, "majorColor");
 	const GLuint minorId = glGetUniformLocation(_programKeysId, "minorColor");
 	const GLuint highId = glGetUniformLocation(_programKeysId, "highlightKeys");
+	const GLuint activesId = glGetUniformLocation(_programKeysId, "actives");
 	glUniform2fv(screenId1, 1, &(invScreenSize[0]));
 	glUniform3fv(colorId, 1, &(keyColor[0]));
 	glUniform3fv(majorId, GLsizei(majorColors.size()), &(majorColors[0][0]));
 	glUniform3fv(minorId, GLsizei(minorColors.size()), &(minorColors[0][0]));
 	glUniform1i(highId, int(highlightKeys));
-
-	glBindBuffer(GL_UNIFORM_BUFFER, _uboKeyboard);
-	glBindBufferBase(GL_UNIFORM_BUFFER, 0, _uboKeyboard);
+	glUniform1iv(activesId, GLsizei(_actives.size()), &(_actives[0]));
 
 	// Draw the geometry.
 	glBindVertexArray(_vaoKeyboard);
@@ -476,7 +466,8 @@ void MIDIScene::drawWaves(float time, const glm::vec2 & invScreenSize, const Sta
 
 	glEnable(GL_BLEND);
 	glUseProgram(_programWaveId);
-	glBlendFunc(GL_ONE, GL_ONE);
+	glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
+
 	// Uniforms setup.
 	const GLuint colorId = glGetUniformLocation(_programWaveId, "waveColor");
 	const GLuint opacityId = glGetUniformLocation(_programWaveId, "waveOpacity");
@@ -510,7 +501,7 @@ void MIDIScene::drawWaves(float time, const glm::vec2 & invScreenSize, const Sta
 
 	glBindVertexArray(0);
 	glUseProgram(0);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
 	glDisable(GL_BLEND);
 }
 
@@ -596,6 +587,10 @@ int MIDISceneEmpty::notesCount() const {
 }
 
 void MIDISceneEmpty::print() const {
+
+}
+
+void MIDISceneEmpty::save(std::ofstream& file) const {
 
 }
 

@@ -2,7 +2,8 @@
 #define State_h
 
 #include "../helpers/Configuration.h"
-#include "../midi/MIDIUtils.h"
+//#include "../midi/MIDIUtils.h"
+#include "SetOptions.h"
 
 #include <gl3w/gl3w.h>
 #include <glm/glm.hpp>
@@ -11,15 +12,13 @@
 #include <unordered_map>
 #include <array>
 
-#define MIDIVIZ_VERSION_MAJOR 6
-#define MIDIVIZ_VERSION_MINOR 3
+#define MIDIVIZ_VERSION_MAJOR 7
+#define MIDIVIZ_VERSION_MINOR 0
 
 #define COLUMN_SIZE 170
 #define EXPORT_COLUMN_SIZE 200
 
-#define CHANNELS_COUNT 8
-
-typedef std::array<glm::vec3, CHANNELS_COUNT> ColorArray;
+typedef std::array<glm::vec3, SETS_COUNT> ColorArray;
 
 struct Quality {
 	enum Level : int {
@@ -120,6 +119,7 @@ public:
 	float flashSize; ///< Size of flashes.
 	float prerollTime; ///< Preroll time.
 	float scrollSpeed; ///< Playback speed.
+	float notesFadeOut; ///< Notes fade out at the top.
 
 	int minKey; ///< The lowest key to display.
 	int maxKey; ///< The highest key to display.
@@ -132,7 +132,7 @@ public:
 	bool showNotes;
 	bool showScore;
 	bool showKeyboard;
-	bool perChannelColors;
+	bool perSetColors;
 	bool showPedal;
 	bool showWave;
 	bool applyAA;
@@ -143,7 +143,7 @@ public:
 
 	State();
 
-	void load(const std::string & path);
+	bool load(const std::string & path);
 
 	void load(const Arguments & configArgs);
 
@@ -151,7 +151,9 @@ public:
 	
 	void reset();
 
-	void synchronizeChannels();
+	void synchronizeSets();
+
+	const std::string& filePath() const;
 
 	static size_t helpText(std::string & configOpts, std::string & setsOpts);
 
@@ -191,6 +193,7 @@ private:
 	std::unordered_map<std::string, float*> _floatInfos;
 	std::unordered_map<std::string, glm::vec3*> _vecInfos;
 	std::unordered_map<std::string, std::string*> _stringInfos;
+	std::string _filePath;
 
 };
 

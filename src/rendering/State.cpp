@@ -2,6 +2,7 @@
 #include "State.h"
 #include "scene/MIDIScene.h"
 #include "../helpers/ResourcesManager.h"
+#include "../helpers/System.h"
 
 #include <iostream>
 #include <fstream>
@@ -111,6 +112,7 @@ void State::defineOptions(){
 	_sharedInfos["preroll"] = {"Preroll time in seconds before starting to play", OptionInfos::Type::FLOAT};
 	_sharedInfos["scroll-speed"] = {"Playback speed", OptionInfos::Type::FLOAT};
 	_sharedInfos["bg-img-opacity"] = {"Background opacity", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos["fadeout-notes"] = {"Notes fade-out at the edge of the screen", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
 
 	// Colors.
 	_sharedInfos["color-major"] = {"Major notes color", OptionInfos::Type::COLOR};
@@ -129,8 +131,10 @@ void State::defineOptions(){
 	_sharedInfos["quality"].values = "values: LOW_RES, LOW, MEDIUM, HIGH, HIGH_RES";
 	_sharedInfos["layers"] = {"Active layers indices, from background to foreground", OptionInfos::Type::OTHER};
 	_sharedInfos["layers"].values = "values: bg-color: 0, bg-texture: 1, blur: 2, score: 3, keyboard: 4, particles: 5, notes: 6, flashes: 7, pedal: 8, wave: 9";
+	_sharedInfos["sets-separator-control-points"] = {"Sets of control points for dynamic set asignment", OptionInfos::Type::OTHER};
+	_sharedInfos["sets-separator-control-points"].values = "values: space-separated triplets time,key,set";
 
-	for(size_t cid = 1; cid < CHANNELS_COUNT; ++cid){
+	for(size_t cid = 1; cid < SETS_COUNT; ++cid){
 		const std::string num = std::to_string(cid);
 		_sharedInfos["color-major-" + num] = {"Major notes color for set " + num, OptionInfos::Type::COLOR};
 		_sharedInfos["color-particles-" + num] = {"Particles color for set " + num, OptionInfos::Type::COLOR};
@@ -229,7 +233,7 @@ void State::updateOptions(){
 	_boolInfos["show-blur"] = &showBlur;
 	_boolInfos["show-blur-notes"] = &showBlurNotes;
 	_boolInfos["lock-colors"] = &lockParticleColor;
-	_boolInfos["colors-per-set"] = &perChannelColors;
+	_boolInfos["colors-per-set"] = &perSetColors;
 	_boolInfos["show-horiz-lines"] = &background.hLines;
 	_boolInfos["show-vert-lines"] = &background.vLines;
 	_boolInfos["show-numbers"] = &background.digits;
@@ -250,6 +254,7 @@ void State::updateOptions(){
 	_floatInfos["preroll"] = &prerollTime;
 	_floatInfos["scroll-speed"] = &scrollSpeed;
 	_floatInfos["bg-img-opacity"] = &background.imageAlpha;
+	_floatInfos["fadeout-notes"] = &notesFadeOut;
 	_vecInfos["color-bg"] = &background.color;
 	_vecInfos["color-keyboard-major"] = &keyboard.majorColor[0];
 	_vecInfos["color-keyboard-minor"] = &keyboard.minorColor[0];
@@ -305,7 +310,7 @@ void State::save(const std::string & path){
 	if (path.size() > 4 && path.substr(path.size() - 4, 4) != ".ini") {
 		outputPath += ".ini";
 	}
-	std::ofstream configFile(outputPath);
+	std::ofstream configFile = System::openOutputFile(outputPath);
 	if(!configFile.is_open()){
 		std::cerr << "[CONFIG]: Unable to save state to file at path " << outputPath << std::endl;
 		return;
@@ -365,14 +370,20 @@ void State::save(const std::string & path){
 	}
 	configFile << std::endl;
 
+	configFile << std::endl << "# " << _sharedInfos["sets-separator-control-points"].description << " (";
+	configFile << _sharedInfos["sets-separator-control-points"].values << ")" << std::endl;
+	configFile << "sets-separator-control-points: " << setOptions.toKeysString(" ") << std::endl;
+
 	configFile.close();
+
+	_filePath = outputPath;
 }
 
-void State::load(const std::string & path){
-	std::ifstream configFileRaw(path);
+bool State::load(const std::string & path){
+	std::ifstream configFileRaw = System::openInputFile(path);
 	if(!configFileRaw.is_open()){
 		std::cerr << "[CONFIG]: Unable to load state from file at path " << path << std::endl;
-		return;
+		return false;
 	}
 
 	// Now that we support comments we need to be able to skip them without large code modifications below.
@@ -404,12 +415,15 @@ void State::load(const std::string & path){
 	// Else we use the key-value format, similar to command line.
 	if(majVersion < 5){
 		load(configFile, majVersion, minVersion);
+		// No set options.
 	} else {
 		// Build arguments list.
 		const Arguments args = Configuration::parseArguments(configFile);
 		load(args);
 	}
 
+	_filePath = path;
+	return true;
 }
 
 void State::load(const Arguments & configArgs){
@@ -436,6 +450,16 @@ void State::load(const Arguments & configArgs){
 			for(size_t id = 0; id < bound; ++id){
 				layersMap[id] = Configuration::parseInt(arg.second[id]);
 			}
+			continue;
+		}
+
+		if(key == "sets-separator-control-points"){
+			std::string str = arg.second[0];
+			for(size_t tid = 1; tid < arg.second.size(); ++tid){
+				str.append(" ");
+				str.append(arg.second[tid]);
+			}
+			setOptions.fromKeysString(str);
 			continue;
 		}
 
@@ -493,10 +517,15 @@ void State::load(const Arguments & configArgs){
 		keyboard.majorColor[cid] = keyboard.majorColor[0];
 		keyboard.minorColor[cid] = keyboard.minorColor[0];
 	}
+
+	// Don't erase the file path.
+	
+	// Rebuild internal data.
+	setOptions.rebuild();
 }
 
-void State::synchronizeChannels(){
-	for(size_t cid = 1; cid < CHANNELS_COUNT; ++cid){
+void State::synchronizeSets(){
+	for(size_t cid = 1; cid < SETS_COUNT; ++cid){
 		baseColors[cid] = baseColors[0];
 		minorColors[cid] = minorColors[0];
 		flashColors[cid] = flashColors[0];
@@ -506,9 +535,13 @@ void State::synchronizeChannels(){
 	}
 }
 
+const std::string& State::filePath() const {
+	return _filePath;
+}
+
 void State::reset(){
 
-	for(size_t cid = 0; cid < CHANNELS_COUNT; ++cid){
+	for(size_t cid = 0; cid < SETS_COUNT; ++cid){
 		baseColors[cid] = 1.35f * glm::vec3(0.57f,0.19f,0.98f);
 		minorColors[cid] = 0.8f * baseColors[0];
 		flashColors[cid] = baseColors[0];
@@ -528,8 +561,8 @@ void State::reset(){
 	showFlashes = true;
 	showBlur = true;
 	showBlurNotes = false;
-	lockParticleColor = true;
-	perChannelColors = false;
+	lockParticleColor = false; // Changed in 7.0
+	perSetColors = false;
 	showNotes = true;
 	showScore = true;
 	showKeyboard = true;
@@ -557,6 +590,7 @@ void State::reset(){
 	quality = Quality::MEDIUM;
 	prerollTime = 1.0f;
 	scrollSpeed = 1.0f;
+	notesFadeOut = 0.0f;
 	keyboard.highlightKeys = true;
 	keyboard.customKeyColors = false;
 	keyboard.size = 0.25f;
@@ -587,6 +621,8 @@ void State::reset(){
 	applyAA = false;
 	reverseScroll = false;
 	horizontalScroll = false;
+
+	_filePath = "";
 }
 
 void State::load(std::istream & configFile, int majVersion, int minVersion){
@@ -679,7 +715,7 @@ void State::load(std::istream & configFile, int majVersion, int minVersion){
 	}
 
 	// Ensure synchronization of all channels colors.
-	synchronizeChannels();
+	synchronizeSets();
 
 	pedals.color = baseColors[0];
 	waves.color = baseColors[0];
