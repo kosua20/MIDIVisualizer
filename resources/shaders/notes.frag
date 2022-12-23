@@ -36,19 +36,23 @@ void main(){
 	if(	radiusPosition > 1.0){
 		discard;
 	}
-	
+
 	// Fragment color.
 	int cid = int(In.channel);
 	fragColor.rgb = colorScale * mix(baseColor[cid], minorColor[cid], In.isMinor);
-	
-	if(	radiusPosition > 0.8){
-		fragColor.rgb *= 1.05;
-	}
 
+	if(	radiusPosition > 0.4){
+		//outer border
+		fragColor.rgb *= 1.5;
+	} else {
+		//inner
+		fragColor.rgb *= 0.8;
+	}
 
 	float distFromBottom = horizontalMode ? normalizedCoord.x : normalizedCoord.y;
 	float fadeOutFinal = min(fadeOut, 0.9999);
 	distFromBottom = max(distFromBottom - fadeOutFinal, 0.0) / (1.0 - fadeOutFinal);
 	float alpha = 1.0 - distFromBottom;
+
 	fragColor.a = alpha;
 }
