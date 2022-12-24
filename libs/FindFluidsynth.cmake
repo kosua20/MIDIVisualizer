@@ -3,22 +3,23 @@ include(${CMAKE_ROOT}/Modules/SelectLibraryConfigurations.cmake)
 include(${CMAKE_ROOT}/Modules/CMakeFindDependencyMacro.cmake)
 
 
-set(Fluidsynth_VERSION "2.2.0")
+set(Fluidsynth_VERSION "2.3.0")
 set(Fluidsynth_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/libs/fluidsynth)
 
 if(NOT Fluidsynth_INCLUDE_DIRS)
-    find_path(Fluidsynth_INCLUDE_DIRS NAMES libfluidsynth/fluidsynth.h fluidsynth.h PATHS ${Fluidsynth_ROOT}/include/ NO_DEFAULT_PATH)
+    find_path(Fluidsynth_INCLUDE_DIRS NAMES fluidsynth.h PATHS ${Fluidsynth_ROOT}/include/ NO_DEFAULT_PATH)
 endif()
 
 if(NOT Fluidsynth_LIBRARY)
-    find_library(Fluidsynth_LIBRARY NAMES fluidsynth libfluidsynth PATHS ${Fluidsynth_ROOT}/lib64/ NO_DEFAULT_PATH)
+    find_library(Fluidsynth_LIBRARY NAMES fluidsynth libfluidsynth PATHS ${Fluidsynth_ROOT}/lib/ NO_DEFAULT_PATH)
     get_filename_component(Fluidsynth_LIBRARY_DIR ${Fluidsynth_LIBRARY} DIRECTORY)
 endif()
 
 find_library( GLIB_LIB NAMES glib glib-2.0 PATH GLIB_LIBRARY_DIR )
 find_library( GTHREAD_LIB NAMES gthread gthread-2.0 PATH GTHREAD_LIBRARY_DIR )
+find_package ( OpenMP QUIET )
 
-list(APPEND Fluidsynth_LIBRARIES ${GLIB_LIB} ${GTHREAD_LIB})
+list(APPEND Fluidsynth_LIBRARIES ${GLIB_LIB} ${GTHREAD_LIB} OpenMP::OpenMP_C)
 
 if(Fluidsynth_LIBRARY AND Fluidsynth_INCLUDE_DIRS)
     set(Fluidsynth_FOUND 1)
