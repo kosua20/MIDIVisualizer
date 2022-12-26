@@ -86,6 +86,9 @@ set(LibSources
 	"src/libs/stb_image/stb_image.h"
 	"src/libs/stb_image/stb_image_resize.h"
 	"src/libs/stb_image_write/stb_image_write.h" 
+	"src/libs/minisdl/minisdl_audio.h"
+	"src/libs/minisdl/minisdl_audio.c"
+	"src/libs/tsf/tsf.h"
 	${GlmSources}
 )
 
@@ -148,8 +151,15 @@ source_group(TREE ${PROJECT_SOURCE_DIR}/resources FILES ${Shaders})
 
 add_executable(MIDIVisualizer ${LibSources} ${Sources} ${Shaders})
 
+if(APPLE)
+	list(APPEND MINISDL_LIBRARIES
+        "-framework CoreServices"
+        "-framework CoreAudio"
+        "-framework AudioUnit")
+endif()
+
 target_include_directories(MIDIVisualizer PRIVATE src/libs/ src/helpers/)
-target_link_libraries(MIDIVisualizer PRIVATE nfd glfw libremidi ${GLFW_LIBRARIES} ${OPENGL_gl_LIBRARY})
+target_link_libraries(MIDIVisualizer PRIVATE nfd glfw libremidi ${GLFW_LIBRARIES} ${OPENGL_gl_LIBRARY} ${MINISDL_LIBRARIES})
 add_dependencies(MIDIVisualizer Packaging)
 
 # Add dependency to FFmpeg if available.
