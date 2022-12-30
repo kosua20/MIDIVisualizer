@@ -1,0 +1,73 @@
+/*! \page duplex Duplex Mode
+
+Finally, it is easy to use RtAudio for simultaneous audio input/output, or duplex operation.  In this example, we simply pass the input data back to the output.
+
+\code
+#include "RtAudio.h"
+#include <iostream>
+#include <cstdlib>
+#include <cstring>
+
+// Pass-through function.
+int inout( void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
+           double streamTime, RtAudioStreamStatus status, void *data )
+{
+  // Since the number of input and output channels is equal, we can do
+  // a simple buffer copy operation here.
+  if ( status ) std::cout << "Stream over/underflow detected." << std::endl;
+
+  unsigned int *bytes = (unsigned int *) data;
+  memcpy( outputBuffer, inputBuffer, *bytes );
+  return 0;
+}
+
+int main()
+{
+  RtAudio adac;
+  std::vector<unsigned int> deviceIds = adac.getDeviceIds();
+  if ( deviceIds.size() < 1 ) {
+    std::cout << "\nNo audio devices found!\n";
+    exit( 0 );
+  }
+
+  // Set the same number of channels for both input and output.
+  unsigned int bufferBytes, bufferFrames = 512;
+  RtAudio::StreamParameters iParams, oParams;
+  iParams.deviceId = deviceIds[0]; // first available device
+  iParams.nChannels = 2;
+  oParams.deviceId = deviceIds[0]; // first available device
+  oParams.nChannels = 2;
+
+  if ( adac.openStream( &oParams, &iParams, RTAUDIO_SINT32, 44100,
+                        &bufferFrames, &inout, (void *)&bufferBytes ) ) {
+    std::cout << '\n' << adac.getErrorText() << '\n' << std::endl;
+    exit( 0 ); // problem with device settings
+  }
+
+  bufferBytes = bufferFrames * 2 * 4;
+
+  if ( adac.startStream() ) {
+    std::cout << adac.getErrorText() << std::endl;
+    goto cleanup;
+  }
+
+  char input;
+  std::cout << "\nRunning ... press <enter> to quit.\n";
+  std::cin.get(input);
+
+  // Block released ... stop the stream
+  if ( adac.isStreamRunning() )
+    adac.stopStream();  // or could call adac.abortStream();
+
+ cleanup:
+  if ( adac.isStreamOpen() ) adac.closeStream();
+
+  return 0;
+}
+\endcode
+
+In this example, audio recorded by the stream input will be played out during the next round of audio processing.
+
+Note that a duplex stream can (and often must) make use of two different devices (except when using the Linux Jack and Windows ASIO APIs).  However, if the two devices do not share a common internal or external "sync", there may be timing problems due to possible device clock variations.
+
+*/
