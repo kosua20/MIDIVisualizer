@@ -30,6 +30,12 @@ set(LIBREMIDI_NO_WINUWP ON CACHE BOOL "" FORCE)
 add_definitions(-DLIBREMIDI_NO_BOOST)
 add_subdirectory(libs/libremidi/)
 
+# Add rtaudio
+set(RTAUDIO_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(RTAUDIO_BUILD_TESTING OFF CACHE BOOL "" FORCE)
+set(RTAUDIO_INSTALL OFF CACHE BOOL "" FORCE)
+add_subdirectory(libs/rtaudio/)
+
 # Add OpenGL
 find_package(OpenGL REQUIRED)
 
@@ -86,8 +92,6 @@ set(LibSources
 	"src/libs/stb_image/stb_image.h"
 	"src/libs/stb_image/stb_image_resize.h"
 	"src/libs/stb_image_write/stb_image_write.h" 
-	"src/libs/minisdl/minisdl_audio.h"
-	"src/libs/minisdl/minisdl_audio.c"
 	"src/libs/tsf/tsf.h"
 	${GlmSources}
 )
@@ -151,15 +155,8 @@ source_group(TREE ${PROJECT_SOURCE_DIR}/resources FILES ${Shaders})
 
 add_executable(MIDIVisualizer ${LibSources} ${Sources} ${Shaders})
 
-if(APPLE)
-	list(APPEND MINISDL_LIBRARIES
-        "-framework CoreServices"
-        "-framework CoreAudio"
-        "-framework AudioUnit")
-endif()
-
 target_include_directories(MIDIVisualizer PRIVATE src/libs/ src/helpers/)
-target_link_libraries(MIDIVisualizer PRIVATE nfd glfw libremidi ${GLFW_LIBRARIES} ${OPENGL_gl_LIBRARY} ${MINISDL_LIBRARIES})
+target_link_libraries(MIDIVisualizer PRIVATE nfd glfw libremidi rtaudio ${GLFW_LIBRARIES} ${OPENGL_gl_LIBRARY} ${RTAUDIO_LIBRARIES})
 add_dependencies(MIDIVisualizer Packaging)
 
 # Add dependency to FFmpeg if available.

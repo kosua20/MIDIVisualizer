@@ -17,22 +17,33 @@
 
 #include <algorithm>
 #include <fstream>
+#include <mutex>
 
-
-#include <minisdl/minisdl_audio.h>
+#include <RtAudio.h>
 #define TSF_IMPLEMENTATION
 #include <tsf/tsf.h>
 
 static tsf* g_TinySoundFont;
-static SDL_mutex* g_Mutex;
+static RtAudio* dac;
+std::mutex g_mutex;
 
-static void AudioCallback(void* data, Uint8 *stream, int len)
+
+static int AudioCallback( void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
+		 double streamTime, RtAudioStreamStatus status, void *userData )
 {
-	// Render the audio samples in float format
-	int SampleCount = (len / (2 * sizeof(float))); //2 output channels
-	SDL_LockMutex(g_Mutex); //get exclusive lock
-	tsf_render_float(g_TinySoundFont, (float*)stream, SampleCount, 0);
-	SDL_UnlockMutex(g_Mutex);
+	float* stream = (float*)outputBuffer;
+	if ( status )
+		std::cout << "Stream underflow detected!" << std::endl;
+	{
+		const std::lock_guard<std::mutex> lock(g_mutex);
+		tsf_render_float(g_TinySoundFont, (float*)stream, nBufferFrames, 0);
+	}
+	for(int sid = 0; sid < nBufferFrames; ++sid){
+		for(int cid = 0; cid < 2; ++cid){
+			stream[2*sid + cid] = glm::clamp(stream[2*sid + cid], -1.0f, 1.0f);
+		}
+	}
+	return 0;
 }
 
 bool ImGuiSliderPercent(const char* label, float* v, float v_min, float v_max){
@@ -150,50 +161,38 @@ Renderer::Renderer(const Configuration& config) :
 	_score.reset(new Score(2.0f));
 	_scene.reset(new MIDISceneEmpty());
 
-	SDL_AudioSpec outputAudioSpec;
-		SDL_zero(outputAudioSpec);
-	outputAudioSpec.freq = 44100;
-	outputAudioSpec.format = AUDIO_F32;
-	outputAudioSpec.channels = 2;
-	outputAudioSpec.samples = 4096;
-	outputAudioSpec.callback = AudioCallback;
-
-	if(SDL_AudioInit(nullptr) < 0) {
-		fprintf(stderr, "Could not initialize audio hardware or driver\n");
-		return 1;
+	dac = new RtAudio();
+	if ( dac->getDeviceCount() < 1 ) {
+	  std::cout << "\nNo audio devices found!\n";
+	  exit( 0 );
 	}
-	SDL_InitSubSystem(SDL_INIT_AUDIO);
+	RtAudio::StreamParameters parameters;
+	parameters.deviceId = dac->getDefaultOutputDevice();
+	parameters.nChannels = 2;
+	parameters.firstChannel = 0;
+	unsigned int sampleRate = 44100;
+	unsigned int bufferFrames = 256; // 256 sample frames
+
+	RtAudioErrorType stat = dac->openStream( &parameters, NULL, RTAUDIO_FLOAT32,
+					   sampleRate, &bufferFrames, &AudioCallback, nullptr );
+
+	if(stat != 0){
+		std::cout << "Error " << stat << std::endl;
+		return;
+	}
+
+
 
 	// Load the SoundFont from a file
 	g_TinySoundFont = tsf_load_filename("/Users/simon/Developer/graphics/MIDIVisualizer/buildtsf/Debug/VintageDreamsWaves-v2.sf2");
 	if (!g_TinySoundFont) {
 		fprintf(stderr, "Could not load SoundFont\n");
-		return 1;
-	}
-
-	/* pass it 0 for playback */
-	 int numAudioDevices = SDL_GetNumAudioDevices(0);
-
-	 /* print the audio devices that we can see */
-	 printf("[SDL] %d audio devices:", numAudioDevices);
-	 for(int i = 0; i < numAudioDevices; i++)
-	   printf(" \'%s\'", SDL_GetAudioDeviceName(i, 0)); /* again, 0 for playback */
-	 printf("\n");
-
-	SDL_AudioSpec obtainedAudioSpec;
-		
-	if (SDL_OpenAudio(&outputAudioSpec, &obtainedAudioSpec) < 0) {
-		fprintf(stderr, "Could not open the audio hardware or the desired audio outputformat\n");
-		return 1;
+		return;
 	}
 
 		// Set the SoundFont rendering output mode
-	 tsf_set_output(g_TinySoundFont, TSF_STEREO_INTERLEAVED, obtainedAudioSpec.freq, 0);
-		g_Mutex = SDL_CreateMutex();
+	 tsf_set_output(g_TinySoundFont, TSF_STEREO_INTERLEAVED, sampleRate, 0);
 
-	// Start the actual audio playback here
-	// The audio thread will begin to call our AudioCallback function
-	SDL_PauseAudio(1);
 }
 
 Renderer::~Renderer() {}
@@ -301,11 +300,12 @@ SystemAction Renderer::draw(float currentTime) {
 	if(_shouldPlay){
 		if(index % 60 == 1){
 			int indnote = index / 60 + 40;
-			SDL_LockMutex(g_Mutex);
+
+			const std::lock_guard<std::mutex> lock(g_mutex);
+
 			tsf_note_off(g_TinySoundFont, 0, lastindex);
 			tsf_note_on(g_TinySoundFont, 0, indnote, 1.0f);
 			lastindex = indnote;
-			SDL_UnlockMutex(g_Mutex);
 		}
 		++index;
 	}
@@ -736,7 +736,11 @@ SystemAction Renderer::showTopButtons(double currentTime){
 	if (ImGui::Button(_shouldPlay ? "Pause (p)" : "Play (p)")) {
 		_shouldPlay = !_shouldPlay;
 		_timerStart = float(currentTime) - _timer;
-		SDL_PauseAudio(_shouldPlay ? 0 : 1);
+
+		if(_shouldPlay)
+			dac->startStream();
+		else
+			dac->stopStream();
 	}
 	ImGuiSameLine();
 	if (ImGui::Button("Restart (r)")) {
@@ -1540,6 +1544,11 @@ void Renderer::keyPressed(int key, int action) {
 		if (key == GLFW_KEY_P) {
 			_shouldPlay = !_shouldPlay;
 			_timerStart = DEBUG_SPEED * float(glfwGetTime()) - _timer;
+
+			if(_shouldPlay)
+				dac->startStream();
+			else
+				dac->stopStream();
 		}
 		else if (key == GLFW_KEY_R) {
 			reset();
