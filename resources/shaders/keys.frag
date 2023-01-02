@@ -4,7 +4,7 @@ in INTERFACE {
 	vec2 uv;
 } In ;
 
-#define SETS_COUNT 8
+#define SETS_COUNT 12
 #define MAJOR_COUNT 75
 
 uniform vec2 inverseScreenSize;

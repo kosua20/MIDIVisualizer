@@ -1,5 +1,5 @@
 #version 330
-#define SETS_COUNT 8
+#define SETS_COUNT 12
 
 
 in INTERFACE {

@@ -5,7 +5,7 @@
 #include <array>
 #include <string>
 
-#define SETS_COUNT 8
+#define SETS_COUNT 12
 
 enum class SetMode : int {
 	CHANNEL = 0,
