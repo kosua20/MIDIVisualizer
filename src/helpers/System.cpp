@@ -203,3 +203,8 @@ void System::writeStringToFile(const std::string& path, const std::string& conte
 		file.close();
 	}
 }
+
+void System::forceLocale(){
+	// Helps managing configuration files loading/saving.
+	std::setlocale(LC_ALL, "C");
+}

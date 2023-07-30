@@ -406,6 +406,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			// Read arguments.
 			nfdchar_t *outPath = NULL;
 			nfdresult_t result = NFD_OpenDialog(NULL, NULL, &outPath);
+			System::forceLocale();
 			if (result == NFD_OKAY) {
 				loadFile(std::string(outPath));
 			}
@@ -433,6 +434,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			if(ImGui::Button("Export MIDI file...")) {
 				nfdchar_t *savePath = NULL;
 				nfdresult_t result = NFD_SaveDialog("mid", NULL, &savePath);
+				System::forceLocale();
 				if (result == NFD_OKAY && savePath != nullptr) {
 					std::ofstream outFile = System::openOutputFile(std::string(savePath), true);
 					_scene->save(outFile);
@@ -759,6 +761,7 @@ void Renderer::showParticleOptions(){
 		// Read arguments.
 		nfdpathset_t outPaths;
 		nfdresult_t result = NFD_OpenDialogMultiple("png;jpg,jpeg;", NULL, &outPaths);
+		System::forceLocale();
 
 		if (result == NFD_OKAY) {
 			std::vector<std::string> paths;
@@ -948,6 +951,7 @@ void Renderer::showBackgroundOptions(){
 		// Read arguments.
 		nfdchar_t *outPath = NULL;
 		nfdresult_t result = NFD_OpenDialog("jpg,jpeg;png", NULL, &outPath);
+		System::forceLocale();
 		if (result == NFD_OKAY) {
 			_state.background.imagePath = std::string(outPath);
 			glDeleteTextures(1, &_state.background.tex);
@@ -985,6 +989,7 @@ void Renderer::showBottomButtons(){
 		// Read arguments.
 		nfdchar_t *savePath = NULL;
 		nfdresult_t result = NFD_SaveDialog("ini", NULL, &savePath);
+		System::forceLocale();
 		if (result == NFD_OKAY) {
 			_state.save(std::string(savePath));
 		}
@@ -995,6 +1000,7 @@ void Renderer::showBottomButtons(){
 		// Read arguments.
 		nfdchar_t *outPath = NULL;
 		nfdresult_t result = NFD_OpenDialog("ini", NULL, &outPath);
+		System::forceLocale();
 		if (result == NFD_OKAY) {
 			if(_state.load(std::string(outPath))){
 				setState(_state);
@@ -1179,6 +1185,7 @@ void Renderer::showSetEditor(){
 		if(ImGui::Button("Save control points...")){
 			nfdchar_t *savePath = NULL;
 			nfdresult_t result = NFD_SaveDialog("csv", NULL, &savePath);
+			System::forceLocale();
 			if (result == NFD_OKAY) {
 				const std::string content = _state.setOptions.toKeysString("\n");
 				System::writeStringToFile(std::string(savePath), content);
@@ -1189,6 +1196,7 @@ void Renderer::showSetEditor(){
 			// Read arguments.
 			nfdchar_t *outPath = NULL;
 			nfdresult_t result = NFD_OpenDialog("csv", NULL, &outPath);
+			System::forceLocale();
 			if (result == NFD_OKAY) {
 				const std::string str = System::loadStringFromFile(std::string(outPath));
 				_state.setOptions.fromKeysString(str);

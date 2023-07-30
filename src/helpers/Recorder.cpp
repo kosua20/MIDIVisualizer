@@ -1,4 +1,5 @@
 #include "Recorder.h"
+#include "System.h"
 #include "../rendering/State.h"
 
 #include <imgui/imgui.h>
@@ -305,6 +306,7 @@ bool Recorder::drawGUI(float scale){
 
 			if(_config.format == Export::Format::PNG){
 				nfdresult_t result = NFD_PickFolder(NULL, &outPath);
+				System::forceLocale();
 				if(result == NFD_OKAY) {
 					_config.path = std::string(outPath);
 					shouldStart = true;
@@ -313,6 +315,7 @@ bool Recorder::drawGUI(float scale){
 			} else {
 				const std::string & ext = _formats.at(int(_config.format)).ext;
 				nfdresult_t result = NFD_SaveDialog(ext.c_str(), NULL, &outPath);
+				System::forceLocale();
 				if(result == NFD_OKAY) {
 					_config.path = std::string(outPath);
 					const std::string fullExt = "." + ext;

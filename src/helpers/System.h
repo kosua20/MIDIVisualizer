@@ -39,5 +39,7 @@ public:
 	static bool createDirectory(const std::string & directory);
 	
 	static std::string getApplicationDataDirectory();
+
+	static void forceLocale();
 	
 };

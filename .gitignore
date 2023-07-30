@@ -9,6 +9,7 @@ x64/
 *.user
 *.xcodeproj
 *.xcuserstate
+*.vscode
 */xcuserdata/*
 dependencies/
 libs/ffmpeg
