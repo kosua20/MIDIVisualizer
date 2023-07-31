@@ -40,6 +40,8 @@ int SetOptions::apply(int note, int channel, int track, double start) const {
 		case SetMode::SPLIT:
 			return note < key ? 0 : 1;
 		case SetMode::KEY:
+			return noteShift[note % 12] % SETS_COUNT;
+		case SetMode::CHROMATIC:
 			return (note % 12) % SETS_COUNT;
 		case SetMode::LIST:
 		{

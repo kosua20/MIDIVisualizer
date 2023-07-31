@@ -1149,6 +1149,8 @@ void Renderer::showSets(){
 		shouldUpdate = ImGui::RadioButton("Track", (int*)(&_state.setOptions.mode), int(SetMode::TRACK)) || shouldUpdate;
 		ImGuiSameLine(2*90);
 		shouldUpdate = ImGui::RadioButton("Key", (int*)(&_state.setOptions.mode), int(SetMode::KEY)) || shouldUpdate;
+		ImGuiSameLine(3*90);
+		shouldUpdate = ImGui::RadioButton("Chromatic", (int*)(&_state.setOptions.mode), int(SetMode::CHROMATIC)) || shouldUpdate;
 
 		shouldUpdate = ImGui::RadioButton("Split", (int*)(&_state.setOptions.mode), int(SetMode::SPLIT)) || shouldUpdate;
 		ImGuiSameLine();
@@ -1173,6 +1175,8 @@ void Renderer::showSets(){
 	}
 
 }
+
+static constexpr char const* kSetsComboString = " 0\0 1\0 2\0 3\0 4\0 5\0 6\0 7\0 8\0 9\0 10\0 11\0\0";
 
 void Renderer::showSetEditor(){
 
@@ -1270,7 +1274,7 @@ void Renderer::showSetEditor(){
 				ImGui::TableNextColumn();
 				ImGuiPushItemWidth(colWidth);
 				// It is simpler to use a combo here (no weird focus issues when sorting rows).
-				if(ImGui::Combo("##Set", &key.set, " 0\0 1\0 2\0 3\0 4\0 5\0 6\0 7\0\0")){
+				if(ImGui::Combo("##Set", &key.set, kSetsComboString)){
 					refreshSetOptions = true;
 				}
 				ImGui::PopItemWidth();
@@ -1306,7 +1310,7 @@ void Renderer::showSetEditor(){
 
 		ImGuiSameLine(2 * colWidth + 3 * offset);
 		ImGuiPushItemWidth(colWidth);
-		ImGui::Combo("##Set", &newKey.set, " 0\0 1\0 2\0 3\0 4\0 5\0 6\0 7\0\0");
+		ImGui::Combo("##Set", &newKey.set, kSetsComboString);
 		ImGui::PopItemWidth();
 
 		ImGuiSameLine(3 * colWidth + 4 * offset);
@@ -1674,14 +1678,14 @@ bool Renderer::channelColorEdit(const char * name, const char * displayName, Col
 	ImGuiSameLine(); ImGui::Text("%s", displayName);
 
 	if(ImGui::BeginPopup(name)){
-		// Do 2x4 color sinks.
+		// Do 3 columns of color sinks.
 		bool edit = false;
-		ImGuiPushItemWidth(25);
+		ImGuiPushItemWidth(35);
 		for(size_t cid = 0; cid < colors.size(); ++cid){
 			const std::string nameC = "Set " + std::to_string(cid);
 			edit = ImGui::ColorEdit3(nameC.c_str(), &colors[cid][0], ImGuiColorEditFlags_NoInputs) || edit;
-			if(cid % 2 == 0 && cid != colors.size()-1){
-				ImGuiSameLine();
+			if(cid % 3 != 2 && cid != colors.size()-1){
+				ImGuiSameLine(75 * (cid%3+1));
 			}
 		}
 		ImGui::PopItemWidth();

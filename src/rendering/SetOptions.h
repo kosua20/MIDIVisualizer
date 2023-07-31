@@ -13,6 +13,7 @@ enum class SetMode : int {
 	SPLIT = 2,
 	KEY = 3,
 	LIST = 4,
+	CHROMATIC = 5,
 };
 
 struct SetOptions {
