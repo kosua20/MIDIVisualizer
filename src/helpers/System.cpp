@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <sstream>
 #include <cstdlib>
+#include <clocale>
 
 #include <GLFW/glfw3.h>
 
