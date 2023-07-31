@@ -13,7 +13,7 @@
 #include <array>
 
 #define MIDIVIZ_VERSION_MAJOR 7
-#define MIDIVIZ_VERSION_MINOR 0
+#define MIDIVIZ_VERSION_MINOR 1
 
 #define COLUMN_SIZE 170
 #define EXPORT_COLUMN_SIZE 200
@@ -78,8 +78,10 @@ public:
 		ColorArray majorColor; ///< Major key pressed color.
 		ColorArray minorColor; ///< Minor key pressed color.
 		float size; ///< Size on screen, starting from the bottom.
+		float minorHeight; ///< Fraction of the keyboard height taken by the minor keys.
 		bool highlightKeys; ///< Highlight pressed keys.
 		bool customKeyColors; ///< Use the custom colors above instead of the color of the notes.
+		bool minorEdges; ///< Show edges on minor keys.
 	};
 
 	struct PedalsState {

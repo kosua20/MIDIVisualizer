@@ -97,6 +97,7 @@ void State::defineOptions(){
 	_sharedInfos["bg-img-behind-keyboard"] = {"Should the background image extend behind the keyboard", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["keyboard-highlight"] = {"Should the pressed keys be highlighted", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["keyboard-custom-colors"] = {"Override notes color for pressed keys", OptionInfos::Type::BOOLEAN};
+	_sharedInfos["keyboard-minor-edges"] = {"Show edges around minor keys", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["show-score"] = {"Should the score (lines, numbers) be shown", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["show-bg-img"] = {"Use a background texture", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["show-notes"] = {"Should the notes be shown", OptionInfos::Type::BOOLEAN};
@@ -159,7 +160,7 @@ void State::defineOptions(){
 	_sharedInfos["sets-separator-key"].category = OptionInfos::Category::SETS;
 
 	_sharedInfos["keyboard-size"] = {"Vertical size of the keyboard", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
-
+	_sharedInfos["keyboard-minor-height"] = {"Vertical fraction of the keyboard taken by minor keys", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
 
 	_sharedInfos["min-key"] = {"Lowest key to display", OptionInfos::Type::KEY, {0.0f, 127.0f}};
 	_sharedInfos["max-key"] = {"Highest key to display", OptionInfos::Type::KEY, {0.0f, 127.0f}};
@@ -241,6 +242,7 @@ void State::updateOptions(){
 	_boolInfos["bg-img-behind-keyboard"] = &background.imageBehindKeyboard;
 	_boolInfos["keyboard-highlight"] = &keyboard.highlightKeys;
 	_boolInfos["keyboard-custom-colors"] = &keyboard.customKeyColors;
+	_boolInfos["keyboard-minor-edges"] = &keyboard.minorEdges;
 	_boolInfos["show-score"] = &showScore;
 	_boolInfos["show-bg-img"] = &background.image;
 	_boolInfos["show-notes"] = &showNotes;
@@ -278,6 +280,7 @@ void State::updateOptions(){
 	_intInfos["sets-mode"] = (int*)&setOptions.mode;
 	_intInfos["sets-separator-key"] = &setOptions.key;
 	_floatInfos["keyboard-size"] = &keyboard.size;
+	_floatInfos["keyboard-minor-height"] = &keyboard.minorHeight;
 
 	_intInfos["min-key"] = &minKey;
 	_intInfos["max-key"] = &maxKey;
@@ -592,8 +595,10 @@ void State::reset(){
 	scrollSpeed = 1.0f;
 	notesFadeOut = 0.0f;
 	keyboard.highlightKeys = true;
+	keyboard.minorEdges = true;
 	keyboard.customKeyColors = false;
 	keyboard.size = 0.25f;
+	keyboard.minorHeight = 0.6f;
 
 	for (int i = 0; i < layersMap.size(); ++i) {
 		layersMap[i] = i;

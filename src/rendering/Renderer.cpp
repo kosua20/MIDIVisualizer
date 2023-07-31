@@ -812,7 +812,7 @@ void Renderer::showParticleOptions(){
 
 void Renderer::showKeyboardOptions(){
 	ImGuiPushItemWidth(25);
-	if (ImGui::ColorEdit3("Color##Keys", &_state.background.keysColor[0], ImGuiColorEditFlags_NoInputs)) {
+	if (ImGui::ColorEdit3("Fill Color##Keys", &_state.background.keysColor[0], ImGuiColorEditFlags_NoInputs)) {
 		_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
 	}
 	ImGui::PopItemWidth();
@@ -824,6 +824,20 @@ void Renderer::showKeyboardOptions(){
 		_state.keyboard.size = glm::clamp(_state.keyboard.size, 0.0f, 1.0f);
 		_scene->setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notesFadeOut);
 		_score->setKeyboardSize(_state.keyboard.size);
+	}
+	ImGui::PopItemWidth();
+
+	ImGuiPushItemWidth(25);
+	if (ImGui::Checkbox("Minor edges##Keys", &_state.keyboard.minorEdges)){
+		_scene->setMinorEdgesAndHeight(_state.keyboard.minorEdges, _state.keyboard.minorHeight);
+	}
+	ImGui::PopItemWidth();
+	ImGuiSameLine(COLUMN_SIZE);
+
+	ImGuiPushItemWidth(100);
+	if(ImGuiSliderPercent("Minor height##Keys", &_state.keyboard.minorHeight, 0.0f, 1.0f)){
+		_state.keyboard.minorHeight = glm::clamp(_state.keyboard.minorHeight, 0.0f, 1.0f);
+		_scene->setMinorEdgesAndHeight(_state.keyboard.minorEdges, _state.keyboard.minorHeight);
 	}
 	ImGui::PopItemWidth();
 
@@ -1388,6 +1402,7 @@ void Renderer::applyAllSettings() {
 	_score->setDisplay(_state.background.digits, _state.background.hLines, _state.background.vLines);
 	_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
 	_scene->setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notesFadeOut);
+	_scene->setMinorEdgesAndHeight(_state.keyboard.minorEdges, _state.keyboard.minorHeight);
 	_score->setKeyboardSize(_state.keyboard.size);
 	_score->setPlayDirection(_state.reverseScroll);
 	

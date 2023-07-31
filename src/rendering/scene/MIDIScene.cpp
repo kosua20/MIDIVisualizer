@@ -44,7 +44,7 @@ void MIDIScene::renderSetup(){
 	_flagsBufferId = 0;
 	glGenBuffers(1, &_flagsBufferId);
 	glBindBuffer(GL_ARRAY_BUFFER, _flagsBufferId);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(int) * 128, NULL, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(int) * 128, nullptr, GL_DYNAMIC_DRAW);
 
 	// Programs.
 
@@ -140,7 +140,9 @@ void MIDIScene::renderSetup(){
 	glUseProgram(0);
 
 	// Keyboard setup.
-	_programKeysId = createGLProgramFromStrings(ResourcesManager::getStringForShader("keys_vert"), ResourcesManager::getStringForShader("keys_frag"));
+	_programKeyMajorsId = createGLProgramFromStrings(ResourcesManager::getStringForShader("majorKeys_vert"), ResourcesManager::getStringForShader("majorKeys_frag"));
+	_programKeyMinorsId = createGLProgramFromStrings(ResourcesManager::getStringForShader("minorKeys_vert"), ResourcesManager::getStringForShader("minorKeys_frag"));
+
 	glGenVertexArrays(1, &_vaoKeyboard);
 	glBindVertexArray(_vaoKeyboard);
 	// The first attribute will be the vertices positions.
@@ -222,8 +224,8 @@ void MIDIScene::setScaleAndMinorWidth(const float scale, const float minorWidth)
 	glUniform1f(speedID, scale);
 	GLuint widthId = glGetUniformLocation(_programId, "minorsWidth");
 	glUniform1f(widthId, minorWidth);
-	glUseProgram(_programKeysId);
-	GLuint widthId1 = glGetUniformLocation(_programKeysId, "minorsWidth");
+	glUseProgram(_programKeyMinorsId);
+	GLuint widthId1 = glGetUniformLocation(_programKeyMinorsId, "minorsWidth");
 	glUniform1f(widthId1, minorWidth);
 	glUseProgram(0);
 }
@@ -245,10 +247,19 @@ void MIDIScene::setKeyboardSizeAndFadeout(float keyboardHeight, float fadeOut){
 	glUniform1f(glGetUniformLocation(_programId, "fadeOut"), fadeOutFinal);
 	glUseProgram(_programParticulesId);
 	glUniform1f(glGetUniformLocation(_programParticulesId, "keyboardHeight"), keyboardHeight);
-	glUseProgram(_programKeysId);
-	glUniform1f(glGetUniformLocation(_programKeysId, "keyboardHeight"), keyboardHeight);
+	glUseProgram(_programKeyMinorsId);
+	glUniform1f(glGetUniformLocation(_programKeyMinorsId, "keyboardHeight"), keyboardHeight);
+	glUseProgram(_programKeyMajorsId);
+	glUniform1f(glGetUniformLocation(_programKeyMajorsId, "keyboardHeight"), keyboardHeight);
 	glUseProgram(_programFlashesId);
 	glUniform1f(glGetUniformLocation(_programFlashesId, "keyboardHeight"), keyboardHeight);
+	glUseProgram(0);
+}
+
+void MIDIScene::setMinorEdgesAndHeight(bool minorEdges, float minorHeight){
+	glUseProgram(_programKeyMinorsId);
+	glUniform1i(glGetUniformLocation(_programKeyMinorsId, "edgeOnMinors"), int(minorEdges));
+	glUniform1f(glGetUniformLocation(_programKeyMinorsId, "minorsHeight"), minorHeight);
 	glUseProgram(0);
 }
 
@@ -378,26 +389,47 @@ void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const C
 
 void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::vec3 & keyColor, const ColorArray & majorColors, const ColorArray & minorColors, bool highlightKeys) {
 
-	glUseProgram(_programKeysId);
+	{
+		glUseProgram(_programKeyMajorsId);
 
-	// Uniforms setup.
-	const GLuint screenId1 = glGetUniformLocation(_programKeysId, "inverseScreenSize");
-	const GLuint colorId = glGetUniformLocation(_programKeysId, "keysColor");
-	const GLuint majorId = glGetUniformLocation(_programKeysId, "majorColor");
-	const GLuint minorId = glGetUniformLocation(_programKeysId, "minorColor");
-	const GLuint highId = glGetUniformLocation(_programKeysId, "highlightKeys");
-	const GLuint activesId = glGetUniformLocation(_programKeysId, "actives");
-	glUniform2fv(screenId1, 1, &(invScreenSize[0]));
-	glUniform3fv(colorId, 1, &(keyColor[0]));
-	glUniform3fv(majorId, GLsizei(majorColors.size()), &(majorColors[0][0]));
-	glUniform3fv(minorId, GLsizei(minorColors.size()), &(minorColors[0][0]));
-	glUniform1i(highId, int(highlightKeys));
-	glUniform1iv(activesId, GLsizei(_actives.size()), &(_actives[0]));
+		const GLuint highId = glGetUniformLocation(_programKeyMajorsId, "highlightKeys");
+		const GLuint activesId = glGetUniformLocation(_programKeyMajorsId, "actives");
+		const GLuint screenId1 = glGetUniformLocation(_programKeyMajorsId, "inverseScreenSize");
+		const GLuint colorId = glGetUniformLocation(_programKeyMajorsId, "edgeColor");
+		const GLuint majorId = glGetUniformLocation(_programKeyMajorsId, "majorColor");
 
-	// Draw the geometry.
-	glBindVertexArray(_vaoKeyboard);
-	glDrawElements(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0);
+		// Uniforms setup.
+		glUniform2fv(screenId1, 1, &(invScreenSize[0]));
+		glUniform3fv(colorId, 1, &(keyColor[0]));
+		glUniform3fv(majorId, GLsizei(majorColors.size()), &(majorColors[0][0]));
+		glUniform1i(highId, int(highlightKeys));
+		glUniform1iv(activesId, GLsizei(_actives.size()), &(_actives[0]));
 
+		// Draw the geometry.
+		glBindVertexArray(_vaoKeyboard);
+		glDrawElements(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0);
+	}
+
+	{
+		glUseProgram(_programKeyMinorsId);
+
+		const GLuint highId = glGetUniformLocation(_programKeyMinorsId, "highlightKeys");
+		const GLuint activesId = glGetUniformLocation(_programKeyMinorsId, "actives");
+		const GLuint screenId1 = glGetUniformLocation(_programKeyMinorsId, "inverseScreenSize");
+		const GLuint colorId = glGetUniformLocation(_programKeyMinorsId, "edgeColor");
+		const GLuint minorId = glGetUniformLocation(_programKeyMinorsId, "minorColor");
+
+		// Uniforms setup.
+		glUniform2fv(screenId1, 1, &(invScreenSize[0]));
+		glUniform3fv(colorId, 1, &(keyColor[0]));
+		glUniform3fv(minorId, GLsizei(minorColors.size()), &(minorColors[0][0]));
+		glUniform1i(highId, int(highlightKeys));
+		glUniform1iv(activesId, GLsizei(_actives.size()), &(_actives[0]));
+
+		glBindVertexArray(_vaoKeyboard);
+		glDrawElementsInstanced(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0, 53);
+	}
+	
 	glBindVertexArray(0);
 	glUseProgram(0);
 }
@@ -512,9 +544,12 @@ void MIDIScene::setMinMaxKeys(int minKey, int minKeyMajor, int notesCount){
 	glUseProgram(_programFlashesId);
 	glUniform1i(glGetUniformLocation(_programFlashesId, "minNote"), minKey);
 	glUniform1f(glGetUniformLocation(_programFlashesId, "notesCount"), float(notesCount));
-	glUseProgram(_programKeysId);
-	glUniform1i(glGetUniformLocation(_programKeysId, "minNoteMajor"), minKeyMajor);
-	glUniform1f(glGetUniformLocation(_programKeysId, "notesCount"), float(notesCount));
+	glUseProgram(_programKeyMajorsId);
+	glUniform1i(glGetUniformLocation(_programKeyMajorsId, "minNoteMajor"), minKeyMajor);
+	glUniform1f(glGetUniformLocation(_programKeyMajorsId, "notesCount"), float(notesCount));
+	glUseProgram(_programKeyMinorsId);
+	glUniform1i(glGetUniformLocation(_programKeyMinorsId, "minNoteMajor"), minKeyMajor);
+	glUniform1f(glGetUniformLocation(_programKeyMinorsId, "notesCount"), float(notesCount));
 	glUseProgram(_programParticulesId);
 	glUniform1i(glGetUniformLocation(_programParticulesId, "minNote"), minKey);
 	glUniform1f(glGetUniformLocation(_programParticulesId, "notesCount"), float(notesCount));
@@ -528,8 +563,10 @@ void MIDIScene::setOrientation(bool horizontal){
 	glUniform1i(glGetUniformLocation(_programId, "horizontalMode"), val);
 	glUseProgram(_programFlashesId);
 	glUniform1i(glGetUniformLocation(_programFlashesId, "horizontalMode"), val);
-	glUseProgram(_programKeysId);
-	glUniform1i(glGetUniformLocation(_programKeysId, "horizontalMode"), val);
+	glUseProgram(_programKeyMajorsId);
+	glUniform1i(glGetUniformLocation(_programKeyMajorsId, "horizontalMode"), val);
+	glUseProgram(_programKeyMinorsId);
+	glUniform1i(glGetUniformLocation(_programKeyMinorsId, "horizontalMode"), val);
 	glUseProgram(_programParticulesId);
 	glUniform1i(glGetUniformLocation(_programParticulesId, "horizontalMode"), val);
 	glUseProgram(_programWaveId);

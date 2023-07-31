@@ -35,6 +35,8 @@ public:
 
 	void setKeyboardSizeAndFadeout(float keyboardHeight, float fadeOut);
 
+	void setMinorEdgesAndHeight(bool minorEdges, float minorHeight);
+
 	void setMinMaxKeys(int minKey, int minKeyMajor, int notesCount);
 
 	void setOrientation(bool horizontal);
@@ -100,7 +102,8 @@ private:
 	GLuint _programId;
 	GLuint _programFlashesId;
 	GLuint _programParticulesId;
-	GLuint _programKeysId;
+	GLuint _programKeyMinorsId;
+	GLuint _programKeyMajorsId;
 	GLuint _programPedalsId;
 	GLuint _programWaveId;
 	
