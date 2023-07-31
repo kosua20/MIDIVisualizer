@@ -200,21 +200,32 @@ size_t State::helpText(std::string & configOpts, std::string & setsOpts){
 	}
 	size_t alignSize = maxLength + 4;
 
-	std::stringstream msgDefault;
-	std::stringstream msgSets;
+	std::vector<std::string> msgDefault;
+	std::vector<std::string> msgSets;
 
 	for(const auto & param : _sharedInfos){
 		const std::string padString(alignSize - param.first.size(), ' ');
 		const std::string line = "--" + param.first + padString + param.second.description + " (" + param.second.values + ")\n";
 		if(param.second.category == OptionInfos::Category::SETS){
-			msgSets << line;
+			msgSets.push_back(line);
 		} else {
-			msgDefault << line;
+			msgDefault.push_back(line);
 		}
 	}
+	std::sort(msgDefault.begin(), msgDefault.end());
+	std::sort(msgSets.begin(), msgSets.end());
 
-	configOpts = msgDefault.str();
-	setsOpts = msgSets.str();
+	std::stringstream msgDefaultStr;
+	std::stringstream msgSetsStr;
+
+	for(const auto& str : msgDefault){
+		msgDefaultStr << str;
+	}
+	for(const auto& str : msgSets){
+		msgSetsStr << str;
+	}
+	configOpts = msgDefaultStr.str();
+	setsOpts = msgSetsStr.str();
 	return alignSize;
 }
 
