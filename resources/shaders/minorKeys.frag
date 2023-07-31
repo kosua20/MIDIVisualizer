@@ -5,7 +5,7 @@ in INTERFACE {
 	float id;
 } In ;
 
-#define SETS_COUNT 8
+#define SETS_COUNT 12
 
 uniform bool highlightKeys;
 uniform bool horizontalMode = false;
