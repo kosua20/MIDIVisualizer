@@ -305,7 +305,7 @@ void Renderer::blurPrepass() {
 	}
 	if (_state.showBlurNotes) {
 		// Draw the notes.
-		_scene->drawNotes(_timer, invSizeB, _state.baseColors, _state.minorColors, _state.reverseScroll, true);
+		_scene->drawNotes(_timer, invSizeB, _state.notes, _state.reverseScroll, true);
 	}
 
 	_particlesFramebuffer->unbind();
@@ -360,19 +360,19 @@ void Renderer::drawScore(const glm::vec2 & invSize) {
 }
 
 void Renderer::drawKeyboard(const glm::vec2 & invSize) {
-	const ColorArray & majColors = _state.keyboard.customKeyColors ? _state.keyboard.majorColor : _state.baseColors;
-	const ColorArray & minColors = _state.keyboard.customKeyColors ? _state.keyboard.minorColor : _state.minorColors;
+	const ColorArray & majColors = _state.keyboard.customKeyColors ? _state.keyboard.majorColor : _state.notes.majorColors;
+	const ColorArray & minColors = _state.keyboard.customKeyColors ? _state.keyboard.minorColor : _state.notes.minorColors;
 	_scene->drawKeyboard(_timer, invSize, _state.background.keysColor, majColors, minColors, _state.keyboard.highlightKeys);
 }
 
 void Renderer::drawNotes(const glm::vec2 & invSize) {
 	glEnable(GL_BLEND);
-	_scene->drawNotes(_timer * _state.scrollSpeed, invSize, _state.baseColors, _state.minorColors, _state.reverseScroll, false);
+	_scene->drawNotes(_timer * _state.scrollSpeed, invSize, _state.notes, _state.reverseScroll, false);
 	glDisable(GL_BLEND);
 }
 
 void Renderer::drawFlashes(const glm::vec2 & invSize) {
-	_scene->drawFlashes(_timer, invSize, _state.flashColors, _state.flashSize);
+	_scene->drawFlashes(_timer, invSize, _state.flashes);
 }
 
 void Renderer::drawPedals(const glm::vec2 & invSize){
@@ -468,7 +468,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 
 		if (ImGui::Checkbox("Use the same color for all effects", &_state.lockParticleColor)) {
 			// If we enable the lock, make sure the colors are synched.
-			synchronizeColors(_state.baseColors);
+			synchronizeColors(_state.notes.majorColors);
 		}
 
 		ImGuiPushItemWidth(100);
@@ -498,67 +498,12 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		}
 
 		if(ImGui::CollapsingHeader("Notes##HEADER")){
-
-			ImGuiPushItemWidth(100);
-			bool smw0 = ImGui::InputFloat("Scale", &_state.scale, 0.01f, 0.1f, "%.2fx");
-			ImGuiSameLine(COLUMN_SIZE);
-			smw0 = ImGuiSliderPercent("Minor width", &_state.background.minorsWidth, 0.1f, 1.0f) || smw0;
-			ImGui::PopItemWidth();
-
-			if (smw0) {
-				_state.scale = (std::max)(_state.scale, 0.01f);
-				_state.background.minorsWidth = glm::clamp(_state.background.minorsWidth, 0.1f, 1.0f);
-				_scene->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
-				_score->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
-			}
-
-			if(channelColorEdit("Notes", "Notes", _state.baseColors)){
-				synchronizeColors(_state.baseColors);
-			}
-			ImGuiSameLine();
-			if(channelColorEdit("Minors", "Minors", _state.minorColors)){
-				synchronizeColors(_state.minorColors);
-			}
-
-			ImGuiSameLine(COLUMN_SIZE);
-
-
-			ImGuiPushItemWidth(100);
-			if(ImGui::SliderFloat("Fadeout", &_state.notesFadeOut, 0.0f, 1.0f)){
-				_state.notesFadeOut = glm::clamp(_state.notesFadeOut, 0.0f, 1.0f);
-				_scene->setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notesFadeOut);
-			}
-			ImGui::PopItemWidth();
-
-			if(ImGui::Checkbox("Per-set colors", &_state.perSetColors)){
-				if(!_state.perSetColors){
-					_state.synchronizeSets();
-				}
-			}
-
-			if(_state.perSetColors){
-				ImGuiSameLine(COLUMN_SIZE);
-				if(ImGui::Button("Define sets...")){
-					ImGui::OpenPopup("Note sets options");
-				}
-				showSets();
-			}
-
-
+			showNoteOptions();
 		}
 
 		if (_state.showFlashes && ImGui::CollapsingHeader("Flashes##HEADER")) {
-
-			if(channelColorEdit("Color##Flashes", "Color", _state.flashColors)){
-				synchronizeColors(_state.flashColors);
-			}
-
-			ImGuiSameLine(COLUMN_SIZE);
-			ImGuiPushItemWidth(100);
-			ImGui::SliderFloat("Scale##flash", &_state.flashSize, 0.1f, 3.0f, "%.2fx");
-			ImGui::PopItemWidth();
+			showFlashOptions();
 		}
-
 
 		if (_state.showParticles && ImGui::CollapsingHeader("Particles##HEADER")) {
 			showParticleOptions();
@@ -648,13 +593,13 @@ void Renderer::synchronizeColors(const ColorArray & colors){
 	}
 
 	for(size_t cid = 0; cid < SETS_COUNT; ++cid){
-		_state.baseColors[cid] = _state.particles.colors[cid] = _state.minorColors[cid] = _state.flashColors[cid] = colors[cid];
+		_state.notes.majorColors[cid] = _state.particles.colors[cid] = _state.notes.minorColors[cid] = _state.flashes.colors[cid] = colors[cid];
 	}
 
 	// If we have only one channel, synchronize one-shot effects.
 	// Disable this because it's not symmetric.
 	//if(!_state.perChannelColors){
-	//	_state.pedals.color = _state.waves.color = _state.baseColors[0];
+	//	_state.pedals.color = _state.waves.color = _state.notes.majorColors[0];
 	//}
 }
 
@@ -727,6 +672,64 @@ SystemAction Renderer::showTopButtons(double currentTime){
 		ImGui::EndTooltip();
 	}
 	return action;
+}
+
+void Renderer::showFlashOptions() {
+	if(channelColorEdit("Color##Flashes", "Color", _state.flashes.colors)){
+		synchronizeColors(_state.flashes.colors);
+	}
+
+	ImGuiSameLine(COLUMN_SIZE);
+	ImGuiPushItemWidth(100);
+	ImGui::SliderFloat("Scale##flash", &_state.flashes.size, 0.1f, 3.0f, "%.2fx");
+	ImGui::PopItemWidth();
+}
+
+void Renderer::showNoteOptions() {
+	ImGuiPushItemWidth(100);
+	bool smw0 = ImGui::InputFloat("Scale", &_state.scale, 0.01f, 0.1f, "%.2fx");
+	ImGuiSameLine(COLUMN_SIZE);
+	smw0 = ImGuiSliderPercent("Minor width", &_state.background.minorsWidth, 0.1f, 1.0f) || smw0;
+	ImGui::PopItemWidth();
+
+	if (smw0) {
+		_state.scale = (std::max)(_state.scale, 0.01f);
+		_state.background.minorsWidth = glm::clamp(_state.background.minorsWidth, 0.1f, 1.0f);
+		_scene->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
+		_score->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
+	}
+
+
+	if(channelColorEdit("Notes", "Notes", _state.notes.majorColors)){
+		synchronizeColors(_state.notes.majorColors);
+	}
+	ImGuiSameLine();
+	if(channelColorEdit("Minors", "Minors", _state.notes.minorColors)){
+		synchronizeColors(_state.notes.minorColors);
+	}
+
+	ImGuiSameLine(COLUMN_SIZE);
+
+	ImGuiPushItemWidth(100);
+	if(ImGui::SliderFloat("Fadeout", &_state.notes.fadeOut, 0.0f, 1.0f)){
+		_state.notes.fadeOut = glm::clamp(_state.notes.fadeOut, 0.0f, 1.0f);
+		_scene->setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notes.fadeOut);
+	}
+	ImGui::PopItemWidth();
+
+	if(ImGui::Checkbox("Per-set colors", &_state.perSetColors)){
+		if(!_state.perSetColors){
+			_state.synchronizeSets();
+		}
+	}
+
+	if(_state.perSetColors){
+		ImGuiSameLine(COLUMN_SIZE);
+		if(ImGui::Button("Define sets...")){
+			ImGui::OpenPopup("Note sets options");
+		}
+		showSets();
+	}
 }
 
 void Renderer::showParticleOptions(){
@@ -822,7 +825,7 @@ void Renderer::showKeyboardOptions(){
 	ImGuiPushItemWidth(100);
 	if(ImGuiSliderPercent("Height##Keys", &_state.keyboard.size, 0.0f, 1.0f)){
 		_state.keyboard.size = glm::clamp(_state.keyboard.size, 0.0f, 1.0f);
-		_scene->setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notesFadeOut);
+		_scene->setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notes.fadeOut);
 		_score->setKeyboardSize(_state.keyboard.size);
 	}
 	ImGui::PopItemWidth();
@@ -1405,7 +1408,7 @@ void Renderer::applyAllSettings() {
 	_scene->setParticlesParameters(_state.particles.speed, _state.particles.expansion);
 	_score->setDisplay(_state.background.digits, _state.background.hLines, _state.background.vLines);
 	_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
-	_scene->setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notesFadeOut);
+	_scene->setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notes.fadeOut);
 	_scene->setMinorEdgesAndHeight(_state.keyboard.minorEdges, _state.keyboard.minorHeight);
 	_score->setKeyboardSize(_state.keyboard.size);
 	_score->setPlayDirection(_state.reverseScroll);

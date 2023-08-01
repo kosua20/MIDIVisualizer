@@ -14,9 +14,9 @@ public:
 	MIDIScene();
 
 	/// Draw function
-	void drawNotes(float time, const glm::vec2 & invScreenSize, const ColorArray & majorColors, const ColorArray & minorColors, bool reverseScroll, bool prepass);
+	void drawNotes(float time, const glm::vec2 & invScreenSize, const State::NotesState & state, bool reverseScroll, bool prepass);
 	
-	void drawFlashes(float time, const glm::vec2 & invScreenSize, const ColorArray & baseColors, float userScale);
+	void drawFlashes(float time, const glm::vec2 & invScreenSize, const State::FlashesState& state);
 	
 	void drawParticles(float time, const glm::vec2 & invScreenSize, const State::ParticlesState & state, bool prepass);
 	

@@ -110,9 +110,13 @@ private:
 
 	SystemAction showTopButtons(double currentTime);
 
+	void showNoteOptions();
+
 	void showParticleOptions();
 
 	void showKeyboardOptions();
+
+	void showFlashOptions();
 
 	void showPedalOptions();
 	

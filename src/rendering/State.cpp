@@ -135,6 +135,7 @@ void State::defineOptions(){
 	_sharedInfos["sets-separator-control-points"] = {"Sets of control points for dynamic set asignment", OptionInfos::Type::OTHER};
 	_sharedInfos["sets-separator-control-points"].values = "values: space-separated triplets time,key,set";
 
+	// Sets
 	for(size_t cid = 1; cid < SETS_COUNT; ++cid){
 		const std::string num = std::to_string(cid);
 		_sharedInfos["color-major-" + num] = {"Major notes color for set " + num, OptionInfos::Type::COLOR};
@@ -148,6 +149,11 @@ void State::defineOptions(){
 		_sharedInfos["color-flashes-" + num].category = OptionInfos::Category::SETS;
 
 	}
+	// Override set 0 parameters to stay consistent.
+	_sharedInfos["color-major"].category = OptionInfos::Category::SETS;
+	_sharedInfos["color-particles"].category = OptionInfos::Category::SETS;
+	_sharedInfos["color-minor"].category = OptionInfos::Category::SETS;
+	_sharedInfos["color-flashes"].category = OptionInfos::Category::SETS;
 	
 	_sharedInfos["colors-per-set"] = {"Should each notes set use its own key/effects colors", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["colors-per-set"].category = OptionInfos::Category::SETS;
@@ -263,11 +269,11 @@ void State::updateOptions(){
 	_floatInfos["particles-speed"] = &particles.speed;
 	_floatInfos["particles-expansion"] = &particles.expansion;
 	_floatInfos["blur-attenuation"] = &attenuation;
-	_floatInfos["flashes-size"] = &flashSize;
+	_floatInfos["flashes-size"] = &flashes.size;
 	_floatInfos["preroll"] = &prerollTime;
 	_floatInfos["scroll-speed"] = &scrollSpeed;
 	_floatInfos["bg-img-opacity"] = &background.imageAlpha;
-	_floatInfos["fadeout-notes"] = &notesFadeOut;
+	_floatInfos["fadeout-notes"] = &notes.fadeOut;
 	_vecInfos["color-bg"] = &background.color;
 	_vecInfos["color-keyboard-major"] = &keyboard.majorColor[0];
 	_vecInfos["color-keyboard-minor"] = &keyboard.minorColor[0];
@@ -275,17 +281,17 @@ void State::updateOptions(){
 	_vecInfos["color-numbers"] = &background.textColor;
 	_vecInfos["color-keyboard"] = &background.keysColor;
 
-	_vecInfos["color-major"] = &baseColors[0];
+	_vecInfos["color-major"] = &notes.majorColors[0];
 	_vecInfos["color-particles"] = &particles.colors[0];
-	_vecInfos["color-minor"] = &minorColors[0];
-	_vecInfos["color-flashes"] = &flashColors[0];
+	_vecInfos["color-minor"] = &notes.minorColors[0];
+	_vecInfos["color-flashes"] = &flashes.colors[0];
 
-	for(size_t cid = 1; cid < baseColors.size(); ++cid){
+	for(size_t cid = 1; cid < notes.majorColors.size(); ++cid){
 		const std::string num = std::to_string(cid);
-		_vecInfos["color-major-" + num] = &baseColors[cid];
+		_vecInfos["color-major-" + num] = &notes.majorColors[cid];
 		_vecInfos["color-particles-" + num] = &particles.colors[cid];
-		_vecInfos["color-minor-" + num] = &minorColors[cid];
-		_vecInfos["color-flashes-" + num] = &flashColors[cid];
+		_vecInfos["color-minor-" + num] = &notes.minorColors[cid];
+		_vecInfos["color-flashes-" + num] = &flashes.colors[cid];
 	}
 
 	_intInfos["sets-mode"] = (int*)&setOptions.mode;
@@ -540,9 +546,9 @@ void State::load(const Arguments & configArgs){
 
 void State::synchronizeSets(){
 	for(size_t cid = 1; cid < SETS_COUNT; ++cid){
-		baseColors[cid] = baseColors[0];
-		minorColors[cid] = minorColors[0];
-		flashColors[cid] = flashColors[0];
+		notes.majorColors[cid] = notes.majorColors[0];
+		notes.minorColors[cid] = notes.minorColors[0];
+		flashes.colors[cid] = flashes.colors[0];
 		particles.colors[cid] = particles.colors[0];
 		keyboard.majorColor[cid] = keyboard.majorColor[0];
 		keyboard.minorColor[cid] = keyboard.minorColor[0];
@@ -556,12 +562,12 @@ const std::string& State::filePath() const {
 void State::reset(){
 
 	for(size_t cid = 0; cid < SETS_COUNT; ++cid){
-		baseColors[cid] = 1.35f * glm::vec3(0.57f,0.19f,0.98f);
-		minorColors[cid] = 0.8f * baseColors[0];
-		flashColors[cid] = baseColors[0];
-		particles.colors[cid] = baseColors[0];
-		keyboard.majorColor[cid] = baseColors[0];
-		keyboard.minorColor[cid] = minorColors[0];
+		notes.majorColors[cid] = 1.35f * glm::vec3(0.57f,0.19f,0.98f);
+		notes.minorColors[cid] = 0.8f * notes.majorColors[0];
+		flashes.colors[cid] = notes.majorColors[0];
+		particles.colors[cid] = notes.majorColors[0];
+		keyboard.majorColor[cid] = notes.majorColors[0];
+		keyboard.minorColor[cid] = notes.minorColors[0];
 	}
 
 	background.color = glm::vec3(0.0f, 0.0f, 0.0f) ;
@@ -580,7 +586,7 @@ void State::reset(){
 	showNotes = true;
 	showScore = true;
 	showKeyboard = true;
-	flashSize = 1.0f;
+	flashes.size = 1.0f;
 	
 	background.minorsWidth = 0.8f;
 	background.hLines = true;
@@ -604,7 +610,6 @@ void State::reset(){
 	quality = Quality::MEDIUM;
 	prerollTime = 1.0f;
 	scrollSpeed = 1.0f;
-	notesFadeOut = 0.0f;
 	keyboard.highlightKeys = true;
 	keyboard.minorEdges = true;
 	keyboard.customKeyColors = false;
@@ -617,18 +622,20 @@ void State::reset(){
 
 	setOptions = SetOptions();
 
+	notes.fadeOut = 0.0f;
+	
 	minKey = 21;
 	maxKey = 108;
 	
 	showPedal = true;
-	pedals.color = baseColors[0];
+	pedals.color = notes.majorColors[0];
 	pedals.size = 0.2f;
 	pedals.opacity = 0.4f;
 	pedals.merge = false;
 	pedals.location = PedalsState::BOTTOMRIGHT;
 
 	showWave = true;
-	waves.color = baseColors[0];
+	waves.color = notes.majorColors[0];
 	waves.amplitude = 1.0f;
 	waves.frequency = 1.0f;
 	waves.opacity = 1.0f;
@@ -647,7 +654,7 @@ void State::load(std::istream & configFile, int majVersion, int minVersion){
 	// This part is always valid, as it was present when the saving system was introduced.
 	// Note: we don't restore the texture IDs and scale.
 	{
-		configFile >> baseColors[0][0] >> baseColors[0][1] >> baseColors[0][2] ;
+		configFile >> notes.majorColors[0][0] >> notes.majorColors[0][1] >> notes.majorColors[0][2] ;
 		configFile >> background.color[0] >> background.color[1] >> background.color[2] ;
 		configFile >> particles.colors[0][0] >> particles.colors[0][1] >> particles.colors[0][2] ;
 
@@ -693,9 +700,9 @@ void State::load(std::istream & configFile, int majVersion, int minVersion){
 		configFile >> background.linesColor[0] >> background.linesColor[1] >> background.linesColor[2] ;
 		configFile >> background.textColor[0] >> background.textColor[1] >> background.textColor[2] ;
 		configFile >> background.keysColor[0] >> background.keysColor[1] >> background.keysColor[2] ;
-		configFile >> minorColors[0][0] >> minorColors[0][1] >> minorColors[0][2] ;
-		configFile >> flashColors[0][0] >> flashColors[0][1] >> flashColors[0][2] ;
-		configFile >> flashSize;
+		configFile >> notes.minorColors[0][0] >> notes.minorColors[0][1] >> notes.minorColors[0][2] ;
+		configFile >> flashes.colors[0][0] >> flashes.colors[0][1] >> flashes.colors[0][2] ;
+		configFile >> flashes.size;
 	}
 
 	// MIDIVIZ_VERSION_MAJOR == 3, MIDIVIZ_VERSION_MINOR == 5
@@ -733,6 +740,6 @@ void State::load(std::istream & configFile, int majVersion, int minVersion){
 	// Ensure synchronization of all channels colors.
 	synchronizeSets();
 
-	pedals.color = baseColors[0];
-	waves.color = baseColors[0];
+	pedals.color = notes.majorColors[0];
+	waves.color = notes.majorColors[0];
 }

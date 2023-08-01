@@ -104,24 +104,33 @@ public:
 		float amplitude;
 		float frequency;
 	};
-	
+
+	struct NotesState {
+		ColorArray majorColors; ///< Major notes color.
+		ColorArray minorColors; ///< Minor notes color.
+		float fadeOut; ///< Notes fade out at the top.
+	};
+
+	struct FlashesState {
+		ColorArray colors; ///< Flashes color.
+		float size; ///< Size of flashes.
+	};
+
 	BackgroundState background;
 	ParticlesState particles;
 	KeyboardState keyboard;
 	SetOptions setOptions;
 	PedalsState pedals;
 	WaveState waves;
+	NotesState notes;
+	FlashesState flashes;
 	
 	Quality::Level quality;
-	ColorArray baseColors; ///< Major notes color.
-	ColorArray minorColors; ///< Minor notes color.
-	ColorArray flashColors; ///< Flashes color.
 	float scale; ///< Display vertical scale.
 	float attenuation; ///< Blur attenuation.
-	float flashSize; ///< Size of flashes.
+
 	float prerollTime; ///< Preroll time.
 	float scrollSpeed; ///< Playback speed.
-	float notesFadeOut; ///< Notes fade out at the top.
 
 	int minKey; ///< The lowest key to display.
 	int maxKey; ///< The highest key to display.

@@ -323,7 +323,7 @@ void MIDIScene::drawParticles(float time, const glm::vec2 & invScreenSize, const
 
 }
 
-void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const ColorArray & majorColors, const ColorArray & minorColors, bool reverseScroll, bool prepass){
+void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const State::NotesState & state, bool reverseScroll, bool prepass){
 	
 	glUseProgram(_programId);
 	
@@ -338,8 +338,8 @@ void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const Col
 	glUniform1f(timeId, time);
 	glUniform1f(colorScaleId, prepass ? 0.6f: 1.0f);
 
-	glUniform3fv(colorId, GLsizei(majorColors.size()), &(majorColors[0][0]));
-	glUniform3fv(colorMinId, GLsizei(minorColors.size()), &(minorColors[0][0]));
+	glUniform3fv(colorId, GLsizei(state.majorColors.size()), &(state.majorColors[0][0]));
+	glUniform3fv(colorMinId, GLsizei(state.minorColors.size()), &(state.minorColors[0][0]));
 	glUniform1i(reverseId, reverseScroll ? 1 : 0);
 	
 	// Draw the geometry.
@@ -351,7 +351,7 @@ void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const Col
 	
 }
 
-void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const ColorArray & baseColors, float userScale){
+void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const State::FlashesState& state){
 	
 	// Need alpha blending.
 	glEnable(GL_BLEND);
@@ -370,8 +370,8 @@ void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const C
 	GLuint scaleId = glGetUniformLocation(_programFlashesId, "userScale");
 	glUniform2fv(screenId1,1, &(invScreenSize[0]));
 	glUniform1f(timeId1,time);
-	glUniform3fv(colorId, GLsizei(baseColors.size()), &(baseColors[0][0]));
-	glUniform1f(scaleId,userScale);
+	glUniform3fv(colorId, GLsizei(state.colors.size()), &(state.colors[0][0]));
+	glUniform1f(scaleId, state.size);
 	// Flash texture.
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, _texFlash);
