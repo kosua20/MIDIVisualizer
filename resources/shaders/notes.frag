@@ -13,7 +13,9 @@ uniform vec3 minorColor[SETS_COUNT];
 uniform vec2 inverseScreenSize;
 uniform float colorScale;
 uniform float keyboardHeight = 0.25;
-uniform float fadeOut = 0.0;
+uniform float fadeOut;
+uniform float edgeWidth;
+uniform float edgeBrightness;
 uniform bool horizontalMode = false;
 
 #define cornerRadius 0.01
@@ -41,13 +43,10 @@ void main(){
 	int cid = int(In.channel);
 	fragColor.rgb = colorScale * mix(baseColor[cid], minorColor[cid], In.isMinor);
 
-	if(	radiusPosition > 0.4){
-		//outer border
-		fragColor.rgb *= 1.5;
-	} else {
-		//inner
-		fragColor.rgb *= 0.8;
-	}
+	// Apply scaling factor to edge.
+	float deltaPix = fwidth(In.uv.x) * 4.0;
+	float edgeIntensity = smoothstep(1.0 - edgeWidth - deltaPix, 1.0 - edgeWidth + deltaPix, radiusPosition);
+	fragColor.rgb *= (1.0f + (edgeBrightness - 1.0f) * edgeIntensity);
 
 	float distFromBottom = horizontalMode ? normalizedCoord.x : normalizedCoord.y;
 	float fadeOutFinal = min(fadeOut, 0.9999);

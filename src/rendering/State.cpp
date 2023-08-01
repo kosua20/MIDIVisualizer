@@ -114,6 +114,8 @@ void State::defineOptions(){
 	_sharedInfos["scroll-speed"] = {"Playback speed", OptionInfos::Type::FLOAT};
 	_sharedInfos["bg-img-opacity"] = {"Background opacity", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
 	_sharedInfos["fadeout-notes"] = {"Notes fade-out at the edge of the screen", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos["notes-edge-width"] = {"Control the width of the edge around notes", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos["notes-edge-brightness"] = {"Control the brightness of the edge around notes", OptionInfos::Type::FLOAT, {0.0f, 100.0f}};
 
 	// Colors.
 	_sharedInfos["color-major"] = {"Major notes color", OptionInfos::Type::COLOR};
@@ -274,6 +276,8 @@ void State::updateOptions(){
 	_floatInfos["scroll-speed"] = &scrollSpeed;
 	_floatInfos["bg-img-opacity"] = &background.imageAlpha;
 	_floatInfos["fadeout-notes"] = &notes.fadeOut;
+	_floatInfos["notes-edge-width"] = &notes.edgeWidth;
+	_floatInfos["notes-edge-brightness"] = &notes.edgeBrightness;
 	_vecInfos["color-bg"] = &background.color;
 	_vecInfos["color-keyboard-major"] = &keyboard.majorColor[0];
 	_vecInfos["color-keyboard-minor"] = &keyboard.minorColor[0];
@@ -622,6 +626,8 @@ void State::reset(){
 
 	setOptions = SetOptions();
 
+	notes.edgeBrightness = 1.05f;
+	notes.edgeWidth = 0.1f;
 	notes.fadeOut = 0.0f;
 	
 	minKey = 21;

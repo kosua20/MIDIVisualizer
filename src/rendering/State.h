@@ -109,6 +109,8 @@ public:
 		ColorArray majorColors; ///< Major notes color.
 		ColorArray minorColors; ///< Minor notes color.
 		float fadeOut; ///< Notes fade out at the top.
+		float edgeWidth; ///< Edges drawn around the notes.
+		float edgeBrightness; ///< Factor applied around the notes edges.
 	};
 
 	struct FlashesState {

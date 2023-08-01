@@ -699,6 +699,15 @@ void Renderer::showNoteOptions() {
 		_score->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
 	}
 
+	ImGuiPushItemWidth(100);
+	if(ImGuiSliderPercent("Edge", &_state.notes.edgeWidth, 0.0f, 1.0f)){
+		_state.notes.edgeWidth = glm::clamp(_state.notes.edgeWidth, 0.0f, 1.0f);
+	}
+	ImGuiSameLine(COLUMN_SIZE);
+	if(ImGuiSliderPercent("Brightness", &_state.notes.edgeBrightness, 0.0f, 4.0f)){
+		_state.notes.edgeBrightness = glm::max(_state.notes.edgeBrightness, 0.0f);
+	}
+	ImGui::PopItemWidth();
 
 	if(channelColorEdit("Notes", "Notes", _state.notes.majorColors)){
 		synchronizeColors(_state.notes.majorColors);

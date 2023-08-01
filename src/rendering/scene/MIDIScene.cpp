@@ -334,6 +334,8 @@ void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const Sta
 	GLuint colorMinId = glGetUniformLocation(_programId, "minorColor");
 	GLuint colorScaleId = glGetUniformLocation(_programId, "colorScale");
 	GLuint reverseId = glGetUniformLocation(_programId, "reverseMode");
+	GLuint edgeWidthId = glGetUniformLocation(_programId, "edgeWidth");
+	GLuint edgeBrightnessId = glGetUniformLocation(_programId, "edgeBrightness");
 	glUniform2fv(screenId,1, &(invScreenSize[0]));
 	glUniform1f(timeId, time);
 	glUniform1f(colorScaleId, prepass ? 0.6f: 1.0f);
@@ -341,6 +343,8 @@ void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const Sta
 	glUniform3fv(colorId, GLsizei(state.majorColors.size()), &(state.majorColors[0][0]));
 	glUniform3fv(colorMinId, GLsizei(state.minorColors.size()), &(state.minorColors[0][0]));
 	glUniform1i(reverseId, reverseScroll ? 1 : 0);
+	glUniform1f(edgeWidthId, state.edgeWidth);
+	glUniform1f(edgeBrightnessId, state.edgeBrightness);
 	
 	// Draw the geometry.
 	glBindVertexArray(_vao);
