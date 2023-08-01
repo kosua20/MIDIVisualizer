@@ -1,4 +1,5 @@
 build/
+build*/
 .DS_Store
 .thumb
 ext/
@@ -9,6 +10,7 @@ x64/
 *.user
 *.xcodeproj
 *.xcuserstate
+*.vscode
 */xcuserdata/*
 dependencies/
 libs/ffmpeg

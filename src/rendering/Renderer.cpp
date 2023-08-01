@@ -406,6 +406,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			// Read arguments.
 			nfdchar_t *outPath = NULL;
 			nfdresult_t result = NFD_OpenDialog(NULL, NULL, &outPath);
+			System::forceLocale();
 			if (result == NFD_OKAY) {
 				loadFile(std::string(outPath));
 			}
@@ -433,6 +434,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			if(ImGui::Button("Export MIDI file...")) {
 				nfdchar_t *savePath = NULL;
 				nfdresult_t result = NFD_SaveDialog("mid", NULL, &savePath);
+				System::forceLocale();
 				if (result == NFD_OKAY && savePath != nullptr) {
 					std::ofstream outFile = System::openOutputFile(std::string(savePath), true);
 					_scene->save(outFile);
@@ -759,6 +761,7 @@ void Renderer::showParticleOptions(){
 		// Read arguments.
 		nfdpathset_t outPaths;
 		nfdresult_t result = NFD_OpenDialogMultiple("png;jpg,jpeg;", NULL, &outPaths);
+		System::forceLocale();
 
 		if (result == NFD_OKAY) {
 			std::vector<std::string> paths;
@@ -809,7 +812,7 @@ void Renderer::showParticleOptions(){
 
 void Renderer::showKeyboardOptions(){
 	ImGuiPushItemWidth(25);
-	if (ImGui::ColorEdit3("Color##Keys", &_state.background.keysColor[0], ImGuiColorEditFlags_NoInputs)) {
+	if (ImGui::ColorEdit3("Fill Color##Keys", &_state.background.keysColor[0], ImGuiColorEditFlags_NoInputs)) {
 		_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
 	}
 	ImGui::PopItemWidth();
@@ -821,6 +824,20 @@ void Renderer::showKeyboardOptions(){
 		_state.keyboard.size = glm::clamp(_state.keyboard.size, 0.0f, 1.0f);
 		_scene->setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notesFadeOut);
 		_score->setKeyboardSize(_state.keyboard.size);
+	}
+	ImGui::PopItemWidth();
+
+	ImGuiPushItemWidth(25);
+	if (ImGui::Checkbox("Minor edges##Keys", &_state.keyboard.minorEdges)){
+		_scene->setMinorEdgesAndHeight(_state.keyboard.minorEdges, _state.keyboard.minorHeight);
+	}
+	ImGui::PopItemWidth();
+	ImGuiSameLine(COLUMN_SIZE);
+
+	ImGuiPushItemWidth(100);
+	if(ImGuiSliderPercent("Minor height##Keys", &_state.keyboard.minorHeight, 0.0f, 1.0f)){
+		_state.keyboard.minorHeight = glm::clamp(_state.keyboard.minorHeight, 0.0f, 1.0f);
+		_scene->setMinorEdgesAndHeight(_state.keyboard.minorEdges, _state.keyboard.minorHeight);
 	}
 	ImGui::PopItemWidth();
 
@@ -948,6 +965,7 @@ void Renderer::showBackgroundOptions(){
 		// Read arguments.
 		nfdchar_t *outPath = NULL;
 		nfdresult_t result = NFD_OpenDialog("jpg,jpeg;png", NULL, &outPath);
+		System::forceLocale();
 		if (result == NFD_OKAY) {
 			_state.background.imagePath = std::string(outPath);
 			glDeleteTextures(1, &_state.background.tex);
@@ -985,6 +1003,7 @@ void Renderer::showBottomButtons(){
 		// Read arguments.
 		nfdchar_t *savePath = NULL;
 		nfdresult_t result = NFD_SaveDialog("ini", NULL, &savePath);
+		System::forceLocale();
 		if (result == NFD_OKAY) {
 			_state.save(std::string(savePath));
 		}
@@ -995,6 +1014,7 @@ void Renderer::showBottomButtons(){
 		// Read arguments.
 		nfdchar_t *outPath = NULL;
 		nfdresult_t result = NFD_OpenDialog("ini", NULL, &outPath);
+		System::forceLocale();
 		if (result == NFD_OKAY) {
 			if(_state.load(std::string(outPath))){
 				setState(_state);
@@ -1129,6 +1149,8 @@ void Renderer::showSets(){
 		shouldUpdate = ImGui::RadioButton("Track", (int*)(&_state.setOptions.mode), int(SetMode::TRACK)) || shouldUpdate;
 		ImGuiSameLine(2*90);
 		shouldUpdate = ImGui::RadioButton("Key", (int*)(&_state.setOptions.mode), int(SetMode::KEY)) || shouldUpdate;
+		ImGuiSameLine(3*90);
+		shouldUpdate = ImGui::RadioButton("Chromatic", (int*)(&_state.setOptions.mode), int(SetMode::CHROMATIC)) || shouldUpdate;
 
 		shouldUpdate = ImGui::RadioButton("Split", (int*)(&_state.setOptions.mode), int(SetMode::SPLIT)) || shouldUpdate;
 		ImGuiSameLine();
@@ -1153,6 +1175,8 @@ void Renderer::showSets(){
 	}
 
 }
+
+static constexpr char const* kSetsComboString = " 0\0 1\0 2\0 3\0 4\0 5\0 6\0 7\0 8\0 9\0 10\0 11\0\0";
 
 void Renderer::showSetEditor(){
 
@@ -1179,6 +1203,7 @@ void Renderer::showSetEditor(){
 		if(ImGui::Button("Save control points...")){
 			nfdchar_t *savePath = NULL;
 			nfdresult_t result = NFD_SaveDialog("csv", NULL, &savePath);
+			System::forceLocale();
 			if (result == NFD_OKAY) {
 				const std::string content = _state.setOptions.toKeysString("\n");
 				System::writeStringToFile(std::string(savePath), content);
@@ -1189,6 +1214,7 @@ void Renderer::showSetEditor(){
 			// Read arguments.
 			nfdchar_t *outPath = NULL;
 			nfdresult_t result = NFD_OpenDialog("csv", NULL, &outPath);
+			System::forceLocale();
 			if (result == NFD_OKAY) {
 				const std::string str = System::loadStringFromFile(std::string(outPath));
 				_state.setOptions.fromKeysString(str);
@@ -1248,7 +1274,7 @@ void Renderer::showSetEditor(){
 				ImGui::TableNextColumn();
 				ImGuiPushItemWidth(colWidth);
 				// It is simpler to use a combo here (no weird focus issues when sorting rows).
-				if(ImGui::Combo("##Set", &key.set, " 0\0 1\0 2\0 3\0 4\0 5\0 6\0 7\0\0")){
+				if(ImGui::Combo("##Set", &key.set, kSetsComboString)){
 					refreshSetOptions = true;
 				}
 				ImGui::PopItemWidth();
@@ -1284,7 +1310,7 @@ void Renderer::showSetEditor(){
 
 		ImGuiSameLine(2 * colWidth + 3 * offset);
 		ImGuiPushItemWidth(colWidth);
-		ImGui::Combo("##Set", &newKey.set, " 0\0 1\0 2\0 3\0 4\0 5\0 6\0 7\0\0");
+		ImGui::Combo("##Set", &newKey.set, kSetsComboString);
 		ImGui::PopItemWidth();
 
 		ImGuiSameLine(3 * colWidth + 4 * offset);
@@ -1380,6 +1406,7 @@ void Renderer::applyAllSettings() {
 	_score->setDisplay(_state.background.digits, _state.background.hLines, _state.background.vLines);
 	_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
 	_scene->setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notesFadeOut);
+	_scene->setMinorEdgesAndHeight(_state.keyboard.minorEdges, _state.keyboard.minorHeight);
 	_score->setKeyboardSize(_state.keyboard.size);
 	_score->setPlayDirection(_state.reverseScroll);
 	
@@ -1651,14 +1678,14 @@ bool Renderer::channelColorEdit(const char * name, const char * displayName, Col
 	ImGuiSameLine(); ImGui::Text("%s", displayName);
 
 	if(ImGui::BeginPopup(name)){
-		// Do 2x4 color sinks.
+		// Do 3 columns of color sinks.
 		bool edit = false;
-		ImGuiPushItemWidth(25);
+		ImGuiPushItemWidth(35);
 		for(size_t cid = 0; cid < colors.size(); ++cid){
 			const std::string nameC = "Set " + std::to_string(cid);
 			edit = ImGui::ColorEdit3(nameC.c_str(), &colors[cid][0], ImGuiColorEditFlags_NoInputs) || edit;
-			if(cid % 2 == 0 && cid != colors.size()-1){
-				ImGuiSameLine();
+			if(cid % 3 != 2 && cid != colors.size()-1){
+				ImGuiSameLine(75 * (cid%3+1));
 			}
 		}
 		ImGui::PopItemWidth();

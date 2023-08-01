@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <sstream>
 #include <cstdlib>
+#include <clocale>
 
 #include <GLFW/glfw3.h>
 
@@ -202,4 +203,9 @@ void System::writeStringToFile(const std::string& path, const std::string& conte
 		file << content << std::endl;
 		file.close();
 	}
+}
+
+void System::forceLocale(){
+	// Helps managing configuration files loading/saving.
+	std::setlocale(LC_ALL, "C");
 }

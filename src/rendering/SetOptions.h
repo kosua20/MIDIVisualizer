@@ -5,7 +5,7 @@
 #include <array>
 #include <string>
 
-#define SETS_COUNT 8
+#define SETS_COUNT 12
 
 enum class SetMode : int {
 	CHANNEL = 0,
@@ -13,6 +13,7 @@ enum class SetMode : int {
 	SPLIT = 2,
 	KEY = 3,
 	LIST = 4,
+	CHROMATIC = 5,
 };
 
 struct SetOptions {

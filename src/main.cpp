@@ -140,7 +140,9 @@ int main( int argc, char** argv) {
 		std::cerr << "[ERROR]: could not start GLFW3" << std::endl;
 		return 2;
 	}
-	
+	// Ensure we are using the C locale.
+	System::forceLocale();
+
 	// Retrieve the settings directory for all applications.
 	std::string applicationDataPath = System::getApplicationDataDirectory();
 	// If this is not empty (ie the working directory), be a good citizen
