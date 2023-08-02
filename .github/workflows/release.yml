@@ -40,7 +40,7 @@ jobs:
       - name: Dependencies-ubuntu
         if: startsWith(matrix.os, 'ubuntu')
         shell: bash
-        run: sudo apt-get update -y && sudo apt-get install -yq xorg-dev libgtk-3-dev libasound2-dev
+        run: sudo apt-get update -y && sudo apt-get install -yq xorg-dev libgtk-3-dev libasound2-dev libnotify-dev
 
       - name: Dependencies-macos
         if: startsWith(matrix.os, 'macos')
