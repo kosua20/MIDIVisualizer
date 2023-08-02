@@ -204,7 +204,7 @@ GLuint loadTextureArray(const std::vector<std::string>& paths, bool sRGB, int & 
 		glm::ivec2 size(0);
 		unsigned char * image = stbi_load(path.c_str(), &size[0], &size[1], &nChans, 1);
 		if (image == NULL) {
-			// Skip non existent file.
+			// Skip non existant file.
 			std::cerr << "[GL]: " << "Unable to load the texture at path " << path << "." << std::endl;
 			continue;
 		}
@@ -252,6 +252,70 @@ GLuint loadTextureArray(const std::vector<unsigned char*>& images, const std::ve
 	glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_R, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	if(channels == 1){
+		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_SWIZZLE_G, GL_RED);
+		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_SWIZZLE_B, GL_RED);
+	}
 
 	return textureId;
+}
+
+std::vector<GLuint> generate2DViewsOfArray(GLuint tex, unsigned int maxSize){
+	glBindTexture(GL_TEXTURE_2D_ARRAY, tex);
+	int w, h, l, m, typedFormat;
+	glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_WIDTH, &w);
+	glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_HEIGHT, &h);
+	glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_DEPTH, &l);
+	glGetTexParameteriv(GL_TEXTURE_2D_ARRAY,  GL_TEXTURE_MAX_LEVEL, &m);
+	glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_INTERNAL_FORMAT, &typedFormat);
+	int r,g,b,a;
+	glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_RED_TYPE, &r);
+	glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_GREEN_TYPE, &g);
+	glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_BLUE_TYPE, &b);
+	glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_ALPHA_TYPE, &a);
+	int channelCount = (r != GL_NONE) + (g != GL_NONE) + (b != GL_NONE) + (a != GL_NONE);
+	const GLint channelFormats[] = {0, GL_RED, GL_RG, GL_RGB, GL_RGBA};
+
+	std::vector<GLuint> tex2Ds(l);
+	glGenTextures(l, tex2Ds.data());
+
+	for(unsigned int i = 0; i < l; ++i){
+		glBindTexture(GL_TEXTURE_2D, tex2Ds[i]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		if(channelCount == 1){
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_RED);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
+		}
+
+		// Allocate.
+		glTexImage2D(GL_TEXTURE_2D, 0, typedFormat, maxSize, maxSize, 0, channelFormats[channelCount], GL_UNSIGNED_BYTE, nullptr);
+
+		// Create two framebuffers.
+		GLuint srcFb, dstFb;
+		glGenFramebuffers(1, &srcFb);
+		glGenFramebuffers(1, &dstFb);
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, srcFb);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dstFb);
+
+		glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, tex, 0, i);
+		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex2Ds[i], 0);
+
+		glBlitFramebuffer(0, 0, w, h, 0, 0, maxSize, maxSize, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+		// Restore the proper framebuffers from the cache.
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+		glDeleteFramebuffers(1, &srcFb);
+		glDeleteFramebuffers(1, &dstFb);
+
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	return tex2Ds;
 }

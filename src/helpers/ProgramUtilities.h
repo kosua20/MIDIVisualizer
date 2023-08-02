@@ -37,6 +37,8 @@ GLuint loadTextureArray(const std::vector<std::string>& paths, bool sRGB, int & 
 
 GLuint loadTextureArray(const std::vector<unsigned char*>& images, const std::vector<glm::ivec2> & sizes, unsigned int channels, bool sRGB);
 
+std::vector<GLuint> generate2DViewsOfArray(GLuint tex, unsigned int maxSize);
+
 // Cubemap texture.
 //GLuint loadTextureCubeMap(const std::string& pathBase, bool sRGB);
 
