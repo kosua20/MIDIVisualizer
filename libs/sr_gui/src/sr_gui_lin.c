@@ -100,6 +100,12 @@ int _sr_gui_add_filter_extensions(const char* exts, GtkFileChooser* dialog) {
 	return 1;
 }
 
+void _sr_gui_pump_events(){
+	while (gtk_events_pending()){
+        gtk_main_iteration();
+	}
+}
+
 int sr_gui_ask_directory(const char* title, const char* startDir, char** outPath) {
 	*outPath = NULL;
 	if(!gtk_init_check(NULL, NULL)) {
@@ -114,6 +120,7 @@ int sr_gui_ask_directory(const char* title, const char* startDir, char** outPath
 	int res = gtk_native_dialog_run(GTK_NATIVE_DIALOG(pickerNative));
 	if(res != GTK_RESPONSE_ACCEPT) {
 		g_object_unref(pickerNative);
+		_sr_gui_pump_events();
 		return SR_GUI_CANCELLED;
 	}
 
@@ -123,12 +130,14 @@ int sr_gui_ask_directory(const char* title, const char* startDir, char** outPath
 	if(*outPath == NULL) {
 		g_free(filename);
 		g_object_unref(pickerNative);
+		_sr_gui_pump_events();
 		return SR_GUI_CANCELLED;
 	}
 	SR_GUI_MEMCPY(*outPath, filename, fileLen * sizeof(char));
 	(*outPath)[fileLen] = '\0';
 	g_free(filename);
 	g_object_unref(pickerNative);
+	_sr_gui_pump_events();
 	return SR_GUI_VALIDATED;
 }
 
@@ -146,27 +155,30 @@ int sr_gui_ask_load_files(const char* title, const char* startDir, const char* e
 
 	if(_sr_gui_add_filter_extensions(exts, picker) != 1) {
 		g_object_unref(pickerNative);
+		_sr_gui_pump_events();
 		return SR_GUI_CANCELLED;
 	}
 
 	int res = gtk_native_dialog_run(GTK_NATIVE_DIALOG(pickerNative));
 	if(res != GTK_RESPONSE_ACCEPT) {
 		g_object_unref(pickerNative);
+		_sr_gui_pump_events();
 		return SR_GUI_CANCELLED;
 	}
 
 	GSList* filenames	  = gtk_file_chooser_get_filenames(picker);
-	const uint itemsCount = g_slist_length(filenames);
+	const unsigned int itemsCount = g_slist_length(filenames);
 
 	if(itemsCount > 0) {
 		*outPaths = (char**)SR_GUI_MALLOC(sizeof(char*) * itemsCount);
 		if(*outPaths == NULL) {
 			g_object_unref(pickerNative);
 			g_slist_free_full(filenames, g_free);
+			_sr_gui_pump_events();
 			return SR_GUI_CANCELLED;
 		}
 		GSList* head = filenames;
-		for(uint i = 0; i < itemsCount; ++i) {
+		for(unsigned int i = 0; i < itemsCount; ++i) {
 			char* path = (char*)(head->data);
 			// Move to the next.
 			head = g_slist_next(head);
@@ -185,6 +197,7 @@ int sr_gui_ask_load_files(const char* title, const char* startDir, const char* e
 	}
 	g_slist_free_full(filenames, g_free);
 	g_object_unref(pickerNative);
+	_sr_gui_pump_events();
 	return SR_GUI_VALIDATED;
 }
 
@@ -201,12 +214,14 @@ int sr_gui_ask_load_file(const char* title, const char* startDir, const char* ex
 
 	if(_sr_gui_add_filter_extensions(exts, picker) != 1) {
 		g_object_unref(pickerNative);
+		_sr_gui_pump_events();
 		return SR_GUI_CANCELLED;
 	}
 
 	int res = gtk_native_dialog_run(GTK_NATIVE_DIALOG(pickerNative));
 	if(res != GTK_RESPONSE_ACCEPT) {
 		g_object_unref(pickerNative);
+		_sr_gui_pump_events();
 		return SR_GUI_CANCELLED;
 	}
 
@@ -216,6 +231,7 @@ int sr_gui_ask_load_file(const char* title, const char* startDir, const char* ex
 	if(*outPath == NULL) {
 		g_free(filename);
 		g_object_unref(pickerNative);
+		_sr_gui_pump_events();
 		return SR_GUI_CANCELLED;
 	}
 	SR_GUI_MEMCPY(*outPath, filename, fileLen * sizeof(char));
@@ -223,6 +239,7 @@ int sr_gui_ask_load_file(const char* title, const char* startDir, const char* ex
 
 	g_free(filename);
 	g_object_unref(pickerNative);
+	_sr_gui_pump_events();
 	return SR_GUI_VALIDATED;
 }
 
@@ -237,15 +254,16 @@ int sr_gui_ask_save_file(const char* title, const char* startDir, const char* ex
 	gtk_file_chooser_set_do_overwrite_confirmation(picker, TRUE);
 	gtk_file_chooser_set_create_folders(picker, TRUE);
 	gtk_file_chooser_set_current_folder(picker, startDir);
-
+	
 	if(_sr_gui_add_filter_extensions(exts, picker) != 1) {
 		g_object_unref(pickerNative);
+		_sr_gui_pump_events();
 		return SR_GUI_CANCELLED;
 	}
-
 	int res = gtk_native_dialog_run(GTK_NATIVE_DIALOG(pickerNative));
 	if(res != GTK_RESPONSE_ACCEPT) {
 		g_object_unref(pickerNative);
+		_sr_gui_pump_events();
 		return SR_GUI_CANCELLED;
 	}
 
@@ -255,12 +273,14 @@ int sr_gui_ask_save_file(const char* title, const char* startDir, const char* ex
 	if(*outPath == NULL) {
 		g_free(filename);
 		g_object_unref(pickerNative);
+		_sr_gui_pump_events();
 		return SR_GUI_CANCELLED;
 	}
 	SR_GUI_MEMCPY(*outPath, filename, fileLen * sizeof(char));
 	(*outPath)[fileLen] = '\0';
 	g_free(filename);
 	g_object_unref(pickerNative);
+	_sr_gui_pump_events();
 	return SR_GUI_VALIDATED;
 }
 
@@ -338,6 +358,7 @@ int sr_gui_ask_choice(const char* title, const char* message, int level, const c
 	// Run
 	int res = gtk_dialog_run(GTK_DIALOG(dialog));
 	gtk_widget_destroy(dialog);
+	_sr_gui_pump_events();
 
 	for(int bid = 0; bid < bCount; ++bid){
 		if(buttons[bid] != NULL && ((SR_GUI_BUTTON0+bid) == res)){
@@ -365,6 +386,7 @@ int sr_gui_ask_string(const char* title, const char* message, char** result) {
 	int res = gtk_dialog_run(GTK_DIALOG(dialog));
 	if(res != GTK_RESPONSE_ACCEPT && res != GTK_RESPONSE_OK && res != GTK_RESPONSE_APPLY && res != GTK_RESPONSE_YES) {
 		gtk_widget_destroy(dialog);
+		_sr_gui_pump_events();
 		return SR_GUI_CANCELLED;
 	}
 
@@ -373,11 +395,13 @@ int sr_gui_ask_string(const char* title, const char* message, char** result) {
 	*result				   = (char*)SR_GUI_MALLOC(sizeBytes + sizeof(char));
 	if(*result == NULL) {
 		gtk_widget_destroy(dialog);
+		_sr_gui_pump_events();
 		return SR_GUI_CANCELLED;
 	}
 	SR_GUI_MEMCPY(*result, str, sizeBytes);
 	(*result)[sizeBytes] = '\0';
 	gtk_widget_destroy(dialog);
+	_sr_gui_pump_events();
 	return SR_GUI_VALIDATED;
 }
 
@@ -402,6 +426,7 @@ int sr_gui_ask_color(unsigned char color[3]) {
 	// The button label is "Select", so in doubt check all possible outcomes.
 	if(res != GTK_RESPONSE_ACCEPT && res != GTK_RESPONSE_OK && res != GTK_RESPONSE_APPLY && res != GTK_RESPONSE_YES) {
 		gtk_widget_destroy(picker);
+		_sr_gui_pump_events();
 		return SR_GUI_CANCELLED;
 	}
 
@@ -411,17 +436,25 @@ int sr_gui_ask_color(unsigned char color[3]) {
 	color[1] = (unsigned char)(fmin(fmax(255.0f * colorGtk.green, 0.0f), 255.0f));
 	color[2] = (unsigned char)(fmin(fmax(255.0f * colorGtk.blue, 0.0f), 255.0f));
 	gtk_widget_destroy(picker);
+	_sr_gui_pump_events();
 	return SR_GUI_VALIDATED;
 }
 
 int sr_gui_open_in_explorer(const char* path){
-	// TODO: test
-	/*
 	const unsigned int strSize = strlen(path) + 1;
-	char buffer = SR_GUI_MALLOC((strSize + 10) * sizeof(char));
+	char* buffer = SR_GUI_MALLOC((strSize + 10) * sizeof(char));
+	// Generate a xdg-open command with the parent directory.
 	sprintf(buffer, "xdg-open %s", path);
+	// End the path at the last path separator.
+	char* tail = strrchr(buffer, '/');
+	if(tail == NULL){
+		tail = strrchr(buffer, '\\');
+	}
+	if(tail != NULL){
+		*tail = '\0';
+	}
+	// Run
 	system(buffer);
 	SR_GUI_FREE(buffer);
-	*/
 	return SR_GUI_CANCELLED;
 }
