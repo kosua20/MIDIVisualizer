@@ -559,6 +559,10 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		showSetEditor();
 	}
 
+	if(_showParticleEditor){
+		showParticlesEditor();
+	}
+
 	if(_shouldQuit != 0){
 		// We should only open the popup once.
 		if(_shouldQuit == 1){
@@ -769,56 +773,13 @@ void Renderer::showParticleOptions(){
 		_scene->setParticlesParameters(_state.particles.speed, _state.particles.expansion);
 	}
 
-	if (ImGui::Button("Load images...##Particles")) {
-		// Read arguments.
-		nfdpathset_t outPaths;
-		nfdresult_t result = NFD_OpenDialogMultiple("png;jpg,jpeg;", NULL, &outPaths);
-		System::forceLocale();
-
-		if (result == NFD_OKAY) {
-			std::vector<std::string> paths;
-			for (size_t i = 0; i < NFD_PathSet_GetCount(&outPaths); ++i) {
-				nfdchar_t *outPath = NFD_PathSet_GetPath(&outPaths, i);
-				const std::string imageFilePath = std::string(outPath);
-				paths.push_back(imageFilePath);
-			}
-			if (_state.particles.tex != ResourcesManager::getTextureFor("blankarray")) {
-				glDeleteTextures(1, &_state.particles.tex);
-			}
-			_state.particles.tex = loadTextureArray(paths, false, _state.particles.texCount);
-			NFD_PathSet_Free(&outPaths);
-			if (_state.particles.scale <= 9.0f) {
-				_state.particles.scale = 10.0f;
-			}
-			// Save the paths to the state.
-			_state.particles.imagePaths = "";
-			for(size_t pid = 0; pid < paths.size(); ++pid){
-				_state.particles.imagePaths.append(pid == 0 ? "" : " ");
-				_state.particles.imagePaths.append(paths[pid]);
-			}
-		}
-	}
-	ImGuiSameLine();
-	ImGui::TextDisabled("(?)");
-	if (ImGui::IsItemHovered()) {
-		ImGui::BeginTooltip();
-		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-		ImGui::TextUnformatted("You can select multiple images (PNG or JPEG). They should be square and greyscale, where black is transparent, white opaque.");
-		ImGui::PopTextWrapPos();
-		ImGui::EndTooltip();
-	}
-
 	ImGuiSameLine(COLUMN_SIZE);
-	if (ImGui::Button("Clear images##TextureParticles")) {
-		if (_state.particles.tex != ResourcesManager::getTextureFor("blankarray")) {
-			glDeleteTextures(1, &_state.particles.tex);
-		}
-		// Use a white square particle appearance by default.
-		_state.particles.tex =  ResourcesManager::getTextureFor("blankarray");
-		_state.particles.texCount = 1;
-		_state.particles.scale = 1.0f;
-		_state.particles.imagePaths = "";
+
+	if(ImGui::Button("Configure images...##Particles")) {
+		_showParticleEditor = true;
+		_backupParticlesOptions = _state.particles;
 	}
+
 	ImGui::PopID();
 }
 
@@ -1385,8 +1346,153 @@ void Renderer::showSetEditor(){
 		}
 	}
 	ImGui::End();
+}
 
+void Renderer::showParticlesEditor(){
 
+	const unsigned int colWidth = 270;
+	const unsigned int colButtonWidth = 20;
+	const float offset = 8;
+	const unsigned int thumbSize = 24;
+	const unsigned int thumbDisplaySize = _guiScale * thumbSize;
+
+	// For previewing.
+	static std::vector<GLuint> previewTextures;
+	if(previewTextures.empty() && !_state.particles.imagePaths.empty()){
+		previewTextures = generate2DViewsOfArray(_state.particles.tex, thumbSize);
+	}
+
+	// Initial window position.
+	const ImVec2 & screenSize = ImGui::GetIO().DisplaySize;
+	ImGui::SetNextWindowPos(ImVec2(screenSize.x * 0.5f, screenSize.y * 0.1f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.0f));
+	ImGui::SetNextWindowSize({360, 360}, ImGuiCond_FirstUseEver);
+
+	if(ImGui::Begin("Particle Images Editor", &_showParticleEditor)){
+
+		bool refreshTextures = false;
+
+		// Header
+		ImGui::TextWrapped("You can select multiple images (PNG or JPEG). They should be square and in grey levels, where black indicates transparent regions, and white regions are fully opaque.");
+
+		if(ImGui::Button("Clear all")){
+			_state.particles.imagePaths.clear();
+			refreshTextures = true;
+		}
+		ImGuiSameLine();
+		// Just restore the last backup.
+		if(ImGui::Button("Reset")){
+			_state.particles = _backupParticlesOptions;
+			refreshTextures = true;
+		}
+		ImGui::Separator();
+
+		// List of existing keys.
+		// Keep some room at the bottom for the "new key" section.
+		ImVec2 listSize = ImGui::GetContentRegionAvail();
+		listSize.y -= 1.5 * ImGui::GetTextLineHeightWithSpacing();
+
+		if(ImGui::BeginTable("#List", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX |  ImGuiTableFlags_BordersH, listSize)){
+			const size_t rowCount = _state.particles.imagePaths.size();
+
+			// Header
+			ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
+			ImGui::TableSetupColumn("Preview", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoHeaderLabel, thumbDisplaySize);
+			ImGui::TableSetupColumn("File", ImGuiTableColumnFlags_WidthStretch);
+			ImGui::TableSetupColumn("Remove", ImGuiTableColumnFlags_NoHeaderLabel | ImGuiTableColumnFlags_WidthFixed, _guiScale * colButtonWidth);
+			ImGui::TableHeadersRow();
+
+			int removeIndex = -1;
+			for(size_t row = 0u; row < rowCount; ++row){
+
+				const std::string& path = _state.particles.imagePaths[row];
+
+				ImGui::TableNextColumn();
+				ImGui::PushID(row);
+				if(ImGui::Selectable("##rowSelector", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap, ImVec2(0, thumbDisplaySize))) {
+					// TODO: open directory in file browser.
+				}
+				if(ImGui::IsItemHovered()){
+					ImGui::SetTooltip("%s",path.c_str());
+				}
+				if(row < previewTextures.size()){
+					ImGui::SameLine();
+					ImGui::Image((ImTextureID)(uint64_t)previewTextures[row], ImVec2(thumbDisplaySize,thumbDisplaySize), ImVec2(0,1), ImVec2(1,0));
+				}
+				ImGui::TableNextColumn();
+				ImGui::AlignTextToFramePadding();
+				ImGuiPushItemWidth(colWidth);
+				// Display the filename.
+				std::string::size_type pos = path.find_last_of("/\\");
+				pos = (pos == std::string::npos) ? 0 : (pos + 1);
+				ImGui::Text("%s", path.c_str() + pos);
+
+				ImGui::PopItemWidth();
+
+				ImGui::TableNextColumn();
+				if(ImGui::Button("x")){
+					removeIndex = int(row);
+				}
+				ImGui::PopID();
+			}
+			ImGui::EndTable();
+
+			// Remove after displaying the table.
+			if(removeIndex >= 0){
+				_state.particles.imagePaths.erase(_state.particles.imagePaths.begin() + removeIndex);
+				refreshTextures = true;
+			}
+		}
+
+		// Section to add a new key.
+		if(ImGui::Button("Add")){
+			// Read arguments.
+			nfdpathset_t outPaths;
+			nfdresult_t result = NFD_OpenDialogMultiple("png;jpg,jpeg;", NULL, &outPaths);
+			System::forceLocale();
+			if(result == NFD_OKAY) {
+				bool wasEmpty = _state.particles.imagePaths.empty();
+				for (size_t i = 0; i < NFD_PathSet_GetCount(&outPaths); ++i) {
+					nfdchar_t *outPath = NFD_PathSet_GetPath(&outPaths, i);
+					const std::string imageFilePath = std::string(outPath);
+					_state.particles.imagePaths.push_back(imageFilePath);
+				}
+				// Ensure particles are zoomed in enough.
+				if(wasEmpty && (_state.particles.scale <= 9.0f)) {
+					_state.particles.scale = 10.0f;
+				}
+				refreshTextures = true;
+			}
+			NFD_PathSet_Free(&outPaths);
+		}
+
+		// Actions
+		if(!_showParticleEditor){
+			// If we are exiting, refresh the existing set.
+			refreshTextures = true;
+		}
+
+		// If refresh is needed, ensure that the texture array is up to date.
+		if(refreshTextures){
+			if (_state.particles.tex != ResourcesManager::getTextureFor("blankarray")) {
+				glDeleteTextures(1, &_state.particles.tex);
+			}
+			glDeleteTextures(previewTextures.size(), previewTextures.data());
+			previewTextures.clear();
+
+			if(_state.particles.imagePaths.empty()){
+				// Use a white square particle appearance by default.
+				_state.particles.tex =  ResourcesManager::getTextureFor("blankarray");
+				_state.particles.texCount = 1;
+				_state.particles.scale = 1.f;
+
+			} else {
+				// Load new particles.
+				_state.particles.tex = loadTextureArray(_state.particles.imagePaths, false, _state.particles.texCount);
+				previewTextures = generate2DViewsOfArray(_state.particles.tex, thumbSize);
+			}
+		}
+	}
+	ImGui::End();
 }
 
 void Renderer::applyBackgroundColor(){
@@ -1528,6 +1634,7 @@ void Renderer::setState(const State & state){
 	_state = state;
 	_state.setOptions.rebuild();
 	_backupSetOptions = _state.setOptions;
+	_backupParticlesOptions = _state.particles;
 	
 	// Update toggles.
 	_layers[Layer::BGTEXTURE].toggle = &_state.background.image;

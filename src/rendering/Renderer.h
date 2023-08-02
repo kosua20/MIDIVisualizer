@@ -138,6 +138,8 @@ private:
 
 	void showSetEditor();
 
+	void showParticlesEditor();
+
 	void applyBackgroundColor();
 
 	void applyAllSettings();
@@ -161,6 +163,7 @@ private:
 	State _state;
 	std::array<Layer, Layer::COUNT> _layers;
 	SetOptions _backupSetOptions;
+	State::ParticlesState _backupParticlesOptions;
 
 	float _timer = 0.0f;
 	float _timerStart = 0.0f;
@@ -193,6 +196,7 @@ private:
 	int _selectedPort = 0;
 	bool _showLayers = false;
 	bool _showSetListEditor = false;
+	bool _showParticleEditor = false;
 	bool _exitAfterRecording = false;
 	bool _fullscreen = false;
 	bool _liveplay = false;
