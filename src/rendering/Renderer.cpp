@@ -979,9 +979,9 @@ void Renderer::showBackgroundOptions(){
 		nfdresult_t result = NFD_OpenDialog("jpg,jpeg;png", NULL, &outPath);
 		System::forceLocale();
 		if (result == NFD_OKAY) {
-			_state.background.imagePath = std::string(outPath);
+			_state.background.imagePath = { std::string(outPath) };
 			glDeleteTextures(1, &_state.background.tex);
-			_state.background.tex = loadTexture(_state.background.imagePath, 4, false);
+			_state.background.tex = loadTexture(_state.background.imagePath[0], 4, false);
 			if(_state.background.tex != 0){
 				_state.background.image = true;
 				// Ensure minimal visibility.
@@ -994,7 +994,7 @@ void Renderer::showBackgroundOptions(){
 	ImGuiSameLine(COLUMN_SIZE);
 	if (ImGui::Button("Clear image##Background")) {
 		_state.background.image = false;
-		_state.background.imagePath = "";
+		_state.background.imagePath.clear();
 		glDeleteTextures(1, &_state.background.tex);
 		_state.background.tex = 0;
 	}
@@ -1550,28 +1550,17 @@ void Renderer::setState(const State & state){
 	// Load the background image.
 	if(!_state.background.imagePath.empty()){
 		glDeleteTextures(1, &_state.background.tex);
-		_state.background.tex = loadTexture(_state.background.imagePath, 4, false);
+		_state.background.tex = loadTexture(_state.background.imagePath[0], 4, false);
 		// Don't modify the rest of the potentially restored state.
 	}
 
 	if(!_state.particles.imagePaths.empty()){
-		const auto & lPaths = _state.particles.imagePaths;
-		// Build the list of paths.
-		std::vector<std::string> paths;
-		std::string::size_type bPos = 0;
-		std::string::size_type ePos = lPaths.find_first_of(" ");
-		while(ePos != std::string::npos) {
-			const std::string value = lPaths.substr(bPos, ePos - bPos);
-			paths.push_back(value);
-			bPos = ePos + 1;
-			ePos = lPaths.find_first_of(" ", bPos);
-		}
 		// Cleanup texture if it's not the default one.
 		if (_state.particles.tex != ResourcesManager::getTextureFor("blankarray")) {
 			glDeleteTextures(1, &_state.particles.tex);
 		}
 		// Load new particles.
-		_state.particles.tex = loadTextureArray(paths, false, _state.particles.texCount);
+		_state.particles.tex = loadTextureArray(state.particles.imagePaths, false, _state.particles.texCount);
 		// Don't modify the rest of the potentially restored state.
 	}
 }

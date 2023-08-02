@@ -324,8 +324,8 @@ void State::updateOptions(){
 	_boolInfos["scroll-reverse"] = &reverseScroll;
 	_boolInfos["scroll-horizontal"] = &horizontalScroll;
 
-	_stringInfos["bg-img-path"] = &background.imagePath;
-	_stringInfos["particles-paths"] = &particles.imagePaths;
+	_pathInfos["bg-img-path"] = &background.imagePath;
+	_pathInfos["particles-paths"] = &particles.imagePaths;
 }
 
 
@@ -372,14 +372,19 @@ void State::save(const std::string & path){
 		configFile << param.first << ": " << val[0] << " " << val[1] << " " << val[2] << std::endl;
 	}
 
-	for(const auto & param : _stringInfos){
-		// Skip empty strings.
+	for(const auto & param : _pathInfos){
+		// Skip empty path collection.
 		if(param.second->empty()){
 			continue;
 		}
+
 		configFile << std::endl << "# " << _sharedInfos[param.first].description << " (";
 		configFile << _sharedInfos[param.first].values << ")" << std::endl;
-		configFile << param.first << ": " << *(param.second) << std::endl;
+		configFile << param.first << ":";
+		for(const std::string& str : *(param.second)){
+			configFile << " " << str;
+		}
+		configFile << std::endl;
 	}
 
 	configFile << std::endl << "# " << _sharedInfos["quality"].description << " (";
@@ -523,15 +528,10 @@ void State::load(const Arguments & configArgs){
 			continue;
 		}
 
-		const auto its = _stringInfos.find(key);
-		if(its != _stringInfos.end()){
+		const auto its = _pathInfos.find(key);
+		if(its != _pathInfos.end()){
 			const auto & opt = its->second;
-			std::string str = arg.second[0];
-			for(size_t tid = 1; tid < arg.second.size(); ++tid){
-				str.append(" ");
-				str.append(arg.second[tid]);
-			}
-			*opt = str;
+			*opt = arg.second;
 			continue;
 		}
 	}
@@ -600,13 +600,13 @@ void State::reset(){
 	background.imageAlpha = 1.0f;
 	background.tex = 0;
 	background.imageBehindKeyboard = false;
-	background.imagePath = "";
+	background.imagePath.clear();
 
 	particles.speed = 0.2f;
 	particles.expansion = 1.0f;
 	particles.scale = 1.0f;
 	particles.count = 256;
-	particles.imagePaths = "";
+	particles.imagePaths.clear();
 	const GLuint blankID = ResourcesManager::getTextureFor("blankarray");
 	particles.tex = blankID;
 	particles.texCount = 1;

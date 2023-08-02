@@ -47,7 +47,7 @@ struct Quality {
 class State {
 public:
 	struct BackgroundState {
-		std::string imagePath; ///< Path to an image on disk.
+		std::vector<std::string> imagePath; ///< Path to an image on disk (expect only one).
 		glm::vec3 color; ///< Background color.
 		glm::vec3 linesColor; ///< Score lines color.
 		glm::vec3 textColor; ///< Score text color.
@@ -64,7 +64,7 @@ public:
 	
 	
 	struct ParticlesState {
-		std::string imagePaths; ///< List of paths to images on disk.
+		std::vector<std::string> imagePaths; ///< List of paths to images on disk.
 		ColorArray colors; ///< Particles color.
 		GLuint tex;
 		int texCount;
@@ -205,7 +205,7 @@ private:
 	std::unordered_map<std::string, int*> _intInfos;
 	std::unordered_map<std::string, float*> _floatInfos;
 	std::unordered_map<std::string, glm::vec3*> _vecInfos;
-	std::unordered_map<std::string, std::string*> _stringInfos;
+	std::unordered_map<std::string, std::vector<std::string>*> _pathInfos;
 	std::string _filePath;
 
 };
