@@ -6,7 +6,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui/imgui.h>
 #include <iostream>
-#include <nfd.h>
+#include <sr_gui.h>
 #include <stdio.h>
 #include <vector>
 
@@ -404,12 +404,13 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		// Load button.
 		if(ImGui::Button("Load MIDI file...")) {
 			// Read arguments.
-			nfdchar_t *outPath = NULL;
-			nfdresult_t result = NFD_OpenDialog(NULL, NULL, &outPath);
+			char* outPath = nullptr;
+			int res = sr_gui_ask_load_file("Load MIDI file", "", "mid", &outPath);
 			System::forceLocale();
-			if (result == NFD_OKAY) {
+			if(res == SR_GUI_VALIDATED && outPath){
 				loadFile(std::string(outPath));
 			}
+			free(outPath);
 		}
 		ImGuiSameLine(COLUMN_SIZE);
 		if(_liveplay){
@@ -432,14 +433,15 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		if(!emptyScene)
 		{
 			if(ImGui::Button("Export MIDI file...")) {
-				nfdchar_t *savePath = NULL;
-				nfdresult_t result = NFD_SaveDialog("mid", NULL, &savePath);
+				char* savePath = nullptr;
+				int res = sr_gui_ask_save_file("Save MIDI file", "", "mid", &savePath);
 				System::forceLocale();
-				if (result == NFD_OKAY && savePath != nullptr) {
+				if(res == SR_GUI_VALIDATED && savePath){
 					std::ofstream outFile = System::openOutputFile(std::string(savePath), true);
 					_scene->save(outFile);
 					outFile.close();
 				}
+				free(savePath);
 			}
 		}
 
@@ -936,10 +938,10 @@ void Renderer::showBackgroundOptions(){
 	ImGui::PopItemWidth();
 	if (ImGui::Button("Load image...##Background")){
 		// Read arguments.
-		nfdchar_t *outPath = NULL;
-		nfdresult_t result = NFD_OpenDialog("jpg,jpeg;png", NULL, &outPath);
+		char *outPath = nullptr;
+		int res = sr_gui_ask_load_file("Select images", "", "jpg,jpeg,png", &outPath);
 		System::forceLocale();
-		if (result == NFD_OKAY) {
+		if(res == SR_GUI_VALIDATED && outPath){
 			_state.background.imagePath = { std::string(outPath) };
 			glDeleteTextures(1, &_state.background.tex);
 			_state.background.tex = loadTexture(_state.background.imagePath[0], 4, false);
@@ -951,6 +953,7 @@ void Renderer::showBackgroundOptions(){
 				}
 			}
 		}
+		free(outPath);
 	}
 	ImGuiSameLine(COLUMN_SIZE);
 	if (ImGui::Button("Clear image##Background")) {
@@ -974,25 +977,27 @@ void Renderer::showBottomButtons(){
 
 	if (ImGui::Button("Save config...")) {
 		// Read arguments.
-		nfdchar_t *savePath = NULL;
-		nfdresult_t result = NFD_SaveDialog("ini", NULL, &savePath);
+		char* savePath = nullptr;
+		int res = sr_gui_ask_save_file("Create config file", "", "ini", &savePath);
 		System::forceLocale();
-		if (result == NFD_OKAY) {
+		if(res == SR_GUI_VALIDATED && savePath){
 			_state.save(std::string(savePath));
 		}
+		free(savePath);
 	}
 	ImGuiSameLine();
 
 	if (ImGui::Button("Load config...")) {
 		// Read arguments.
-		nfdchar_t *outPath = NULL;
-		nfdresult_t result = NFD_OpenDialog("ini", NULL, &outPath);
+		char* outPath = nullptr;
+		int res = sr_gui_ask_load_file("Select config file", "", "ini", &outPath);
 		System::forceLocale();
-		if (result == NFD_OKAY) {
+		if(res == SR_GUI_VALIDATED && outPath){
 			if(_state.load(std::string(outPath))){
 				setState(_state);
 			}
 		}
+		free(outPath);
 	}
 	ImGuiSameLine();
 
@@ -1174,24 +1179,26 @@ void Renderer::showSetEditor(){
 
 		// Load/save as CSV.
 		if(ImGui::Button("Save control points...")){
-			nfdchar_t *savePath = NULL;
-			nfdresult_t result = NFD_SaveDialog("csv", NULL, &savePath);
+			char* savePath = nullptr;
+			int res = sr_gui_ask_save_file("Create CSV file", "", "csv", &savePath);
 			System::forceLocale();
-			if (result == NFD_OKAY) {
+			if(res == SR_GUI_VALIDATED && savePath){
 				const std::string content = _state.setOptions.toKeysString("\n");
 				System::writeStringToFile(std::string(savePath), content);
 			}
+			free(savePath);
 		}
 		ImGuiSameLine();
 		if(ImGui::Button("Load control points...")){
 			// Read arguments.
-			nfdchar_t *outPath = NULL;
-			nfdresult_t result = NFD_OpenDialog("csv", NULL, &outPath);
+			char* outPath = nullptr;
+			int res = sr_gui_ask_load_file("Select CSV file", "", "csv", &outPath);
 			System::forceLocale();
-			if (result == NFD_OKAY) {
+			if(res == SR_GUI_VALIDATED && outPath){
 				const std::string str = System::loadStringFromFile(std::string(outPath));
 				_state.setOptions.fromKeysString(str);
 			}
+			free(outPath);
 			refreshSetOptions = true;
 		}
 		ImGuiSameLine();
@@ -1409,7 +1416,8 @@ void Renderer::showParticlesEditor(){
 				ImGui::TableNextColumn();
 				ImGui::PushID(row);
 				if(ImGui::Selectable("##rowSelector", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap, ImVec2(0, thumbDisplaySize))) {
-					// TODO: open directory in file browser.
+					// Open directory in file browser.
+					sr_gui_open_in_explorer(path.c_str());
 				}
 				if(ImGui::IsItemHovered()){
 					ImGui::SetTooltip("%s",path.c_str());
@@ -1446,14 +1454,14 @@ void Renderer::showParticlesEditor(){
 		// Section to add a new key.
 		if(ImGui::Button("Add")){
 			// Read arguments.
-			nfdpathset_t outPaths;
-			nfdresult_t result = NFD_OpenDialogMultiple("png;jpg,jpeg;", NULL, &outPaths);
+			char** outPaths = nullptr;
+			int outCount = 0;
+			int res = sr_gui_ask_load_files("Select images", "", "png,jpg,jpeg", &outPaths, &outCount);
 			System::forceLocale();
-			if(result == NFD_OKAY) {
+			if((res == SR_GUI_VALIDATED) && outPaths && outCount > 0){
 				bool wasEmpty = _state.particles.imagePaths.empty();
-				for (size_t i = 0; i < NFD_PathSet_GetCount(&outPaths); ++i) {
-					nfdchar_t *outPath = NFD_PathSet_GetPath(&outPaths, i);
-					const std::string imageFilePath = std::string(outPath);
+				for (unsigned int i = 0; i < (unsigned int)outCount; ++i) {
+					const std::string imageFilePath = std::string(outPaths[i]);
 					_state.particles.imagePaths.push_back(imageFilePath);
 				}
 				// Ensure particles are zoomed in enough.
@@ -1462,7 +1470,10 @@ void Renderer::showParticlesEditor(){
 				}
 				refreshTextures = true;
 			}
-			NFD_PathSet_Free(&outPaths);
+			for(unsigned int i = 0; i < (unsigned int)outCount; ++i){
+				free(outPaths[i]);
+			}
+			free(outPaths);
 		}
 
 		// Actions

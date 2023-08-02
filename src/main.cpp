@@ -12,7 +12,7 @@
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
-#include <nfd.h>
+#include <sr_gui.h>
 #include <iostream>
 #include <algorithm>
 
@@ -205,6 +205,8 @@ int main( int argc, char** argv) {
 		return -1;
 	}
 
+	sr_gui_init();
+
 	// The font should be maintained alive until the atlas is built.
 	ImFontConfig font;
 	// We need a scope to ensure the renderer is deleted before the OpenGL context is destroyed.
@@ -312,6 +314,7 @@ int main( int argc, char** argv) {
 		renderer.clean();
 	}
 
+	sr_gui_cleanup();
 	// Remove the window.
 	glfwDestroyWindow(window);
 	// Clean other resources

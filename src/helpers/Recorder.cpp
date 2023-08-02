@@ -3,7 +3,7 @@
 #include "../rendering/State.h"
 
 #include <imgui/imgui.h>
-#include <nfd.h>
+#include <sr_gui.h>
 #include <lodepng/lodepng.h>
 
 #include <iostream>
@@ -302,21 +302,22 @@ bool Recorder::drawGUI(float scale){
 
 		if (ImGui::Button(exportButtonName.c_str(), buttonSize)) {
 			// Read arguments.
-			nfdchar_t *outPath = NULL;
-
 			if(_config.format == Export::Format::PNG){
-				nfdresult_t result = NFD_PickFolder(NULL, &outPath);
+				char* outPath = nullptr;
+				int res = sr_gui_ask_directory("Select export directory", "", &outPath);
 				System::forceLocale();
-				if(result == NFD_OKAY) {
+				if((res == SR_GUI_VALIDATED) && outPath){
 					_config.path = std::string(outPath);
 					shouldStart = true;
 					ImGui::CloseCurrentPopup();
 				}
+				free(outPath);
 			} else {
 				const std::string & ext = _formats.at(int(_config.format)).ext;
-				nfdresult_t result = NFD_SaveDialog(ext.c_str(), NULL, &outPath);
+				char* outPath = nullptr;
+				int res = sr_gui_ask_save_file("Create export video", "", ext.c_str(), &outPath);
 				System::forceLocale();
-				if(result == NFD_OKAY) {
+				if((res == SR_GUI_VALIDATED) && outPath){
 					_config.path = std::string(outPath);
 					const std::string fullExt = "." + ext;
 					// Append extension if needed.
@@ -326,6 +327,7 @@ bool Recorder::drawGUI(float scale){
 					shouldStart = true;
 					ImGui::CloseCurrentPopup();
 				}
+				free(outPath);
 			}
 
 		}
