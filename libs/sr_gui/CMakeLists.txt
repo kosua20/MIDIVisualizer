@@ -1,0 +1,30 @@
+project(sr_gui)
+
+set(SR_GUI_SOURCES include/sr_gui.h src/sr_gui_internal.h)
+
+if(WIN32)
+	list(APPEND SR_GUI_SOURCES src/sr_gui_win.cpp)
+elseif(APPLE)
+	find_library(APPKIT_LIBRARY AppKit)
+	list(APPEND SR_GUI_SOURCES src/sr_gui_mac.m)
+elseif(UNIX AND NOT APPLE)
+	find_package(PkgConfig REQUIRED)
+	pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+	list(APPEND SR_GUI_SOURCES src/sr_gui_lin.c)
+endif()
+
+add_library(sr_gui STATIC ${SR_GUI_SOURCES})
+set_target_properties(sr_gui PROPERTIES FOLDER "sr_gui")
+target_compile_definitions(sr_gui PRIVATE _CRT_SECURE_NO_WARNINGS)
+target_include_directories(sr_gui PUBLIC ${sr_gui_SOURCE_DIR}/include/)
+
+
+if(WIN32)
+	target_link_libraries(sr_gui PRIVATE User2 Comdlg32 Comctl32 runtimeobject)
+elseif(APPLE)
+	target_link_libraries(sr_gui PRIVATE ${APPKIT_LIBRARY})
+elseif(UNIX AND NOT APPLE)
+	target_include_directories(sr_gui PRIVATE ${GTK3_INCLUDE_DIRS})
+	target_link_libraries(sr_gui PRIVATE ${GTK3_LIBRARIES})
+	target_link_libraries(sr_gui PRIVATE libnotify)
+endif()
