@@ -1396,7 +1396,7 @@ void Renderer::showParticlesEditor(){
 
 			// Header
 			ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
-			ImGui::TableSetupColumn("Preview", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoHeaderLabel, thumbDisplaySize);
+			ImGui::TableSetupColumn("Preview", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoHeaderLabel, 1.5f * thumbDisplaySize);
 			ImGui::TableSetupColumn("File", ImGuiTableColumnFlags_WidthStretch);
 			ImGui::TableSetupColumn("Remove", ImGuiTableColumnFlags_NoHeaderLabel | ImGuiTableColumnFlags_WidthFixed, _guiScale * colButtonWidth);
 			ImGui::TableHeadersRow();
