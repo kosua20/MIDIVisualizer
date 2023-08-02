@@ -20,7 +20,8 @@ target_include_directories(sr_gui PUBLIC ${sr_gui_SOURCE_DIR}/include/)
 
 
 if(WIN32)
-	target_link_libraries(sr_gui PRIVATE User2 Comdlg32 Comctl32 runtimeobject)
+	target_link_libraries(sr_gui PRIVATE User32 Comdlg32 Comctl32 Shell32 runtimeobject)
+	target_compile_definitions(sr_gui PRIVATE _UNICODE UNICODE)
 elseif(APPLE)
 	target_link_libraries(sr_gui PRIVATE ${APPKIT_LIBRARY})
 elseif(UNIX AND NOT APPLE)

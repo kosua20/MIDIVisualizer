@@ -17,6 +17,7 @@
 #	include <appmodel.h>
 #	include <wrl/wrappers/corewrappers.h>
 #	include <string>
+#   include <Shlobj.h>
 
 #	pragma comment(linker, "\"/manifestdependency:type='win32' \
 name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
@@ -774,23 +775,41 @@ int sr_gui_ask_color(unsigned char color[3]) {
 }
 
 int sr_gui_open_in_explorer(const char* path){
-	// TODO: implement
-	/*
-	IShellFolder desktop;
-	HRESULT hr = SHGetDesktopFolder(desktop.Receive());
-	ITEMIDLIST file_item;
 
 	WCHAR* pathW = _sr_gui_widen_string(path);
-	hr = desktop->ParseDisplayName(NULL, NULL, pathW, NULL, &file_item, NULL);
 
-	hr = SHOpenFolderAndSelectItems(file_item, 0, NULL, NULL);
-	if(FAILED(hr)){
-		ShellExecute(NULL, L"open", path, NULL, NULL, SW_SHOW); // need parent probably
+	bool done = false;
+	IShellFolder* desktop = NULL;
+	HRESULT hr = SHGetDesktopFolder(&desktop);
+	if (!FAILED(hr)) {
+		LPITEMIDLIST file_item = NULL;
+		hr = desktop->ParseDisplayName(NULL, NULL, pathW, NULL, &file_item, NULL);
+		if (!FAILED(hr)) {
+			//hr = SHOpenFolderAndSelectItems(file_item, 0, NULL, NULL);
+			//done = !FAILED(hr);
+		}
+		if (file_item) {
+			CoTaskMemFree(file_item);
+		}
 	}
+	if (desktop) {
+		desktop->Release();
+	}
+	if (!done) {
+		// Open parent directory using shell.
+		// Extract prefix path by finding the last separator.
+		wchar_t* tail = wcsrchr(pathW, '\\');
+		if (tail == NULL) {
+			tail = wcsrchr(pathW, '/');
+		}
+		if (tail) {
+			*tail = '\0';
+		}
+		ShellExecute(NULL, L"open", pathW, NULL, NULL, SW_SHOW);
+	}
+	
 	SR_GUI_FREE(pathW);
 	return SR_GUI_VALIDATED;
-	*/
-	return SR_GUI_CANCELLED;
 }
 
 #endif
