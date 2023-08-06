@@ -25,7 +25,7 @@ MIDIScene::MIDIScene(){
 void MIDIScene::renderSetup(){
 
 	std::vector<float> vertices = {-0.5,-0.5, 0.5, -0.5, 0.5,0.5, -0.5, 0.5};
-	std::vector<unsigned int> indices = {0, 1, 3, 3, 1, 2};
+	std::vector<unsigned int> indices = {1, 2, 0, 2, 3, 0};
 	_primitiveCount = indices.size();
 	// Create an array buffer to host the geometry data.
 	GLuint vbo = 0;
@@ -79,6 +79,15 @@ void MIDIScene::renderSetup(){
  	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), &(indices[0]), GL_STATIC_DRAW);
 
 	glBindVertexArray(0);
+
+	glUseProgram(_programId);
+	glActiveTexture(GL_TEXTURE0);
+	GLuint texNotesUniID0 = glGetUniformLocation(_programId, "majorTexture");
+	glUniform1i(texNotesUniID0, 0);
+	glActiveTexture(GL_TEXTURE1);
+	GLuint texNotesUniID1 = glGetUniformLocation(_programId, "minorTexture");
+	glUniform1i(texNotesUniID1, 1);
+	glUseProgram(0);
 	checkGLError();
 
 	// Flashes shaders.
@@ -336,6 +345,15 @@ void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const Sta
 	GLuint reverseId = glGetUniformLocation(_programId, "reverseMode");
 	GLuint edgeWidthId = glGetUniformLocation(_programId, "edgeWidth");
 	GLuint edgeBrightnessId = glGetUniformLocation(_programId, "edgeBrightness");
+	GLuint hasMajTexId = glGetUniformLocation(_programId, "useMajorTexture");
+	GLuint hasMinTexId = glGetUniformLocation(_programId, "useMinorTexture");
+	GLuint majTexScrollId = glGetUniformLocation(_programId, "scrollMajorTexture");
+	GLuint minTexScrollId = glGetUniformLocation(_programId, "scrollMinorTexture");
+
+	GLuint texturesScaleID = glGetUniformLocation(_programId, "texturesScale");
+	GLuint texturesStrengthID = glGetUniformLocation(_programId, "texturesStrength");
+	GLuint cornerRadiusID = glGetUniformLocation(_programId, "cornerRadius");
+
 	glUniform2fv(screenId,1, &(invScreenSize[0]));
 	glUniform1f(timeId, time);
 	glUniform1f(colorScaleId, prepass ? 0.6f: 1.0f);
@@ -345,6 +363,22 @@ void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const Sta
 	glUniform1i(reverseId, reverseScroll ? 1 : 0);
 	glUniform1f(edgeWidthId, state.edgeWidth);
 	glUniform1f(edgeBrightnessId, state.edgeBrightness);
+
+	glUniform2f(texturesScaleID, state.majorTexScale, state.minorTexScale);
+	glUniform2f(texturesStrengthID, state.majorTexAlpha, state.minorTexAlpha);
+	glUniform1f(majTexScrollId, state.majorTexScroll);
+	glUniform1f(minTexScrollId, state.minorTexScroll);
+	const float maxCornerRadius = 0.12f; // Internal tweaking to avoid notes whose edges are not timing-aligned.
+	glUniform1f(cornerRadiusID, state.cornerRadius * maxCornerRadius);
+
+	// Pass note textures if present, and corresponding flags.
+	glUniform1i(hasMajTexId, int(state.majorTex != 0));
+	glUniform1i(hasMinTexId, int(state.minorTex != 0));
+	// IDs below can be 0
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, state.majorTex);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, state.minorTex);
 	
 	// Draw the geometry.
 	glBindVertexArray(_vao);
