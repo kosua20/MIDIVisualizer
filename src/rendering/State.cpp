@@ -101,6 +101,8 @@ void State::defineOptions(){
 	_sharedInfos["show-score"] = {"Should the score (lines, numbers) be shown", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["show-bg-img"] = {"Use a background texture", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["show-notes"] = {"Should the notes be shown", OptionInfos::Type::BOOLEAN};
+	_sharedInfos["notes-major-img-scroll"] = {"Should the major notes texture scroll with the notes", OptionInfos::Type::BOOLEAN};
+	_sharedInfos["notes-minor-img-scroll"] = {"Should the minor notes texture scroll with the notes", OptionInfos::Type::BOOLEAN};
 
 	// Floats.
 	_sharedInfos["time-scale"] = {"Vertical display scale", OptionInfos::Type::FLOAT};
@@ -115,7 +117,15 @@ void State::defineOptions(){
 	_sharedInfos["bg-img-opacity"] = {"Background opacity", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
 	_sharedInfos["fadeout-notes"] = {"Notes fade-out at the edge of the screen", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
 	_sharedInfos["notes-edge-width"] = {"Control the width of the edge around notes", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
-	_sharedInfos["notes-edge-brightness"] = {"Control the brightness of the edge around notes", OptionInfos::Type::FLOAT, {0.0f, 100.0f}};
+	_sharedInfos["notes-edge-intensity"] = {"Control the intensity of the edge around notes", OptionInfos::Type::FLOAT, {0.0f, 100.0f}};
+
+	_sharedInfos["notes-corner-radius"]  = {"Rounding radius of the notes corners", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos["notes-major-img-scale"]    = {"Scale of the texture applied to major notes", OptionInfos::Type::FLOAT};
+	_sharedInfos["notes-major-img-intensity"] = {"Intensity of the texture applied to major notes", OptionInfos::Type::FLOAT, {0.0, 1.0f}};
+	_sharedInfos["notes-minor-img-scale"]    = {"Scale of the texture applied to minor notes", OptionInfos::Type::FLOAT};
+	_sharedInfos["notes-minor-img-intensity"] = {"Intensity of the texture applied to minor notes", OptionInfos::Type::FLOAT, {0.0, 1.0f}};
+
+
 
 	// Colors.
 	_sharedInfos["color-major"] = {"Major notes color", OptionInfos::Type::COLOR};
@@ -194,7 +204,9 @@ void State::defineOptions(){
 
 	// Paths.
 	_sharedInfos["bg-img-path"] = {"Path to an image on disk to use as background", OptionInfos::Type::PATH};
-	_sharedInfos["particles-paths"] = {"Set of paths (separated by spaces) to B&W images on disk to use as particles", OptionInfos::Type::PATH};
+	_sharedInfos["particles-paths"] = {"Set of paths (separated by spaces) to black and white images on disk to use as particles", OptionInfos::Type::PATH};
+	_sharedInfos["notes-major-img-path"] = {"Path to an image on disk to use as texture for the major notes", OptionInfos::Type::PATH};
+	_sharedInfos["notes-minor-img-path"] = {"Path to an image on disk to use as texture for the minor notes", OptionInfos::Type::PATH};
 	
 }
 
@@ -265,6 +277,9 @@ void State::updateOptions(){
 	_boolInfos["show-score"] = &showScore;
 	_boolInfos["show-bg-img"] = &background.image;
 	_boolInfos["show-notes"] = &showNotes;
+	_boolInfos["notes-major-img-scroll"] = &notes.majorTexScroll;
+	_boolInfos["notes-minor-img-scroll"] = &notes.minorTexScroll;
+
 	_floatInfos["time-scale"] = &scale;
 	_floatInfos["minor-size"] = &background.minorsWidth;
 	_floatInfos["particles-size"] = &particles.scale;
@@ -277,7 +292,13 @@ void State::updateOptions(){
 	_floatInfos["bg-img-opacity"] = &background.imageAlpha;
 	_floatInfos["fadeout-notes"] = &notes.fadeOut;
 	_floatInfos["notes-edge-width"] = &notes.edgeWidth;
-	_floatInfos["notes-edge-brightness"] = &notes.edgeBrightness;
+	_floatInfos["notes-edge-intensity"] = &notes.edgeBrightness;
+	_floatInfos["notes-corner-radius"] = &notes.cornerRadius;
+	_floatInfos["notes-major-img-scale"] = &notes.majorTexScale;
+	_floatInfos["notes-major-img-intensity"] = &notes.majorTexAlpha;
+	_floatInfos["notes-minor-img-scale"] = &notes.minorTexScale;
+	_floatInfos["notes-minor-img-intensity"] = &notes.minorTexAlpha;
+
 	_vecInfos["color-bg"] = &background.color;
 	_vecInfos["color-keyboard-major"] = &keyboard.majorColor[0];
 	_vecInfos["color-keyboard-minor"] = &keyboard.minorColor[0];
@@ -326,6 +347,9 @@ void State::updateOptions(){
 
 	_pathInfos["bg-img-path"] = &background.imagePath;
 	_pathInfos["particles-paths"] = &particles.imagePaths;
+
+	_pathInfos["notes-major-path"] = &notes.majorImagePath;
+	_pathInfos["notes-minor-path"] = &notes.minorImagePath;
 }
 
 
@@ -629,6 +653,17 @@ void State::reset(){
 	notes.edgeBrightness = 1.05f;
 	notes.edgeWidth = 0.1f;
 	notes.fadeOut = 0.0f;
+	notes.cornerRadius = 0.09f;
+	notes.majorTexAlpha = 1.0;
+	notes.majorTexScale = 5.0f;
+	notes.minorTexAlpha = 1.0;
+	notes.minorTexScale = 5.0f;
+	notes.majorTexScroll = true;
+	notes.minorTexScroll = true;
+	notes.majorImagePath.clear();
+	notes.minorImagePath.clear();
+	notes.minorTex = 0;
+	notes.majorTex = 0;
 	
 	minKey = 21;
 	maxKey = 108;

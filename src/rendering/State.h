@@ -106,11 +106,22 @@ public:
 	};
 
 	struct NotesState {
+		std::vector<std::string> majorImagePath; ///< Path to major notes background texture.
+		std::vector<std::string> minorImagePath; ///< Path to minor notes background texture.
 		ColorArray majorColors; ///< Major notes color.
 		ColorArray minorColors; ///< Minor notes color.
 		float fadeOut; ///< Notes fade out at the top.
 		float edgeWidth; ///< Edges drawn around the notes.
 		float edgeBrightness; ///< Factor applied around the notes edges.
+		float cornerRadius; ///< Notes rounding factor.
+		float majorTexScale; ///< Scale for the major texture
+		float minorTexScale; ///< Scale for the minor texture
+		float majorTexAlpha; ///< Intensity for the major texture
+		float minorTexAlpha; ///< Intensity for the minor texture
+		bool majorTexScroll; ///< Scrolling for the major texture
+		bool minorTexScroll; ///< Scrolling for the minor texture
+		GLuint majorTex;
+		GLuint minorTex;
 	};
 
 	struct FlashesState {
