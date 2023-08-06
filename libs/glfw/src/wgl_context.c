@@ -24,6 +24,8 @@
 //    distribution.
 //
 //========================================================================
+// Please use C89 style variable declarations in this file because VS 2010
+//========================================================================
 
 #include "internal.h"
 
@@ -75,8 +77,8 @@ static int choosePixelFormat(_GLFWwindow* window,
     {
         const int attrib = WGL_NUMBER_PIXEL_FORMATS_ARB;
 
-        if (!_glfw.wgl.GetPixelFormatAttribivARB(window->context.wgl.dc,
-                                                 1, 0, 1, &attrib, &nativeCount))
+        if (!wglGetPixelFormatAttribivARB(window->context.wgl.dc,
+                                          1, 0, 1, &attrib, &nativeCount))
         {
             _glfwInputErrorWin32(GLFW_PLATFORM_ERROR,
                                  "WGL: Failed to retrieve pixel format attribute");
@@ -139,10 +141,10 @@ static int choosePixelFormat(_GLFWwindow* window,
         {
             // Get pixel format attributes through "modern" extension
 
-            if (!_glfw.wgl.GetPixelFormatAttribivARB(window->context.wgl.dc,
-                                                     pixelFormat, 0,
-                                                     attribCount,
-                                                     attribs, values))
+            if (!wglGetPixelFormatAttribivARB(window->context.wgl.dc,
+                                              pixelFormat, 0,
+                                              attribCount,
+                                              attribs, values))
             {
                 _glfwInputErrorWin32(GLFW_PLATFORM_ERROR,
                                     "WGL: Failed to retrieve pixel format attributes");
@@ -163,6 +165,9 @@ static int choosePixelFormat(_GLFWwindow* window,
             if (findAttribValue(WGL_ACCELERATION_ARB) == WGL_NO_ACCELERATION_ARB)
                 continue;
 
+            if (findAttribValue(WGL_DOUBLE_BUFFER_ARB) != fbconfig->doublebuffer)
+                continue;
+
             u->redBits = findAttribValue(WGL_RED_BITS_ARB);
             u->greenBits = findAttribValue(WGL_GREEN_BITS_ARB);
             u->blueBits = findAttribValue(WGL_BLUE_BITS_ARB);
@@ -180,8 +185,6 @@ static int choosePixelFormat(_GLFWwindow* window,
 
             if (findAttribValue(WGL_STEREO_ARB))
                 u->stereo = GLFW_TRUE;
-            if (findAttribValue(WGL_DOUBLE_BUFFER_ARB))
-                u->doublebuffer = GLFW_TRUE;
 
             if (_glfw.wgl.ARB_multisample)
                 u->samples = findAttribValue(WGL_SAMPLES_ARB);
@@ -237,6 +240,9 @@ static int choosePixelFormat(_GLFWwindow* window,
             if (pfd.iPixelType != PFD_TYPE_RGBA)
                 continue;
 
+            if (!!(pfd.dwFlags & PFD_DOUBLEBUFFER) != fbconfig->doublebuffer)
+                continue;
+
             u->redBits = pfd.cRedBits;
             u->greenBits = pfd.cGreenBits;
             u->blueBits = pfd.cBlueBits;
@@ -254,8 +260,6 @@ static int choosePixelFormat(_GLFWwindow* window,
 
             if (pfd.dwFlags & PFD_STEREO)
                 u->stereo = GLFW_TRUE;
-            if (pfd.dwFlags & PFD_DOUBLEBUFFER)
-                u->doublebuffer = GLFW_TRUE;
         }
 
         u->handle = pixelFormat;
@@ -360,7 +364,7 @@ static void swapIntervalWGL(int interval)
     }
 
     if (_glfw.wgl.EXT_swap_control)
-        _glfw.wgl.SwapIntervalEXT(interval);
+        wglSwapIntervalEXT(interval);
 }
 
 static int extensionSupportedWGL(const char* extension)
@@ -368,9 +372,9 @@ static int extensionSupportedWGL(const char* extension)
     const char* extensions = NULL;
 
     if (_glfw.wgl.GetExtensionsStringARB)
-        extensions = _glfw.wgl.GetExtensionsStringARB(wglGetCurrentDC());
+        extensions = wglGetExtensionsStringARB(wglGetCurrentDC());
     else if (_glfw.wgl.GetExtensionsStringEXT)
-        extensions = _glfw.wgl.GetExtensionsStringEXT();
+        extensions = wglGetExtensionsStringEXT();
 
     if (!extensions)
         return GLFW_FALSE;
@@ -387,8 +391,6 @@ static GLFWglproc getProcAddressWGL(const char* procname)
     return (GLFWglproc) GetProcAddress(_glfw.wgl.instance, procname);
 }
 
-// Destroy the OpenGL context
-//
 static void destroyContextWGL(_GLFWwindow* window)
 {
     if (window->context.wgl.handle)
@@ -693,8 +695,7 @@ GLFWbool _glfwCreateContextWGL(_GLFWwindow* window,
         setAttrib(0, 0);
 
         window->context.wgl.handle =
-            _glfw.wgl.CreateContextAttribsARB(window->context.wgl.dc,
-                                              share, attribs);
+            wglCreateContextAttribsARB(window->context.wgl.dc, share, attribs);
         if (!window->context.wgl.handle)
         {
             const DWORD error = GetLastError();
@@ -786,7 +787,7 @@ GLFWAPI HGLRC glfwGetWGLContext(GLFWwindow* handle)
     _GLFWwindow* window = (_GLFWwindow*) handle;
     _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
 
-    if (window->context.client == GLFW_NO_API)
+    if (window->context.source != GLFW_NATIVE_CONTEXT_API)
     {
         _glfwInputError(GLFW_NO_WINDOW_CONTEXT, NULL);
         return NULL;

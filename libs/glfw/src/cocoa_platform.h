@@ -28,18 +28,23 @@
 #include <dlfcn.h>
 
 #include <Carbon/Carbon.h>
-#include <CoreVideo/CVBase.h>
-#include <CoreVideo/CVDisplayLink.h>
 
 // NOTE: All of NSGL was deprecated in the 10.14 SDK
 //       This disables the pointless warnings for every symbol we use
+#ifndef GL_SILENCE_DEPRECATION
 #define GL_SILENCE_DEPRECATION
+#endif
 
 #if defined(__OBJC__)
 #import <Cocoa/Cocoa.h>
 #else
 typedef void* id;
 #endif
+
+// NOTE: Many Cocoa enum values have been renamed and we need to build across
+//       SDK versions where one is unavailable or deprecated.
+//       We use the newer names in code and replace them with the older names if
+//       the base SDK does not provide the newer names.
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 101200
  #define NSBitmapFormatAlphaNonpremultiplied NSAlphaNonpremultipliedBitmapFormat
@@ -59,7 +64,17 @@ typedef void* id;
  #define NSWindowStyleMaskTitled NSTitledWindowMask
 #endif
 
+// NOTE: Many Cocoa dynamically linked constants have been renamed and we need
+//       to build across SDK versions where one is unavailable or deprecated.
+//       We use the newer names in code and replace them with the older names if
+//       the deployment target is older than the newer names.
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101300
+ #define NSPasteboardTypeURL NSURLPboardType
+#endif
+
 typedef VkFlags VkMacOSSurfaceCreateFlagsMVK;
+typedef VkFlags VkMetalSurfaceCreateFlagsEXT;
 
 typedef struct VkMacOSSurfaceCreateInfoMVK
 {
@@ -69,7 +84,16 @@ typedef struct VkMacOSSurfaceCreateInfoMVK
     const void*                     pView;
 } VkMacOSSurfaceCreateInfoMVK;
 
+typedef struct VkMetalSurfaceCreateInfoEXT
+{
+    VkStructureType                 sType;
+    const void*                     pNext;
+    VkMetalSurfaceCreateFlagsEXT    flags;
+    const void*                     pLayer;
+} VkMetalSurfaceCreateInfoEXT;
+
 typedef VkResult (APIENTRY *PFN_vkCreateMacOSSurfaceMVK)(VkInstance,const VkMacOSSurfaceCreateInfoMVK*,const VkAllocationCallbacks*,VkSurfaceKHR*);
+typedef VkResult (APIENTRY *PFN_vkCreateMetalSurfaceEXT)(VkInstance,const VkMetalSurfaceCreateInfoEXT*,const VkAllocationCallbacks*,VkSurfaceKHR*);
 
 #include "posix_thread.h"
 #include "cocoa_joystick.h"
@@ -81,7 +105,7 @@ typedef VkResult (APIENTRY *PFN_vkCreateMacOSSurfaceMVK)(VkInstance,const VkMacO
 #define _glfw_dlclose(handle) dlclose(handle)
 #define _glfw_dlsym(handle, name) dlsym(handle, name)
 
-#define _GLFW_EGL_NATIVE_WINDOW  ((EGLNativeWindowType) window->ns.view)
+#define _GLFW_EGL_NATIVE_WINDOW  ((EGLNativeWindowType) window->ns.layer)
 #define _GLFW_EGL_NATIVE_DISPLAY EGL_DEFAULT_DISPLAY
 
 #define _GLFW_PLATFORM_WINDOW_STATE         _GLFWwindowNS  ns
@@ -110,6 +134,7 @@ typedef struct _GLFWwindowNS
     id              layer;
 
     GLFWbool        maximized;
+    GLFWbool        occluded;
     GLFWbool        retina;
 
     // Cached window properties to filter out duplicate events
@@ -121,7 +146,6 @@ typedef struct _GLFWwindowNS
     // since the last cursor motion event was processed
     // This is kept to counteract Cocoa doing the same internally
     double          cursorWarpDeltaX, cursorWarpDeltaY;
-
 } _GLFWwindowNS;
 
 // Cocoa-specific global data
@@ -139,7 +163,7 @@ typedef struct _GLFWlibraryNS
     id                  keyUpMonitor;
     id                  nibObjects;
 
-    char                keyName[64];
+    char                keynames[GLFW_KEY_LAST + 1][17];
     short int           keycodes[256];
     short int           scancodes[GLFW_KEY_LAST + 1];
     char*               clipboardString;
@@ -156,7 +180,6 @@ typedef struct _GLFWlibraryNS
         PFN_LMGetKbdType GetKbdType;
         CFStringRef     kPropertyUnicodeKeyLayoutData;
     } tis;
-
 } _GLFWlibraryNS;
 
 // Cocoa-specific per-monitor data
@@ -167,7 +190,7 @@ typedef struct _GLFWmonitorNS
     CGDisplayModeRef    previousMode;
     uint32_t            unitNumber;
     id                  screen;
-
+    double              fallbackRefreshRate;
 } _GLFWmonitorNS;
 
 // Cocoa-specific per-cursor data
@@ -175,7 +198,6 @@ typedef struct _GLFWmonitorNS
 typedef struct _GLFWcursorNS
 {
     id              object;
-
 } _GLFWcursorNS;
 
 // Cocoa-specific global timer data
@@ -183,7 +205,6 @@ typedef struct _GLFWcursorNS
 typedef struct _GLFWtimerNS
 {
     uint64_t        frequency;
-
 } _GLFWtimerNS;
 
 
@@ -194,4 +215,6 @@ void _glfwSetVideoModeNS(_GLFWmonitor* monitor, const GLFWvidmode* desired);
 void _glfwRestoreVideoModeNS(_GLFWmonitor* monitor);
 
 float _glfwTransformYNS(float y);
+
+void* _glfwLoadLocalVulkanLoaderNS(void);
 

@@ -24,6 +24,8 @@
 //    distribution.
 //
 //========================================================================
+// It is fine to use C99 in this file because it will not be built with VS
+//========================================================================
 
 #include "internal.h"
 
@@ -65,6 +67,9 @@ int _glfwPlatformCreateWindow(_GLFWwindow* window,
             _glfwInputError(GLFW_API_UNAVAILABLE, "Null: EGL not available");
             return GLFW_FALSE;
         }
+
+        if (!_glfwRefreshContextAttribs(window, ctxconfig))
+            return GLFW_FALSE;
     }
 
     return GLFW_TRUE;

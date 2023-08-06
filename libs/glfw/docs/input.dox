@@ -123,9 +123,21 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 }
 @endcode
 
-The action is one of `GLFW_PRESS`, `GLFW_REPEAT` or `GLFW_RELEASE`.  The key
-will be `GLFW_KEY_UNKNOWN` if GLFW lacks a key token for it, for example
-_E-mail_ and _Play_ keys.
+The action is one of `GLFW_PRESS`, `GLFW_REPEAT` or `GLFW_RELEASE`.  Events with
+`GLFW_PRESS` and `GLFW_RELEASE` actions are emitted for every key press.  Most
+keys will also emit events with `GLFW_REPEAT` actions while a key is held down.
+
+Key events with `GLFW_REPEAT` actions are intended for text input.  They are
+emitted at the rate set in the user's keyboard settings.  At most one key is
+repeated even if several keys are held down.  `GLFW_REPEAT` actions should not
+be relied on to know which keys are being held down or to drive animation.
+Instead you should either save the state of relevant keys based on `GLFW_PRESS`
+and `GLFW_RELEASE` actions, or call @ref glfwGetKey, which provides basic cached
+key state.
+
+The key will be one of the existing [key tokens](@ref keys), or
+`GLFW_KEY_UNKNOWN` if GLFW lacks a token for it, for example _E-mail_ and _Play_
+keys.
 
 The scancode is unique for every key, regardless of whether it has a key token.
 Scancodes are platform-specific but consistent over time, so keys will have
@@ -645,7 +657,7 @@ const char* name = glfwGetJoystickName(GLFW_JOYSTICK_4);
 @endcode
 
 Joystick names are not guaranteed to be unique.  Two joysticks of the same model
-and make may have the same name.  Only the [joystick token](@ref joysticks) is
+and make may have the same name.  Only the [joystick ID](@ref joysticks) is
 guaranteed to be unique, and only until that joystick is disconnected.
 
 
@@ -794,6 +806,11 @@ glfwUpdateGamepadMappings(mappings);
 This function supports everything from single lines up to and including the
 unmodified contents of the whole `gamecontrollerdb.txt` file.
 
+If you are compiling GLFW from source with CMake you can update the built-in mappings by
+building the _update_mappings_ target.  This runs the `GenerateMappings.cmake` CMake
+script, which downloads `gamecontrollerdb.txt` and regenerates the `mappings.h` header
+file.
+
 Below is a description of the mapping format.  Please keep in mind that __this
 description is not authoritative__.  The format is defined by the SDL and
 SDL_GameControllerDB projects and their documentation and code takes precedence.
@@ -813,7 +830,7 @@ The second value is always the human-readable name of the gamepad.
 All subsequent values are in the form `<field>:<value>` and describe the layout
 of the mapping.  These fields may not all be present and may occur in any order.
 
-The button fields are `a`, `b`, `c`, `d`, `back`, `start`, `guide`, `dpup`,
+The button fields are `a`, `b`, `x`, `y`, `back`, `start`, `guide`, `dpup`,
 `dpright`, `dpdown`, `dpleft`, `leftshoulder`, `rightshoulder`, `leftstick` and
 `rightstick`.
 
@@ -864,31 +881,32 @@ GLFW provides high-resolution time input, in seconds, with @ref glfwGetTime.
 double seconds = glfwGetTime();
 @endcode
 
-It returns the number of seconds since the timer was started when the library
-was initialized with @ref glfwInit.  The platform-specific time sources used
-usually have micro- or nanosecond resolution.
+It returns the number of seconds since the library was initialized with @ref
+glfwInit.  The platform-specific time sources used typically have micro- or
+nanosecond resolution.
 
-You can modify the reference time with @ref glfwSetTime.
+You can modify the base time with @ref glfwSetTime.
 
 @code
 glfwSetTime(4.0);
 @endcode
 
-This sets the timer to the specified time, in seconds.
+This sets the time to the specified time, in seconds, and it continues to count
+from there.
 
-You can also access the raw timer value, measured in 1&nbsp;/&nbsp;frequency
-seconds, with @ref glfwGetTimerValue.
+You can also access the raw timer used to implement the functions above,
+with @ref glfwGetTimerValue.
 
 @code
 uint64_t value = glfwGetTimerValue();
 @endcode
 
-The frequency of the raw timer varies depending on what time sources are
-available on the machine.  You can query its frequency, in Hz, with @ref
-glfwGetTimerFrequency.
+This value is in 1&nbsp;/&nbsp;frequency seconds.  The frequency of the raw
+timer varies depending on the operating system and hardware.  You can query the
+frequency, in Hz, with @ref glfwGetTimerFrequency.
 
 @code
-uint64_t freqency = glfwGetTimerFrequency();
+uint64_t frequency = glfwGetTimerFrequency();
 @endcode
 
 

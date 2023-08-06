@@ -84,8 +84,8 @@ typedef GLFWglproc (* _GLFWgetprocaddressfun)(const char*);
 typedef void (* _GLFWdestroycontextfun)(_GLFWwindow*);
 
 #define GL_VERSION 0x1f02
-#define GL_NONE	0
-#define GL_COLOR_BUFFER_BIT	0x00004000
+#define GL_NONE 0
+#define GL_COLOR_BUFFER_BIT 0x00004000
 #define GL_UNSIGNED_BYTE 0x1401
 #define GL_EXTENSIONS 0x1f03
 #define GL_NUM_EXTENSIONS 0x821d
@@ -102,7 +102,7 @@ typedef void (* _GLFWdestroycontextfun)(_GLFWwindow*);
 #define GL_CONTEXT_RELEASE_BEHAVIOR_FLUSH 0x82fc
 #define GL_CONTEXT_FLAG_NO_ERROR_BIT_KHR 0x00000008
 
-typedef int	GLint;
+typedef int GLint;
 typedef unsigned int GLuint;
 typedef unsigned int GLenum;
 typedef unsigned int GLbitfield;
@@ -128,6 +128,7 @@ typedef enum VkStructureType
     VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR = 1000006000,
     VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR = 1000009000,
     VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK = 1000123000,
+    VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT = 1000217000,
     VK_STRUCTURE_TYPE_MAX_ENUM = 0x7FFFFFFF
 } VkStructureType;
 
@@ -341,9 +342,9 @@ struct _GLFWcontext
     int                 robustness;
     int                 release;
 
-    PFNGLGETSTRINGIPROC GetStringi;
+    PFNGLGETSTRINGIPROC  GetStringi;
     PFNGLGETINTEGERVPROC GetIntegerv;
-    PFNGLGETSTRINGPROC  GetString;
+    PFNGLGETSTRINGPROC   GetString;
 
     _GLFWmakecontextcurrentfun  makeCurrent;
     _GLFWswapbuffersfun         swapBuffers;
@@ -374,6 +375,7 @@ struct _GLFWwindow
     GLFWbool            focusOnShow;
     GLFWbool            shouldClose;
     void*               userPointer;
+    GLFWbool            doublebuffer;
     GLFWvidmode         videoMode;
     _GLFWmonitor*       monitor;
     _GLFWcursor*        cursor;
@@ -395,23 +397,23 @@ struct _GLFWwindow
     _GLFWcontext        context;
 
     struct {
-        GLFWwindowposfun        pos;
-        GLFWwindowsizefun       size;
-        GLFWwindowclosefun      close;
-        GLFWwindowrefreshfun    refresh;
-        GLFWwindowfocusfun      focus;
-        GLFWwindowiconifyfun    iconify;
-        GLFWwindowmaximizefun   maximize;
-        GLFWframebuffersizefun  fbsize;
+        GLFWwindowposfun          pos;
+        GLFWwindowsizefun         size;
+        GLFWwindowclosefun        close;
+        GLFWwindowrefreshfun      refresh;
+        GLFWwindowfocusfun        focus;
+        GLFWwindowiconifyfun      iconify;
+        GLFWwindowmaximizefun     maximize;
+        GLFWframebuffersizefun    fbsize;
         GLFWwindowcontentscalefun scale;
-        GLFWmousebuttonfun      mouseButton;
-        GLFWcursorposfun        cursorPos;
-        GLFWcursorenterfun      cursorEnter;
-        GLFWscrollfun           scroll;
-        GLFWkeyfun              key;
-        GLFWcharfun             character;
-        GLFWcharmodsfun         charmods;
-        GLFWdropfun             drop;
+        GLFWmousebuttonfun        mouseButton;
+        GLFWcursorposfun          cursorPos;
+        GLFWcursorenterfun        cursorEnter;
+        GLFWscrollfun             scroll;
+        GLFWkeyfun                key;
+        GLFWcharfun               character;
+        GLFWcharmodsfun           charmods;
+        GLFWdropfun               drop;
     } callbacks;
 
     // This is defined in the window API's platform.h
@@ -422,7 +424,7 @@ struct _GLFWwindow
 //
 struct _GLFWmonitor
 {
-    char*           name;
+    char            name[128];
     void*           userPointer;
 
     // Physical dimensions in millimeters.
@@ -476,14 +478,15 @@ struct _GLFWmapping
 //
 struct _GLFWjoystick
 {
-    GLFWbool        present;
+    GLFWbool        allocated;
+    GLFWbool        connected;
     float*          axes;
     int             axisCount;
     unsigned char*  buttons;
     int             buttonCount;
     unsigned char*  hats;
     int             hatCount;
-    char*           name;
+    char            name[128];
     void*           userPointer;
     char            guid[33];
     _GLFWmapping*   mapping;
@@ -556,6 +559,7 @@ struct _GLFWlibrary
         GLFWbool        KHR_win32_surface;
 #elif defined(_GLFW_COCOA)
         GLFWbool        MVK_macos_surface;
+        GLFWbool        EXT_metal_surface;
 #elif defined(_GLFW_X11)
         GLFWbool        KHR_xlib_surface;
         GLFWbool        KHR_xcb_surface;
@@ -715,7 +719,7 @@ void _glfwInputWindowMonitor(_GLFWwindow* window, _GLFWmonitor* monitor);
 void _glfwInputKey(_GLFWwindow* window,
                    int key, int scancode, int action, int mods);
 void _glfwInputChar(_GLFWwindow* window,
-                    unsigned int codepoint, int mods, GLFWbool plain);
+                    uint32_t codepoint, int mods, GLFWbool plain);
 void _glfwInputScroll(_GLFWwindow* window, double xoffset, double yoffset);
 void _glfwInputMouseClick(_GLFWwindow* window, int button, int action, int mods);
 void _glfwInputCursorPos(_GLFWwindow* window, double xpos, double ypos);
@@ -758,6 +762,7 @@ void _glfwAllocGammaArrays(GLFWgammaramp* ramp, unsigned int size);
 void _glfwFreeGammaArrays(GLFWgammaramp* ramp);
 void _glfwSplitBPP(int bpp, int* red, int* green, int* blue);
 
+void _glfwInitGamepadMappings(void);
 _GLFWjoystick* _glfwAllocJoystick(const char* name,
                                   const char* guid,
                                   int axisCount,
@@ -770,7 +775,12 @@ GLFWbool _glfwInitVulkan(int mode);
 void _glfwTerminateVulkan(void);
 const char* _glfwGetVulkanResultString(VkResult result);
 
+size_t _glfwEncodeUTF8(char* s, uint32_t codepoint);
+char** _glfwParseUriList(char* text, int* count);
+
 char* _glfw_strdup(const char* source);
+int _glfw_min(int a, int b);
+int _glfw_max(int a, int b);
 float _glfw_fminf(float a, float b);
 float _glfw_fmaxf(float a, float b);
 

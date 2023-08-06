@@ -299,6 +299,19 @@ a requirement of the GLFW CMake files.  The GLFW source files do not depend on
 CMake.
 
 
+@subsubsection caveat_fbtransparency_33 Framebuffer transparency requires DWM transparency
+
+GLFW no longer supports framebuffer transparency enabled via @ref
+GLFW_TRANSPARENT_FRAMEBUFFER on Windows 7 if DWM transparency is off
+(the Transparency setting under Personalization > Window Color).
+
+
+@subsubsection emptyevents_33 Empty events on X11 no longer roundtrip to server
+
+Starting with GLFW 3.3.7, events posted with @ref glfwPostEmptyEvent now use a separate
+unnamed pipe instead of sending an X11 client event to the helper window.
+
+
 @subsection deprecations_33 Deprecations in version 3.3
 
 @subsubsection charmods_callback_33 Character with modifiers callback
@@ -363,6 +376,13 @@ library directory suffix and the `LIB_SUFFIX` CMake option has been removed.
 
 Existing projects and makefiles that set the `LIB_SUFFIX` option will use the
 suffix chosen by the GNUInstallDirs package and the option will be ignored.
+
+
+@subsubsection wl_shell_33 Support for the wl_shell protocol
+
+Support for the wl_shell protocol has been removed and GLFW now only supports
+the XDG-Shell protocol.  If your Wayland compositor does not support XDG-Shell
+then GLFW will fail to initialize.
 
 
 @subsubsection mir_removed_33 Mir support
