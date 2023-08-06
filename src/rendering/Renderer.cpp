@@ -549,6 +549,24 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 				_scene->print();
 			}
 			ImGui::Checkbox("Verbose log", &_verbose);
+			if(ImGui::Button("Assign random colors")){
+				_state.lockParticleColor = true;
+				const ColorArray debugColors = {
+					glm::vec3{1.0f, 0.0f, 0.0f},
+					glm::vec3{1.0f, 0.5f, 0.0f},
+					glm::vec3{1.0f, 1.0f, 0.0f},
+					glm::vec3{0.5f, 1.0f, 0.0f},
+					glm::vec3{0.0f, 1.0f, 0.0f},
+					glm::vec3{0.0f, 1.0f, 0.5f},
+					glm::vec3{0.0f, 1.0f, 1.0f},
+					glm::vec3{0.0f, 0.5f, 1.0f},
+					glm::vec3{0.0f, 0.0f, 1.0f},
+					glm::vec3{0.5f, 0.0f, 1.0f},
+					glm::vec3{1.0f, 0.0f, 1.0f},
+					glm::vec3{1.0f, 0.0f, 0.5f}
+				};
+				synchronizeColors(debugColors);
+			}
 		}
 	}
 	ImGui::End();
@@ -706,11 +724,19 @@ void Renderer::showNoteOptions() {
 	}
 
 	ImGuiPushItemWidth(100);
+	if(ImGui::SliderFloat("Radius", &_state.notes.cornerRadius, 0.0f, 1.0f)){
+		_state.notes.cornerRadius = glm::clamp(_state.notes.cornerRadius, 0.0f, 1.0f);
+	}
+	ImGuiSameLine(COLUMN_SIZE);
+	if(ImGui::SliderFloat("Fadeout", &_state.notes.fadeOut, 0.0f, 1.0f)){
+		_state.notes.fadeOut = glm::clamp(_state.notes.fadeOut, 0.0f, 1.0f);
+		_scene->setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notes.fadeOut);
+	}
 	if(ImGuiSliderPercent("Edge", &_state.notes.edgeWidth, 0.0f, 1.0f)){
 		_state.notes.edgeWidth = glm::clamp(_state.notes.edgeWidth, 0.0f, 1.0f);
 	}
 	ImGuiSameLine(COLUMN_SIZE);
-	if(ImGuiSliderPercent("Brightness", &_state.notes.edgeBrightness, 0.0f, 4.0f)){
+	if(ImGuiSliderPercent("Intensity", &_state.notes.edgeBrightness, 0.0f, 4.0f)){
 		_state.notes.edgeBrightness = glm::max(_state.notes.edgeBrightness, 0.0f);
 	}
 	ImGui::PopItemWidth();
@@ -724,14 +750,6 @@ void Renderer::showNoteOptions() {
 	}
 
 	ImGuiSameLine(COLUMN_SIZE);
-
-	ImGuiPushItemWidth(100);
-	if(ImGui::SliderFloat("Fadeout", &_state.notes.fadeOut, 0.0f, 1.0f)){
-		_state.notes.fadeOut = glm::clamp(_state.notes.fadeOut, 0.0f, 1.0f);
-		_scene->setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notes.fadeOut);
-	}
-	ImGui::PopItemWidth();
-
 	if(ImGui::Checkbox("Per-set colors", &_state.perSetColors)){
 		if(!_state.perSetColors){
 			_state.synchronizeSets();
@@ -739,12 +757,70 @@ void Renderer::showNoteOptions() {
 	}
 
 	if(_state.perSetColors){
-		ImGuiSameLine(COLUMN_SIZE);
 		if(ImGui::Button("Define sets...")){
 			ImGui::OpenPopup("Note sets options");
 		}
 		showSets();
 	}
+
+	if(ImGui::Button("Load major image...##Notes")){
+		// Read arguments.
+		char *outPath = nullptr;
+		int res = sr_gui_ask_load_file("Select image", "", "jpg,jpeg,png", &outPath);
+		System::forceLocale();
+		if(res == SR_GUI_VALIDATED && outPath){
+			_state.notes.majorImagePath = { std::string(outPath) };
+			glDeleteTextures(1, &_state.notes.majorTex);
+			_state.notes.majorTex = loadTexture(_state.notes.majorImagePath[0], 4, false);
+		}
+		free(outPath);
+	}
+	ImGuiSameLine(COLUMN_SIZE);
+	if(ImGui::Button("Clear major image##Notes")) {
+		_state.notes.majorImagePath.clear();
+		glDeleteTextures(1, &_state.notes.majorTex);
+		_state.notes.majorTex = 0;
+	}
+
+	ImGuiPushItemWidth(100);
+	if(ImGui::SliderFloat("Scale##NotesMajorTexture", &_state.notes.majorTexScale, 0.1f, 15.0f, "%.2fx")){
+		_state.notes.majorTexScale = glm::max(_state.notes.majorTexScale, 0.001f);
+	}
+	ImGuiSameLine(COLUMN_SIZE);
+	if(ImGuiSliderPercent("Intensity##NotesMajorTexture", &_state.notes.majorTexAlpha, 0.0f, 1.0f)){
+		_state.notes.majorTexAlpha = glm::clamp(_state.notes.majorTexAlpha, 0.0f, 1.0f);
+	}
+	ImGui::Checkbox("Scroll##NotesMajorTexture", &_state.notes.majorTexScroll);
+	ImGui::PopItemWidth();
+
+	if(ImGui::Button("Load minor image...##Notes")){
+		// Read arguments.
+		char *outPath = nullptr;
+		int res = sr_gui_ask_load_file("Select image", "", "jpg,jpeg,png", &outPath);
+		System::forceLocale();
+		if(res == SR_GUI_VALIDATED && outPath){
+			_state.notes.minorImagePath = { std::string(outPath) };
+			glDeleteTextures(1, &_state.notes.minorTex);
+			_state.notes.minorTex = loadTexture(_state.notes.minorImagePath[0], 4, false);
+		}
+		free(outPath);
+	}
+	ImGuiSameLine(COLUMN_SIZE);
+	if(ImGui::Button("Clear minor image##Notes")) {
+		_state.notes.minorImagePath.clear();
+		glDeleteTextures(1, &_state.notes.minorTex);
+		_state.notes.minorTex = 0;
+	}
+	ImGuiPushItemWidth(100);
+	if(ImGui::SliderFloat("Scale##NotesMinorTexture", &_state.notes.minorTexScale, 0.1f, 15.0f, "%.2fx")){
+		_state.notes.minorTexScale = glm::max(_state.notes.minorTexScale, 0.001f);
+	}
+	ImGuiSameLine(COLUMN_SIZE);
+	if(ImGuiSliderPercent("Intensity##NotesMinorTexture", &_state.notes.minorTexAlpha, 0.0f, 1.0f)){
+		_state.notes.minorTexAlpha = glm::clamp(_state.notes.minorTexAlpha, 0.0f, 1.0f);
+	}
+	ImGui::Checkbox("Scroll##NotesMinorTexture", &_state.notes.minorTexScroll);
+	ImGui::PopItemWidth();
 }
 
 void Renderer::showParticleOptions(){
@@ -939,7 +1015,7 @@ void Renderer::showBackgroundOptions(){
 	if (ImGui::Button("Load image...##Background")){
 		// Read arguments.
 		char *outPath = nullptr;
-		int res = sr_gui_ask_load_file("Select images", "", "jpg,jpeg,png", &outPath);
+		int res = sr_gui_ask_load_file("Select image", "", "jpg,jpeg,png", &outPath);
 		System::forceLocale();
 		if(res == SR_GUI_VALIDATED && outPath){
 			_state.background.imagePath = { std::string(outPath) };
@@ -1118,7 +1194,7 @@ void Renderer::showSets(){
 	if(ImGui::BeginPopup("Note sets options")){
 		ImGui::Text("Decide how notes should be grouped in multiple sets");
 		ImGui::Text("(to which you can assign different key/effects colors).");
-		ImGui::Text("This can be based on the MIDI channel, the track, by key, or by");
+		ImGui::Text("This can be based on the MIDI channel, the track, by key, using the chromatic sequence or by");
 		ImGui::Text("separating notes that are lower or higher than a given key.");
 
 		bool shouldUpdate = false;
@@ -1670,6 +1746,15 @@ void Renderer::setState(const State & state){
 		glDeleteTextures(1, &_state.background.tex);
 		_state.background.tex = loadTexture(_state.background.imagePath[0], 4, false);
 		// Don't modify the rest of the potentially restored state.
+	}
+	// Load notes images
+	if(!_state.notes.majorImagePath.empty()){
+		glDeleteTextures(1, &_state.notes.majorTex);
+		_state.notes.majorTex = loadTexture(_state.notes.majorImagePath[0], 4, false);
+	}
+	if(!_state.notes.minorImagePath.empty()){
+		glDeleteTextures(1, &_state.notes.minorTex);
+		_state.notes.minorTex = loadTexture(_state.notes.minorImagePath[0], 4, false);
 	}
 
 	if(!_state.particles.imagePaths.empty()){
