@@ -16,56 +16,55 @@ Score::Score(double secondsPerMeasure){
 	
 	// Load additional data.
 	_program.use();
-	glUniform1f(_program["secondsPerMeasure"], float(secondsPerMeasure));
+	_program.uniform("secondsPerMeasure", float(secondsPerMeasure));
 	glUseProgram(0);
 
 }
 
 void Score::setScaleAndMinorWidth(const float scale, const float width){
 	_program.use();
-	glUniform1f(_program["mainSpeed"], scale);
-	glUniform1f(_program["minorsWidth"], width);
+	_program.uniform("mainSpeed", scale);
+	_program.uniform("minorsWidth", width);
 	glUseProgram(0);
 }
 
 void Score::setDisplay(const bool digits, const bool horiz, const bool vert){
 	_program.use();
-	glUniform1i(_program["useDigits"], digits);
-	glUniform1i(_program["useHLines"], horiz);
-	glUniform1i(_program["useVLines"], vert);
+	_program.uniform("useDigits", digits);
+	_program.uniform("useHLines", horiz);
+	_program.uniform("useVLines", vert);
 	glUseProgram(0);
 }
 
 void Score::setColors(const glm::vec3 & linesColor, const glm::vec3 & textColor, const glm::vec3 & keysColor){
 	_program.use();
-	glUniform3fv(_program["linesColor"], 1, &linesColor[0]);
-	glUniform3fv(_program["textColor" ], 1, &textColor[0]);
-	//glUniform3fv(_program["keysColor" ], 1, &keysColor[0]);
+	_program.uniform("linesColor", linesColor);
+	_program.uniform("textColor" , textColor);
 	glUseProgram(0);
 }
 
 void Score::setKeyboardSize(float keyboardHeight){
 	_program.use();
-	glUniform1f(_program["keyboardHeight"], keyboardHeight);
+	_program.uniform("keyboardHeight", keyboardHeight);
 	glUseProgram(0);
 }
 
 void Score::setMinMaxKeys(int minKey, int minKeyMajor, int notesCount){
 	_program.use();
-	glUniform1i(_program["minNoteMajor"], minKeyMajor);
-	glUniform1f(_program["notesCount"], float(notesCount));
+	_program.uniform("minNoteMajor", minKeyMajor);
+	_program.uniform("notesCount", float(notesCount));
 	glUseProgram(0);
 }
 
 void Score::setPlayDirection(bool reverse){
 	_program.use();
-	glUniform1i(_program["reverseMode"], reverse ? 1 : 0);
+	_program.uniform("reverseMode", reverse);
 	glUseProgram(0);
 }
 
 void Score::setOrientation(bool horizontal){
 	_program.use();
-	glUniform1i(_program["horizontalMode"], horizontal ? 1 : 0);
+	_program.uniform("horizontalMode", horizontal);
 	glUseProgram(0);
 }
 

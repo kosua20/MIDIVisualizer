@@ -334,10 +334,11 @@ void Renderer::drawBackgroundImage(const glm::vec2 &) {
 		return;
 	}
 	glEnable(GL_BLEND);
-	_backgroundTexture.program().use();
-	glUniform1f(_backgroundTexture.program()[ "textureAlpha"], _state.background.imageAlpha);
-	glUniform1i(_backgroundTexture.program()[ "behindKeyboard"], _state.background.imageBehindKeyboard);
-	glUniform1f(_backgroundTexture.program()[ "keyboardHeight"], _state.keyboard.size);
+	ShaderProgram& bgProg = _backgroundTexture.program();
+	bgProg.use();
+	bgProg.uniform("textureAlpha", _state.background.imageAlpha);
+	bgProg.uniform("behindKeyboard", _state.background.imageBehindKeyboard);
+	bgProg.uniform("keyboardHeight", _state.keyboard.size);
 	_backgroundTexture.draw(_state.background.tex, _timer);
 
 	glDisable(GL_BLEND);
@@ -983,7 +984,7 @@ void Renderer::showBlurOptions(){
 	if (ImGui::SliderFloat("Fading", &_state.attenuation, 0.0f, 1.0f)) {
 		_state.attenuation = glm::clamp(_state.attenuation, 0.0f, 1.0f);
 		_blurringScreen.program().use();
-		glUniform1f(_blurringScreen.program()["attenuationFactor"], _state.attenuation);
+		_blurringScreen.program().uniform("attenuationFactor", _state.attenuation);
 		glUseProgram(0);
 	}
 	ImGui::PopItemWidth();
@@ -1613,7 +1614,7 @@ void Renderer::applyBackgroundColor(){
 	_blurFramebuffer1->unbind();
 	// Update parameter.
 	_blurringScreen.program().use();
-	glUniform3fv(_blurringScreen.program()["backgroundColor"], 1, &_state.background.color[0]);
+	_blurringScreen.program().uniform("backgroundColor", _state.background.color);
 	glUseProgram(0);
 }
 
@@ -1639,7 +1640,7 @@ void Renderer::applyAllSettings() {
 	// Reset buffers.
 	applyBackgroundColor();
 	_blurringScreen.program().use();
-	glUniform1f(_blurringScreen.program()["attenuationFactor"], _state.attenuation);
+	_blurringScreen.program().uniform("attenuationFactor", _state.attenuation);
 	glUseProgram(0);
 
 	// Resize the framebuffers.

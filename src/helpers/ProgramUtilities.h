@@ -21,11 +21,17 @@ public:
 
 	void init(const std::string & vertexName, const std::string & fragmentName);
 
-	GLint operator[](const std::string& name) { return _uniforms[name]; }
-
 	void use();
 
+	void clean();
+
 	void texture(const std::string& name, GLuint texture, GLenum shape);
+
+	template<typename T>
+	void uniform(const std::string& name, const T& val);
+
+	template<typename T>
+	void uniforms(const std::string& name, unsigned int count, const T* vals);
 
 private:
 
@@ -38,6 +44,61 @@ private:
 	std::unordered_map<std::string, int> _textures;
 	GLuint _id;
 };
+
+template<>
+inline void ShaderProgram::uniform(const std::string& name, const float& val){
+	glUniform1f(_uniforms[name], val);
+}
+
+template<>
+inline void ShaderProgram::uniform(const std::string& name, const int& val){
+	glUniform1i(_uniforms[name], val);
+}
+
+template<>
+inline void ShaderProgram::uniform(const std::string& name, const bool& val){
+	glUniform1i(_uniforms[name], val ? 1 : 0);
+}
+
+template<>
+inline void ShaderProgram::uniform(const std::string& name, const glm::vec2& val){
+	glUniform2fv(_uniforms[name], 1, &val[0]);
+}
+
+template<>
+inline void ShaderProgram::uniform(const std::string& name, const glm::vec3& val){
+	glUniform3fv(_uniforms[name], 1, &val[0]);
+}
+
+template<>
+inline void ShaderProgram::uniform(const std::string& name, const glm::vec4& val){
+	glUniform4fv(_uniforms[name], 1, &val[0]);
+}
+
+template<>
+inline void ShaderProgram::uniforms(const std::string& name, unsigned int count, const int* vals){
+	glUniform1iv(_uniforms[name], count, vals);
+}
+
+template<>
+inline void ShaderProgram::uniforms(const std::string& name, unsigned int count, const float* vals){
+	glUniform1fv(_uniforms[name], count, vals);
+}
+
+template<>
+inline void ShaderProgram::uniforms(const std::string& name, unsigned int count, const glm::vec2* vals){
+	glUniform2fv(_uniforms[name], count, (GLfloat*)vals);
+}
+
+template<>
+inline void ShaderProgram::uniforms(const std::string& name, unsigned int count, const glm::vec3* vals){
+	glUniform3fv(_uniforms[name], count, (GLfloat*)vals);
+}
+
+template<>
+inline void ShaderProgram::uniforms(const std::string& name, unsigned int count, const glm::vec4* vals){
+	glUniform4fv(_uniforms[name], count, (GLfloat*)vals);
+}
 
 // Texture loading.
 

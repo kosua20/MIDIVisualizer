@@ -75,7 +75,7 @@ void ScreenQuad::draw(GLuint texId, float time) {
 	// Select the program (and shaders).
 	_program.use();
 
-	glUniform1f(_program["time"], time);
+	_program.uniform("time", time);
 
 	// Active screen texture.
 	_program.texture("screenTexture", texId, GL_TEXTURE_2D);
@@ -96,7 +96,7 @@ void ScreenQuad::draw(GLuint texid, float time, glm::vec2 invScreenSize) {
 	_program.use();
 
 	// Inverse screen size uniform.
-	glUniform2fv(_program["inverseScreenSize"], 1, &(invScreenSize[0]));
+	_program.uniform("inverseScreenSize", invScreenSize);
 
 	draw(texid, time);
 }

@@ -117,6 +117,10 @@ void ShaderProgram::use(){
 	glUseProgram(_id);
 }
 
+void ShaderProgram::clean(){
+	glDeleteProgram(_id);
+}
+
 void ShaderProgram::texture(const std::string& name, GLuint texture, GLenum shape){
 	const int texSlot = _textures.at(name);
 	glActiveTexture(GL_TEXTURE0 + texSlot);
