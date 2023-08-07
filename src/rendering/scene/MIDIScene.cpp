@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "../../helpers/ProgramUtilities.h"
 #include "../../helpers/ResourcesManager.h"
 
 #include "MIDIScene.h"
@@ -49,7 +48,8 @@ void MIDIScene::renderSetup(){
 	// Programs.
 
 	// Notes shaders.
-	_programId = createGLProgramFromStrings(ResourcesManager::getStringForShader("notes_vert"), ResourcesManager::getStringForShader("notes_frag"));
+	// TODO: (MV) wrap program in abstraction with reflection, to avoid querying IDs at each frame
+	_programNotes.init("notes_vert", "notes_frag");
 
 	// Generate a vertex array (useful when we add other attributes to the geometry).
 	_vao = 0;
@@ -80,18 +80,10 @@ void MIDIScene::renderSetup(){
 
 	glBindVertexArray(0);
 
-	glUseProgram(_programId);
-	glActiveTexture(GL_TEXTURE0);
-	GLuint texNotesUniID0 = glGetUniformLocation(_programId, "majorTexture");
-	glUniform1i(texNotesUniID0, 0);
-	glActiveTexture(GL_TEXTURE1);
-	GLuint texNotesUniID1 = glGetUniformLocation(_programId, "minorTexture");
-	glUniform1i(texNotesUniID1, 1);
-	glUseProgram(0);
 	checkGLError();
 
 	// Flashes shaders.
-	_programFlashesId = createGLProgramFromStrings(ResourcesManager::getStringForShader("flashes_vert"), ResourcesManager::getStringForShader("flashes_frag"));
+	_programFlashes.init("flashes_vert", "flashes_frag");
 
 	glGenVertexArrays (1, &_vaoFlashes);
 	glBindVertexArray(_vaoFlashes);
@@ -110,16 +102,9 @@ void MIDIScene::renderSetup(){
 
 	// Flash texture loading.
 	_texFlash = ResourcesManager::getTextureFor("flash");
-	glUseProgram(_programFlashesId);
-	glActiveTexture(GL_TEXTURE0);
-	GLuint texUniID = glGetUniformLocation(_programFlashesId, "textureFlash");
-	glUniform1i(texUniID, 0);
-	glUseProgram(0);
-
 
 	// Particles program.
-
-	_programParticulesId = createGLProgramFromStrings(ResourcesManager::getStringForShader("particles_vert"), ResourcesManager::getStringForShader("particles_frag"));
+	_programParticules.init("particles_vert", "particles_frag");
 
 	glGenVertexArrays (1, &_vaoParticles);
 	glBindVertexArray(_vaoParticles);
@@ -132,25 +117,16 @@ void MIDIScene::renderSetup(){
 
 	// Particles trajectories texture loading.
 	_texParticles = ResourcesManager::getTextureFor("particles");
-	glUseProgram(_programParticulesId);
-	glActiveTexture(GL_TEXTURE0);
-	GLuint texUniID1 = glGetUniformLocation(_programParticulesId, "textureParticles");
-	glUniform1i(texUniID1, 0);
-
-	glUseProgram(_programParticulesId);
-	glActiveTexture(GL_TEXTURE1);
-	GLuint texUniID2 = glGetUniformLocation(_programParticulesId, "lookParticles");
-	glUniform1i(texUniID2, 1);
 
 	// Pass texture size to shader.
 	const glm::vec2 tsize = ResourcesManager::getTextureSizeFor("particles");
-	GLuint texSizeID = glGetUniformLocation(_programParticulesId, "inverseTextureSize");
-	glUniform2f(texSizeID, 1.0f/float(tsize[0]), 1.0f/float(tsize[1]));
+	 _programParticules.use();
+	glUniform2f(_programParticules["inverseTextureSize"], 1.0f/float(tsize[0]), 1.0f/float(tsize[1]));
 	glUseProgram(0);
 
 	// Keyboard setup.
-	_programKeyMajorsId = createGLProgramFromStrings(ResourcesManager::getStringForShader("majorKeys_vert"), ResourcesManager::getStringForShader("majorKeys_frag"));
-	_programKeyMinorsId = createGLProgramFromStrings(ResourcesManager::getStringForShader("minorKeys_vert"), ResourcesManager::getStringForShader("minorKeys_frag"));
+	_programKeyMajors.init("majorKeys_vert", "majorKeys_frag");
+	_programKeyMinors.init("minorKeys_vert", "minorKeys_frag");
 
 	glGenVertexArrays(1, &_vaoKeyboard);
 	glBindVertexArray(_vaoKeyboard);
@@ -164,7 +140,7 @@ void MIDIScene::renderSetup(){
 	glBindVertexArray(0);
 
 	// Pedals setup.
-	_programPedalsId = createGLProgramFromStrings(ResourcesManager::getStringForShader("pedal_vert"), ResourcesManager::getStringForShader("pedal_frag"));
+	_programPedals.init("pedal_vert", "pedal_frag");
 	// Create an array buffer to host the geometry data.
 	GLuint vboPdl = 0;
 	glGenBuffers(1, &vboPdl);
@@ -184,7 +160,7 @@ void MIDIScene::renderSetup(){
 	_countPedals = pedalsIndices.size();
 
 	// Wave setup.
-	_programWaveId = createGLProgramFromStrings(ResourcesManager::getStringForShader("wave_vert"), ResourcesManager::getStringForShader("wave_frag"));
+	_programWave.init("wave_vert", "wave_frag");
 	// Create an array buffer to host the geometry data.
 	const int numSegments = 512;
 	std::vector<glm::vec2> waveVerts((numSegments+1)*2);
@@ -228,47 +204,42 @@ void MIDIScene::renderSetup(){
 }
 
 void MIDIScene::setScaleAndMinorWidth(const float scale, const float minorWidth){
-	glUseProgram(_programId);
-	GLuint speedID = glGetUniformLocation(_programId, "mainSpeed");
-	glUniform1f(speedID, scale);
-	GLuint widthId = glGetUniformLocation(_programId, "minorsWidth");
-	glUniform1f(widthId, minorWidth);
-	glUseProgram(_programKeyMinorsId);
-	GLuint widthId1 = glGetUniformLocation(_programKeyMinorsId, "minorsWidth");
-	glUniform1f(widthId1, minorWidth);
+	_programNotes.use();
+	glUniform1f(_programNotes["mainSpeed"], scale);
+	glUniform1f(_programNotes["minorsWidth"], minorWidth);
+	_programKeyMinors.use();
+	glUniform1f(_programKeyMinors["minorsWidth"], minorWidth);
 	glUseProgram(0);
 }
 
 void MIDIScene::setParticlesParameters(const float speed, const float expansion){
-	glUseProgram(_programParticulesId);
-	GLuint id0 = glGetUniformLocation(_programParticulesId, "speedScaling");
-	glUniform1f(id0, speed);
-	GLuint id1 = glGetUniformLocation(_programParticulesId, "expansionFactor");
-	glUniform1f(id1, expansion);
+	_programParticules.use();
+	glUniform1f(_programParticules["speedScaling"], speed);
+	glUniform1f(_programParticules["expansionFactor"], expansion);
 	glUseProgram(0);
 }
 
 void MIDIScene::setKeyboardSizeAndFadeout(float keyboardHeight, float fadeOut){
 	const float fadeOutFinal = keyboardHeight + (1.0f - keyboardHeight) * (1.0f - fadeOut);
 
-	glUseProgram(_programId);
-	glUniform1f(glGetUniformLocation(_programId, "keyboardHeight"), keyboardHeight);
-	glUniform1f(glGetUniformLocation(_programId, "fadeOut"), fadeOutFinal);
-	glUseProgram(_programParticulesId);
-	glUniform1f(glGetUniformLocation(_programParticulesId, "keyboardHeight"), keyboardHeight);
-	glUseProgram(_programKeyMinorsId);
-	glUniform1f(glGetUniformLocation(_programKeyMinorsId, "keyboardHeight"), keyboardHeight);
-	glUseProgram(_programKeyMajorsId);
-	glUniform1f(glGetUniformLocation(_programKeyMajorsId, "keyboardHeight"), keyboardHeight);
-	glUseProgram(_programFlashesId);
-	glUniform1f(glGetUniformLocation(_programFlashesId, "keyboardHeight"), keyboardHeight);
+	_programNotes.use();
+	glUniform1f(_programNotes["keyboardHeight"], keyboardHeight);
+	glUniform1f(_programNotes["fadeOut"], fadeOutFinal);
+	_programParticules.use();
+	glUniform1f(_programParticules["keyboardHeight"], keyboardHeight);
+	_programKeyMinors.use();
+	glUniform1f(_programKeyMinors["keyboardHeight"], keyboardHeight);
+	_programKeyMajors.use();
+	glUniform1f(_programKeyMajors["keyboardHeight"], keyboardHeight);
+	_programFlashes.use();
+	glUniform1f(_programFlashes["keyboardHeight"], keyboardHeight);
 	glUseProgram(0);
 }
 
 void MIDIScene::setMinorEdgesAndHeight(bool minorEdges, float minorHeight){
-	glUseProgram(_programKeyMinorsId);
-	glUniform1i(glGetUniformLocation(_programKeyMinorsId, "edgeOnMinors"), int(minorEdges));
-	glUniform1f(glGetUniformLocation(_programKeyMinorsId, "minorsHeight"), minorHeight);
+	_programKeyMinors.use();
+	glUniform1i(_programKeyMinors["edgeOnMinors"], int(minorEdges));
+	glUniform1f(_programKeyMinors["minorsHeight"], minorHeight);
 	glUseProgram(0);
 }
 
@@ -283,45 +254,33 @@ void MIDIScene::resetParticles() {
 void MIDIScene::drawParticles(float time, const glm::vec2 & invScreenSize, const State::ParticlesState & state, bool prepass){
 
 	glEnable(GL_BLEND);
-	glUseProgram(_programParticulesId);
+	_programParticules.use();
 	
 	// Common uniforms values.
-	GLuint screenId = glGetUniformLocation(_programParticulesId, "inverseScreenSize");
-	GLuint timeId = glGetUniformLocation(_programParticulesId, "time");
-	GLuint durationId = glGetUniformLocation(_programParticulesId, "duration");
-	glUniform2fv(screenId,1, &(invScreenSize[0]));
-	glUniform1f(timeId,0.0);
+	glUniform2fv(_programParticules["inverseScreenSize"], 1, &(invScreenSize[0]));
+	glUniform1f(_programParticules["time"], 0.0f);
 
-	// Variable uniforms.
-	GLuint globalShiftId = glGetUniformLocation(_programParticulesId, "globalId");
-	GLuint scaleId = glGetUniformLocation(_programParticulesId, "scale");
-	GLuint colorId = glGetUniformLocation(_programParticulesId, "baseColor");
-	GLuint channelId = glGetUniformLocation(_programParticulesId, "channel");
-	
 	// Prepass : bigger, darker particles.
-	GLuint colorScaleId = glGetUniformLocation(_programParticulesId, "colorScale");
-	glUniform1f(colorScaleId, prepass ? 0.6f : 1.6f);
-	glUniform1f(scaleId, state.scale * (prepass ? 2.0f : 1.0f));
+	glUniform1f(_programParticules["colorScale"], prepass ? 0.6f : 1.6f);
+	glUniform1f(_programParticules["scale"], state.scale * (prepass ? 2.0f : 1.0f));
 
-	glUniform3fv(colorId, GLsizei(state.colors.size()), &state.colors[0][0]);
+	glUniform3fv(_programParticules["baseColor"], GLsizei(state.colors.size()), &state.colors[0][0]);
 	
 	// Particles trajectories texture.
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, _texParticles);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D_ARRAY, state.tex);
-	GLuint texCountId = glGetUniformLocation(_programParticulesId, "texCount");
-	glUniform1i(texCountId, state.texCount);
+	_programParticules.texture("textureParticles", _texParticles, GL_TEXTURE_2D);
+	_programParticules.texture("lookParticles", state.tex, GL_TEXTURE_2D_ARRAY);
+
+	glUniform1i(_programParticules["texCount"], state.texCount);
 
 	// Select the geometry.
 	glBindVertexArray(_vaoParticles);
 	// For each active particles system, draw it with the right parameters.
 	for(const auto & particle : _particles){
 		if(particle.note >= 0){
-			glUniform1i(globalShiftId, particle.note);
-			glUniform1f(timeId, particle.elapsed);
-			glUniform1f(durationId, particle.duration);
-			glUniform1i(channelId, particle.set);
+			glUniform1i(_programParticules["globalId"], particle.note);
+			glUniform1f(_programParticules["time"], particle.elapsed);
+			glUniform1f(_programParticules["duration"], particle.duration);
+			glUniform1i(_programParticules["channel"], particle.set);
 			glDrawElementsInstanced(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0, state.count);
 		}
 	}
@@ -334,51 +293,33 @@ void MIDIScene::drawParticles(float time, const glm::vec2 & invScreenSize, const
 
 void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const State::NotesState & state, bool reverseScroll, bool prepass){
 	
-	glUseProgram(_programId);
+	_programNotes.use();
 	
 	// Uniforms setup.
-	GLuint screenId = glGetUniformLocation(_programId, "inverseScreenSize");
-	GLuint timeId = glGetUniformLocation(_programId, "time");
-	GLuint colorId = glGetUniformLocation(_programId, "baseColor");
-	GLuint colorMinId = glGetUniformLocation(_programId, "minorColor");
-	GLuint colorScaleId = glGetUniformLocation(_programId, "colorScale");
-	GLuint reverseId = glGetUniformLocation(_programId, "reverseMode");
-	GLuint edgeWidthId = glGetUniformLocation(_programId, "edgeWidth");
-	GLuint edgeBrightnessId = glGetUniformLocation(_programId, "edgeBrightness");
-	GLuint hasMajTexId = glGetUniformLocation(_programId, "useMajorTexture");
-	GLuint hasMinTexId = glGetUniformLocation(_programId, "useMinorTexture");
-	GLuint majTexScrollId = glGetUniformLocation(_programId, "scrollMajorTexture");
-	GLuint minTexScrollId = glGetUniformLocation(_programId, "scrollMinorTexture");
-
-	GLuint texturesScaleID = glGetUniformLocation(_programId, "texturesScale");
-	GLuint texturesStrengthID = glGetUniformLocation(_programId, "texturesStrength");
-	GLuint cornerRadiusID = glGetUniformLocation(_programId, "cornerRadius");
-
-	glUniform2fv(screenId,1, &(invScreenSize[0]));
-	glUniform1f(timeId, time);
-	glUniform1f(colorScaleId, prepass ? 0.6f: 1.0f);
-
-	glUniform3fv(colorId, GLsizei(state.majorColors.size()), &(state.majorColors[0][0]));
-	glUniform3fv(colorMinId, GLsizei(state.minorColors.size()), &(state.minorColors[0][0]));
-	glUniform1i(reverseId, reverseScroll ? 1 : 0);
-	glUniform1f(edgeWidthId, state.edgeWidth);
-	glUniform1f(edgeBrightnessId, state.edgeBrightness);
-
-	glUniform2f(texturesScaleID, state.majorTexScale, state.minorTexScale);
-	glUniform2f(texturesStrengthID, state.majorTexAlpha, state.minorTexAlpha);
-	glUniform1f(majTexScrollId, state.majorTexScroll);
-	glUniform1f(minTexScrollId, state.minorTexScroll);
 	const float maxCornerRadius = 0.12f; // Internal tweaking to avoid notes whose edges are not timing-aligned.
-	glUniform1f(cornerRadiusID, state.cornerRadius * maxCornerRadius);
+
+	glUniform2fv(_programNotes["inverseScreenSize"],1, &(invScreenSize[0]));
+	glUniform1f(_programNotes["time"], time);
+	glUniform1f(_programNotes["colorScale"], prepass ? 0.6f: 1.0f);
+
+	glUniform3fv(_programNotes["baseColor"], GLsizei(state.majorColors.size()), &(state.majorColors[0][0]));
+	glUniform3fv(_programNotes["minorColor"], GLsizei(state.minorColors.size()), &(state.minorColors[0][0]));
+	glUniform1i(_programNotes["reverseMode"], reverseScroll ? 1 : 0);
+	glUniform1f(_programNotes["edgeWidth"], state.edgeWidth);
+	glUniform1f(_programNotes["edgeBrightness"], state.edgeBrightness);
+
+	glUniform2f(_programNotes["texturesScale"], state.majorTexScale, state.minorTexScale);
+	glUniform2f(_programNotes["texturesStrength"], state.majorTexAlpha, state.minorTexAlpha);
+	glUniform1f(_programNotes["scrollMajorTexture"], state.majorTexScroll);
+	glUniform1f(_programNotes["scrollMinorTexture"], state.minorTexScroll);
+	glUniform1f(_programNotes["cornerRadius"], state.cornerRadius * maxCornerRadius);
 
 	// Pass note textures if present, and corresponding flags.
-	glUniform1i(hasMajTexId, int(state.majorTex != 0));
-	glUniform1i(hasMinTexId, int(state.minorTex != 0));
+	glUniform1i(_programNotes["useMajorTexture"], int(state.majorTex != 0));
+	glUniform1i(_programNotes["useMinorTexture"], int(state.minorTex != 0));
 	// IDs below can be 0
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, state.majorTex);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, state.minorTex);
+	_programNotes.texture("majorTexture", state.majorTex, GL_TEXTURE_2D);
+	_programNotes.texture("minorTexture", state.minorTex, GL_TEXTURE_2D);
 	
 	// Draw the geometry.
 	glBindVertexArray(_vao);
@@ -399,20 +340,15 @@ void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const S
 	glBindBuffer(GL_ARRAY_BUFFER, _flagsBufferId);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, _actives.size()*sizeof(int) ,&(_actives[0]));
 	
-	glUseProgram(_programFlashesId);
+	_programFlashes.use();
 	
 	// Uniforms setup.
-	GLuint screenId1 = glGetUniformLocation(_programFlashesId, "inverseScreenSize");
-	GLuint timeId1 = glGetUniformLocation(_programFlashesId, "time");
-	GLuint colorId = glGetUniformLocation(_programFlashesId, "baseColor");
-	GLuint scaleId = glGetUniformLocation(_programFlashesId, "userScale");
-	glUniform2fv(screenId1,1, &(invScreenSize[0]));
-	glUniform1f(timeId1,time);
-	glUniform3fv(colorId, GLsizei(state.colors.size()), &(state.colors[0][0]));
-	glUniform1f(scaleId, state.size);
+	glUniform2fv(_programFlashes["inverseScreenSize"],1, &(invScreenSize[0]));
+	glUniform1f(_programFlashes["time"],time);
+	glUniform3fv(_programFlashes["baseColor"], GLsizei(state.colors.size()), &(state.colors[0][0]));
+	glUniform1f(_programFlashes["userScale"], state.size);
 	// Flash texture.
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, _texFlash);
+	_programFlashes.texture("textureFlash", _texFlash, GL_TEXTURE_2D);
 	
 	// Draw the geometry.
 	glBindVertexArray(_vaoFlashes);
@@ -428,20 +364,13 @@ void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const S
 void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::vec3 & keyColor, const ColorArray & majorColors, const ColorArray & minorColors, bool highlightKeys) {
 
 	{
-		glUseProgram(_programKeyMajorsId);
-
-		const GLuint highId = glGetUniformLocation(_programKeyMajorsId, "highlightKeys");
-		const GLuint activesId = glGetUniformLocation(_programKeyMajorsId, "actives");
-		const GLuint screenId1 = glGetUniformLocation(_programKeyMajorsId, "inverseScreenSize");
-		const GLuint colorId = glGetUniformLocation(_programKeyMajorsId, "edgeColor");
-		const GLuint majorId = glGetUniformLocation(_programKeyMajorsId, "majorColor");
-
+		_programKeyMajors.use();
 		// Uniforms setup.
-		glUniform2fv(screenId1, 1, &(invScreenSize[0]));
-		glUniform3fv(colorId, 1, &(keyColor[0]));
-		glUniform3fv(majorId, GLsizei(majorColors.size()), &(majorColors[0][0]));
-		glUniform1i(highId, int(highlightKeys));
-		glUniform1iv(activesId, GLsizei(_actives.size()), &(_actives[0]));
+		glUniform2fv(_programKeyMajors["inverseScreenSize"], 1, &(invScreenSize[0]));
+		glUniform3fv(_programKeyMajors["edgeColor"], 1, &(keyColor[0]));
+		glUniform3fv(_programKeyMajors["majorColor"], GLsizei(majorColors.size()), &(majorColors[0][0]));
+		glUniform1i(_programKeyMajors["highlightKeys"], int(highlightKeys));
+		glUniform1iv(_programKeyMajors["actives"], GLsizei(_actives.size()), &(_actives[0]));
 
 		// Draw the geometry.
 		glBindVertexArray(_vaoKeyboard);
@@ -449,20 +378,13 @@ void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::
 	}
 
 	{
-		glUseProgram(_programKeyMinorsId);
-
-		const GLuint highId = glGetUniformLocation(_programKeyMinorsId, "highlightKeys");
-		const GLuint activesId = glGetUniformLocation(_programKeyMinorsId, "actives");
-		const GLuint screenId1 = glGetUniformLocation(_programKeyMinorsId, "inverseScreenSize");
-		const GLuint colorId = glGetUniformLocation(_programKeyMinorsId, "edgeColor");
-		const GLuint minorId = glGetUniformLocation(_programKeyMinorsId, "minorColor");
-
+		_programKeyMinors.use();
 		// Uniforms setup.
-		glUniform2fv(screenId1, 1, &(invScreenSize[0]));
-		glUniform3fv(colorId, 1, &(keyColor[0]));
-		glUniform3fv(minorId, GLsizei(minorColors.size()), &(minorColors[0][0]));
-		glUniform1i(highId, int(highlightKeys));
-		glUniform1iv(activesId, GLsizei(_actives.size()), &(_actives[0]));
+		glUniform2fv(_programKeyMinors["inverseScreenSize"], 1, &(invScreenSize[0]));
+		glUniform3fv(_programKeyMinors["edgeColor"], 1, &(keyColor[0]));
+		glUniform3fv(_programKeyMinors["minorColor"], GLsizei(minorColors.size()), &(minorColors[0][0]));
+		glUniform1i(_programKeyMinors["highlightKeys"], int(highlightKeys));
+		glUniform1iv(_programKeyMinors["actives"], GLsizei(_actives.size()), &(_actives[0]));
 
 		glBindVertexArray(_vaoKeyboard);
 		glDrawElementsInstanced(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0, 53);
@@ -475,7 +397,7 @@ void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::
 void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const State::PedalsState & state, float keyboardHeight, bool horizontalMode) {
 
 	glEnable(GL_BLEND);
-	glUseProgram(_programPedalsId);
+	_programPedals.use();
 	glDisable(GL_CULL_FACE);
 
 	// Adjust for aspect ratio.
@@ -505,22 +427,14 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 		}
 	}
 
-
 	// Uniforms setup.
-	const GLuint colorId = glGetUniformLocation(_programPedalsId, "pedalColor");
-	const GLuint opacityId = glGetUniformLocation(_programPedalsId, "pedalOpacity");
-	const GLuint flagsId = glGetUniformLocation(_programPedalsId, "pedalFlags");
-	const GLuint scaleId = glGetUniformLocation(_programPedalsId, "scale");
-	const GLuint mergeId =  glGetUniformLocation(_programPedalsId, "mergePedals");
-	const GLuint shiftId =  glGetUniformLocation(_programPedalsId, "shift");
-
-	glUniform3fv(colorId, 1, &(state.color[0]));
-	glUniform2fv(scaleId, 1, &(scale[0]));
-	glUniform2fv(shiftId, 1, &(shift[0]));
-	glUniform1f(opacityId, state.opacity);
+	glUniform3fv(_programPedals["pedalColor"], 1, &(state.color[0]));
+	glUniform2fv(_programPedals["scale"], 1, &(scale[0]));
+	glUniform2fv(_programPedals["shift"], 1, &(shift[0]));
+	glUniform1f(_programPedals["pedalOpacity"], state.opacity);
 	// sostenuto, damper, soft
-	glUniform4f(flagsId, _pedals.sostenuto, _pedals.damper, _pedals.soft, _pedals.expression);
-	glUniform1i(mergeId, state.merge ? 1 : 0);
+	glUniform4f(_programPedals["pedalFlags"], _pedals.sostenuto, _pedals.damper, _pedals.soft, _pedals.expression);
+	glUniform1i(_programPedals["mergePedals"], state.merge ? 1 : 0);
 
 	// Draw the geometry.
 	glBindVertexArray(_vaoPedals);
@@ -535,22 +449,14 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 void MIDIScene::drawWaves(float time, const glm::vec2 & invScreenSize, const State::WaveState & state, float keyboardHeight) {
 
 	glEnable(GL_BLEND);
-	glUseProgram(_programWaveId);
+	_programWave.use();
 	glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
 
 	// Uniforms setup.
-	const GLuint colorId = glGetUniformLocation(_programWaveId, "waveColor");
-	const GLuint opacityId = glGetUniformLocation(_programWaveId, "waveOpacity");
-	const GLuint spreadId = glGetUniformLocation(_programWaveId, "spread");
-	const GLuint scaleId = glGetUniformLocation(_programWaveId, "amplitude");
-	const GLuint freqId =  glGetUniformLocation(_programWaveId, "freq");
-	const GLuint phaseId =  glGetUniformLocation(_programWaveId, "phase");
-	const GLuint shiftId =  glGetUniformLocation(_programWaveId, "keyboardSize");
-
-	glUniform3fv(colorId, 1, &(state.color[0]));
-	glUniform1f(shiftId, keyboardHeight);
-	glUniform1f(opacityId, state.opacity);
-	glUniform1f(spreadId, state.spread);
+	glUniform3fv(_programWave["waveColor"], 1, &(state.color[0]));
+	glUniform1f(_programWave["keyboardSize"], keyboardHeight);
+	glUniform1f(_programWave["waveOpacity"], state.opacity);
+	glUniform1f(_programWave["spread"], state.spread);
 
 	glBindVertexArray(_vaoWave);
 
@@ -563,9 +469,9 @@ void MIDIScene::drawWaves(float time, const glm::vec2 & invScreenSize, const Sta
 		const float ampl = state.amplitude * ampls[i];
 		const float freq = state.frequency * freqs[i];
 		const float phase = phases[i] * time + float(i+1) * 7.39f;
-		glUniform1f(scaleId, ampl);
-		glUniform1f(freqId, freq);
-		glUniform1f(phaseId, phase);
+		glUniform1f(_programWave["amplitude"], ampl);
+		glUniform1f(_programWave["freq"], freq);
+		glUniform1f(_programWave["phase"], phase);
 		glDrawElements(GL_TRIANGLES, int(_countWave), GL_UNSIGNED_INT, (void*)0);
 	}
 
@@ -576,39 +482,39 @@ void MIDIScene::drawWaves(float time, const glm::vec2 & invScreenSize, const Sta
 }
 
 void MIDIScene::setMinMaxKeys(int minKey, int minKeyMajor, int notesCount){
-	glUseProgram(_programId);
-	glUniform1i(glGetUniformLocation(_programId, "minNoteMajor"), minKeyMajor);
-	glUniform1f(glGetUniformLocation(_programId, "notesCount"), float(notesCount));
-	glUseProgram(_programFlashesId);
-	glUniform1i(glGetUniformLocation(_programFlashesId, "minNote"), minKey);
-	glUniform1f(glGetUniformLocation(_programFlashesId, "notesCount"), float(notesCount));
-	glUseProgram(_programKeyMajorsId);
-	glUniform1i(glGetUniformLocation(_programKeyMajorsId, "minNoteMajor"), minKeyMajor);
-	glUniform1f(glGetUniformLocation(_programKeyMajorsId, "notesCount"), float(notesCount));
-	glUseProgram(_programKeyMinorsId);
-	glUniform1i(glGetUniformLocation(_programKeyMinorsId, "minNoteMajor"), minKeyMajor);
-	glUniform1f(glGetUniformLocation(_programKeyMinorsId, "notesCount"), float(notesCount));
-	glUseProgram(_programParticulesId);
-	glUniform1i(glGetUniformLocation(_programParticulesId, "minNote"), minKey);
-	glUniform1f(glGetUniformLocation(_programParticulesId, "notesCount"), float(notesCount));
+	_programNotes.use();
+	glUniform1i(_programNotes["minNoteMajor"], minKeyMajor);
+	 glUniform1f(_programNotes["notesCount"], float(notesCount));
+	_programFlashes.use();
+	glUniform1i(_programFlashes["minNote"], minKey);
+	glUniform1f(_programFlashes["notesCount"], float(notesCount));
+	_programKeyMajors.use();
+	glUniform1i(_programKeyMajors["minNoteMajor"], minKeyMajor);
+	glUniform1f(_programKeyMajors["notesCount"], float(notesCount));
+	_programKeyMinors.use();
+	glUniform1i(_programKeyMinors["minNoteMajor"], minKeyMajor);
+	glUniform1f(_programKeyMinors["notesCount"], float(notesCount));
+	_programParticules.use();
+	glUniform1i(_programParticules["minNote"], minKey);
+	glUniform1f(_programParticules["notesCount"], float(notesCount));
 	glUseProgram(0);
 }
 
 
 void MIDIScene::setOrientation(bool horizontal){
 	const int val = horizontal ? 1 : 0;
-	glUseProgram(_programId);
-	glUniform1i(glGetUniformLocation(_programId, "horizontalMode"), val);
-	glUseProgram(_programFlashesId);
-	glUniform1i(glGetUniformLocation(_programFlashesId, "horizontalMode"), val);
-	glUseProgram(_programKeyMajorsId);
-	glUniform1i(glGetUniformLocation(_programKeyMajorsId, "horizontalMode"), val);
-	glUseProgram(_programKeyMinorsId);
-	glUniform1i(glGetUniformLocation(_programKeyMinorsId, "horizontalMode"), val);
-	glUseProgram(_programParticulesId);
-	glUniform1i(glGetUniformLocation(_programParticulesId, "horizontalMode"), val);
-	glUseProgram(_programWaveId);
-	glUniform1i(glGetUniformLocation(_programWaveId, "horizontalMode"), val);
+	_programNotes.use();
+	glUniform1i(_programNotes["horizontalMode"], val);
+	_programFlashes.use();
+	glUniform1i(_programFlashes["horizontalMode"], val);
+	_programKeyMajors.use();
+	glUniform1i(_programKeyMajors["horizontalMode"], val);
+	_programKeyMinors.use();
+	glUniform1i(_programKeyMinors["horizontalMode"], val);
+	_programParticules.use();
+	glUniform1i(_programParticules["horizontalMode"], val);
+	_programWave.use();
+	glUniform1i(_programWave["horizontalMode"], val);
 	glUseProgram(0);
 }
 
@@ -616,9 +522,7 @@ void MIDIScene::clean(){
 	glDeleteVertexArrays(1, &_vao);
 	glDeleteVertexArrays(1, &_vaoFlashes);
 	glDeleteVertexArrays(1, &_vaoParticles);
-	glDeleteProgram(_programId);
-	glDeleteProgram(_programFlashesId);
-	glDeleteProgram(_programParticulesId);
+	// TODO: (MV) clear programs
 }
 
 void MIDIScene::upload(const std::vector<GPUNote> & data){

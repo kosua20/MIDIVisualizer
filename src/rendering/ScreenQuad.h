@@ -30,18 +30,16 @@ public:
 	/// Clean function
 	void clean();
 	
-	GLuint programId(){return _programId; }
+	ShaderProgram& program(){ return _program; }
 	
 protected:
-	GLuint _programId;
+	ShaderProgram _program;
 	
 private:
 	
 	GLuint _vao;
 	GLuint _ebo;
 	GLuint _textureId;
-	GLuint _timeId;
-	GLuint _screenId;
 	
 	size_t _count;
 

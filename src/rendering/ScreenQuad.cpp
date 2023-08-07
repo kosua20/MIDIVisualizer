@@ -21,7 +21,7 @@ void ScreenQuad::init(GLuint textureId, const std::string & fragName, const std:
 void ScreenQuad::init(const std::string & fragName, const std::string & vertName) {
 
 	// Load the shaders
-	_programId = createGLProgramFromStrings(ResourcesManager::getStringForShader(vertName), ResourcesManager::getStringForShader(fragName));
+	_program.init(vertName, fragName);
 
 	// Load geometry.
 	std::vector<float> quadVertices{ -1.0, -1.0,  0.0,
@@ -57,15 +57,7 @@ void ScreenQuad::init(const std::string & fragName, const std::string & vertName
 
 	glBindVertexArray(0);
 
-	// Link the texture of the framebuffer for this program.
-	glUseProgram(_programId);
-	GLuint texUniID = glGetUniformLocation(_programId, "screenTexture");
-	glUniform1i(texUniID, 0);
-	glUseProgram(0);
 	checkGLError();
-
-	_screenId = glGetUniformLocation(_programId, "inverseScreenSize");
-	_timeId = glGetUniformLocation(_programId, "time");
 }
 
 void ScreenQuad::draw(float time) {
@@ -81,13 +73,12 @@ void ScreenQuad::draw(float time, glm::vec2 invScreenSize){
 void ScreenQuad::draw(GLuint texId, float time) {
 
 	// Select the program (and shaders).
-	glUseProgram(_programId);
+	_program.use();
 
-	glUniform1f(_timeId, time);
+	glUniform1f(_program["time"], time);
 
 	// Active screen texture.
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texId);
+	_program.texture("screenTexture", texId, GL_TEXTURE_2D);
 
 	// Select the geometry.
 	glBindVertexArray(_vao);
@@ -102,10 +93,10 @@ void ScreenQuad::draw(GLuint texId, float time) {
 void ScreenQuad::draw(GLuint texid, float time, glm::vec2 invScreenSize) {
 
 	// Select the program (and shaders).
-	glUseProgram(_programId);
+	_program.use();
 
 	// Inverse screen size uniform.
-	glUniform2fv(_screenId, 1, &(invScreenSize[0]));
+	glUniform2fv(_program["inverseScreenSize"], 1, &(invScreenSize[0]));
 
 	draw(texid, time);
 }

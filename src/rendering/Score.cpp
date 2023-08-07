@@ -15,60 +15,57 @@ Score::Score(double secondsPerMeasure){
 	ScreenQuad::init(textureId, "background_frag", "background_vert");
 	
 	// Load additional data.
-	glUseProgram(_programId);
-	GLuint sigID = glGetUniformLocation(_programId, "secondsPerMeasure");
-	glUniform1f(sigID, float(secondsPerMeasure));
+	_program.use();
+	glUniform1f(_program["secondsPerMeasure"], float(secondsPerMeasure));
 	glUseProgram(0);
 
 }
 
 void Score::setScaleAndMinorWidth(const float scale, const float width){
-	glUseProgram(_programId);
-	GLuint speedID = glGetUniformLocation(_programId, "mainSpeed");
-	glUniform1f(speedID, scale);
-	GLuint widthId = glGetUniformLocation(_programId, "minorsWidth");
-	glUniform1f(widthId, width);
+	_program.use();
+	glUniform1f(_program["mainSpeed"], scale);
+	glUniform1f(_program["minorsWidth"], width);
 	glUseProgram(0);
 }
 
 void Score::setDisplay(const bool digits, const bool horiz, const bool vert){
-	glUseProgram(_programId);
-	GLuint id1 = glGetUniformLocation(_programId, "useDigits"); glUniform1i(id1, digits);
-	GLuint id2 = glGetUniformLocation(_programId, "useHLines"); glUniform1i(id2, horiz);
-	GLuint id3 = glGetUniformLocation(_programId, "useVLines"); glUniform1i(id3, vert);
+	_program.use();
+	glUniform1i(_program["useDigits"], digits);
+	glUniform1i(_program["useHLines"], horiz);
+	glUniform1i(_program["useVLines"], vert);
 	glUseProgram(0);
 }
 
 void Score::setColors(const glm::vec3 & linesColor, const glm::vec3 & textColor, const glm::vec3 & keysColor){
-	glUseProgram(_programId);
-	GLuint id1 = glGetUniformLocation(_programId, "linesColor"); glUniform3fv(id1, 1, &linesColor[0]);
-	GLuint id2 = glGetUniformLocation(_programId, "textColor"); glUniform3fv(id2, 1, &textColor[0]);
-	GLuint id3 = glGetUniformLocation(_programId, "keysColor"); glUniform3fv(id3, 1, &keysColor[0]);
+	_program.use();
+	glUniform3fv(_program["linesColor"], 1, &linesColor[0]);
+	glUniform3fv(_program["textColor" ], 1, &textColor[0]);
+	//glUniform3fv(_program["keysColor" ], 1, &keysColor[0]);
 	glUseProgram(0);
 }
 
 void Score::setKeyboardSize(float keyboardHeight){
-	glUseProgram(_programId);
-	glUniform1f(glGetUniformLocation(_programId, "keyboardHeight"), keyboardHeight);
+	_program.use();
+	glUniform1f(_program["keyboardHeight"], keyboardHeight);
 	glUseProgram(0);
 }
 
 void Score::setMinMaxKeys(int minKey, int minKeyMajor, int notesCount){
-	glUseProgram(_programId);
-	glUniform1i(glGetUniformLocation(_programId, "minNoteMajor"), minKeyMajor);
-	glUniform1f(glGetUniformLocation(_programId, "notesCount"), float(notesCount));
+	_program.use();
+	glUniform1i(_program["minNoteMajor"], minKeyMajor);
+	glUniform1f(_program["notesCount"], float(notesCount));
 	glUseProgram(0);
 }
 
 void Score::setPlayDirection(bool reverse){
-	glUseProgram(_programId);
-	glUniform1i(glGetUniformLocation(_programId, "reverseMode"), reverse ? 1 : 0);
+	_program.use();
+	glUniform1i(_program["reverseMode"], reverse ? 1 : 0);
 	glUseProgram(0);
 }
 
 void Score::setOrientation(bool horizontal){
-	glUseProgram(_programId);
-	glUniform1i(glGetUniformLocation(_programId, "horizontalMode"), horizontal ? 1 : 0);
+	_program.use();
+	glUniform1i(_program["horizontalMode"], horizontal ? 1 : 0);
 	glUseProgram(0);
 }
 

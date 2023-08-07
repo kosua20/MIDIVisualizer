@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 /// This macro is used to check for OpenGL errors with access to the file and line number where the error is detected.
 #define checkGLError() _checkGLError(__FILE__, __LINE__)
@@ -15,13 +16,28 @@ std::string getGLErrorString(GLenum error);
 /// Check if any OpenGL error has been detected and log it.
 int _checkGLError(const char *file, int line);
 
-/// Load a shader of the given type from a string
-GLuint loadShader(const std::string & prog, GLuint type);
+class ShaderProgram {
+public:
 
-/// Create a GLProgram using the hader code contained in the given files.
-GLuint createGLProgram(const std::string & vertexPath, const std::string & fragmentPath, const std::string & geometryPath = "");
+	void init(const std::string & vertexName, const std::string & fragmentName);
 
-GLuint createGLProgramFromStrings(const std::string & vertexContent, const std::string & fragmentContent, const std::string & geometryContent = "");
+	GLint operator[](const std::string& name) { return _uniforms[name]; }
+
+	void use();
+
+	void texture(const std::string& name, GLuint texture, GLenum shape);
+
+private:
+
+	/// Load a shader of the given type from a string
+	static GLuint loadShader(const std::string & prog, GLuint type);
+
+	static GLuint createGLProgramFromStrings(const std::string & vertexContent, const std::string & fragmentContent);
+
+	std::unordered_map<std::string, GLint> _uniforms;
+	std::unordered_map<std::string, int> _textures;
+	GLuint _id;
+};
 
 // Texture loading.
 

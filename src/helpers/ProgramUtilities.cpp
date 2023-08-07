@@ -1,5 +1,6 @@
 #include "ProgramUtilities.h"
 #include "../helpers/System.h"
+#include "ResourcesManager.h"
 
 #include <iostream>
 #include <fstream>
@@ -48,7 +49,81 @@ int _checkGLError(const char *file, int line){
 	return 0;
 }
 
-GLuint loadShader(const std::string & prog, GLuint type){
+void ShaderProgram::init(const std::string & vertexName, const std::string & fragmentName){
+	const std::string vertexContent = ResourcesManager::getStringForShader(vertexName);
+	const std::string fragmentContent = ResourcesManager::getStringForShader(fragmentName);
+	_id = createGLProgramFromStrings(vertexContent, fragmentContent);
+	_textures.clear();
+	_uniforms.clear();
+	// Get the number of active uniforms and their maximum length.
+	// Note: this will also capture each attribute of each element of a uniform block (not used in MIDIViz for now)
+	GLint count = 0;
+	GLint size  = 0;
+	glGetProgramiv(_id, GL_ACTIVE_UNIFORMS, &count);
+	glGetProgramiv(_id, GL_ACTIVE_UNIFORM_MAX_LENGTH, &size);
+	glUseProgram(_id);
+
+	for(GLuint i = 0; i < GLuint(count); ++i) {
+		// Get infos (name, name length, type,...) of each uniform.
+		std::vector<GLchar> uname(size);
+		GLenum utype;
+		GLint usize		= 0;
+		GLsizei ulength = 0;
+		glGetActiveUniform(_id, i, size, &ulength, &usize, &utype, &uname[0]);
+		std::string name(&uname[0]);
+		// Skip empty or default uniforms (starting with 'gl_').
+		if(usize == 0 || name.empty() || (name.size() > 3 && name.substr(0, 3) == "gl_")) {
+			continue;
+		}
+		// If the size of the uniform is > 1, we have an array.
+		if(usize > 1) {
+			// Extract the array name from the 'name[0]' string.
+			const std::string subname = name.substr(0, name.find_first_of('['));
+			name = subname;
+		}
+		// Register uniform using its name.
+		// /!\ the uniform location can be different from the uniform ID.
+		const GLint location = glGetUniformLocation(_id, uname.data());
+
+		// Store textures in their separate list.
+		// Ignore more complex texture types for now
+		if(utype == GL_SAMPLER_1D || utype == GL_SAMPLER_2D || utype == GL_SAMPLER_CUBE || utype == GL_SAMPLER_3D
+		   || utype == GL_SAMPLER_1D_ARRAY || utype == GL_SAMPLER_2D_ARRAY || utype == GL_SAMPLER_CUBE_MAP_ARRAY){
+			_textures[name] = location;
+		} else {
+			_uniforms[name] = location;
+		}
+		// Do we need additional info?
+	}
+	checkGLError();
+
+	// Check we have no uniform blocks.
+	glGetProgramiv(_id, GL_ACTIVE_UNIFORM_BLOCKS, &count);
+	glGetProgramiv(_id, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, &size);
+	assert(count == 0);
+
+	int textureSlot = 0;
+	for(auto& texture : _textures){
+		glUniform1i(texture.second, textureSlot);
+		texture.second = textureSlot;
+		++textureSlot;
+	}
+
+	checkGLError();
+	glUseProgram(0);
+}
+
+void ShaderProgram::use(){
+	glUseProgram(_id);
+}
+
+void ShaderProgram::texture(const std::string& name, GLuint texture, GLenum shape){
+	const int texSlot = _textures.at(name);
+	glActiveTexture(GL_TEXTURE0 + texSlot);
+	glBindTexture(shape, texture);
+}
+
+GLuint ShaderProgram::loadShader(const std::string & prog, GLuint type){
 	GLuint id;
 	// Create shader object.
 	id = glCreateShader(type);
@@ -83,21 +158,8 @@ GLuint loadShader(const std::string & prog, GLuint type){
 	return id;
 }
 
-GLuint createGLProgram(const std::string & vertexPath, const std::string & fragmentPath, const std::string & geometryPath){
-	
-	std::string vertexCode = System::loadStringFromFile(vertexPath);
-	std::string fragmentCode = System::loadStringFromFile(fragmentPath);
-	std::string geometryCode = "";
-	
-	if(!geometryPath.empty()) {
-		geometryCode = System::loadStringFromFile(geometryPath);
-	}
-	
-	return createGLProgramFromStrings(vertexCode, fragmentCode, geometryCode);
-}
-
-GLuint createGLProgramFromStrings(const std::string & vertexContent, const std::string & fragmentContent, const std::string & geometryContent){
-	GLuint vp(0), fp(0), gp(0), id(0);
+GLuint ShaderProgram::createGLProgramFromStrings(const std::string & vertexContent, const std::string & fragmentContent){
+	GLuint vp(0), fp(0), id(0);
 	id = glCreateProgram();
 	checkGLError();
 	std::string vertexCode = vertexContent;
@@ -113,14 +175,7 @@ GLuint createGLProgramFromStrings(const std::string & vertexContent, const std::
 		fp = loadShader(fragmentCode,GL_FRAGMENT_SHADER);
 		glAttachShader(id,fp);
 	}
-	// If geometry program filepath exists, load it and compile it.
-	std::string geometryCode = geometryContent;
-	if (!geometryCode.empty()) {
-		gp = loadShader(geometryCode,GL_GEOMETRY_SHADER);
-		glAttachShader(id,gp);
-	}
-	
-	
+
 	// Link everything
 	glLinkProgram(id);
 	checkGLError();
@@ -145,14 +200,10 @@ GLuint createGLProgramFromStrings(const std::string & vertexContent, const std::
 	if (fp != 0) {
 		glDetachShader(id,fp);
 	}
-	if (gp != 0) {
-		glDetachShader(id,gp);
-	}
 	checkGLError();
 	//And deleting them
 	glDeleteShader(vp);
 	glDeleteShader(fp);
-	glDeleteShader(gp);
 	
 	glUseProgram(id);
 	checkGLError();

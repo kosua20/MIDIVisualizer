@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include "../midi/MIDIFile.h"
 #include "../State.h"
+#include "../../helpers/ProgramUtilities.h"
 
 #include <fstream>
 
@@ -99,13 +100,13 @@ private:
 
 	void renderSetup();
 
-	GLuint _programId;
-	GLuint _programFlashesId;
-	GLuint _programParticulesId;
-	GLuint _programKeyMinorsId;
-	GLuint _programKeyMajorsId;
-	GLuint _programPedalsId;
-	GLuint _programWaveId;
+	ShaderProgram _programNotes;
+	ShaderProgram _programFlashes;
+	ShaderProgram _programParticules;
+	ShaderProgram _programKeyMinors;
+	ShaderProgram _programKeyMajors;
+	ShaderProgram _programPedals;
+	ShaderProgram _programWave;
 	
 	GLuint _vao;
 	GLuint _ebo;

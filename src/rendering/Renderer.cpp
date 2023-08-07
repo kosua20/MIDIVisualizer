@@ -334,10 +334,10 @@ void Renderer::drawBackgroundImage(const glm::vec2 &) {
 		return;
 	}
 	glEnable(GL_BLEND);
-	glUseProgram(_backgroundTexture.programId());
-	glUniform1f(glGetUniformLocation(_backgroundTexture.programId(), "textureAlpha"), _state.background.imageAlpha);
-	glUniform1i(glGetUniformLocation(_backgroundTexture.programId(), "behindKeyboard"), _state.background.imageBehindKeyboard);
-	glUniform1f(glGetUniformLocation(_backgroundTexture.programId(), "keyboardHeight"), _state.keyboard.size);
+	_backgroundTexture.program().use();
+	glUniform1f(_backgroundTexture.program()[ "textureAlpha"], _state.background.imageAlpha);
+	glUniform1i(_backgroundTexture.program()[ "behindKeyboard"], _state.background.imageBehindKeyboard);
+	glUniform1f(_backgroundTexture.program()[ "keyboardHeight"], _state.keyboard.size);
 	_backgroundTexture.draw(_state.background.tex, _timer);
 
 	glDisable(GL_BLEND);
@@ -966,9 +966,8 @@ void Renderer::showBlurOptions(){
 	ImGuiPushItemWidth(100);
 	if (ImGui::SliderFloat("Fading", &_state.attenuation, 0.0f, 1.0f)) {
 		_state.attenuation = glm::clamp(_state.attenuation, 0.0f, 1.0f);
-		glUseProgram(_blurringScreen.programId());
-		const GLuint id1 = glGetUniformLocation(_blurringScreen.programId(), "attenuationFactor");
-		glUniform1f(id1, _state.attenuation);
+		_blurringScreen.program().use();
+		glUniform1f(_blurringScreen.program()["attenuationFactor"], _state.attenuation);
 		glUseProgram(0);
 	}
 	ImGui::PopItemWidth();
@@ -1595,9 +1594,8 @@ void Renderer::applyBackgroundColor(){
 	glClear(GL_COLOR_BUFFER_BIT);
 	_blurFramebuffer1->unbind();
 	// Update parameter.
-	glUseProgram(_blurringScreen.programId());
-	GLuint id3 = glGetUniformLocation(_blurringScreen.programId(), "backgroundColor");
-	glUniform3fv(id3, 1, &_state.background.color[0]);
+	_blurringScreen.program().use();
+	glUniform3fv(_blurringScreen.program()["backgroundColor"], 1, &_state.background.color[0]);
 	glUseProgram(0);
 }
 
@@ -1622,9 +1620,8 @@ void Renderer::applyAllSettings() {
 
 	// Reset buffers.
 	applyBackgroundColor();
-	glUseProgram(_blurringScreen.programId());
-	GLuint id2 = glGetUniformLocation(_blurringScreen.programId(), "attenuationFactor");
-	glUniform1f(id2, _state.attenuation);
+	_blurringScreen.program().use();
+	glUniform1f(_blurringScreen.program()["attenuationFactor"], _state.attenuation);
 	glUseProgram(0);
 
 	// Resize the framebuffers.
