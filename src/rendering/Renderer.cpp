@@ -457,46 +457,63 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		ImGuiSameLine(COLUMN_SIZE);
 		ImGui::Checkbox("Smoothing", &_state.applyAA);
 
-		if(ImGui::Checkbox("Horizontal scroll", &_state.horizontalScroll)){
-			_score->setOrientation(_state.horizontalScroll);
-			_scene->setOrientation(_state.horizontalScroll);
-		}
-		if(!_liveplay){
-			ImGuiSameLine(COLUMN_SIZE);
-			if(ImGui::Checkbox("Reverse scroll", &_state.reverseScroll)){
-				_score->setPlayDirection(_state.reverseScroll);
-			}
-		}
 
-		if (ImGui::Checkbox("Use the same color for all effects", &_state.lockParticleColor)) {
-			// If we enable the lock, make sure the colors are synched.
-			synchronizeColors(_state.notes.majorColors);
-		}
-
-		ImGuiPushItemWidth(100);
-		if(ImGui::Combo("Min key", &_state.minKey, midiKeysStrings, 128)){
-			updateMinMaxKeys();
-		}
-
-		ImGuiSameLine(COLUMN_SIZE);
-		if(ImGui::Combo("Max key", &_state.maxKey, midiKeysStrings, 128)){
-			updateMinMaxKeys();
-		}
-
-		if (ImGui::InputFloat("Preroll", &_state.prerollTime, 0.1f, 1.0f, "%.1fs")) {
-			reset();
-		}
-
-		if(!_liveplay){
-			ImGuiSameLine(COLUMN_SIZE);
-			if(ImGui::SliderFloat("Speed", &_state.scrollSpeed, 0.1f, 5.0f, "%.1fx")){
-				_state.scrollSpeed = (std::max)(0.01f, _state.scrollSpeed);
-			}
-		}
-		ImGui::PopItemWidth();
 
 		if (ImGui::Button("Show effect layers...")) {
 			_showLayers = true;
+		}
+		ImGuiSameLine(COLUMN_SIZE);
+		if (ImGui::Checkbox("Use same colors for all effects", &_state.lockParticleColor)) {
+			// If we enable the lock, make sure the colors are synched.
+			synchronizeColors(_state.notes.majorColors);
+		}
+		if(ImGui::Checkbox("Per-set colors", &_state.perSetColors)){
+			if(!_state.perSetColors){
+				_state.synchronizeSets();
+			}
+		}
+		if(_state.perSetColors){
+			ImGuiSameLine(COLUMN_SIZE);
+			if(ImGui::Button("Define sets...")){
+				ImGui::OpenPopup("Note sets options");
+			}
+			showSets();
+		}
+
+		if(ImGui::CollapsingHeader("Playback##HEADER")){
+			ImGuiPushItemWidth(100);
+			if(ImGui::Combo("Min key", &_state.minKey, midiKeysStrings, 128)){
+				updateMinMaxKeys();
+			}
+
+			ImGuiSameLine(COLUMN_SIZE);
+			if(ImGui::Combo("Max key", &_state.maxKey, midiKeysStrings, 128)){
+				updateMinMaxKeys();
+			}
+
+			if (ImGui::InputFloat("Preroll", &_state.prerollTime, 0.1f, 1.0f, "%.1fs")) {
+				reset();
+			}
+
+			if(!_liveplay){
+				ImGuiSameLine(COLUMN_SIZE);
+				if(ImGui::SliderFloat("Speed", &_state.scrollSpeed, 0.1f, 5.0f, "%.1fx")){
+					_state.scrollSpeed = (std::max)(0.01f, _state.scrollSpeed);
+				}
+			}
+			ImGui::PopItemWidth();
+
+			if(ImGui::Checkbox("Horizontal scroll", &_state.horizontalScroll)){
+				_score->setOrientation(_state.horizontalScroll);
+				_scene->setOrientation(_state.horizontalScroll);
+			}
+			if(!_liveplay){
+				ImGuiSameLine(COLUMN_SIZE);
+				if(ImGui::Checkbox("Reverse scroll", &_state.reverseScroll)){
+					_score->setPlayDirection(_state.reverseScroll);
+				}
+			}
+
 		}
 
 		if(ImGui::CollapsingHeader("Notes##HEADER")){
@@ -551,6 +568,7 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			ImGui::Checkbox("Verbose log", &_verbose);
 			if(ImGui::Button("Assign random colors")){
 				_state.lockParticleColor = true;
+
 				const ColorArray debugColors = {
 					glm::vec3{1.0f, 0.0f, 0.0f},
 					glm::vec3{1.0f, 0.5f, 0.0f},
@@ -698,18 +716,79 @@ SystemAction Renderer::showTopButtons(double currentTime){
 	return action;
 }
 
-void Renderer::showFlashOptions() {
-	if(channelColorEdit("Color##Flashes", "Color", _state.flashes.colors)){
-		synchronizeColors(_state.flashes.colors);
+void Renderer::showNoteOptions() {
+
+	if(channelColorEdit("Notes", "Notes", _state.notes.majorColors)){
+		synchronizeColors(_state.notes.majorColors);
+	}
+	ImGuiSameLine();
+	if(channelColorEdit("Minors", "Minors", _state.notes.minorColors)){
+		synchronizeColors(_state.notes.minorColors);
 	}
 
 	ImGuiSameLine(COLUMN_SIZE);
-	ImGuiPushItemWidth(100);
-	ImGui::SliderFloat("Scale##flash", &_state.flashes.size, 0.1f, 3.0f, "%.2fx");
-	ImGui::PopItemWidth();
-}
+	if(ImGui::Button("Use background images...")){
+		ImGui::OpenPopup("Note background textures");
+	}
 
-void Renderer::showNoteOptions() {
+	if(ImGui::BeginPopup("Note background textures")){
+		struct BackgroundTextureParams {
+			const char* name;
+			std::vector<std::string>& paths;
+			float& scale;
+			float& alpha;
+			bool& scroll;
+			GLuint& tex;
+		};
+
+		BackgroundTextureParams paramGroups[2] = {
+			{"Major notes", _state.notes.majorImagePath, _state.notes.majorTexScale, _state.notes.majorTexAlpha, _state.notes.majorTexScroll, _state.notes.majorTex},
+			{"Minor notes", _state.notes.minorImagePath, _state.notes.minorTexScale, _state.notes.minorTexAlpha, _state.notes.minorTexScroll, _state.notes.minorTex},
+		};
+
+		for(unsigned int i = 0; i < 2; ++i){
+			BackgroundTextureParams& group = paramGroups[i];
+			ImGui::PushID(group.name);
+			ImGui::AlignTextToFramePadding();
+			ImGui::Text("%s", group.name);
+			ImGuiSameLine(100);
+			if(ImGui::Button("Load...")){
+				 // Read arguments.
+				 char *outPath = nullptr;
+				 int res = sr_gui_ask_load_file("Select image", "", "jpg,jpeg,png", &outPath);
+				 System::forceLocale();
+				 if(res == SR_GUI_VALIDATED && outPath){
+					 group.paths = { std::string(outPath) };
+					 glDeleteTextures(1, &group.tex);
+					 group.tex = loadTexture(group.paths[0], 4, false);
+				 }
+				 free(outPath);
+			 }
+			 ImGuiSameLine();
+			 if(ImGui::Button("Clear")) {
+				 group.paths.clear();
+				 glDeleteTextures(1, &group.tex);
+				 group.tex = 0;
+			 }
+			ImGuiSameLine();
+			ImGuiPushItemWidth(100);
+			if(ImGui::SliderFloat("Scale", &group.scale, 0.1f, 15.0f, "%.2fx")){
+				group.scale = glm::max(group.scale, 0.001f);
+			}
+			ImGuiSameLine();
+			if(ImGuiSliderPercent("Intensity", &group.alpha, 0.0f, 1.0f)){
+				group.alpha = glm::clamp(group.alpha, 0.0f, 1.0f);
+			}
+			ImGuiSameLine();
+			ImGui::Checkbox("Scroll", &group.scroll);
+			ImGui::PopItemWidth();
+			ImGui::PopID();
+		}
+
+		ImGui::EndPopup();
+	}
+
+
 	ImGuiPushItemWidth(100);
 	bool smw0 = ImGui::InputFloat("Scale", &_state.scale, 0.01f, 0.1f, "%.2fx");
 	ImGuiSameLine(COLUMN_SIZE);
@@ -741,86 +820,20 @@ void Renderer::showNoteOptions() {
 	}
 	ImGui::PopItemWidth();
 
-	if(channelColorEdit("Notes", "Notes", _state.notes.majorColors)){
-		synchronizeColors(_state.notes.majorColors);
-	}
-	ImGuiSameLine();
-	if(channelColorEdit("Minors", "Minors", _state.notes.minorColors)){
-		synchronizeColors(_state.notes.minorColors);
+
+}
+
+void Renderer::showFlashOptions() {
+	if(channelColorEdit("Color##Flashes", "Color", _state.flashes.colors)){
+		synchronizeColors(_state.flashes.colors);
 	}
 
 	ImGuiSameLine(COLUMN_SIZE);
-	if(ImGui::Checkbox("Per-set colors", &_state.perSetColors)){
-		if(!_state.perSetColors){
-			_state.synchronizeSets();
-		}
-	}
-
-	if(_state.perSetColors){
-		if(ImGui::Button("Define sets...")){
-			ImGui::OpenPopup("Note sets options");
-		}
-		showSets();
-	}
-
-	if(ImGui::Button("Load major image...##Notes")){
-		// Read arguments.
-		char *outPath = nullptr;
-		int res = sr_gui_ask_load_file("Select image", "", "jpg,jpeg,png", &outPath);
-		System::forceLocale();
-		if(res == SR_GUI_VALIDATED && outPath){
-			_state.notes.majorImagePath = { std::string(outPath) };
-			glDeleteTextures(1, &_state.notes.majorTex);
-			_state.notes.majorTex = loadTexture(_state.notes.majorImagePath[0], 4, false);
-		}
-		free(outPath);
-	}
-	ImGuiSameLine(COLUMN_SIZE);
-	if(ImGui::Button("Clear major image##Notes")) {
-		_state.notes.majorImagePath.clear();
-		glDeleteTextures(1, &_state.notes.majorTex);
-		_state.notes.majorTex = 0;
-	}
-
 	ImGuiPushItemWidth(100);
-	if(ImGui::SliderFloat("Scale##NotesMajorTexture", &_state.notes.majorTexScale, 0.1f, 15.0f, "%.2fx")){
-		_state.notes.majorTexScale = glm::max(_state.notes.majorTexScale, 0.001f);
-	}
-	ImGuiSameLine(COLUMN_SIZE);
-	if(ImGuiSliderPercent("Intensity##NotesMajorTexture", &_state.notes.majorTexAlpha, 0.0f, 1.0f)){
-		_state.notes.majorTexAlpha = glm::clamp(_state.notes.majorTexAlpha, 0.0f, 1.0f);
-	}
-	ImGui::Checkbox("Scroll##NotesMajorTexture", &_state.notes.majorTexScroll);
+	ImGui::SliderFloat("Scale##flash", &_state.flashes.size, 0.1f, 3.0f, "%.2fx");
 	ImGui::PopItemWidth();
-
-	if(ImGui::Button("Load minor image...##Notes")){
-		// Read arguments.
-		char *outPath = nullptr;
-		int res = sr_gui_ask_load_file("Select image", "", "jpg,jpeg,png", &outPath);
-		System::forceLocale();
-		if(res == SR_GUI_VALIDATED && outPath){
-			_state.notes.minorImagePath = { std::string(outPath) };
-			glDeleteTextures(1, &_state.notes.minorTex);
-			_state.notes.minorTex = loadTexture(_state.notes.minorImagePath[0], 4, false);
-		}
-		free(outPath);
-	}
-	ImGuiSameLine(COLUMN_SIZE);
-	if(ImGui::Button("Clear minor image##Notes")) {
-		_state.notes.minorImagePath.clear();
-		glDeleteTextures(1, &_state.notes.minorTex);
-		_state.notes.minorTex = 0;
-	}
-	ImGuiPushItemWidth(100);
-	if(ImGui::SliderFloat("Scale##NotesMinorTexture", &_state.notes.minorTexScale, 0.1f, 15.0f, "%.2fx")){
-		_state.notes.minorTexScale = glm::max(_state.notes.minorTexScale, 0.001f);
-	}
-	ImGuiSameLine(COLUMN_SIZE);
-	if(ImGuiSliderPercent("Intensity##NotesMinorTexture", &_state.notes.minorTexAlpha, 0.0f, 1.0f)){
-		_state.notes.minorTexAlpha = glm::clamp(_state.notes.minorTexAlpha, 0.0f, 1.0f);
-	}
-	ImGui::Checkbox("Scroll##NotesMinorTexture", &_state.notes.minorTexScroll);
-	ImGui::PopItemWidth();
+	// TODO: (MV) customize texture atlas
+	// TODO: (MV) additional halo control
 }
 
 void Renderer::showParticleOptions(){
@@ -938,6 +951,9 @@ void Renderer::showPedalOptions(){
 	ImGui::PopItemWidth();
 
 	ImGui::Checkbox("Merge pedals", &_state.pedals.merge);
+
+	// TODO: (MV) customize textures for each pedal
+	// TODO: (MV) relative placement.
 }
 
 void Renderer::showWaveOptions(){
@@ -992,6 +1008,7 @@ void Renderer::showScoreOptions(){
 	if (cbg0 || cbg1) {
 		_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
 	}
+	// TODO: (MV) lines width and text size
 }
 
 void Renderer::showBackgroundOptions(){
@@ -1193,8 +1210,9 @@ void Renderer::showSets(){
 	if(ImGui::BeginPopup("Note sets options")){
 		ImGui::Text("Decide how notes should be grouped in multiple sets");
 		ImGui::Text("(to which you can assign different key/effects colors).");
-		ImGui::Text("This can be based on the MIDI channel, the track, by key, using the chromatic sequence or by");
-		ImGui::Text("separating notes that are lower or higher than a given key.");
+		ImGui::Text("This can be based on the MIDI channel, the track, the key,");
+		ImGui::Text("using the chromatic sequence, separating notes that are");
+		ImGui::Text("lower or higher than a given key, or defining custom lists.");
 
 		bool shouldUpdate = false;
 		shouldUpdate = ImGui::RadioButton("Channel", (int*)(&_state.setOptions.mode), int(SetMode::CHANNEL)) || shouldUpdate;

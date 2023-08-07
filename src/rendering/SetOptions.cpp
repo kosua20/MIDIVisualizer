@@ -53,7 +53,7 @@ int SetOptions::apply(int note, int channel, int track, double start) const {
 					// Ignore this set.
 					continue;
 				}
-				// TODO: binary search instead.
+				// TODO: (MV) binary search instead.
 				int kid = 0;
 				for( ; kid < keyCount; ++kid){
 					if(start < _keysPerSet[sid][kid].time){
