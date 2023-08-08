@@ -48,7 +48,6 @@ void MIDIScene::renderSetup(){
 	// Programs.
 
 	// Notes shaders.
-	// TODO: (MV) wrap program in abstraction with reflection, to avoid querying IDs at each frame
 	_programNotes.init("notes_vert", "notes_frag");
 
 	// Generate a vertex array (useful when we add other attributes to the geometry).
@@ -99,9 +98,6 @@ void MIDIScene::renderSetup(){
 	glVertexAttribDivisor(1, 1);
 	// We load the indices data
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
-
-	// Flash texture loading.
-	_texFlash = ResourcesManager::getTextureFor("flash");
 
 	// Particles program.
 	_programParticules.init("particles_vert", "particles_frag");
@@ -347,8 +343,13 @@ void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const S
 	_programFlashes.uniform("time",time);
 	_programFlashes.uniforms("baseColor", state.colors.size(), state.colors.data());
 	_programFlashes.uniform("userScale", state.size);
+	_programFlashes.uniform("haloInnerRadius", state.haloInnerRadius);
+	_programFlashes.uniform("haloOuterRadius", state.haloOuterRadius);
+	_programFlashes.uniform("haloIntensity", state.haloIntensity);
+	_programFlashes.uniform("texRowCount", state.texRowCount);
+	_programFlashes.uniform("texColCount", state.texColCount);
 	// Flash texture.
-	_programFlashes.texture("textureFlash", _texFlash, GL_TEXTURE_2D);
+	_programFlashes.texture("textureFlash", state.tex, GL_TEXTURE_2D);
 	
 	// Draw the geometry.
 	glBindVertexArray(_vaoFlashes);

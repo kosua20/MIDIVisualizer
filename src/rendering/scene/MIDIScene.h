@@ -114,7 +114,6 @@ private:
 	
 	GLuint _flagsBufferId;
 	GLuint _vaoFlashes;
-	GLuint _texFlash;
 	
 	GLuint _vaoParticles;
 	GLuint _texParticles;

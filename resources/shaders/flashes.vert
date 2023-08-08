@@ -5,8 +5,8 @@ layout(location = 1) in int onChan;
 
 uniform float time;
 uniform vec2 inverseScreenSize;
-uniform float userScale = 1.0;
-uniform float keyboardHeight = 0.25;
+uniform float userScale;
+uniform float keyboardHeight;
 
 uniform int minNote;
 uniform float notesCount;
