@@ -125,8 +125,15 @@ public:
 	};
 
 	struct FlashesState {
+		std::vector<std::string> imagePath;
 		ColorArray colors; ///< Flashes color.
-		float size; ///< Size of flashes.
+		float size; ///< Size of float
+		float haloInnerRadius; ///< Inner halo size
+		float haloOuterRadius; ///< Outer halo size
+		float haloIntensity; ///< Brightness of the halo
+		int texRowCount;
+		int texColCount;
+		GLuint tex;
 	};
 
 	BackgroundState background;

@@ -833,8 +833,58 @@ void Renderer::showFlashOptions() {
 	ImGuiPushItemWidth(100);
 	ImGui::SliderFloat("Scale##flash", &_state.flashes.size, 0.1f, 3.0f, "%.2fx");
 	ImGui::PopItemWidth();
-	// TODO: (MV) customize texture atlas
-	// TODO: (MV) additional halo control
+
+	// Additional halo control
+	ImGuiPushItemWidth(100);
+	if(ImGui::SliderFloat("Halo min", &_state.flashes.haloInnerRadius, 0.0f, 1.0f)){
+		_state.flashes.haloInnerRadius = glm::clamp(_state.flashes.haloInnerRadius, 0.0f, _state.flashes.haloOuterRadius);
+	}
+	ImGuiSameLine(COLUMN_SIZE);
+	if(ImGui::SliderFloat("Halo max", &_state.flashes.haloOuterRadius, 0.0f, 1.0f)){
+		_state.flashes.haloOuterRadius = glm::clamp(_state.flashes.haloOuterRadius, _state.flashes.haloInnerRadius, 1.0f);
+	}
+
+	if(ImGuiSliderPercent("Intensity##Halo", &_state.flashes.haloIntensity, 0.0f, 2.0f)){
+		_state.flashes.haloIntensity = std::max(0.f, _state.flashes.haloIntensity);
+	}
+
+	// Texture atlas (specify rows/cols count)
+	if (ImGui::Button("Load image...##Flashes")){
+		// Read arguments.
+		char *outPath = nullptr;
+		int res = sr_gui_ask_load_file("Select image", "", "jpg,jpeg,png", &outPath);
+		System::forceLocale();
+		if(res == SR_GUI_VALIDATED && outPath){
+			_state.flashes.imagePath = { std::string(outPath) };
+			if(_state.flashes.tex != ResourcesManager::getTextureFor("flash")){
+				glDeleteTextures(1, &_state.flashes.tex);
+			}
+			_state.flashes.tex = loadTexture(_state.flashes.imagePath[0], 1, false);
+		}
+		free(outPath);
+	}
+	ImGuiSameLine(COLUMN_SIZE);
+	if (ImGui::Button("Clear image##Flashes")) {
+		_state.flashes.imagePath.clear();
+		if(_state.flashes.tex != ResourcesManager::getTextureFor("flash")){
+			glDeleteTextures(1, &_state.flashes.tex);
+		}
+		_state.flashes.tex = ResourcesManager::getTextureFor("flash");
+		_state.flashes.texColCount = 2;
+		_state.flashes.texRowCount = 4;
+	}
+	// Don't expose tiling on default image.
+	if(!_state.flashes.imagePath.empty()){
+		if(ImGui::InputInt("Columns", &_state.flashes.texColCount)){
+			_state.flashes.texColCount = std::max(1, _state.flashes.texColCount);
+		}
+		ImGuiSameLine(COLUMN_SIZE);
+		if(ImGui::InputInt("Rows", &_state.flashes.texRowCount)){
+			_state.flashes.texRowCount = std::max(1, _state.flashes.texRowCount);
+		}
+	}
+
+	ImGui::PopItemWidth();
 }
 
 void Renderer::showParticleOptions(){
@@ -1771,6 +1821,12 @@ void Renderer::setState(const State & state){
 	if(!_state.notes.minorImagePath.empty()){
 		glDeleteTextures(1, &_state.notes.minorTex);
 		_state.notes.minorTex = loadTexture(_state.notes.minorImagePath[0], 4, false);
+	}
+	if(!_state.flashes.imagePath.empty()){
+		if (_state.flashes.tex != ResourcesManager::getTextureFor("flash")) {
+			glDeleteTextures(1, &_state.flashes.tex);
+		}
+		_state.flashes.tex = loadTexture(_state.flashes.imagePath[0], 1, false);
 	}
 
 	if(!_state.particles.imagePaths.empty()){

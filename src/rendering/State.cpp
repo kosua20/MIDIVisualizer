@@ -112,6 +112,14 @@ void State::defineOptions(){
 	_sharedInfos["particles-expansion"] = {"Particles expansion factor", OptionInfos::Type::FLOAT};
 	_sharedInfos["blur-attenuation"] = {"Blur attenuation speed", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
 	_sharedInfos["flashes-size"] = {"Flash effect size", OptionInfos::Type::FLOAT, {0.1f, 3.0f}};
+	_sharedInfos["flashes-halo-inner"] = {"Flash inner halo size", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos["flashes-halo-outer"] = {"Flash outer halo size", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos["flashes-halo-intensity"] = {"Flash halo brightness", OptionInfos::Type::FLOAT, {0.0f, 2.0f}};
+
+	_sharedInfos["flashes-img-path"] = {"Path to an image on disk to use as the flash flipbook", OptionInfos::Type::PATH};
+	_sharedInfos["flashes-img-rows"] = {"Number of rows in the flipbook image", OptionInfos::Type::INTEGER};
+	_sharedInfos["flashes-img-columns"] = {"Number of columns in the flipbook image", OptionInfos::Type::INTEGER};
+
 	_sharedInfos["preroll"] = {"Preroll time in seconds before starting to play", OptionInfos::Type::FLOAT};
 	_sharedInfos["scroll-speed"] = {"Playback speed", OptionInfos::Type::FLOAT};
 	_sharedInfos["bg-img-opacity"] = {"Background opacity", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
@@ -124,8 +132,6 @@ void State::defineOptions(){
 	_sharedInfos["notes-major-img-intensity"] = {"Intensity of the texture applied to major notes", OptionInfos::Type::FLOAT, {0.0, 1.0f}};
 	_sharedInfos["notes-minor-img-scale"]    = {"Scale of the texture applied to minor notes", OptionInfos::Type::FLOAT};
 	_sharedInfos["notes-minor-img-intensity"] = {"Intensity of the texture applied to minor notes", OptionInfos::Type::FLOAT, {0.0, 1.0f}};
-
-
 
 	// Colors.
 	_sharedInfos["color-major"] = {"Major notes color", OptionInfos::Type::COLOR};
@@ -287,6 +293,9 @@ void State::updateOptions(){
 	_floatInfos["particles-expansion"] = &particles.expansion;
 	_floatInfos["blur-attenuation"] = &attenuation;
 	_floatInfos["flashes-size"] = &flashes.size;
+	_floatInfos["flashes-halo-inner"] = &flashes.haloInnerRadius;
+	_floatInfos["flashes-halo-outer"] = &flashes.haloOuterRadius;
+	_floatInfos["flashes-halo-intensity"] = &flashes.haloIntensity;
 	_floatInfos["preroll"] = &prerollTime;
 	_floatInfos["scroll-speed"] = &scrollSpeed;
 	_floatInfos["bg-img-opacity"] = &background.imageAlpha;
@@ -350,6 +359,9 @@ void State::updateOptions(){
 
 	_pathInfos["notes-major-path"] = &notes.majorImagePath;
 	_pathInfos["notes-minor-path"] = &notes.minorImagePath;
+	_pathInfos["flashes-img-path"] = &flashes.imagePath;
+	_intInfos["flashes-img-rows"] = &flashes.texRowCount;
+	_intInfos["flashes-img-columns"] = &flashes.texColCount;
 }
 
 
@@ -615,6 +627,13 @@ void State::reset(){
 	showScore = true;
 	showKeyboard = true;
 	flashes.size = 1.0f;
+	flashes.haloIntensity = 1.0f;
+	flashes.haloInnerRadius = 0.14f;
+	flashes.haloOuterRadius = 1.0f;
+	flashes.texRowCount = 4;
+	flashes.texColCount = 2;
+	flashes.imagePath.clear();
+	flashes.tex = ResourcesManager::getTextureFor("flash");
 	
 	background.minorsWidth = 0.8f;
 	background.hLines = true;
