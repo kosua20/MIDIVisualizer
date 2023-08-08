@@ -122,6 +122,9 @@ void ShaderProgram::clean(){
 }
 
 void ShaderProgram::texture(const std::string& name, GLuint texture, GLenum shape){
+	if(_textures.find(name) == _textures.end())
+		return;
+	
 	const int texSlot = _textures.at(name);
 	glActiveTexture(GL_TEXTURE0 + texSlot);
 	glBindTexture(shape, texture);
