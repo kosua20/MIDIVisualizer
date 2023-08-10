@@ -16,6 +16,13 @@ std::string getGLErrorString(GLenum error);
 /// Check if any OpenGL error has been detected and log it.
 int _checkGLError(const char *file, int line);
 
+struct GPUHandle {
+	GLint _handle{-1};
+
+	operator GLint() const { return _handle; }
+	GPUHandle& operator=(const GLint handle){ _handle = handle; return *this; }
+};
+
 class ShaderProgram {
 public:
 
@@ -40,85 +47,63 @@ private:
 
 	static GLuint createGLProgramFromStrings(const std::string & vertexContent, const std::string & fragmentContent);
 
-	std::unordered_map<std::string, GLint> _uniforms;
+	std::unordered_map<std::string, GPUHandle> _uniforms;
 	std::unordered_map<std::string, int> _textures;
 	GLuint _id;
 };
 
 template<>
 inline void ShaderProgram::uniform(const std::string& name, const float& val){
-	if(_uniforms.find(name) == _uniforms.end())
-		return;
 	glUniform1f(_uniforms[name], val);
 }
 
 template<>
 inline void ShaderProgram::uniform(const std::string& name, const int& val){
-	if(_uniforms.find(name) == _uniforms.end())
-		return;
 	glUniform1i(_uniforms[name], val);
 }
 
 template<>
 inline void ShaderProgram::uniform(const std::string& name, const bool& val){
-	if(_uniforms.find(name) == _uniforms.end())
-		return;
 	glUniform1i(_uniforms[name], val ? 1 : 0);
 }
 
 template<>
 inline void ShaderProgram::uniform(const std::string& name, const glm::vec2& val){
-	if(_uniforms.find(name) == _uniforms.end())
-		return;
 	glUniform2fv(_uniforms[name], 1, &val[0]);
 }
 
 template<>
 inline void ShaderProgram::uniform(const std::string& name, const glm::vec3& val){
-	if(_uniforms.find(name) == _uniforms.end())
-		return;
 	glUniform3fv(_uniforms[name], 1, &val[0]);
 }
 
 template<>
 inline void ShaderProgram::uniform(const std::string& name, const glm::vec4& val){
-	if(_uniforms.find(name) == _uniforms.end())
-		return;
 	glUniform4fv(_uniforms[name], 1, &val[0]);
 }
 
 template<>
 inline void ShaderProgram::uniforms(const std::string& name, unsigned int count, const int* vals){
-	if(_uniforms.find(name) == _uniforms.end())
-		return;
 	glUniform1iv(_uniforms[name], count, vals);
 }
 
 template<>
 inline void ShaderProgram::uniforms(const std::string& name, unsigned int count, const float* vals){
-	if(_uniforms.find(name) == _uniforms.end())
-		return;
 	glUniform1fv(_uniforms[name], count, vals);
 }
 
 template<>
 inline void ShaderProgram::uniforms(const std::string& name, unsigned int count, const glm::vec2* vals){
-	if(_uniforms.find(name) == _uniforms.end())
-		return;
 	glUniform2fv(_uniforms[name], count, (GLfloat*)vals);
 }
 
 template<>
 inline void ShaderProgram::uniforms(const std::string& name, unsigned int count, const glm::vec3* vals){
-	if(_uniforms.find(name) == _uniforms.end())
-		return;
 	glUniform3fv(_uniforms[name], count, (GLfloat*)vals);
 }
 
 template<>
 inline void ShaderProgram::uniforms(const std::string& name, unsigned int count, const glm::vec4* vals){
-	if(_uniforms.find(name) == _uniforms.end())
-		return;
 	glUniform4fv(_uniforms[name], count, (GLfloat*)vals);
 }
 
