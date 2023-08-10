@@ -162,8 +162,7 @@ private:
 
 	State _state;
 	std::array<Layer, Layer::COUNT> _layers;
-	SetOptions _backupSetOptions;
-	State::ParticlesState _backupParticlesOptions;
+	State _backupState;
 
 	float _timer = 0.0f;
 	float _timerStart = 0.0f;

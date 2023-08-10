@@ -458,13 +458,11 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		ImGuiSameLine(COLUMN_SIZE);
 		ImGui::Checkbox("Smoothing", &_state.applyAA);
 
-
-
 		if (ImGui::Button("Show effect layers...")) {
 			_showLayers = true;
 		}
 		ImGuiSameLine(COLUMN_SIZE);
-		if (ImGui::Checkbox("Use same colors for all effects", &_state.lockParticleColor)) {
+		if (ImGui::Checkbox("Same colors for all effects", &_state.lockParticleColor)) {
 			// If we enable the lock, make sure the colors are synched.
 			synchronizeColors(_state.notes.majorColors);
 		}
@@ -919,7 +917,7 @@ void Renderer::showParticleOptions(){
 
 	if(ImGui::Button("Configure images...##Particles")) {
 		_showParticleEditor = true;
-		_backupParticlesOptions = _state.particles;
+		_backupState = _state;
 	}
 
 	ImGui::PopID();
@@ -1285,7 +1283,7 @@ void Renderer::showSets(){
 		ImGuiSameLine();
 		if(ImGui::Button("Configure...")){
 			_showSetListEditor = true;
-			_backupSetOptions = _state.setOptions;
+			_backupState = _state;
 			ImGui::CloseCurrentPopup();
 		}
 
@@ -1348,7 +1346,7 @@ void Renderer::showSetEditor(){
 		ImGuiSameLine();
 		// Just restore the last backup.
 		if(ImGui::Button("Reset")){
-			_state.setOptions = _backupSetOptions;
+			_state = _backupState;
 			refreshSetOptions = true;
 		}
 		ImGui::Separator();
@@ -1532,7 +1530,7 @@ void Renderer::showParticlesEditor(){
 		ImGuiSameLine();
 		// Just restore the last backup.
 		if(ImGui::Button("Reset")){
-			_state.particles = _backupParticlesOptions;
+			_state = _backupState;
 			refreshTextures = true;
 		}
 		ImGui::Separator();
@@ -1786,8 +1784,7 @@ void Renderer::reset() {
 void Renderer::setState(const State & state){
 	_state = state;
 	_state.setOptions.rebuild();
-	_backupSetOptions = _state.setOptions;
-	_backupParticlesOptions = _state.particles;
+	_backupState = _state;
 	
 	// Update toggles.
 	_layers[Layer::BGTEXTURE].toggle = &_state.background.image;
@@ -1830,14 +1827,14 @@ void Renderer::setState(const State & state){
 	}
 
 	if(!_state.particles.imagePaths.empty()){
-		// Cleanup texture if it's not the default one.
 		if (_state.particles.tex != ResourcesManager::getTextureFor("blankarray")) {
 			glDeleteTextures(1, &_state.particles.tex);
 		}
 		// Load new particles.
 		_state.particles.tex = loadTextureArray(state.particles.imagePaths, false, _state.particles.texCount);
-		// Don't modify the rest of the potentially restored state.
 	}
+
+	// Don't modify the rest of the potentially restored state.
 }
 
 void  Renderer::setGUIScale(float scale){
