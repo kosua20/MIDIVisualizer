@@ -196,6 +196,9 @@ void State::defineOptions(){
 	_sharedInfos["pedal-merge"] = {"Display only one pedal", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["pedal-location"] = {"Pedal location on screen", OptionInfos::Type::OTHER, {0.0f, 3.0f}};
 	_sharedInfos["pedal-location"].values = "top-left: 0, bottom-left: 1, top-right: 2, bottom-right: 3";
+	_sharedInfos["pedal-img-offset-x"] = {"Horizontal overlap offset between pedals", OptionInfos::Type::FLOAT, {-0.5f, 0.5f}};
+	_sharedInfos["pedal-img-offset-y"] = {"Vertical overlap offset between pedals", OptionInfos::Type::FLOAT  , {-0.5f, 0.5f}};
+	_sharedInfos["pedal-img-mirrored"] = {"Should the right pedal be mirrored horizontally", OptionInfos::Type::BOOLEAN};
 
 	_sharedInfos["show-wave"] = {"Display the wave effect along the top of the keyboard", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["wave-size"] = {"Wave effect size", OptionInfos::Type::FLOAT, {0.0f, 5.0f}};
@@ -213,7 +216,10 @@ void State::defineOptions(){
 	_sharedInfos["particles-paths"] = {"Set of paths (separated by spaces) to black and white images on disk to use as particles", OptionInfos::Type::PATH};
 	_sharedInfos["notes-major-img-path"] = {"Path to an image on disk to use as texture for the major notes", OptionInfos::Type::PATH};
 	_sharedInfos["notes-minor-img-path"] = {"Path to an image on disk to use as texture for the minor notes", OptionInfos::Type::PATH};
-	
+
+	_sharedInfos["pedal-top-img-path"] = {"Path to an image on disk to use as texture for the top pedal", OptionInfos::Type::PATH};
+	_sharedInfos["pedal-center-img-path"] = {"Path to an image on disk to use as texture for the center pedal", OptionInfos::Type::PATH};
+	_sharedInfos["pedal-side-img-paths"] = {"Paths to one or two images on disk to use as textures for the side pedals", OptionInfos::Type::PATH};
 }
 
 size_t State::helpText(std::string & configOpts, std::string & setsOpts){
@@ -342,6 +348,13 @@ void State::updateOptions(){
 	_vecInfos["color-pedal"] = &pedals.color;
 	_boolInfos["pedal-merge"] = &pedals.merge;
 	_intInfos["pedal-location"] = (int*)&pedals.location;
+	_floatInfos["pedal-img-offset-x"] = &pedals.margin[0];
+	_floatInfos["pedal-img-offset-y"] = &pedals.margin[1];
+	_boolInfos["pedal-img-mirrored"] = &pedals.mirror;
+
+	_pathInfos["pedal-top-img-path"] = &pedals.topImagePath;
+	_pathInfos["pedal-center-img-path"] = &pedals.centerImagePath;
+	_pathInfos["pedal-side-img-paths"] = &pedals.sideImagePaths;
 
 	_boolInfos["show-wave"] = &showWave;
 	_floatInfos["wave-size"] = &waves.spread;
@@ -692,7 +705,17 @@ void State::reset(){
 	pedals.size = 0.2f;
 	pedals.opacity = 0.4f;
 	pedals.merge = false;
+	pedals.margin = {0.04f, 0.0f};
+	pedals.mirror = true;
 	pedals.location = PedalsState::BOTTOMRIGHT;
+	pedals.topImagePath.clear();
+	pedals.centerImagePath.clear();
+	pedals.sideImagePaths.clear();
+
+	pedals.texCenter = ResourcesManager::getTextureFor("pedal_center");
+	pedals.texTop = ResourcesManager::getTextureFor("pedal_top");
+	pedals.texSides[0] = ResourcesManager::getTextureFor("pedal_side");
+	pedals.texSides[1] = ResourcesManager::getTextureFor("pedal_side");
 
 	showWave = true;
 	waves.color = notes.majorColors[0];

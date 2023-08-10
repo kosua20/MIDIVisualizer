@@ -19,6 +19,7 @@
 #define EXPORT_COLUMN_SIZE 200
 
 typedef std::array<glm::vec3, SETS_COUNT> ColorArray;
+typedef std::vector<std::string> PathCollection;
 
 struct Quality {
 	enum Level : int {
@@ -47,7 +48,7 @@ struct Quality {
 class State {
 public:
 	struct BackgroundState {
-		std::vector<std::string> imagePath; ///< Path to an image on disk (expect only one).
+		PathCollection imagePath; ///< Path to an image on disk (expect only one).
 		glm::vec3 color; ///< Background color.
 		glm::vec3 linesColor; ///< Score lines color.
 		glm::vec3 textColor; ///< Score text color.
@@ -64,10 +65,10 @@ public:
 	
 	
 	struct ParticlesState {
-		std::vector<std::string> imagePaths; ///< List of paths to images on disk.
+		PathCollection imagePaths; ///< List of paths to images on disk.
 		ColorArray colors; ///< Particles color.
 		GLuint tex;
-		int texCount;
+		int texCount; ///< Number of particle textures.
 		float speed; ///< Particles speed.
 		float expansion; ///< Expansion factor.
 		float scale; ///< Particles scale.
@@ -90,11 +91,20 @@ public:
 			TOPLEFT = 0, BOTTOMLEFT = 1, TOPRIGHT = 2, BOTTOMRIGHT = 3
 		};
 
-		glm::vec3 color;
-		Location location;
-		float size;
-		float opacity;
-		bool merge;
+		PathCollection centerImagePath; ///< Image for center pedal.
+		PathCollection topImagePath; ///< Image for top pedal.
+		PathCollection sideImagePaths; ///< Image(s) for side pedals
+		GLuint texCenter;
+		GLuint texTop;
+		GLuint texSides[2];
+
+		glm::vec3 color; ///< Pedals color
+		glm::vec2 margin; ///< Offset between pedals
+		Location location; ///< Corner location on screen
+		float size; ///< Pedals size
+		float opacity; ///< Pedals opacity
+		bool merge; // Display only one pedal for all effects
+		bool mirror; // Mirror the right pedal horizontally.
 	};
 
 	struct WaveState {
@@ -131,8 +141,8 @@ public:
 		float haloInnerRadius; ///< Inner halo size
 		float haloOuterRadius; ///< Outer halo size
 		float haloIntensity; ///< Brightness of the halo
-		int texRowCount;
-		int texColCount;
+		int texRowCount; ///< Number of rows in atlas
+		int texColCount; ///< Number of columns in atlas
 		GLuint tex;
 	};
 
