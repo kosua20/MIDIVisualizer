@@ -98,7 +98,10 @@ public:
 		GLuint texTop;
 		GLuint texSides[2];
 
-		glm::vec3 color; ///< Pedals color
+		glm::vec3 centerColor; ///< Pedals color
+		glm::vec3 topColor; ///< Pedals color
+		glm::vec3 leftColor; ///< Pedals color
+		glm::vec3 rightColor; ///< Pedals color
 		glm::vec2 margin; ///< Offset between pedals
 		Location location; ///< Corner location on screen
 		float size; ///< Pedals size

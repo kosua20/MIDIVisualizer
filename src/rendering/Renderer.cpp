@@ -987,7 +987,12 @@ void Renderer::showKeyboardOptions(){
 
 void Renderer::showPedalOptions(){
 	ImGuiPushItemWidth(25);
-	ImGui::ColorEdit3("Color##Pedals", &_state.pedals.color[0], ImGuiColorEditFlags_NoInputs);
+	if(ImGui::ColorEdit3("Colors##Pedals", &_state.pedals.centerColor[0], ImGuiColorEditFlags_NoInputs)){
+		// Synchronize other colors
+		_state.pedals.topColor = _state.pedals.centerColor;
+		_state.pedals.leftColor = _state.pedals.centerColor;
+		_state.pedals.rightColor = _state.pedals.centerColor;
+	}
 	ImGui::PopItemWidth();
 
 	ImGuiPushItemWidth(100);
@@ -1655,10 +1660,17 @@ void Renderer::showParticlesEditor(){
 	ImGui::End();
 }
 
-bool Renderer::drawPedalImageSettings(GLuint tex, const glm::vec2& size, bool flipUV, PathCollection& path, unsigned int index){
+bool Renderer::drawPedalImageSettings(GLuint tex, const glm::vec2& size, bool flipUV, PathCollection& path, unsigned int index, glm::vec3& color){
 	bool refresh = false;
 	ImGui::BeginGroup();
-	ImGui::Image((void*)(uint64_t)tex, size, ImVec2(flipUV ? 1 : 0,1), ImVec2(flipUV ? 0 : 1,0));
+
+	ImGui::Image((void*)(uint64_t)tex, size, ImVec2(flipUV ? 1 : 0,1), ImVec2(flipUV ? 0 : 1,0), color);
+
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.f,0.0f));
+	ImGui::ColorEdit3("Picker", &color[0], ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
+	ImGui::PopStyleVar();
+
+	ImGuiSameLine(0);
 	if(ImGui::SmallButton("Load")){
 		char* outPath = nullptr;
 		int res = sr_gui_ask_load_file("Select image", "", "png,jpg,jpeg", &outPath);
@@ -1673,11 +1685,12 @@ bool Renderer::drawPedalImageSettings(GLuint tex, const glm::vec2& size, bool fl
 		}
 		free(outPath);
 	}
-	ImGuiSameLine();
+	ImGuiSameLine(0);
 	if(ImGui::SmallButton("x")){
 		path.clear();
 		refresh = true;
 	}
+
 	ImGui::EndGroup();
 	return refresh;
 };
@@ -1727,37 +1740,54 @@ void Renderer::showPedalsEditor(){
 	// Initial window position.
 	const ImVec2 & screenSize = ImGui::GetIO().DisplaySize;
 	ImGui::SetNextWindowPos(ImVec2(screenSize.x * 0.5f, screenSize.y * 0.1f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.0f));
-	const float fixedWidth = _guiScale * 250.0f;
-	const float fixedHeight = _guiScale * 430.0f;
+	const float fixedWidth = _guiScale * 300.0f;
+	const float fixedHeight = _guiScale * 455.0f;
 	ImGui::SetNextWindowSize({fixedWidth, fixedHeight}, ImGuiCond_Always);
 
 	if(ImGui::Begin("Pedal Images Editor", &_showPedalsEditor, ImGuiWindowFlags_NoResize)){
 
 		bool refreshTextures = false;
 		// Header
-		ImGui::TextWrapped("Load images to use as masks for each pedal. The overlap between pedals can be tweaked using offsets.");
-
-		if(ImGui::Button("Clear all")){
-			_state.pedals.centerImagePath.clear();
-			_state.pedals.topImagePath.clear();
-			_state.pedals.sideImagePaths.clear();
-			refreshTextures = true;
+		ImGui::TextWrapped("Load images to use as masks for each pedal. Overlap between pedals can be tweaked using offsets.");
+		{
+			ImGuiPushItemWidth(100);
+			if(ImGui::SliderFloat("##OffsetX", &_state.pedals.margin[0], -0.5f, 0.5f, "Horiz.: %.2f")){
+				_state.pedals.margin[0] = glm::clamp(_state.pedals.margin[0], -0.5f, 0.5f);
+			}
+			ImGuiSameLine();
+			if(ImGui::SliderFloat("##OffsetY", &_state.pedals.margin[1], -0.5f, 0.5f, "Vert.: %.2f")){
+				_state.pedals.margin[1] = glm::clamp(_state.pedals.margin[1], -0.5f, 0.5f);
+			}
+			ImGui::PopItemWidth();
+			ImGuiSameLine();
+			ImGui::AlignTextToFramePadding();
+			ImGui::Text("Offsets");
 		}
-		ImGuiSameLine();
-		// Just restore the last backup.
-		if(ImGui::Button("Reset")){
-			_state = _backupState;
-			refreshTextures = true;
+		{
+			ImGui::Checkbox("Mirror right pedal", &_state.pedals.mirror);
+			ImGuiSameLine();
+			if(ImGui::Button("Clear all")){
+				_state.pedals.centerImagePath.clear();
+				_state.pedals.topImagePath.clear();
+				_state.pedals.sideImagePaths.clear();
+				refreshTextures = true;
+			}
+			ImGuiSameLine();
+			// Just restore the last backup.
+			if(ImGui::Button("Reset")){
+				_state = _backupState;
+				refreshTextures = true;
+			}
 		}
 		ImGui::Separator();
 
-		const float scale = 0.9f;
+		const float scale = 0.95f;
 		const ImVec2 diagSize(scale * fixedWidth, scale * fixedWidth);
 		const float topHeight = 0.20f;
 		const float bottomHeight = 0.72f;
-		const float sideWidth = 0.33f;
-		const float centerWidth = 0.28f;
-		const float topWidth = 1.01f;
+		const float sideWidth = 0.32f;
+		const float centerWidth = 0.29f;
+		const float topWidth = 0.99f;
 		const glm::vec2 sideSize = glm::vec2(sideWidth * diagSize.x, bottomHeight * diagSize.y);
 		const glm::vec2 topSize = glm::vec2(topWidth * diagSize.x, topHeight * diagSize.y);
 		const glm::vec2 centerSize = glm::vec2(centerWidth * diagSize.x, bottomHeight * diagSize.y);
@@ -1765,6 +1795,10 @@ void Renderer::showPedalsEditor(){
 		ImGui::BeginGroup();
 		// Approximately center buttons
 		ImGui::Dummy(ImVec2(sideSize.x, 5.0f));
+		ImGuiSameLine();
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.f,0.0f));
+		ImGui::ColorEdit3("Picker", &_state.pedals.topColor[0], ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
+		ImGui::PopStyleVar();
 		ImGuiSameLine();
 		if(ImGui::SmallButton("Load##Top")){
 			char* outPath = nullptr;
@@ -1781,29 +1815,22 @@ void Renderer::showPedalsEditor(){
 			_state.pedals.topImagePath.clear();
 			refreshTextures = true;
 		}
-		ImGui::Image((void*)(uint64_t)_state.pedals.texTop, topSize, ImVec2(0,1), ImVec2(1,0));
+		ImGui::Image((void*)(uint64_t)_state.pedals.texTop, topSize, ImVec2(0,1), ImVec2(1,0), _state.pedals.topColor);
 		ImGui::EndGroup();
 
 		ImGui::PushID("Left");
-		refreshTextures |= drawPedalImageSettings(_state.pedals.texSides[0], sideSize, false, _state.pedals.sideImagePaths, 0);
+		refreshTextures |= drawPedalImageSettings(_state.pedals.texSides[0], sideSize, false, _state.pedals.sideImagePaths, 0, _state.pedals.leftColor);
 		ImGui::PopID();
 		ImGuiSameLine(0);
 
 		ImGui::PushID("Center");
-		refreshTextures |= drawPedalImageSettings(_state.pedals.texCenter, centerSize, false, _state.pedals.centerImagePath, 0);
+		refreshTextures |= drawPedalImageSettings(_state.pedals.texCenter, centerSize, false, _state.pedals.centerImagePath, 0, _state.pedals.centerColor);
 		ImGui::PopID();
 		ImGuiSameLine(0);
 
 		ImGui::PushID("Right");
-		refreshTextures |= drawPedalImageSettings(_state.pedals.texSides[1], sideSize, _state.pedals.mirror, _state.pedals.sideImagePaths, 1);
+		refreshTextures |= drawPedalImageSettings(_state.pedals.texSides[1], sideSize, _state.pedals.mirror, _state.pedals.sideImagePaths, 1, _state.pedals.rightColor);
 		ImGui::PopID();
-
-		ImGui::Separator();
-		if(ImGui::SliderFloat2("Offsets", &_state.pedals.margin[0], -0.5f, 0.5f)){
-			_state.pedals.margin = glm::clamp(_state.pedals.margin, -0.5f, 0.5f);
-		}
-
-		ImGui::Checkbox("Mirror right pedal", &_state.pedals.mirror);
 
 		// Actions
 		if(!_showPedalsEditor){

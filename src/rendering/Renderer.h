@@ -140,7 +140,7 @@ private:
 
 	void showParticlesEditor();
 
-	bool drawPedalImageSettings(GLuint tex, const glm::vec2& size, bool flipUV, PathCollection& path, unsigned int index);
+	bool drawPedalImageSettings(GLuint tex, const glm::vec2& size, bool flipUV, PathCollection& path, unsigned int index, glm::vec3& color);
 
 	void refreshPedalTextures(State::PedalsState& pedals);
 

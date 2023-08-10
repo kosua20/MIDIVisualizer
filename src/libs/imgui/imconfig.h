@@ -65,7 +65,8 @@
 
 #define IM_VEC4_CLASS_EXTRA                                                 \
         ImVec4(const glm::vec4& f) { x = f.x; y = f.y; z = f.z; w = f.w; }  \
-        operator glm::vec4() const { return glm::vec4(x,y,z,w); }
+        operator glm::vec4() const { return glm::vec4(x,y,z,w); }			\
+		ImVec4(const glm::vec3& f) { x = f.x; y = f.y; z = f.z; w = 1.0f; }  \
 
 
 //---- Using 32-bits vertex indices (default is 16-bits) is one way to allow large meshes with more than 64K vertices.

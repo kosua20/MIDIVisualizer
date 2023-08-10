@@ -461,9 +461,8 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 		glm::vec2( sidesShiftX, sidesShiftY), glm::vec2(expressionShiftX,	expressionShiftY)
 	};
 	const float actives[4] = { _pedals.soft, _pedals.sostenuto, _pedals.damper, _pedals.expression };
-
+	const glm::vec3* colors[4] = { &state.leftColor, &state.centerColor, &state.rightColor, &state.topColor};
 	// Uniforms setup.
-	_programPedals.uniform("pedalColor", state.color);
 	_programPedals.uniform("pedalOpacity", state.opacity);
 
 	glBindVertexArray(_vao);
@@ -477,6 +476,7 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 		_programPedals.uniform("pedalFlag", active);
 		_programPedals.uniform("mirror", false);
 		_programPedals.texture("pedalTexture", textures[1], GL_TEXTURE_2D);
+		_programPedals.uniform("pedalColor", *colors[1]);
 
 		glDrawElements(GL_TRIANGLES, int(_vaoFlashes), GL_UNSIGNED_INT, (void*)0);
 	} else {
@@ -486,6 +486,7 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 			_programPedals.uniform("pedalFlag", actives[i]);
 			_programPedals.texture("pedalTexture", textures[i], GL_TEXTURE_2D);
 			_programPedals.uniform("mirror", state.mirror && (i==2));
+			_programPedals.uniform("pedalColor", *colors[i]);
 			glDrawElements(GL_TRIANGLES, int(_vaoFlashes), GL_UNSIGNED_INT, (void*)0);
 		}
 	}

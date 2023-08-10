@@ -192,7 +192,11 @@ void State::defineOptions(){
 	_sharedInfos["show-pedal"] = {"Display the pedals indicator", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["pedal-size"] = {"Pedal indicator size", OptionInfos::Type::FLOAT, {0.05f, 0.5f}};
 	_sharedInfos["pedal-opacity"] = {"Pedal indicator opacity when not pressed", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
-	_sharedInfos["color-pedal"] = {"Pedal color when pressed", OptionInfos::Type::COLOR};
+	_sharedInfos["color-pedal"] = {"All pedals color when pressed", OptionInfos::Type::COLOR};
+	_sharedInfos["color-pedal-top"] = {"Top pedal color when pressed", OptionInfos::Type::COLOR};
+	_sharedInfos["color-pedal-center"] = {"Center pedal color when pressed", OptionInfos::Type::COLOR};
+	_sharedInfos["color-pedal-left"] = {"Left color when pressed", OptionInfos::Type::COLOR};
+	_sharedInfos["color-pedal-right"] = {"Right pedal color when pressed", OptionInfos::Type::COLOR};
 	_sharedInfos["pedal-merge"] = {"Display only one pedal", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["pedal-location"] = {"Pedal location on screen", OptionInfos::Type::OTHER, {0.0f, 3.0f}};
 	_sharedInfos["pedal-location"].values = "top-left: 0, bottom-left: 1, top-right: 2, bottom-right: 3";
@@ -345,7 +349,11 @@ void State::updateOptions(){
 	_boolInfos["show-pedal"] = &showPedal;
 	_floatInfos["pedal-size"] = &pedals.size;
 	_floatInfos["pedal-opacity"] = &pedals.opacity;
-	_vecInfos["color-pedal"] = &pedals.color;
+	_vecInfos["color-pedal"] = &pedals.centerColor; // Retro-compat
+	_vecInfos["color-pedal-center"] = &pedals.centerColor;
+	_vecInfos["color-pedal-top"] = &pedals.topColor;
+	_vecInfos["color-pedal-right"] = &pedals.rightColor;
+	_vecInfos["color-pedal-left"] = &pedals.leftColor;
 	_boolInfos["pedal-merge"] = &pedals.merge;
 	_intInfos["pedal-location"] = (int*)&pedals.location;
 	_floatInfos["pedal-img-offset-x"] = &pedals.margin[0];
@@ -590,6 +598,13 @@ void State::load(const Arguments & configArgs){
 		keyboard.majorColor[cid] = keyboard.majorColor[0];
 		keyboard.minorColor[cid] = keyboard.minorColor[0];
 	}
+	
+	// Synchronization for pedals global/legacy setting.
+	if(configArgs.count("color-pedal") != 0){
+		pedals.topColor = pedals.centerColor;
+		pedals.leftColor = pedals.centerColor;
+		pedals.rightColor = pedals.centerColor;
+	}
 
 	// Don't erase the file path.
 	
@@ -701,7 +716,10 @@ void State::reset(){
 	maxKey = 108;
 	
 	showPedal = true;
-	pedals.color = notes.majorColors[0];
+	pedals.topColor = notes.majorColors[0];
+	pedals.centerColor = pedals.topColor;
+	pedals.leftColor = pedals.topColor;
+	pedals.rightColor = pedals.topColor;
 	pedals.size = 0.2f;
 	pedals.opacity = 0.4f;
 	pedals.merge = false;
@@ -823,6 +841,9 @@ void State::load(std::istream & configFile, int majVersion, int minVersion){
 	// Ensure synchronization of all channels colors.
 	synchronizeSets();
 
-	pedals.color = notes.majorColors[0];
+	pedals.topColor = notes.majorColors[0];
+	pedals.leftColor = pedals.topColor;
+	pedals.rightColor = pedals.topColor;
+	pedals.centerColor = pedals.topColor;
 	waves.color = notes.majorColors[0];
 }
