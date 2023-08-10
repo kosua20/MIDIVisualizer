@@ -42,29 +42,62 @@ void ResourcesManager::loadResources(){
 	imagesLibrary["font"] = font_image;
 	imagesLibrary["flash"] = flash_image;
 	imagesLibrary["particles"] = particles_image;
-	imagesSize["font"] = glm::vec2(256, 128);
-	imagesSize["flash"] = glm::vec2(256, 256);
-	imagesSize["particles"] = glm::vec2(337, 24);
+	imagesLibrary["noise"] = noise_image;
+	imagesLibrary["pedal_side"] = pedal_side_image;
+	imagesLibrary["pedal_center"] = pedal_center_image;
+	imagesLibrary["pedal_top"] = pedal_top_image;
+
+	imagesSize["font"] = font_size;
+	imagesSize["flash"] = flash_size;
+	imagesSize["particles"] = particles_size;
+	imagesSize["noise"] = noise_size;
+	imagesSize["pedal_side"] = pedal_side_size;
+	imagesSize["pedal_center"] = pedal_center_size;
+	imagesSize["pedal_top"] = pedal_top_size;
 	
 	{
 		unsigned int imwidth;
 		unsigned int imheight;
-		auto fontTexture = ResourcesManager::getDataForImage("font", imwidth, imheight);
-		textureLibrary["font"] = loadTexture(fontTexture, imwidth, imheight, 4, false);
+		auto texture = ResourcesManager::getDataForImage("font", imwidth, imheight);
+		textureLibrary["font"] = loadTexture(texture, imwidth, imheight, 4, false);
 	}
 	
 	{
 		unsigned int imwidth;
 		unsigned int imheight;
-		auto flashTexture = ResourcesManager::getDataForImage("flash", imwidth, imheight);
-		textureLibrary["flash"] = loadTexture(flashTexture, imwidth, imheight, 4, false);
+		auto texture = ResourcesManager::getDataForImage("flash", imwidth, imheight);
+		textureLibrary["flash"] = loadTexture(texture, imwidth, imheight, 4, false);
+	}
+	{
+		unsigned int imwidth;
+		unsigned int imheight;
+		auto texture = ResourcesManager::getDataForImage("noise", imwidth, imheight);
+		textureLibrary["noise"] = loadTexture(texture, imwidth, imheight, 4, false);
 	}
 	
 	{
-		unsigned int imwidth1;
-		unsigned int imheight1;
-		auto particlesTexture = ResourcesManager::getDataForImage("particles", imwidth1, imheight1);
-		textureLibrary["particles"] = loadTexture(particlesTexture, imwidth1, imheight1, 4, false);
+		unsigned int imwidth;
+		unsigned int imheight;
+		auto texture = ResourcesManager::getDataForImage("particles", imwidth, imheight);
+		textureLibrary["particles"] = loadTexture(texture, imwidth, imheight, 4, false);
+	}
+	{
+		unsigned int imwidth;
+		unsigned int imheight;
+		auto texture = ResourcesManager::getDataForImage("pedal_side", imwidth, imheight);
+		textureLibrary["pedal_side"] = loadTexture(texture, imwidth, imheight, 4, false);
+	}
+	{
+		unsigned int imwidth;
+		unsigned int imheight;
+		auto texture = ResourcesManager::getDataForImage("pedal_center", imwidth, imheight);
+		textureLibrary["pedal_center"] = loadTexture(texture, imwidth, imheight, 4, false);
+	}
+	{
+		unsigned int imwidth;
+		unsigned int imheight;
+		auto texture = ResourcesManager::getDataForImage("pedal_top", imwidth, imheight);
+		textureLibrary["pedal_top"] = loadTexture(texture, imwidth, imheight, 4, false);
 	}
 	
 	{

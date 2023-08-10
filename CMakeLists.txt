@@ -132,21 +132,19 @@ set(Sources
 	"src/rendering/camera/Camera.h"
 	"src/rendering/camera/Keyboard.cpp"
 	"src/rendering/camera/Keyboard.h"
-	"src/resources/meshes.h"
-	"src/resources/meshes.cpp"
-	"src/resources/data.h"
-	"src/resources/flash_image.cpp"
-	"src/resources/font_image.cpp"
-	"src/resources/particles_image.cpp"
-	"src/resources/shaders.cpp"
 	"src/main.cpp")
+
+file(GLOB DataSources
+	"src/resources/*.h"
+	"src/resources/*.cpp"
+)
 
 file(GLOB Shaders "resources/shaders/*.vert" "resources/shaders/*.frag")
 
-source_group(TREE ${PROJECT_SOURCE_DIR}/src FILES ${Sources} ${LibSources})
+source_group(TREE ${PROJECT_SOURCE_DIR}/src FILES ${Sources} ${DataSources} ${LibSources})
 source_group(TREE ${PROJECT_SOURCE_DIR}/resources FILES ${Shaders})
 
-add_executable(MIDIVisualizer ${LibSources} ${Sources} ${Shaders})
+add_executable(MIDIVisualizer ${LibSources} ${Sources} ${DataSources} ${Shaders})
 
 target_include_directories(MIDIVisualizer PRIVATE src/libs/ src/helpers/)
 target_link_libraries(MIDIVisualizer PRIVATE sr_gui glfw libremidi ${GLFW_LIBRARIES} ${OPENGL_gl_LIBRARY})

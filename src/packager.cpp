@@ -37,7 +37,7 @@ int main( int argc, char** argv) {
 	const std::string resourcesDir = baseDir + "/resources/";
 	const std::string outputDir = baseDir + "/src/resources/";
 	
-	std::vector<std::string> imagesToLoad = { "flash", "font", "particles"};
+	std::vector<std::string> imagesToLoad = { "flash", "font", "particles", "noise", "pedal_side", "pedal_center", "pedal_top"};
 	std::vector<std::string> shadersToLoad = { "background", "flashes", "notes", "particles", "particlesblur", "screenquad", "majorKeys", "minorKeys", "backgroundtexture", "pedal", "wave", "fxaa"};
 	
 	// Header file.
@@ -49,6 +49,7 @@ int main( int argc, char** argv) {
 	
 	headerFile << "#ifndef DATA_RESOURCES_H" << "\n"
 			   << "#define DATA_RESOURCES_H" << "\n" << "\n"
+			   << "#include <glm/glm.hpp>" << "\n"
 			   << "#include <string>" << "\n"
 			   << "#include <unordered_map>" << "\n"
 			   << "#include <vector>" << "\n" << "\n"
@@ -72,11 +73,13 @@ int main( int argc, char** argv) {
 
 		// Definition in the header.
 		headerFile << "extern  unsigned char " << imageName << "_image[" << (imwidth*imheight*4) << "];" << "\n";
+		headerFile << "extern  glm::vec2 " << imageName << "_size;" << "\n";
 		
 		// Write the values in the cpp file
 		std::ofstream outputFile(outputPath);
 		if(outputFile.is_open()){
 			outputFile << "#include \"data.h\"" << "\n";
+			outputFile << "glm::vec2 " << imageName << "_size = { " << imwidth << ", " << imheight << "};" << "\n";
 			outputFile << "unsigned char " << imageName << "_image[] = { ";
 			for(size_t pid = 0; pid < image.size(); ++pid){
 				outputFile << (pid == 0 ? "" : ", ") << int(image[pid]);
