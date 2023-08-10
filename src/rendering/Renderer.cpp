@@ -600,6 +600,10 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 		showParticlesEditor();
 	}
 
+	if(_showPedalsEditor){
+		showPedalsEditor();
+	}
+
 	if(_shouldQuit != 0){
 		// We should only open the popup once.
 		if(_shouldQuit == 1){
@@ -1000,9 +1004,12 @@ void Renderer::showPedalOptions(){
 	ImGui::PopItemWidth();
 
 	ImGui::Checkbox("Merge pedals", &_state.pedals.merge);
+	ImGuiSameLine(COLUMN_SIZE);
+	if(ImGui::Button("Configure images...##Pedals")) {
+		_showPedalsEditor = true;
+		_backupState = _state;
+	}
 
-	// TODO: (MV) customize textures for each pedal
-	// TODO: (MV) relative placement.
 }
 
 void Renderer::showWaveOptions(){
@@ -1648,6 +1655,172 @@ void Renderer::showParticlesEditor(){
 	ImGui::End();
 }
 
+bool Renderer::drawPedalImageSettings(GLuint tex, const glm::vec2& size, bool flipUV, PathCollection& path, unsigned int index){
+	bool refresh = false;
+	ImGui::BeginGroup();
+	ImGui::Image((void*)(uint64_t)tex, size, ImVec2(flipUV ? 1 : 0,1), ImVec2(flipUV ? 0 : 1,0));
+	if(ImGui::SmallButton("Load")){
+		char* outPath = nullptr;
+		int res = sr_gui_ask_load_file("Select image", "", "png,jpg,jpeg", &outPath);
+		System::forceLocale();
+		if((res == SR_GUI_VALIDATED) && outPath ){
+			if(index >= path.size()){
+				path.resize(index + 1, std::string(outPath));
+			} else {
+				path[index] = std::string(outPath);
+			}
+			refresh = true;
+		}
+		free(outPath);
+	}
+	ImGuiSameLine();
+	if(ImGui::SmallButton("x")){
+		path.clear();
+		refresh = true;
+	}
+	ImGui::EndGroup();
+	return refresh;
+};
+
+void Renderer::refreshPedalTextures(State::PedalsState& pedals){
+	const GLuint defaultCenter = ResourcesManager::getTextureFor("pedal_center");
+	const GLuint defaultTop = ResourcesManager::getTextureFor("pedal_top");
+	const GLuint defaultSide = ResourcesManager::getTextureFor("pedal_side");
+	// Cleanup non-default textures.
+	if(pedals.texCenter != defaultCenter){
+		glDeleteTextures(1, &pedals.texCenter);
+	}
+	if(pedals.texTop != defaultTop){
+		glDeleteTextures(1, &pedals.texTop);
+	}
+	// Clear existing side textures (potentially the same)
+	for(unsigned int i = 0; i < 2; ++i){
+		const bool neverEncountered = (i == 0) || (pedals.texSides[i] != pedals.texSides[i-1]);
+		if((pedals.texSides[i] != defaultSide) && neverEncountered){
+			glDeleteTextures(1, &pedals.texSides[i]);
+		}
+	}
+	// Load new textures (or assign default)
+	if(pedals.centerImagePath.empty()){
+		pedals.texCenter = defaultCenter;
+	} else {
+		pedals.texCenter = loadTexture(pedals.centerImagePath[0], 1, false);
+	}
+	if(pedals.topImagePath.empty()){
+		pedals.texTop = defaultTop;
+	} else {
+		pedals.texTop = loadTexture(pedals.topImagePath[0], 1, false);
+	}
+	// Load the new ones if present.
+	const unsigned int newCount = pedals.sideImagePaths.size();
+	for(unsigned int i = 0; i < 2; ++i){
+		if(i < newCount){
+			pedals.texSides[i] = loadTexture(pedals.sideImagePaths[i], 1, false);
+		} else {
+			pedals.texSides[i] = newCount == 0 ? defaultSide : pedals.texSides[0];
+		}
+	}
+ }
+
+void Renderer::showPedalsEditor(){
+
+	// Initial window position.
+	const ImVec2 & screenSize = ImGui::GetIO().DisplaySize;
+	ImGui::SetNextWindowPos(ImVec2(screenSize.x * 0.5f, screenSize.y * 0.1f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.0f));
+	const float fixedWidth = _guiScale * 250.0f;
+	const float fixedHeight = _guiScale * 430.0f;
+	ImGui::SetNextWindowSize({fixedWidth, fixedHeight}, ImGuiCond_Always);
+
+	if(ImGui::Begin("Pedal Images Editor", &_showPedalsEditor, ImGuiWindowFlags_NoResize)){
+
+		bool refreshTextures = false;
+		// Header
+		ImGui::TextWrapped("Load images to use as masks for each pedal. The overlap between pedals can be tweaked using offsets.");
+
+		if(ImGui::Button("Clear all")){
+			_state.pedals.centerImagePath.clear();
+			_state.pedals.topImagePath.clear();
+			_state.pedals.sideImagePaths.clear();
+			refreshTextures = true;
+		}
+		ImGuiSameLine();
+		// Just restore the last backup.
+		if(ImGui::Button("Reset")){
+			_state = _backupState;
+			refreshTextures = true;
+		}
+		ImGui::Separator();
+
+		const float scale = 0.9f;
+		const ImVec2 diagSize(scale * fixedWidth, scale * fixedWidth);
+		const float topHeight = 0.20f;
+		const float bottomHeight = 0.72f;
+		const float sideWidth = 0.33f;
+		const float centerWidth = 0.28f;
+		const float topWidth = 1.01f;
+		const glm::vec2 sideSize = glm::vec2(sideWidth * diagSize.x, bottomHeight * diagSize.y);
+		const glm::vec2 topSize = glm::vec2(topWidth * diagSize.x, topHeight * diagSize.y);
+		const glm::vec2 centerSize = glm::vec2(centerWidth * diagSize.x, bottomHeight * diagSize.y);
+
+		ImGui::BeginGroup();
+		// Approximately center buttons
+		ImGui::Dummy(ImVec2(sideSize.x, 5.0f));
+		ImGuiSameLine();
+		if(ImGui::SmallButton("Load##Top")){
+			char* outPath = nullptr;
+			int res = sr_gui_ask_load_file("Select image", "", "png,jpg,jpeg", &outPath);
+			System::forceLocale();
+			if((res == SR_GUI_VALIDATED) && outPath ){
+				_state.pedals.topImagePath = { std::string(outPath)};
+				refreshTextures = true;
+			}
+			free(outPath);
+		}
+		ImGuiSameLine();
+		if(ImGui::SmallButton("x##Top")){
+			_state.pedals.topImagePath.clear();
+			refreshTextures = true;
+		}
+		ImGui::Image((void*)(uint64_t)_state.pedals.texTop, topSize, ImVec2(0,1), ImVec2(1,0));
+		ImGui::EndGroup();
+
+		ImGui::PushID("Left");
+		refreshTextures |= drawPedalImageSettings(_state.pedals.texSides[0], sideSize, false, _state.pedals.sideImagePaths, 0);
+		ImGui::PopID();
+		ImGuiSameLine(0);
+
+		ImGui::PushID("Center");
+		refreshTextures |= drawPedalImageSettings(_state.pedals.texCenter, centerSize, false, _state.pedals.centerImagePath, 0);
+		ImGui::PopID();
+		ImGuiSameLine(0);
+
+		ImGui::PushID("Right");
+		refreshTextures |= drawPedalImageSettings(_state.pedals.texSides[1], sideSize, _state.pedals.mirror, _state.pedals.sideImagePaths, 1);
+		ImGui::PopID();
+
+		ImGui::Separator();
+		if(ImGui::SliderFloat2("Offsets", &_state.pedals.margin[0], -0.5f, 0.5f)){
+			_state.pedals.margin = glm::clamp(_state.pedals.margin, -0.5f, 0.5f);
+		}
+
+		ImGui::Checkbox("Mirror right pedal", &_state.pedals.mirror);
+
+		// Actions
+		if(!_showPedalsEditor){
+			// If we are exiting, refresh the existing set.
+			refreshTextures = true;
+		}
+
+		// If refresh is needed, ensure that the texture array is up to date.
+		if(refreshTextures){
+			refreshPedalTextures(_state.pedals);
+			// Auto-mirror if only one side pedal image.
+			_state.pedals.mirror = _state.pedals.sideImagePaths.size() < 2;
+		}
+	}
+	ImGui::End();
+}
+
 void Renderer::applyBackgroundColor(){
 	// Clear all buffers with this color.
 	glClearColor(_state.background.color[0], _state.background.color[1], _state.background.color[2], _useTransparency ? 0.0f : 1.0f);
@@ -1833,6 +2006,8 @@ void Renderer::setState(const State & state){
 		// Load new particles.
 		_state.particles.tex = loadTextureArray(state.particles.imagePaths, false, _state.particles.texCount);
 	}
+
+	refreshPedalTextures(_state.pedals);
 
 	// Don't modify the rest of the potentially restored state.
 }

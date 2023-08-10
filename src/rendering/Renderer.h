@@ -140,6 +140,12 @@ private:
 
 	void showParticlesEditor();
 
+	bool drawPedalImageSettings(GLuint tex, const glm::vec2& size, bool flipUV, PathCollection& path, unsigned int index);
+
+	void refreshPedalTextures(State::PedalsState& pedals);
+
+	void showPedalsEditor();
+
 	void applyBackgroundColor();
 
 	void applyAllSettings();
@@ -196,6 +202,7 @@ private:
 	bool _showLayers = false;
 	bool _showSetListEditor = false;
 	bool _showParticleEditor = false;
+	bool _showPedalsEditor = false;
 	bool _exitAfterRecording = false;
 	bool _fullscreen = false;
 	bool _liveplay = false;
