@@ -399,52 +399,100 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 
 	glEnable(GL_BLEND);
 	_programPedals.use();
-	glDisable(GL_CULL_FACE);
 
 	// Adjust for aspect ratio.
 	const float rat = invScreenSize.y/invScreenSize.x;
-	const glm::vec2 scale = state.size * (rat < 1.0f ? glm::vec2(1.0f, rat) : glm::vec2(1.0f/rat, 1.0f));
-	const float extraHorizFix = state.merge ? 0.4f : 1.0f;
+	const glm::vec2 ratioScale = (rat < 1.0f) ? glm::vec2(1.0f, rat) : glm::vec2(1.0f/rat, 1.0f);
+	const glm::vec2 globalScale = 2.0f * state.size * ratioScale; // quad is [-0.5,0.5]
 
-	// Mode: top left, bottom left, top right, bottom right
-	const int mode = int(state.location);
-	const bool isTop = (mode % 2 == 0);
-	const float vertSign = mode % 2 == 0 ? 1.0f : -1.0f;
-	const float horizSign = mode < 2 ? -1.0f : 1.0f;
+	const State::PedalsState::Location mode = state.location;
+	const float vertSign  = (mode == State::PedalsState::TOPLEFT || mode == State::PedalsState::TOPRIGHT) ? 1.0f : -1.0f;
+	const float horizSign = (mode == State::PedalsState::TOPLEFT || mode == State::PedalsState::BOTTOMLEFT) ? -1.0f : 1.0f;
+	const float safetyMargin = 0.02f;
+	glm::vec2 globalShift = glm::vec2(horizSign, vertSign) * (1.0f - 0.5f * globalScale - safetyMargin * ratioScale);
 
-	// Extra vertical shift for the horizontal pedal when at the top.
-	const glm::vec2 propShift = glm::vec2(extraHorizFix * 1.25f,
-							(isTop && !state.merge) ? 1.2f : 0.8f) * scale;
-
-	glm::vec2 shift = glm::vec2(horizSign, vertSign) * (1.0f - propShift);
 	// If at the bottom, shift above the keyboard.
 	if(horizontalMode){
-		if(mode < 2){
-			shift[0] += 2.0f * keyboardHeight;
+		if(mode == State::PedalsState::TOPLEFT || mode == State::PedalsState::BOTTOMLEFT){
+			globalShift[0] += 2.0f * keyboardHeight;
 		}
 	} else {
-		if(mode % 2 == 1){
-			shift[1] += 2.0f * keyboardHeight;
+		if(mode == State::PedalsState::BOTTOMLEFT || mode == State::PedalsState::BOTTOMRIGHT){
+			globalShift[1] += 2.0f * keyboardHeight;
 		}
 	}
 
+	const float tightenShiftX = state.margin.x;
+	const float tightenShiftY = state.margin.y;
+	const GLuint textures[4] = { state.texSides[0], state.texCenter, state.texSides[1], state.texTop };
+
+
+	// (1)soft, (2)sostenuto, (3)damper, (4)expression
+	//   *-----------------^-----*
+	//   |          (4)    | 20% |
+	//   |-----------------v-----|
+	//   |  (1)  |  (2)  |  (3)  |
+	//   |       |   x   |       |
+	//   |       |       |       |
+	//   |<-35%->|<-30%->|<-35%->|
+	//   |       |       |       |
+	//   *-----------------------*
+
+	const float expressionHeight = 0.20f;
+	const float expressionWidth = 1.0f;
+	const float sidesWidth = 0.35f;
+	const float sidesHeight = 1.0f - expressionHeight;
+	const float centralWidth = 1.0f - 2.0f * sidesWidth;
+	const float centralHeight = sidesHeight;
+	const float expressionShiftX = 0.0f;
+	const float expressionShiftY = 0.5f * (1.0f - expressionHeight ) - tightenShiftY;
+	const float sidesShiftX = 0.5f * (sidesWidth + centralWidth) - tightenShiftX;
+	const float sidesShiftY = 0.5f * (sidesHeight-1.0f);
+	const float centralShiftX = 0.0f;
+	const float centralShiftY = 0.5f * (sidesHeight-1.0f);
+
+	const glm::vec2 localScales[4] = {
+		glm::vec2(sidesWidth, sidesHeight), glm::vec2(centralWidth, 	centralHeight),
+		glm::vec2(sidesWidth, sidesHeight), glm::vec2(expressionWidth,	expressionHeight)
+	};
+	// By default all quads are centered at 0.5,0.5 in local space, we need to shift them post-scaling.
+	const glm::vec2 localShifts[4] = {
+		glm::vec2(-sidesShiftX, sidesShiftY), glm::vec2(centralShiftX,		centralShiftY),
+		glm::vec2( sidesShiftX, sidesShiftY), glm::vec2(expressionShiftX,	expressionShiftY)
+	};
+	const float actives[4] = { _pedals.soft, _pedals.sostenuto, _pedals.damper, _pedals.expression };
+
 	// Uniforms setup.
 	_programPedals.uniform("pedalColor", state.color);
-	_programPedals.uniform("scale", scale);
-	_programPedals.uniform("shift", shift);
 	_programPedals.uniform("pedalOpacity", state.opacity);
-	// sostenuto, damper, soft
-	_programPedals.uniform("pedalFlags", glm::vec4{_pedals.sostenuto, _pedals.damper, _pedals.soft, _pedals.expression});
-	_programPedals.uniform("mergePedals", state.merge);
 
-	// Draw the geometry.
-	glBindVertexArray(_vaoPedals);
-	glDrawElements(GL_TRIANGLES, int(_countPedals), GL_UNSIGNED_INT, (void*)0);
+	glBindVertexArray(_vao);
+	if(state.merge){
+		const float active = glm::max(glm::max(actives[0], actives[1]), glm::max(actives[2], actives[3]));
+		// We want to move the central pedal to the side
+		const glm::vec2 localShift = glm::vec2(horizSign, vertSign) * glm::vec2(sidesShiftX, 0.5f * expressionHeight);
+
+		_programPedals.uniform("scale", globalScale * localScales[1]);
+		_programPedals.uniform("shift", globalShift + globalScale * localShift);
+		_programPedals.uniform("pedalFlag", active);
+		_programPedals.uniform("mirror", false);
+		_programPedals.texture("pedalTexture", textures[1], GL_TEXTURE_2D);
+
+		glDrawElements(GL_TRIANGLES, int(_vaoFlashes), GL_UNSIGNED_INT, (void*)0);
+	} else {
+		for(unsigned int i = 0; i < 4; ++i){
+			_programPedals.uniform("scale", globalScale * localScales[i]);
+			_programPedals.uniform("shift", globalShift + globalScale * localShifts[i]);
+			_programPedals.uniform("pedalFlag", actives[i]);
+			_programPedals.texture("pedalTexture", textures[i], GL_TEXTURE_2D);
+			_programPedals.uniform("mirror", state.mirror && (i==2));
+			glDrawElements(GL_TRIANGLES, int(_vaoFlashes), GL_UNSIGNED_INT, (void*)0);
+		}
+	}
 
 	glBindVertexArray(0);
 	glUseProgram(0);
 	glDisable(GL_BLEND);
-	glEnable(GL_CULL_FACE);
 }
 
 void MIDIScene::drawWaves(float time, const glm::vec2 & invScreenSize, const State::WaveState & state, float keyboardHeight) {
