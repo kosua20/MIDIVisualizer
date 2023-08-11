@@ -404,8 +404,7 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 	// Adjust for aspect ratio.
 	const float rat = invScreenSize.y/invScreenSize.x;
 	const glm::vec2 ratioScale = (rat < 1.0f) ? glm::vec2(1.0f, rat) : glm::vec2(1.0f/rat, 1.0f);
-	const glm::vec2 globalScale = 2.0f * state.size * ratioScale; // quad is [-0.5,0.5]
-
+	const glm::vec2 globalScale = 2.0f /* quad is -0.5,0.5 */ * state.size * ratioScale * glm::vec2(1.2f, 1.0f)  /* existing pedal ratio correction */;
 	const State::PedalsState::Location mode = state.location;
 	const float vertSign  = (mode == State::PedalsState::TOPLEFT || mode == State::PedalsState::TOPRIGHT) ? 1.0f : -1.0f;
 	const float horizSign = (mode == State::PedalsState::TOPLEFT || mode == State::PedalsState::BOTTOMLEFT) ? -1.0f : 1.0f;
