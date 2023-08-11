@@ -161,7 +161,7 @@ Recorder::~Recorder(){
 
 void Recorder::record(const std::shared_ptr<Framebuffer> & frame){
 
-	const unsigned int displayCurrentFrame = _currentFrame + 1;
+	const unsigned int displayCurrentFrame = (unsigned int)_currentFrame + 1;
 	if((displayCurrentFrame == 1) || (displayCurrentFrame % 10 == 0)){
 		std::cout << "\r[EXPORT]: Processing frame " << displayCurrentFrame << "/" << _framesCount << "." << std::flush;
 	}
@@ -177,7 +177,7 @@ void Recorder::record(const std::shared_ptr<Framebuffer> & frame){
 		return;
 	}
 
-	const unsigned int buffIndex = _currentFrame % _savingThreads.size();
+	const unsigned int buffIndex = _currentFrame % (unsigned int)_savingThreads.size();
 	// Make sure the thread we want to work on is available.
 	if(_savingThreads[buffIndex].joinable())
 		_savingThreads[buffIndex].join();

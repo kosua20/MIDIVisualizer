@@ -23,7 +23,7 @@ void ImGui::configureStyle(){
 	ImGui::StyleColorsDark();
 	ImGuiStyle & style = ImGui::GetStyle();
 	// Colors.
-	const ImVec4 a( 0.9f, 0.7, 1.0f, 1.0f );
+	const ImVec4 a( 0.9f, 0.7f, 1.0f, 1.0f );
 	ImVec4* colors = style.Colors;
 	const ImVec4 textColor = ImVec4( 0.95f, 0.95f, 0.95f, 1.00f );
 	const ImVec4 bgColor					= ImVec4(0.10f * a.x, 0.10f * a.y, 0.10f * a.z, 1.00f);

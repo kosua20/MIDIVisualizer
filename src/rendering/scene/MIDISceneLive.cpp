@@ -370,7 +370,7 @@ void MIDISceneLive::save(std::ofstream& file) const {
 	// Write all messages.
 	for(const MIDIFrame& frame : allMessages){
 		for(const libremidi::message& message : frame.messages){
-			writer.add_event(message.timestamp * unitsPerSecond, 0, message);
+			writer.add_event(int(message.timestamp * unitsPerSecond), 0, message);
 		}
 	}
 	writer.write(file);

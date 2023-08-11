@@ -38,7 +38,7 @@ public:
 	void uniform(const std::string& name, const T& val);
 
 	template<typename T>
-	void uniforms(const std::string& name, unsigned int count, const T* vals);
+	void uniforms(const std::string& name, size_t count, const T* vals);
 
 private:
 
@@ -83,28 +83,28 @@ inline void ShaderProgram::uniform(const std::string& name, const glm::vec4& val
 }
 
 template<>
-inline void ShaderProgram::uniforms(const std::string& name, unsigned int count, const int* vals){
-	glUniform1iv(_uniforms[name], count, vals);
+inline void ShaderProgram::uniforms(const std::string& name, size_t count, const int* vals){
+	glUniform1iv(_uniforms[name], (unsigned int)count, vals);
 }
 
 template<>
-inline void ShaderProgram::uniforms(const std::string& name, unsigned int count, const float* vals){
-	glUniform1fv(_uniforms[name], count, vals);
+inline void ShaderProgram::uniforms(const std::string& name, size_t count, const float* vals){
+	glUniform1fv(_uniforms[name], (unsigned int)count, vals);
 }
 
 template<>
-inline void ShaderProgram::uniforms(const std::string& name, unsigned int count, const glm::vec2* vals){
-	glUniform2fv(_uniforms[name], count, (GLfloat*)vals);
+inline void ShaderProgram::uniforms(const std::string& name, size_t count, const glm::vec2* vals){
+	glUniform2fv(_uniforms[name], (unsigned int)count, (GLfloat*)vals);
 }
 
 template<>
-inline void ShaderProgram::uniforms(const std::string& name, unsigned int count, const glm::vec3* vals){
-	glUniform3fv(_uniforms[name], count, (GLfloat*)vals);
+inline void ShaderProgram::uniforms(const std::string& name, size_t count, const glm::vec3* vals){
+	glUniform3fv(_uniforms[name], (unsigned int)count, (GLfloat*)vals);
 }
 
 template<>
-inline void ShaderProgram::uniforms(const std::string& name, unsigned int count, const glm::vec4* vals){
-	glUniform4fv(_uniforms[name], count, (GLfloat*)vals);
+inline void ShaderProgram::uniforms(const std::string& name, size_t count, const glm::vec4* vals){
+	glUniform4fv(_uniforms[name], (unsigned int)count, (GLfloat*)vals);
 }
 
 // Texture loading.

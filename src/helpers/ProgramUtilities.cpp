@@ -347,7 +347,7 @@ std::vector<GLuint> generate2DViewsOfArray(GLuint tex, unsigned int maxSize){
 	std::vector<GLuint> tex2Ds(l);
 	glGenTextures(l, tex2Ds.data());
 
-	for(unsigned int i = 0; i < l; ++i){
+	for(int i = 0; i < l; ++i){
 		glBindTexture(GL_TEXTURE_2D, tex2Ds[i]);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

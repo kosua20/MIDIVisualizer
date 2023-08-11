@@ -1372,7 +1372,7 @@ void Renderer::showSetEditor(){
 		// List of existing keys.
 		// Keep some room at the bottom for the "new key" section.
 		ImVec2 listSize = ImGui::GetContentRegionAvail();
-		listSize.y -= 1.5 * ImGui::GetTextLineHeightWithSpacing();
+		listSize.y -= 1.5f * ImGui::GetTextLineHeightWithSpacing();
 
 		if(ImGui::BeginTable("#List", 4, ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX |  ImGuiTableFlags_BordersH, listSize)){
 			const size_t rowCount = _state.setOptions.keys.size();
@@ -1392,7 +1392,7 @@ void Renderer::showSetEditor(){
 				SetOptions::KeyFrame& key = _state.setOptions.keys[row];
 
 				ImGui::TableNextColumn();
-				ImGui::PushID(row);
+				ImGui::PushID((unsigned int)row);
 
 				ImGuiPushItemWidth(colWidth);
 				if(ImGui::InputDouble("##Time", &key.time, 0, 0, "%.3fs")){
@@ -1443,17 +1443,17 @@ void Renderer::showSetEditor(){
 			newKey.time = (std::max)(0.0, newKey.time);
 		}
 		ImGui::PopItemWidth();
-		ImGuiSameLine(colWidth + 2 * offset);
+		ImGuiSameLine(int(colWidth + 2 * offset));
 		ImGuiPushItemWidth(colWidth);
 		ImGui::Combo("##Key", &newKey.key, midiKeysStrings, 128);
 		ImGui::PopItemWidth();
 
-		ImGuiSameLine(2 * colWidth + 3 * offset);
+		ImGuiSameLine(int(2 * colWidth + 3 * offset));
 		ImGuiPushItemWidth(colWidth);
 		ImGui::Combo("##Set", &newKey.set, kSetsComboString);
 		ImGui::PopItemWidth();
 
-		ImGuiSameLine(3 * colWidth + 4 * offset);
+		ImGuiSameLine(int(3 * colWidth + 4 * offset));
 		if(ImGui::Button("Add")){
 			auto insert = std::upper_bound(_state.setOptions.keys.begin(), _state.setOptions.keys.end(), newKey);
 			_state.setOptions.keys.insert(insert, newKey);
@@ -1521,7 +1521,7 @@ void Renderer::showParticlesEditor(){
 	const unsigned int colButtonWidth = 20;
 	const float offset = 8;
 	const unsigned int thumbSize = 24;
-	const unsigned int thumbDisplaySize = _guiScale * thumbSize;
+	const unsigned int thumbDisplaySize = (unsigned int)(_guiScale * thumbSize);
 
 	// For previewing.
 	static std::vector<GLuint> previewTextures;
@@ -1556,7 +1556,7 @@ void Renderer::showParticlesEditor(){
 		// List of existing keys.
 		// Keep some room at the bottom for the "new key" section.
 		ImVec2 listSize = ImGui::GetContentRegionAvail();
-		listSize.y -= 1.5 * ImGui::GetTextLineHeightWithSpacing();
+		listSize.y -= 1.5f * ImGui::GetTextLineHeightWithSpacing();
 
 		if(ImGui::BeginTable("#List", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX |  ImGuiTableFlags_BordersH, listSize)){
 			const size_t rowCount = _state.particles.imagePaths.size();
@@ -1574,8 +1574,8 @@ void Renderer::showParticlesEditor(){
 				const std::string& path = _state.particles.imagePaths[row];
 
 				ImGui::TableNextColumn();
-				ImGui::PushID(row);
-				if(ImGui::Selectable("##rowSelector", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap, ImVec2(0, thumbDisplaySize))) {
+				ImGui::PushID((unsigned int)row);
+				if(ImGui::Selectable("##rowSelector", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap, ImVec2(0.f, thumbDisplaySize))) {
 					// Open directory in file browser.
 					sr_gui_open_in_explorer(path.c_str());
 				}
@@ -1584,7 +1584,7 @@ void Renderer::showParticlesEditor(){
 				}
 				if(row < previewTextures.size()){
 					ImGui::SameLine();
-					ImGui::Image((ImTextureID)(uint64_t)previewTextures[row], ImVec2(thumbDisplaySize,thumbDisplaySize), ImVec2(0,1), ImVec2(1,0));
+					ImGui::Image((ImTextureID)(uint64_t)previewTextures[row], ImVec2(thumbDisplaySize,thumbDisplaySize), ImVec2(0.f,1.f), ImVec2(1.f,0.f));
 				}
 				ImGui::TableNextColumn();
 				ImGui::AlignTextToFramePadding();
@@ -1647,7 +1647,7 @@ void Renderer::showParticlesEditor(){
 			if (_state.particles.tex != ResourcesManager::getTextureFor("blankarray")) {
 				glDeleteTextures(1, &_state.particles.tex);
 			}
-			glDeleteTextures(previewTextures.size(), previewTextures.data());
+			glDeleteTextures((GLsizei)previewTextures.size(), previewTextures.data());
 			previewTextures.clear();
 
 			if(_state.particles.imagePaths.empty()){
@@ -1668,8 +1668,8 @@ void Renderer::showParticlesEditor(){
 
 bool Renderer::drawPedalImageSettings(GLuint tex, const glm::vec2& size, bool labelsAfter, bool flipUV, PathCollection& path, unsigned int index, glm::vec3& color){
 	bool refresh = false;
-	const ImVec2 startUV(flipUV ? 1 : 0,1);
-	const ImVec2 endUV(flipUV ? 0 : 1,0);
+	const ImVec2 startUV(flipUV ? 1.f : 0.f, 1.f);
+	const ImVec2 endUV(flipUV ? 0.f : 1.f, 0.f);
 
 	ImGui::BeginGroup();
 
@@ -1744,7 +1744,7 @@ void Renderer::refreshPedalTextures(State::PedalsState& pedals){
 		pedals.texTop = loadTexture(pedals.topImagePath[0], 1, false);
 	}
 	// Load the new ones if present.
-	const unsigned int newCount = pedals.sideImagePaths.size();
+	const unsigned int newCount = (unsigned int)pedals.sideImagePaths.size();
 	for(unsigned int i = 0; i < 2; ++i){
 		if(i < newCount){
 			pedals.texSides[i] = loadTexture(pedals.sideImagePaths[i], 1, false);

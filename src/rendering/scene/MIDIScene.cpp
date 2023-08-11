@@ -467,7 +467,7 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 
 	glBindVertexArray(_vao);
 	if(state.merge){
-		const float active = glm::max(glm::max(actives[0], actives[1]), glm::max(actives[2], actives[3]));
+		const float active = (glm::max)((glm::max)(actives[0], actives[1]), (glm::max)(actives[2], actives[3]));
 		// We want to move the central pedal to the side
 		const glm::vec2 localShift = glm::vec2(horizSign, vertSign) * glm::vec2(sidesShiftX, 0.5f * expressionHeight);
 
