@@ -107,6 +107,7 @@ private:
 	ShaderProgram _programKeyMajors;
 	ShaderProgram _programPedals;
 	ShaderProgram _programWave;
+	ShaderProgram _programWaveNoise;
 	
 	GLuint _vao;
 	GLuint _ebo;

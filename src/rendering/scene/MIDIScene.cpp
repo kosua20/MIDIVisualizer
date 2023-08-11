@@ -157,6 +157,7 @@ void MIDIScene::renderSetup(){
 
 	// Wave setup.
 	_programWave.init("wave_vert", "wave_frag");
+	_programWaveNoise.init("wave_noise_vert", "wave_noise_frag");
 	// Create an array buffer to host the geometry data.
 	const int numSegments = 512;
 	std::vector<glm::vec2> waveVerts((numSegments+1)*2);
@@ -498,8 +499,8 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 
 void MIDIScene::drawWaves(float time, const glm::vec2 & invScreenSize, const State::WaveState & state, float keyboardHeight) {
 
-	glEnable(GL_BLEND);
 	_programWave.use();
+	glEnable(GL_BLEND);
 	glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
 
 	// Uniforms setup.
@@ -507,7 +508,6 @@ void MIDIScene::drawWaves(float time, const glm::vec2 & invScreenSize, const Sta
 	_programWave.uniform("keyboardSize", keyboardHeight);
 	_programWave.uniform("waveOpacity", state.opacity);
 	_programWave.uniform("spread", state.spread);
-
 	glBindVertexArray(_vaoWave);
 
 	// Fixed initial parameters.
@@ -518,12 +518,29 @@ void MIDIScene::drawWaves(float time, const glm::vec2 & invScreenSize, const Sta
 	for(int i = 0; i < 4; ++i){
 		const float ampl = state.amplitude * ampls[i];
 		const float freq = state.frequency * freqs[i];
-		const float phase = phases[i] * time + float(i+1) * 7.39f;
+		const float phase = phases[i] * time * state.speed + float(i+1) * 7.39f;
 		_programWave.uniform("amplitude", ampl);
 		_programWave.uniform("freq", freq);
 		_programWave.uniform("phase", phase);
 		glDrawElements(GL_TRIANGLES, int(_countWave), GL_UNSIGNED_INT, (void*)0);
 	}
+
+	glBindVertexArray(0);
+	glUseProgram(0);
+
+	_programWaveNoise.use();
+	_programWaveNoise.uniform("keyboardSize", keyboardHeight);
+	_programWaveNoise.uniform("scale", state.noiseSize * 0.5f);
+
+	_programWaveNoise.texture("textureNoise", ResourcesManager::getTextureFor("noise"), GL_TEXTURE_2D);
+	_programWaveNoise.uniform("offset", time * state.speed * 0.05f);
+	_programWaveNoise.uniform("waveColor", state.color);
+	_programWaveNoise.uniform("noiseScale", state.frequency);
+	_programWaveNoise.uniform("waveOpacity", state.noiseIntensity);
+	_programWaveNoise.uniform("inverseScreenSize", invScreenSize);
+
+	glBindVertexArray(_vaoFlashes);
+	glDrawElements(GL_TRIANGLES, int(_vaoFlashes), GL_UNSIGNED_INT, (void*)0);
 
 	glBindVertexArray(0);
 	glUseProgram(0);
@@ -564,6 +581,8 @@ void MIDIScene::setOrientation(bool horizontal){
 	_programParticules.uniform("horizontalMode", horizontal);
 	_programWave.use();
 	_programWave.uniform("horizontalMode", horizontal);
+	_programWaveNoise.use();
+	_programWaveNoise.uniform("horizontalMode", horizontal);
 	glUseProgram(0);
 }
 
@@ -579,6 +598,7 @@ void MIDIScene::clean(){
 	_programKeyMajors.clean();
 	_programPedals.clean();
 	_programWave.clean();
+	_programWaveNoise.clean();
 }
 
 void MIDIScene::upload(const std::vector<GPUNote> & data){

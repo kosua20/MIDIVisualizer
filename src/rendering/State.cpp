@@ -210,6 +210,9 @@ void State::defineOptions(){
 	_sharedInfos["wave-amplitude"] = {"Wave effect amplitude", OptionInfos::Type::FLOAT, {0.0f, 5.0f}};
 	_sharedInfos["wave-frequency"] = {"Wave effect frequency", OptionInfos::Type::FLOAT, {0.0f, 5.0f}};
 	_sharedInfos["color-wave"] = {"Wave effect color", OptionInfos::Type::COLOR};
+	_sharedInfos["wave-speed"] = {"Wave scrolling speed", OptionInfos::Type::FLOAT };
+	_sharedInfos["wave-noise-intensity"] = {"Wave noise intensity", OptionInfos::Type::FLOAT };
+	_sharedInfos["wave-noise-extent"] = {"Wave noise extent on screen", OptionInfos::Type::FLOAT };
 
 	_sharedInfos["smooth"] = {"Apply anti-aliasing to smooth all lines", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["scroll-reverse"] = {"Notes scroll from bottom to top instead of the opposite", OptionInfos::Type::BOOLEAN};
@@ -369,6 +372,9 @@ void State::updateOptions(){
 	_floatInfos["wave-opacity"] = &waves.opacity;
 	_floatInfos["wave-amplitude"] =  &waves.amplitude;
 	_floatInfos["wave-frequency"] =  &waves.frequency;
+	_floatInfos["wave-noise-intensity"] =  &waves.noiseIntensity;
+	_floatInfos["wave-noise-extent"] =  &waves.noiseSize;
+	_floatInfos["wave-speed"] =  &waves.speed;
 	_vecInfos["color-wave"] = &waves.color;
 
 	_boolInfos["smooth"] = &applyAA;
@@ -741,6 +747,9 @@ void State::reset(){
 	waves.frequency = 1.0f;
 	waves.opacity = 1.0f;
 	waves.spread = 1.0f;
+	waves.speed = 1.0f;
+	waves.noiseIntensity = 1.0f;
+	waves.noiseSize = 0.03f;
 
 	applyAA = false;
 	reverseScroll = false;

@@ -1033,6 +1033,12 @@ void Renderer::showWaveOptions(){
 	if(ImGuiSliderPercent("Opacity##Waves", &_state.waves.opacity, 0.0f, 1.0f)){
 		_state.waves.opacity = glm::clamp(_state.waves.opacity, 0.0f, 1.0f);
 	}
+	ImGuiSameLine(COLUMN_SIZE);
+	ImGui::SliderFloat("Speed##Waves", &_state.waves.speed, 0.0f, 5.0f, "%.2fx");
+	
+	ImGuiSliderPercent("Noise##Waves", &_state.waves.noiseIntensity, 0.0f, 2.0f);
+	ImGuiSameLine(COLUMN_SIZE);
+	ImGuiSliderPercent("Extent##Waves", &_state.waves.noiseSize, 0.0f, 1.0f);
 	ImGui::PopItemWidth();
 
 }

@@ -116,6 +116,9 @@ public:
 		float spread;
 		float amplitude;
 		float frequency;
+		float speed;
+		float noiseIntensity;
+		float noiseSize;
 	};
 
 	struct NotesState {
