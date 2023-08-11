@@ -330,7 +330,7 @@ int sr_gui_open_in_explorer(const char* path){
 	if(!pathStr){
 		return SR_GUI_CANCELLED;
 	}
-	if([[NSWorkspace sharedWorkspace] selectFile:[pathStr stringByResolvingSymlinksInPath] inFileViewerRootedAtPath:nil]){
+	if([[NSWorkspace sharedWorkspace] selectFile:[pathStr stringByResolvingSymlinksInPath] inFileViewerRootedAtPath:@""]){
 		return SR_GUI_VALIDATED;
 	}
 	return SR_GUI_CANCELLED;

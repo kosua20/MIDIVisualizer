@@ -454,7 +454,7 @@ int sr_gui_open_in_explorer(const char* path){
 		*tail = '\0';
 	}
 	// Run
-	system(buffer);
+	int res = system(buffer);
 	SR_GUI_FREE(buffer);
-	return SR_GUI_CANCELLED;
+	return res == 0 ? SR_GUI_VALIDATED : SR_GUI_CANCELLED;
 }

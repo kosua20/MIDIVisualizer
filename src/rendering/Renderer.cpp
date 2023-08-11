@@ -1521,7 +1521,7 @@ void Renderer::showParticlesEditor(){
 	const unsigned int colButtonWidth = 20;
 	const float offset = 8;
 	const unsigned int thumbSize = 24;
-	const unsigned int thumbDisplaySize = (unsigned int)(_guiScale * thumbSize);
+	const float thumbDisplaySize = _guiScale * thumbSize;
 
 	// For previewing.
 	static std::vector<GLuint> previewTextures;
