@@ -108,6 +108,8 @@ private:
 	ShaderProgram _programPedals;
 	ShaderProgram _programWave;
 	ShaderProgram _programWaveNoise;
+	ShaderProgram _programScoreBars;
+	ShaderProgram _programScoreLabels;
 
 	GLuint _notesDataBuffer;
 	GLuint _keysDataBuffer;

@@ -161,6 +161,8 @@ void MIDIScene::renderSetup(){
 	_programKeyMajors.init("majorKeys_vert", "majorKeys_frag");
 	_programKeyMinors.init("minorKeys_vert", "minorKeys_frag");
 	_programPedals.init("pedal_vert", "pedal_frag");
+	_programScoreBars.init("score_bars_vert", "score_bars_frag");
+	_programScoreLabels.init("score_labels_vert", "score_labels_frag");
 	_programWave.init("wave_vert", "wave_frag");
 	_programWaveNoise.init("wave_noise_vert", "wave_noise_frag");
 
@@ -560,6 +562,10 @@ void MIDIScene::setOrientation(bool horizontal){
 	_programWave.uniform("horizontalMode", horizontal);
 	_programWaveNoise.use();
 	_programWaveNoise.uniform("horizontalMode", horizontal);
+	_programScoreBars.use();
+	_programScoreBars.uniform("horizontalMode", horizontal);
+	_programScoreLabels.use();
+	_programScoreLabels.uniform("horizontalMode", horizontal);
 	glUseProgram(0);
 }
 
@@ -577,6 +583,8 @@ void MIDIScene::clean(){
 	_programPedals.clean();
 	_programWave.clean();
 	_programWaveNoise.clean();
+	_programScoreBars.clean();
+	_programScoreLabels.clean();
 }
 
 void MIDIScene::upload(const std::vector<GPUNote> & data){
