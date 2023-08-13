@@ -131,7 +131,6 @@ Renderer::Renderer(const Configuration& config) :
 	// Check setup errors.
 	checkGLError();
 
-	_score.reset(new Score(2.0f));
 	_scene.reset(new MIDISceneEmpty());
 }
 
@@ -153,7 +152,6 @@ bool Renderer::loadFile(const std::string& midiFilePath) {
 
 	// Init objects.
 	_scene = scene;
-	_score = std::make_shared<Score>(_scene->secondsPerMeasure());
 	applyAllSettings();
 	return true;
 }
@@ -183,7 +181,6 @@ bool Renderer::connectDevice(const std::string& deviceName) {
 	_state.reverseScroll = true;
 	_state.scrollSpeed = 1.0f;
 	_liveplay = true;
-	_score = std::make_shared<Score>(_scene->secondsPerMeasure());
 	applyAllSettings();
 
 	return true;
@@ -356,14 +353,13 @@ void Renderer::drawParticles(const glm::vec2 & invSize) {
 
 void Renderer::drawScore(const glm::vec2 & invSize) {
 	glEnable(GL_BLEND);
-	_score->draw(_timer * _state.scrollSpeed, invSize);
 	glDisable(GL_BLEND);
 }
 
 void Renderer::drawKeyboard(const glm::vec2 & invSize) {
 	const ColorArray & majColors = _state.keyboard.customKeyColors ? _state.keyboard.majorColor : _state.notes.majorColors;
 	const ColorArray & minColors = _state.keyboard.customKeyColors ? _state.keyboard.minorColor : _state.notes.minorColors;
-	_scene->drawKeyboard(_timer, invSize, _state.background.keysColor, majColors, minColors, _state.keyboard.highlightKeys);
+	_scene->drawKeyboard(_timer, invSize, _state.keyboard.edgeColor, majColors, minColors, _state.keyboard.highlightKeys);
 }
 
 void Renderer::drawNotes(const glm::vec2 & invSize) {
@@ -420,7 +416,6 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 				_liveplay = false;
 				_shouldPlay = false;
 				_timer = 0.0f;
-				_score = std::make_shared<Score>(_scene->secondsPerMeasure());
 				applyAllSettings();
 			}
 		} else {
@@ -503,14 +498,11 @@ SystemAction Renderer::drawGUI(const float currentTime) {
 			ImGui::PopItemWidth();
 
 			if(ImGui::Checkbox("Horizontal scroll", &_state.horizontalScroll)){
-				_score->setOrientation(_state.horizontalScroll);
 				_scene->setOrientation(_state.horizontalScroll);
 			}
 			if(!_liveplay){
 				ImGuiSameLine(COLUMN_SIZE);
-				if(ImGui::Checkbox("Reverse scroll", &_state.reverseScroll)){
-					_score->setPlayDirection(_state.reverseScroll);
-				}
+				ImGui::Checkbox("Reverse scroll", &_state.reverseScroll);
 			}
 
 		}
@@ -802,7 +794,6 @@ void Renderer::showNoteOptions() {
 		_state.scale = (std::max)(_state.scale, 0.01f);
 		_state.background.minorsWidth = glm::clamp(_state.background.minorsWidth, 0.1f, 1.0f);
 		_scene->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
-		_score->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
 	}
 
 	ImGuiPushItemWidth(100);
@@ -929,9 +920,7 @@ void Renderer::showParticleOptions(){
 
 void Renderer::showKeyboardOptions(){
 	ImGuiPushItemWidth(25);
-	if (ImGui::ColorEdit3("Fill Color##Keys", &_state.background.keysColor[0], ImGuiColorEditFlags_NoInputs)) {
-		_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
-	}
+	ImGui::ColorEdit3("Fill Color##Keys", &_state.keyboard.edgeColor[0], ImGuiColorEditFlags_NoInputs);
 	ImGui::PopItemWidth();
 	ImGuiSameLine(COLUMN_SIZE);
 
@@ -940,7 +929,6 @@ void Renderer::showKeyboardOptions(){
 	if(ImGuiSliderPercent("Height##Keys", &_state.keyboard.size, 0.0f, 1.0f)){
 		_state.keyboard.size = glm::clamp(_state.keyboard.size, 0.0f, 1.0f);
 		_scene->setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notes.fadeOut);
-		_score->setKeyboardSize(_state.keyboard.size);
 	}
 	ImGui::PopItemWidth();
 
@@ -1068,14 +1056,7 @@ void Renderer::showScoreOptions(){
 	ImGuiSameLine(COLUMN_SIZE);
 	const bool m3 = ImGui::Checkbox("Vertical lines", &_state.background.vLines);
 
-	if (m1 || m2 || m3) {
-		_score->setDisplay(_state.background.digits, _state.background.hLines, _state.background.vLines);
-	}
 
-	if (cbg0 || cbg1) {
-		_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
-	}
-	// TODO: (MV) lines width and text size
 }
 
 void Renderer::showBackgroundOptions(){
@@ -1264,7 +1245,6 @@ void Renderer::showDevices(){
 			_state.reverseScroll = true;
 			_state.scrollSpeed = 1.0f;
 			_liveplay = true;
-			_score = std::make_shared<Score>(_scene->secondsPerMeasure());
 			applyAllSettings();
 
 			ImGui::CloseCurrentPopup();
@@ -1873,16 +1853,10 @@ void Renderer::applyAllSettings() {
 
 	// One-shot parameters.
 	_scene->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
-	_score->setScaleAndMinorWidth(_state.scale, _state.background.minorsWidth);
 	_scene->setParticlesParameters(_state.particles.speed, _state.particles.expansion);
-	_score->setDisplay(_state.background.digits, _state.background.hLines, _state.background.vLines);
-	_score->setColors(_state.background.linesColor, _state.background.textColor, _state.background.keysColor);
 	_scene->setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notes.fadeOut);
 	_scene->setMinorEdgesAndHeight(_state.keyboard.minorEdges, _state.keyboard.minorHeight);
-	_score->setKeyboardSize(_state.keyboard.size);
-	_score->setPlayDirection(_state.reverseScroll);
-	
-	_score->setOrientation(_state.horizontalScroll);
+
 	_scene->setOrientation(_state.horizontalScroll);
 
 	updateMinMaxKeys();
@@ -1905,7 +1879,6 @@ void Renderer::clean() {
 
 	// Clean objects.
 	_scene->clean();
-	_score->clean();
 	_blurringScreen.clean();
 	_passthrough.clean();
 	_backgroundTexture.clean();
@@ -2196,7 +2169,6 @@ void Renderer::updateMinMaxKeys(){
 	const int noteCount = (maxKeyMaj - minKeyMaj + 1);
 
 	_scene->setMinMaxKeys(realMinKey, minKeyMaj, noteCount);
-	_score->setMinMaxKeys(realMinKey, minKeyMaj, noteCount);
 }
 
 

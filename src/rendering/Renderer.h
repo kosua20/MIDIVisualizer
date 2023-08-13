@@ -10,7 +10,6 @@
 #include "camera/Camera.h"
 #include "scene/MIDIScene.h"
 #include "ScreenQuad.h"
-#include "Score.h"
 
 #include "../helpers/Recorder.h"
 
@@ -192,7 +191,6 @@ private:
 	ScreenQuad _passthrough;
 	ScreenQuad _backgroundTexture;
 	ScreenQuad _fxaa;
-	std::shared_ptr<Score> _score;
 
 	glm::ivec2 _windowSize;
 	glm::ivec2 _backbufferSize;
