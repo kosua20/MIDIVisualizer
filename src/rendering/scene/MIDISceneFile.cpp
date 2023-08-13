@@ -58,7 +58,7 @@ void MIDISceneFile::updateSets(const SetOptions & options){
 	}
 	// Upload to the GPU.
 	upload(data);
-	_dataBufferSubsize = int(data.size());
+	_notesDataBufferSubsize = int(data.size());
 }
 
 void MIDISceneFile::updatesActiveNotes(double time, double speed){

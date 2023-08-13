@@ -1046,16 +1046,31 @@ void Renderer::showBlurOptions(){
 
 void Renderer::showScoreOptions(){
 	ImGuiPushItemWidth(25);
-	const bool cbg0 = ImGui::ColorEdit3("Lines##Background", &_state.background.linesColor[0], ImGuiColorEditFlags_NoInputs);
+	ImGui::ColorEdit3("Vertical lines##Background", &_state.score.vLinesColor[0], ImGuiColorEditFlags_NoInputs);
 	ImGuiSameLine();
-	const bool cbg1 = ImGui::ColorEdit3("Text##Background", &_state.background.textColor[0], ImGuiColorEditFlags_NoInputs);
+	ImGui::ColorEdit3("Horizontal lines##Background", &_state.score.hLinesColor[0], ImGuiColorEditFlags_NoInputs);
+	ImGuiSameLine();
+	ImGui::ColorEdit3("Labels##Background", &_state.score.digitsColor[0], ImGuiColorEditFlags_NoInputs);
 	ImGui::PopItemWidth();
-	ImGuiSameLine(COLUMN_SIZE);
-	const bool m1 = ImGui::Checkbox("Digits", &_state.background.digits);
-	const bool m2 = ImGui::Checkbox("Horizontal lines", &_state.background.hLines);
-	ImGuiSameLine(COLUMN_SIZE);
-	const bool m3 = ImGui::Checkbox("Vertical lines", &_state.background.vLines);
 
+
+	ImGui::Checkbox("Digits", &_state.score.digits);
+	ImGuiSameLine(COLUMN_SIZE);
+	ImGuiPushItemWidth(100);
+	ImGuiSliderPercent("Scale##Digits", &_state.score.digitsScale, 0.0f, 0.5f);
+	ImGui::PopItemWidth();
+
+	ImGui::Checkbox("Horizontal lines", &_state.score.hLines);
+	ImGuiSameLine(COLUMN_SIZE);
+	ImGuiPushItemWidth(100);
+	ImGui::SliderFloat("Thickness##Horizontal", &_state.score.hLinesWidth, 0.0f, 15.0f, "%.0fpx");
+	ImGui::PopItemWidth();
+
+	ImGui::Checkbox("Vertical lines", &_state.score.vLines);
+	ImGuiSameLine(COLUMN_SIZE);
+	ImGuiPushItemWidth(100);
+	ImGui::SliderFloat("Thickness##Vertical", &_state.score.vLinesWidth, 0.0f, 15.0f, "%.0fpx");
+	ImGui::PopItemWidth();
 
 }
 
