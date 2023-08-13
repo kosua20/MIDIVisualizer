@@ -260,7 +260,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 	}
 
 	// Update completed notes.
-	for(size_t i = 0; i < _dataBufferSubsize; ++i){
+	for(size_t i = 0; i < _notesDataBufferSubsize; ++i){
 		const auto & noteId = _notesInfos[i];
 		// If the key is recording, no need to update _actives, skip.
 		if(_activeRecording[noteId.note]){
@@ -299,7 +299,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 		upload(_notes, minUpdated, maxUpdated);
 	}
 	// Update range of notes to show.
-	_dataBufferSubsize = std::min(MAX_NOTES_IN_FLIGHT, _notesCount);
+	_notesDataBufferSubsize = std::min(MAX_NOTES_IN_FLIGHT, _notesCount);
 	// Update timings.
 	_previousTime = time;
 	_maxTime = (std::max)(time, _maxTime);

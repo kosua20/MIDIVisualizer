@@ -23,142 +23,38 @@ MIDIScene::MIDIScene(){
 
 void MIDIScene::renderSetup(){
 
+	// - Buffers
+
+	// -- Basic quad
 	std::vector<float> vertices = {-0.5,-0.5, 0.5, -0.5, 0.5,0.5, -0.5, 0.5};
 	std::vector<unsigned int> indices = {1, 2, 0, 2, 3, 0};
-	_primitiveCount = indices.size();
+
 	// Create an array buffer to host the geometry data.
-	GLuint vbo = 0;
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	// Upload the data to the Array buffer.
+
+	glGenBuffers(1, &_quadVertices);
+	glBindBuffer(GL_ARRAY_BUFFER, _quadVertices);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * vertices.size(), &(vertices[0]), GL_STATIC_DRAW);
 
-	// Notes buffer.
-	_dataBuffer = 0;
-	glGenBuffers(1, &_dataBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, _dataBuffer);
+	// We load the indices data
+	glGenBuffers(1, &_quadIndices);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _quadIndices);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), &(indices[0]), GL_STATIC_DRAW);
+	_quadPrimitiveCount = indices.size();
+
+	// -- Notes data
+	// Current notes on screen
+	_notesDataBuffer = 0;
+	glGenBuffers(1, &_notesDataBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, _notesDataBuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 1000, nullptr, GL_STATIC_DRAW);
 
-	// Enabled notes buffer (empty for now).
-	_flagsBufferId = 0;
-	glGenBuffers(1, &_flagsBufferId);
-	glBindBuffer(GL_ARRAY_BUFFER, _flagsBufferId);
+	// Active keys buffer (empty for now).
+	_keysDataBuffer = 0;
+	glGenBuffers(1, &_keysDataBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, _keysDataBuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(int) * 128, nullptr, GL_DYNAMIC_DRAW);
 
-	// Programs.
-
-	// Notes shaders.
-	_programNotes.init("notes_vert", "notes_frag");
-
-	// Generate a vertex array (useful when we add other attributes to the geometry).
-	_vao = 0;
-	glGenVertexArrays (1, &_vao);
-	glBindVertexArray(_vao);
-	// The first attribute will be the vertices positions.
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
-	glVertexAttribDivisor(0, 0);
-
-	// The second attribute will be the notes data.
-	glEnableVertexAttribArray(1);
-	glBindBuffer(GL_ARRAY_BUFFER, _dataBuffer);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), NULL);
-	glVertexAttribDivisor(1, 1);
-
-	// The second attribute will be the notes data.
-	glEnableVertexAttribArray(2);
-	glBindBuffer(GL_ARRAY_BUFFER, _dataBuffer);
-	glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(4 * sizeof(GLfloat)));
-	glVertexAttribDivisor(2, 1);
-
-	// We load the indices data
-	glGenBuffers(1, &_ebo);
- 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
- 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), &(indices[0]), GL_STATIC_DRAW);
-
-	glBindVertexArray(0);
-
-	checkGLError();
-
-	// Flashes shaders.
-	_programFlashes.init("flashes_vert", "flashes_frag");
-
-	glGenVertexArrays (1, &_vaoFlashes);
-	glBindVertexArray(_vaoFlashes);
-	// The first attribute will be the vertices positions.
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
-	glVertexAttribDivisor(0, 0);
-	// The second attribute will be the flags buffer.
-	glEnableVertexAttribArray(1);
-	glBindBuffer(GL_ARRAY_BUFFER, _flagsBufferId);
-	glVertexAttribIPointer(1, 1, GL_INT, 0, NULL);
-	glVertexAttribDivisor(1, 1);
-	// We load the indices data
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
-
-	// Particles program.
-	_programParticules.init("particles_vert", "particles_frag");
-
-	glGenVertexArrays (1, &_vaoParticles);
-	glBindVertexArray(_vaoParticles);
-	// The first attribute will be the vertices positions.
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
-	glVertexAttribDivisor(0, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
-
-	// Particles trajectories texture loading.
-	_texParticles = ResourcesManager::getTextureFor("particles");
-
-	// Pass texture size to shader.
-	const glm::vec2 tsize = ResourcesManager::getTextureSizeFor("particles");
-	 _programParticules.use();
-	_programParticules.uniform("inverseTextureSize", 1.0f / tsize);
-	glUseProgram(0);
-
-	// Keyboard setup.
-	_programKeyMajors.init("majorKeys_vert", "majorKeys_frag");
-	_programKeyMinors.init("minorKeys_vert", "minorKeys_frag");
-
-	glGenVertexArrays(1, &_vaoKeyboard);
-	glBindVertexArray(_vaoKeyboard);
-	// The first attribute will be the vertices positions.
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
-	glVertexAttribDivisor(0, 0);
-	// We load the indices data
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
-	glBindVertexArray(0);
-
-	// Pedals setup.
-	_programPedals.init("pedal_vert", "pedal_frag");
-	// Create an array buffer to host the geometry data.
-	GLuint vboPdl = 0;
-	glGenBuffers(1, &vboPdl);
-	glBindBuffer(GL_ARRAY_BUFFER, vboPdl);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * pedalsVertices.size(), &(pedalsVertices[0]), GL_STATIC_DRAW);
-	glGenVertexArrays (1, &_vaoPedals);
-	glBindVertexArray(_vaoPedals);
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, vboPdl);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
-	// We load the indices data
-	GLuint eboPdl = 0;
-	glGenBuffers(1, &eboPdl);
- 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboPdl);
- 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * pedalsIndices.size(), &(pedalsIndices[0]), GL_STATIC_DRAW);
-	glBindVertexArray(0);
-	_countPedals = pedalsIndices.size();
-
-	// Wave setup.
-	_programWave.init("wave_vert", "wave_frag");
-	_programWaveNoise.init("wave_noise_vert", "wave_noise_frag");
-	// Create an array buffer to host the geometry data.
+	// -- Wave strips
 	const int numSegments = 512;
 	std::vector<glm::vec2> waveVerts((numSegments+1)*2);
 	for(int vid = 0; vid < numSegments+1; ++vid){
@@ -177,22 +73,104 @@ void MIDIScene::renderSetup(){
 		waveInds[bid+4] = vid + 1;
 		waveInds[bid+5] = vid + 3;
 	}
-	GLuint vboWav = 0;
-	glGenBuffers(1, &vboWav);
-	glBindBuffer(GL_ARRAY_BUFFER, vboWav);
+
+	glGenBuffers(1, &_waveVertices);
+	glBindBuffer(GL_ARRAY_BUFFER, _waveVertices);
 	glBufferData(GL_ARRAY_BUFFER, 2 * sizeof(GLfloat) * waveVerts.size(), &(waveVerts[0][0]), GL_STATIC_DRAW);
-	glGenVertexArrays (1, &_vaoWave);
-	glBindVertexArray(_vaoWave);
+	// Corresponding indices.
+	glGenBuffers(1, &_waveIndices);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _waveIndices);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * waveInds.size(), &(waveInds[0]), GL_STATIC_DRAW);
+	_wavePrimitiveCount = waveInds.size();
+
+	// Reset state
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	// - Vertex arrays
+
+	// -- Basic quad
+	glGenVertexArrays(1, &_vaoQuad);
+	glBindVertexArray(_vaoQuad);
+	// Positions
 	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, vboWav);
+	glBindBuffer(GL_ARRAY_BUFFER, _quadVertices);
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
-	// We load the indices data
-	GLuint eboWav = 0;
-	glGenBuffers(1, &eboWav);
- 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboWav);
- 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * waveInds.size(), &(waveInds[0]), GL_STATIC_DRAW);
+	glVertexAttribDivisor(0, 0);
+	// Indices
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _quadIndices);
 	glBindVertexArray(0);
-	_countWave = waveInds.size();
+
+	// -- Quad with notes data.
+	glGenVertexArrays(1, &_vaoQuadWithNoteData);
+	glBindVertexArray(_vaoQuadWithNoteData);
+	// Positions
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, _quadVertices);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+	glVertexAttribDivisor(0, 0);
+	// Notes data part 1
+	glEnableVertexAttribArray(1);
+	glBindBuffer(GL_ARRAY_BUFFER, _notesDataBuffer);
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), NULL);
+	glVertexAttribDivisor(1, 1);
+	// Notes data part 2
+	glEnableVertexAttribArray(2);
+	glBindBuffer(GL_ARRAY_BUFFER, _notesDataBuffer);
+	glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(4 * sizeof(GLfloat)));
+	glVertexAttribDivisor(2, 1);
+	// Indices
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _quadIndices);
+	glBindVertexArray(0);
+
+	// -- Quad with active keys data.
+	glGenVertexArrays(1, &_vaoQuadWithKeyData);
+	glBindVertexArray(_vaoQuadWithKeyData);
+	// Positions
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, _quadVertices);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+	glVertexAttribDivisor(0, 0);
+	// Keys data
+	glEnableVertexAttribArray(1);
+	glBindBuffer(GL_ARRAY_BUFFER, _keysDataBuffer);
+	glVertexAttribIPointer(1, 1, GL_INT, 0, NULL);
+	glVertexAttribDivisor(1, 1);
+	// Indices
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _quadIndices);
+	glBindVertexArray(0);
+
+	// -- Wave
+	glGenVertexArrays(1, &_vaoWave);
+	glBindVertexArray(_vaoWave);
+	// Positions
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, _waveVertices);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+	glVertexAttribDivisor(0, 0);
+	// Indices
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _waveIndices);
+	glBindVertexArray(0);
+
+	checkGLError();
+
+	// Programs.
+	_programNotes.init("notes_vert", "notes_frag");
+	_programFlashes.init("flashes_vert", "flashes_frag");
+	_programParticules.init("particles_vert", "particles_frag");
+	_programKeyMajors.init("majorKeys_vert", "majorKeys_frag");
+	_programKeyMinors.init("minorKeys_vert", "minorKeys_frag");
+	_programPedals.init("pedal_vert", "pedal_frag");
+	_programWave.init("wave_vert", "wave_frag");
+	_programWaveNoise.init("wave_noise_vert", "wave_noise_frag");
+
+	// Pass texture size to shader.
+	_texFont = ResourcesManager::getTextureFor("font");
+	_texParticles = ResourcesManager::getTextureFor("particles");
+	const glm::vec2 tsize = ResourcesManager::getTextureSizeFor("particles");
+	_programParticules.use();
+	_programParticules.uniform("inverseTextureSize", 1.0f / tsize);
+	glUseProgram(0);
 
 	// Prepare actives notes array.
 	_actives.fill(-1);
@@ -270,7 +248,7 @@ void MIDIScene::drawParticles(float time, const glm::vec2 & invScreenSize, const
 	_programParticules.uniform("texCount", state.texCount);
 
 	// Select the geometry.
-	glBindVertexArray(_vaoParticles);
+	glBindVertexArray(_vaoQuad);
 	// For each active particles system, draw it with the right parameters.
 	for(const auto & particle : _particles){
 		if(particle.note >= 0){
@@ -278,7 +256,7 @@ void MIDIScene::drawParticles(float time, const glm::vec2 & invScreenSize, const
 			_programParticules.uniform("time", particle.elapsed);
 			_programParticules.uniform("duration", particle.duration);
 			_programParticules.uniform("channel", particle.set);
-			glDrawElementsInstanced(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0, state.count);
+			glDrawElementsInstanced(GL_TRIANGLES, int(_quadPrimitiveCount), GL_UNSIGNED_INT, (void*)0, state.count);
 		}
 	}
 	
@@ -319,8 +297,8 @@ void MIDIScene::drawNotes(float time, const glm::vec2 & invScreenSize, const Sta
 	_programNotes.texture("minorTexture", state.minorTex, GL_TEXTURE_2D);
 	
 	// Draw the geometry.
-	glBindVertexArray(_vao);
-	glDrawElementsInstanced(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0, GLsizei(_dataBufferSubsize));
+	glBindVertexArray(_vaoQuadWithNoteData);
+	glDrawElementsInstanced(GL_TRIANGLES, int(_quadPrimitiveCount), GL_UNSIGNED_INT, (void*)0, GLsizei(_notesDataBufferSubsize));
 
 	glBindVertexArray(0);
 	glUseProgram(0);
@@ -334,7 +312,7 @@ void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const S
 
 	glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
 	// Update the flags buffer accordingly.
-	glBindBuffer(GL_ARRAY_BUFFER, _flagsBufferId);
+	glBindBuffer(GL_ARRAY_BUFFER, _keysDataBuffer);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, _actives.size()*sizeof(int) ,&(_actives[0]));
 	
 	_programFlashes.use();
@@ -353,8 +331,8 @@ void MIDIScene::drawFlashes(float time, const glm::vec2 & invScreenSize, const S
 	_programFlashes.texture("textureFlash", state.tex, GL_TEXTURE_2D);
 	
 	// Draw the geometry.
-	glBindVertexArray(_vaoFlashes);
-	glDrawElementsInstanced(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0, 128);
+	glBindVertexArray(_vaoQuadWithKeyData);
+	glDrawElementsInstanced(GL_TRIANGLES, int(_quadPrimitiveCount), GL_UNSIGNED_INT, (void*)0, 128);
 	
 	glBindVertexArray(0);
 	glUseProgram(0);
@@ -375,8 +353,8 @@ void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::
 		_programKeyMajors.uniforms("actives", _actives.size(), _actives.data());
 
 		// Draw the geometry.
-		glBindVertexArray(_vaoKeyboard);
-		glDrawElements(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0);
+		glBindVertexArray(_vaoQuad);
+		glDrawElements(GL_TRIANGLES, int(_quadPrimitiveCount), GL_UNSIGNED_INT, (void*)0);
 	}
 
 	{
@@ -388,8 +366,8 @@ void MIDIScene::drawKeyboard(float, const glm::vec2 & invScreenSize, const glm::
 		_programKeyMinors.uniform("highlightKeys", highlightKeys);
 		_programKeyMinors.uniforms("actives", _actives.size(), _actives.data());
 
-		glBindVertexArray(_vaoKeyboard);
-		glDrawElementsInstanced(GL_TRIANGLES, int(_primitiveCount), GL_UNSIGNED_INT, (void*)0, 53);
+		glBindVertexArray(_vaoQuad);
+		glDrawElementsInstanced(GL_TRIANGLES, int(_quadPrimitiveCount), GL_UNSIGNED_INT, (void*)0, 53);
 	}
 	
 	glBindVertexArray(0);
@@ -465,7 +443,7 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 	// Uniforms setup.
 	_programPedals.uniform("pedalOpacity", state.opacity);
 
-	glBindVertexArray(_vao);
+	glBindVertexArray(_vaoQuadWithNoteData);
 	if(state.merge){
 		const float active = (glm::max)((glm::max)(actives[0], actives[1]), (glm::max)(actives[2], actives[3]));
 		// We want to move the central pedal to the side
@@ -478,7 +456,7 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 		_programPedals.texture("pedalTexture", textures[1], GL_TEXTURE_2D);
 		_programPedals.uniform("pedalColor", *colors[1]);
 
-		glDrawElements(GL_TRIANGLES, int(_vaoFlashes), GL_UNSIGNED_INT, (void*)0);
+		glDrawElements(GL_TRIANGLES, int(_vaoQuadWithKeyData), GL_UNSIGNED_INT, (void*)0);
 	} else {
 		for(unsigned int i = 0; i < 4; ++i){
 			_programPedals.uniform("scale", globalScale * localScales[i]);
@@ -487,7 +465,7 @@ void MIDIScene::drawPedals(float time, const glm::vec2 & invScreenSize, const St
 			_programPedals.texture("pedalTexture", textures[i], GL_TEXTURE_2D);
 			_programPedals.uniform("mirror", state.mirror && (i==2));
 			_programPedals.uniform("pedalColor", *colors[i]);
-			glDrawElements(GL_TRIANGLES, int(_vaoFlashes), GL_UNSIGNED_INT, (void*)0);
+			glDrawElements(GL_TRIANGLES, int(_vaoQuadWithKeyData), GL_UNSIGNED_INT, (void*)0);
 		}
 	}
 
@@ -521,7 +499,7 @@ void MIDIScene::drawWaves(float time, const glm::vec2 & invScreenSize, const Sta
 		_programWave.uniform("amplitude", ampl);
 		_programWave.uniform("freq", freq);
 		_programWave.uniform("phase", phase);
-		glDrawElements(GL_TRIANGLES, int(_countWave), GL_UNSIGNED_INT, (void*)0);
+		glDrawElements(GL_TRIANGLES, int(_wavePrimitiveCount), GL_UNSIGNED_INT, (void*)0);
 	}
 
 	glBindVertexArray(0);
@@ -538,8 +516,8 @@ void MIDIScene::drawWaves(float time, const glm::vec2 & invScreenSize, const Sta
 	_programWaveNoise.uniform("waveOpacity", state.noiseIntensity);
 	_programWaveNoise.uniform("inverseScreenSize", invScreenSize);
 
-	glBindVertexArray(_vaoFlashes);
-	glDrawElements(GL_TRIANGLES, int(_vaoFlashes), GL_UNSIGNED_INT, (void*)0);
+	glBindVertexArray(_vaoQuadWithKeyData);
+	glDrawElements(GL_TRIANGLES, int(_vaoQuadWithKeyData), GL_UNSIGNED_INT, (void*)0);
 
 	glBindVertexArray(0);
 	glUseProgram(0);
@@ -586,9 +564,10 @@ void MIDIScene::setOrientation(bool horizontal){
 }
 
 void MIDIScene::clean(){
-	glDeleteVertexArrays(1, &_vao);
-	glDeleteVertexArrays(1, &_vaoFlashes);
-	glDeleteVertexArrays(1, &_vaoParticles);
+	GLuint vaos[] = {_vaoQuad, _vaoQuadWithNoteData, _vaoQuadWithKeyData, _vaoWave};
+	GLuint buffers[] = {_quadVertices, _quadIndices, _waveVertices, _waveIndices, _notesDataBuffer, _notesDataBuffer };
+	glDeleteVertexArrays(sizeof(vaos)/sizeof(vaos[0]), vaos);
+	glDeleteBuffers(sizeof(buffers)/sizeof(buffers[0]), buffers);
 
 	_programNotes.clean();
 	_programFlashes.clean();
@@ -601,14 +580,14 @@ void MIDIScene::clean(){
 }
 
 void MIDIScene::upload(const std::vector<GPUNote> & data){
-	glBindBuffer(GL_ARRAY_BUFFER, _dataBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, _notesDataBuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GPUNote) * data.size(), &(data[0]), GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void MIDIScene::upload(const std::vector<GPUNote> & data, int mini, int maxi){
 	const int size = maxi - mini + 1;
-	glBindBuffer(GL_ARRAY_BUFFER, _dataBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, _notesDataBuffer);
 	glBufferSubData(GL_ARRAY_BUFFER, mini * sizeof(GPUNote), size * sizeof(GPUNote), &(data[mini]));
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -617,7 +596,7 @@ MIDISceneEmpty::MIDISceneEmpty(){
 	// Upload one dummy note.
 	std::vector<GPUNote> data = { GPUNote() };
 	upload(data);
-	_dataBufferSubsize = 0;
+	_notesDataBufferSubsize = 0;
 }
 
 void MIDISceneEmpty::updateSets(const SetOptions & options){

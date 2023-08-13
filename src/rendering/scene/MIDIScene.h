@@ -94,7 +94,7 @@ protected:
 	std::array<int, 128> _actives;
 	std::vector<Particles> _particles;
 	Pedals _pedals;
-	int _dataBufferSubsize = 0;
+	int _notesDataBufferSubsize = 0;
 	
 private:
 
@@ -108,26 +108,24 @@ private:
 	ShaderProgram _programPedals;
 	ShaderProgram _programWave;
 	ShaderProgram _programWaveNoise;
-	
-	GLuint _vao;
-	GLuint _ebo;
-	GLuint _dataBuffer;
-	
-	GLuint _flagsBufferId;
-	GLuint _vaoFlashes;
-	
-	GLuint _vaoParticles;
-	GLuint _texParticles;
 
-	GLuint _vaoKeyboard;
+	GLuint _notesDataBuffer;
+	GLuint _keysDataBuffer;
+	GLuint _quadVertices;
+	GLuint _quadIndices;
+	GLuint _waveVertices;
+	GLuint _waveIndices;
 
-	GLuint _vaoPedals;
-	size_t _countPedals;
+	GLuint _vaoQuad;
+	GLuint _vaoQuadWithNoteData;
+	GLuint _vaoQuadWithKeyData;
+	size_t _quadPrimitiveCount;
 
 	GLuint _vaoWave;
-	size_t _countWave;
-	
-	size_t _primitiveCount;
+	size_t _wavePrimitiveCount;
+
+	GLuint _texParticles;
+	GLuint _texFont;
 
 };
 
