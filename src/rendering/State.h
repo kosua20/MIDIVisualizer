@@ -50,19 +50,24 @@ public:
 	struct BackgroundState {
 		PathCollection imagePath; ///< Path to an image on disk (expect only one).
 		glm::vec3 color; ///< Background color.
-		glm::vec3 linesColor; ///< Score lines color.
-		glm::vec3 textColor; ///< Score text color.
-		glm::vec3 keysColor; ///< Black keys color.
 		float minorsWidth; ///< Minor keys and notes width.
-		bool hLines; ///< Show horizontal score lines.
-		bool vLines; ///< Show vertical score lines.
-		bool digits; ///< Show score text.
 		bool image; ///< Use background image.
 		bool imageBehindKeyboard; ///< Should image pass behind keyboard.
 		float imageAlpha; ///< Background alpha.
 		GLuint tex;
 	};
-	
+
+	struct ScoreState {
+		glm::vec3 hLinesColor; ///< Score lines color.
+		glm::vec3 vLinesColor; ///< Score lines color.
+		glm::vec3 digitsColor; ///< Score text
+		float hLinesWidth;
+		float vLinesWidth;
+		float digitsScale;
+		bool hLines; ///< Show horizontal score lines.
+		bool vLines; ///< Show vertical score lines.
+		bool digits; ///< Show score text.
+	};
 	
 	struct ParticlesState {
 		PathCollection imagePaths; ///< List of paths to images on disk.
@@ -78,6 +83,7 @@ public:
 	struct KeyboardState {
 		ColorArray majorColor; ///< Major key pressed color.
 		ColorArray minorColor; ///< Minor key pressed color.
+		glm::vec3 edgeColor; ///< Black keys color.
 		float size; ///< Size on screen, starting from the bottom.
 		float minorHeight; ///< Fraction of the keyboard height taken by the minor keys.
 		bool highlightKeys; ///< Highlight pressed keys.
@@ -153,6 +159,7 @@ public:
 	};
 
 	BackgroundState background;
+	ScoreState score;
 	ParticlesState particles;
 	KeyboardState keyboard;
 	SetOptions setOptions;

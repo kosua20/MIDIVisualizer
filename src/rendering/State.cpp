@@ -140,6 +140,8 @@ void State::defineOptions(){
 	_sharedInfos["color-keyboard-major"] = {"Custom color for pressed major keys", OptionInfos::Type::COLOR};
 	_sharedInfos["color-keyboard-minor"] = {"Custom color for pressed minor keys", OptionInfos::Type::COLOR};
 	_sharedInfos["color-lines"] = {"Score lines color", OptionInfos::Type::COLOR};
+	_sharedInfos["color-lines-vertical"] = {"Score vertical lines color", OptionInfos::Type::COLOR};
+	_sharedInfos["color-lines-horizontal"] = {"Score horizontal lines color", OptionInfos::Type::COLOR};
 	_sharedInfos["color-numbers"] = {"Score measure numbers color", OptionInfos::Type::COLOR};
 	_sharedInfos["color-keyboard"] = {"Keyboard black keys color", OptionInfos::Type::COLOR};
 	_sharedInfos["color-minor"] = {"Minor notes color", OptionInfos::Type::COLOR};
@@ -218,6 +220,9 @@ void State::defineOptions(){
 	_sharedInfos["scroll-reverse"] = {"Notes scroll from bottom to top instead of the opposite", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["scroll-horizontal"] = {"Notes scroll from right to left when enabled", OptionInfos::Type::BOOLEAN};
 
+	_sharedInfos["score-lines-vertical-width"] = {"Score vertical lines height", OptionInfos::Type::FLOAT};
+	_sharedInfos["score-lines-horizontal-width"] = {"Score horizontal lines width", OptionInfos::Type::FLOAT};
+	_sharedInfos["score-digits-size"] = {"Score digits size", OptionInfos::Type::FLOAT};
 	// Paths.
 	_sharedInfos["bg-img-path"] = {"Path to an image on disk to use as background", OptionInfos::Type::PATH};
 	_sharedInfos["particles-paths"] = {"Set of paths (separated by spaces) to black and white images on disk to use as particles", OptionInfos::Type::PATH};
@@ -285,9 +290,9 @@ void State::updateOptions(){
 	_boolInfos["show-blur-notes"] = &showBlurNotes;
 	_boolInfos["lock-colors"] = &lockParticleColor;
 	_boolInfos["colors-per-set"] = &perSetColors;
-	_boolInfos["show-horiz-lines"] = &background.hLines;
-	_boolInfos["show-vert-lines"] = &background.vLines;
-	_boolInfos["show-numbers"] = &background.digits;
+	_boolInfos["show-horiz-lines"] = &score.hLines;
+	_boolInfos["show-vert-lines"] = &score.vLines;
+	_boolInfos["show-numbers"] = &score.digits;
 	_boolInfos["show-keyboard"] = &showKeyboard;
 	_boolInfos["bg-img-behind-keyboard"] = &background.imageBehindKeyboard;
 	_boolInfos["keyboard-highlight"] = &keyboard.highlightKeys;
@@ -324,9 +329,11 @@ void State::updateOptions(){
 	_vecInfos["color-bg"] = &background.color;
 	_vecInfos["color-keyboard-major"] = &keyboard.majorColor[0];
 	_vecInfos["color-keyboard-minor"] = &keyboard.minorColor[0];
-	_vecInfos["color-lines"] = &background.linesColor;
-	_vecInfos["color-numbers"] = &background.textColor;
-	_vecInfos["color-keyboard"] = &background.keysColor;
+	_vecInfos["color-keyboard"] = &keyboard.edgeColor;
+	_vecInfos["color-lines"] = &score.vLinesColor;
+	_vecInfos["color-lines-vertical"] = &score.vLinesColor;
+	_vecInfos["color-lines-horizontal"] = &score.hLinesColor;
+	_vecInfos["color-numbers"] = &score.digitsColor;
 
 	_vecInfos["color-major"] = &notes.majorColors[0];
 	_vecInfos["color-particles"] = &particles.colors[0];
@@ -389,6 +396,10 @@ void State::updateOptions(){
 	_pathInfos["flashes-img-path"] = &flashes.imagePath;
 	_intInfos["flashes-img-rows"] = &flashes.texRowCount;
 	_intInfos["flashes-img-columns"] = &flashes.texColCount;
+
+	_floatInfos["score-lines-vertical-width"] = &score.hLinesWidth;
+	_floatInfos["score-lines-horizontal-width"] = &score.vLinesWidth;
+	_floatInfos["score-digits-size"] = &score.digitsScale;
 }
 
 
@@ -612,6 +623,10 @@ void State::load(const Arguments & configArgs){
 		pedals.rightColor = pedals.centerColor;
 	}
 
+	if(configArgs.count("color-lines") != 0){
+		score.hLinesColor = score.vLinesColor;
+	}
+
 	// Don't erase the file path.
 	
 	// Rebuild internal data.
@@ -644,10 +659,11 @@ void State::reset(){
 		keyboard.minorColor[cid] = notes.minorColors[0];
 	}
 
-	background.color = glm::vec3(0.0f, 0.0f, 0.0f) ;
-	background.linesColor = glm::vec3(1.0f, 1.0f, 1.0f);
-	background.textColor = glm::vec3(1.0f, 1.0f, 1.0f);
-	background.keysColor = glm::vec3(0.0f, 0.0f, 0.0f);
+	background.color = glm::vec3(0.0f, 0.0f, 0.0f);
+	score.hLinesColor = glm::vec3(1.0f, 1.0f, 1.0f);
+	score.vLinesColor = glm::vec3(1.0f, 1.0f, 1.0f);
+	score.digitsColor = glm::vec3(1.0f, 1.0f, 1.0f);
+	keyboard.edgeColor = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	scale = 0.5f ;
 	attenuation = 0.99f;
@@ -670,14 +686,18 @@ void State::reset(){
 	flashes.tex = ResourcesManager::getTextureFor("flash");
 	
 	background.minorsWidth = 0.8f;
-	background.hLines = true;
-	background.vLines = true ;
-	background.digits = true ;
 	background.image = false;
 	background.imageAlpha = 1.0f;
 	background.tex = 0;
 	background.imageBehindKeyboard = false;
 	background.imagePath.clear();
+
+	score.hLines = true;
+	score.vLines = true;
+	score.digits = true;
+	score.hLinesWidth = 4.0f;
+	score.vLinesWidth = 4.0f;
+	score.digitsScale = 0.08f;
 
 	particles.speed = 0.2f;
 	particles.expansion = 1.0f;
@@ -776,9 +796,9 @@ void State::load(std::istream & configFile, int majVersion, int minVersion){
 		configFile >> lockParticleColor ;
 
 		configFile >> background.minorsWidth ;
-		configFile >> background.hLines ;
-		configFile >> background.vLines ;
-		configFile >> background.digits ;
+		configFile >> score.hLines ;
+		configFile >> score.vLines ;
+		configFile >> score.digits ;
 		configFile >> showKeyboard ;
 
 		configFile >> particles.speed ;
@@ -807,9 +827,9 @@ void State::load(std::istream & configFile, int majVersion, int minVersion){
 	flashColor = baseColor; */
 	if(majVersion > 3 || (majVersion == 3 && minVersion >= 3)){
 		configFile >> showNotes;
-		configFile >> background.linesColor[0] >> background.linesColor[1] >> background.linesColor[2] ;
-		configFile >> background.textColor[0] >> background.textColor[1] >> background.textColor[2] ;
-		configFile >> background.keysColor[0] >> background.keysColor[1] >> background.keysColor[2] ;
+		configFile >> score.vLinesColor[0] >> score.vLinesColor[1] >> score.vLinesColor[2] ;
+		configFile >> score.digitsColor[0] >> score.digitsColor[1] >> score.digitsColor[2] ;
+		configFile >> keyboard.edgeColor[0] >> keyboard.edgeColor[1] >> keyboard.edgeColor[2] ;
 		configFile >> notes.minorColors[0][0] >> notes.minorColors[0][1] >> notes.minorColors[0][2] ;
 		configFile >> flashes.colors[0][0] >> flashes.colors[0][1] >> flashes.colors[0][2] ;
 		configFile >> flashes.size;
@@ -855,4 +875,5 @@ void State::load(std::istream & configFile, int majVersion, int minVersion){
 	pedals.rightColor = pedals.topColor;
 	pedals.centerColor = pedals.topColor;
 	waves.color = notes.majorColors[0];
+	score.hLinesColor = score.vLinesColor;
 }
