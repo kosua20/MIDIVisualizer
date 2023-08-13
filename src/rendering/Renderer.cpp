@@ -353,6 +353,8 @@ void Renderer::drawParticles(const glm::vec2 & invSize) {
 
 void Renderer::drawScore(const glm::vec2 & invSize) {
 	glEnable(GL_BLEND);
+	_scene->drawScore(_timer * _state.scrollSpeed, invSize, _state.score, _state.scale, _state.keyboard.size, _state.horizontalScroll, _state.reverseScroll );
+	
 	glDisable(GL_BLEND);
 }
 

@@ -527,6 +527,84 @@ void MIDIScene::drawWaves(float time, const glm::vec2 & invScreenSize, const Sta
 	glDisable(GL_BLEND);
 }
 
+void MIDIScene::drawScore(float time, const glm::vec2 & invScreenSize, const State::ScoreState & state, float measureScale, float keyboardHeight, bool horizontalMode, bool reverseScroll){
+
+	const glm::vec2 pixelSize = horizontalMode? glm::vec2(invScreenSize.y, invScreenSize.x) : invScreenSize;
+
+	// Draw vertical lines.
+	if(state.vLines){
+		const int firstBar = (_minKeyMajor + 6) / 7;
+		const int barCount = _keyCount / 7 + 1;
+
+		// minKeyMajor maps to -1
+		// _minKeyMajor + _keyCount maps to 1
+		float firstBarCoord = (firstBar * 7 - _minKeyMajor) / (float)_keyCount;
+		firstBarCoord = 2.0f * firstBarCoord - 1.0f;
+		float nextBarDeltaCoord = 7.0f / (float)_keyCount;
+		nextBarDeltaCoord *= 2.0f;
+
+		_programScoreBars.use();
+		_programScoreBars.uniform("baseOffset", glm::vec2(firstBarCoord, 0.0f));
+		_programScoreBars.uniform("nextOffset", glm::vec2(nextBarDeltaCoord, 0.0f));
+		_programScoreBars.uniform("scale", glm::vec2(state.vLinesWidth * pixelSize.x, 1.0f));
+		_programScoreBars.uniform("color", state.vLinesColor);
+		glBindVertexArray(_vaoQuad);
+		glDrawElementsInstanced(GL_TRIANGLES, int(_quadPrimitiveCount), GL_UNSIGNED_INT, (void*)0, barCount);
+		glBindVertexArray(0);
+		glUseProgram(0);
+	}
+
+	if(state.hLines || state.digits){
+
+		const float currentMesureAbcisse = time/secondsPerMeasure()  * (reverseScroll ? -1.0 : 1.0f);
+		const float firstMesureAbscisse = currentMesureAbcisse - keyboardHeight / measureScale;
+		const float firstMesure = std::floor(firstMesureAbscisse);
+		const float firstMesureOffset = firstMesureAbscisse - firstMesure;
+		float firstBarCoord = -firstMesureOffset * measureScale;
+		firstBarCoord = (2.0f * firstBarCoord - 1.0f);
+
+		float nextBarDeltaCoord = measureScale;
+		nextBarDeltaCoord *= 2.0f;
+		// 1/measures on screen (independent of resolution or orientation)
+		const int barCount = int(std::ceil(1.0f/measureScale)) + 1;
+
+		// Draw horizontal lines
+		if(state.hLines){
+			_programScoreBars.use();
+			_programScoreBars.uniform("baseOffset", glm::vec2(0.0f, firstBarCoord));
+			_programScoreBars.uniform("nextOffset", glm::vec2(0.0f, nextBarDeltaCoord));
+			_programScoreBars.uniform("scale", glm::vec2(1.0f, state.hLinesWidth * pixelSize.y));
+			_programScoreBars.uniform("color", state.hLinesColor);
+			glBindVertexArray(_vaoQuad);
+			glDrawElementsInstanced(GL_TRIANGLES, int(_quadPrimitiveCount), GL_UNSIGNED_INT, (void*)0, barCount);
+			glBindVertexArray(0);
+			glUseProgram(0);
+		}
+
+		if(state.digits){
+			const float textScale = state.digitsScale;
+			// Based on texture size.
+			const glm::vec2 digitSize = glm::vec2(200.0f, 256.0f) * invScreenSize * textScale;
+			const float digitCount = std::ceil(std::log10(duration() / secondsPerMeasure() + 1.f / measureScale));
+			const glm::vec2 textSize = glm::vec2(digitCount, 1.0f) * digitSize;
+			const glm::vec2 margin = 5.0f * invScreenSize;
+			_programScoreLabels.use();
+			_programScoreLabels.uniform("baseOffset", glm::vec2(-1.0f, firstBarCoord) + textSize + margin);
+			_programScoreLabels.uniform("nextOffset", glm::vec2(0.0f, nextBarDeltaCoord));
+			_programScoreLabels.uniform("scale", textSize);
+			_programScoreLabels.uniform("color", state.digitsColor);
+			_programScoreLabels.uniform("digitCount", digitCount);
+			_programScoreLabels.uniform("firstMeasure", (int)firstMesure);
+			_programScoreLabels.uniform("reverseMode", reverseScroll);
+			_programScoreLabels.texture("font", _texFont, GL_TEXTURE_2D);
+			glBindVertexArray(_vaoQuad);
+			glDrawElementsInstanced(GL_TRIANGLES, int(_quadPrimitiveCount), GL_UNSIGNED_INT, (void*)0, barCount);
+			glBindVertexArray(0);
+			glUseProgram(0);
+		}
+	}
+}
+
 void MIDIScene::setMinMaxKeys(int minKey, int minKeyMajor, int notesCount){
 	_programNotes.use();
 	_programNotes.uniform("minNoteMajor", minKeyMajor);
@@ -543,6 +621,9 @@ void MIDIScene::setMinMaxKeys(int minKey, int minKeyMajor, int notesCount){
 	_programParticules.use();
 	_programParticules.uniform("minNote", minKey);
 	_programParticules.uniform("notesCount", float(notesCount));
+	// Refresh score settings (used on CPU)
+	_minKeyMajor = minKeyMajor;
+	_keyCount = notesCount;
 	glUseProgram(0);
 }
 

@@ -5,12 +5,13 @@ in INTERFACE {
 	float id;
 } In ;
 
+uniform sampler2D font;
 uniform vec3 color;
 uniform float digitCount;
-uniform sampler2D font;
-out vec4 fragColor;
 uniform int firstMeasure;
 uniform bool reverseMode;
+
+out vec4 fragColor;
 
 void main(){
 	vec2 globalUV = In.uv * vec2(digitCount, 1.0);

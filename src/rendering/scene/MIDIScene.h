@@ -27,6 +27,8 @@ public:
 
 	void drawWaves(float time, const glm::vec2 & invScreenSize, const State::WaveState & state, float keyboardHeight);
 
+	void drawScore(float time, const glm::vec2 & invScreenSize, const State::ScoreState & state, float measureScale, float keyboardHeight, bool horizontalMode, bool reverseScroll);
+
 	/// Clean function
 	void clean();
 	
@@ -129,6 +131,9 @@ private:
 	GLuint _texParticles;
 	GLuint _texFont;
 
+	// Cached info.
+	unsigned int _minKeyMajor{0};
+	unsigned int _keyCount{128};
 };
 
 class MIDISceneEmpty : public MIDIScene {
