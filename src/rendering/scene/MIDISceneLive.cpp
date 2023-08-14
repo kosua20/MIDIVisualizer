@@ -47,8 +47,9 @@ MIDISceneLive::MIDISceneLive(int port, bool verbose) : MIDIScene() {
 	_allMessages.reserve(MAX_NOTES_IN_FLIGHT);
 	_secondsPerMeasure = computeMeasureDuration(_tempo, _signatureNum / _signatureDenom);
 	_pedalInfos[-10000.0f] = Pedals();
-	upload(_notes);
 
+	_dirtyNotes = true;
+	_dirtyNotesRange = {0, 0}; // Full array
 }
 
 void MIDISceneLive::updateSets(const SetOptions & options){
@@ -60,7 +61,8 @@ void MIDISceneLive::updateSets(const SetOptions & options){
 		const int set = _currentSetOption.apply(int(note.note), _notesInfos[nid].channel, 0, note.start);
 		note.set = float(set);
 	}
-	upload(_notes);
+	_dirtyNotes = true;
+	_dirtyNotesRange = {0, 0};  // Full array
 }
 
 void MIDISceneLive::updatesActiveNotes(double time, double speed){
@@ -260,7 +262,7 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 	}
 
 	// Update completed notes.
-	for(size_t i = 0; i < _notesDataBufferSubsize; ++i){
+	for(size_t i = 0; i < _effectiveNotesCount; ++i){
 		const auto & noteId = _notesInfos[i];
 		// If the key is recording, no need to update _actives, skip.
 		if(_activeRecording[noteId.note]){
@@ -296,10 +298,11 @@ void MIDISceneLive::updatesActiveNotes(double time, double speed){
 
 	// If we have indeed updated a note, trigger an upload.
 	if(minUpdated <= maxUpdated){
-		upload(_notes, minUpdated, maxUpdated);
+		_dirtyNotes = true;
+		_dirtyNotesRange = {minUpdated, maxUpdated};
 	}
 	// Update range of notes to show.
-	_notesDataBufferSubsize = std::min(MAX_NOTES_IN_FLIGHT, _notesCount);
+	_effectiveNotesCount = std::min(MAX_NOTES_IN_FLIGHT, _notesCount);
 	// Update timings.
 	_previousTime = time;
 	_maxTime = (std::max)(time, _maxTime);

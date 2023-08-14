@@ -12,21 +12,21 @@ public:
 
 	MIDISceneFile(const std::string & midiFilePath, const SetOptions & options);
 
-	void updateSets(const SetOptions & options);
+	void updateSets(const SetOptions & options) override;
 
 	~MIDISceneFile();
 
-	void updatesActiveNotes(double time, double speed);
+	void updatesActiveNotes(double time, double speed) override;
 
-	double duration() const;
+	double duration() const override;
 
-	double secondsPerMeasure() const;
+	double secondsPerMeasure() const override;
 
-	int notesCount() const;
+	int notesCount() const override;
 
-	void print() const;
+	void print() const override;
 	
-	void save(std::ofstream& file) const;
+	void save(std::ofstream& file) const override;
 
 	const std::string& filePath() const;
 

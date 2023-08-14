@@ -49,7 +49,6 @@ private:
 		double timestamp;
 	};
 
-	std::vector<GPUNote> _notes;
 	std::vector<NoteInfos> _notesInfos;
 	std::array<int, 128> _activeIds;
 	std::array<bool, 128> _activeRecording;

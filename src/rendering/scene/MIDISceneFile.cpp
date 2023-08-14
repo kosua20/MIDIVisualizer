@@ -33,32 +33,41 @@ void MIDISceneFile::updateSets(const SetOptions & options){
 	// Generate note data for rendering.
 	_midiFile.updateSets(options);
 
-	// Load notes shared data.
-	std::vector<GPUNote> data;
 	std::vector<MIDINote> notesM;
 	_midiFile.getNotes(notesM, NoteType::MAJOR, 0);
-	for(auto& note : notesM){
-		data.emplace_back();
-		data.back().note = float(note.note);
-		data.back().start = float(note.start);
-		data.back().duration = float(note.duration);
-		data.back().isMinor = 0.0f;
-		data.back().set = float(note.set);
-	}
-
 	std::vector<MIDINote> notesm;
 	_midiFile.getNotes(notesm, NoteType::MINOR, 0);
-	for(auto& note : notesm){
-		data.emplace_back();
-		data.back().note = float(note.note);
-		data.back().start = float(note.start);
-		data.back().duration = float(note.duration);
-		data.back().isMinor =  1.0f;
-		data.back().set = float(note.set);
+
+	// Load notes shared data.
+	const size_t majorCount = notesM.size();
+	const size_t minorCount = notesm.size();
+	const size_t totalCount = majorCount + minorCount;
+	_notes.resize(totalCount);
+
+	for(size_t i = 0; i < majorCount; ++i){
+		const MIDINote& note = notesM[i];
+		GPUNote& data = _notes[i];
+		data.note = float(note.note);
+		data.start = float(note.start);
+		data.duration = float(note.duration);
+		data.isMinor = 0.0f;
+		data.set = float(note.set);
+	}
+
+	for(size_t i = 0; i < minorCount; ++i){
+		const MIDINote& note = notesm[i];
+		GPUNote& data = _notes[i + majorCount];
+		data.note = float(note.note);
+		data.start = float(note.start);
+		data.duration = float(note.duration);
+		data.isMinor =  1.0f;
+		data.set = float(note.set);
 	}
 	// Upload to the GPU.
-	upload(data);
-	_notesDataBufferSubsize = int(data.size());
+	assert(totalCount < (1 << 31));
+	_dirtyNotes = true;
+	_effectiveNotesCount = int(totalCount);
+	_dirtyNotesRange = {0, 0}; // Means full array
 }
 
 void MIDISceneFile::updatesActiveNotes(double time, double speed){
