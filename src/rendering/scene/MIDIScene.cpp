@@ -22,7 +22,7 @@ MIDIScene::MIDIScene(){
 }
 
 void MIDIScene::renderSetup(){
-
+	// TODO: (MV) avoid recreating resources when loading a new scene.
 	// - Buffers
 
 	// -- Basic quad
@@ -527,12 +527,13 @@ void MIDIScene::drawWaves(float time, const glm::vec2 & invScreenSize, const Sta
 	glDisable(GL_BLEND);
 }
 
-void MIDIScene::drawScore(float time, const glm::vec2 & invScreenSize, const State::ScoreState & state, float measureScale, float keyboardHeight, bool horizontalMode, bool reverseScroll){
+void MIDIScene::drawScore(float time, const glm::vec2 & invScreenSize, const State::ScoreState & state, float measureScale, float qualityScale, float keyboardHeight, bool horizontalMode, bool reverseScroll){
 
-	const glm::vec2 pixelSize = horizontalMode? glm::vec2(invScreenSize.y, invScreenSize.x) : invScreenSize;
+	const glm::vec2 pixelSize = qualityScale * (horizontalMode ? glm::vec2(invScreenSize.y, invScreenSize.x) : invScreenSize);
 
 	// Draw vertical lines.
 	if(state.vLines){
+		// 7 major keys.
 		const int firstBar = (_minKeyMajor + 6) / 7;
 		const int barCount = _keyCount / 7 + 1;
 
@@ -584,10 +585,11 @@ void MIDIScene::drawScore(float time, const glm::vec2 & invScreenSize, const Sta
 		if(state.digits){
 			const float textScale = state.digitsScale;
 			// Based on texture size.
-			const glm::vec2 digitSize = glm::vec2(200.0f, 256.0f) * invScreenSize * textScale;
+			const glm::vec2 digitResolution = glm::vec2(200.0f, 256.0f);
+			const glm::vec2 digitSize = textScale * qualityScale * invScreenSize * digitResolution;
 			const float digitCount = std::ceil(std::log10(duration() / secondsPerMeasure() + 1.f / measureScale));
 			const glm::vec2 textSize = glm::vec2(digitCount, 1.0f) * digitSize;
-			const glm::vec2 margin = 5.0f * invScreenSize;
+			const glm::vec2 margin = 5.0f * qualityScale * invScreenSize;
 			_programScoreLabels.use();
 			_programScoreLabels.uniform("baseOffset", glm::vec2(-1.0f, firstBarCoord) + textSize + margin);
 			_programScoreLabels.uniform("nextOffset", glm::vec2(0.0f, nextBarDeltaCoord));
@@ -652,7 +654,7 @@ void MIDIScene::setOrientation(bool horizontal){
 
 void MIDIScene::clean(){
 	GLuint vaos[] = {_vaoQuad, _vaoQuadWithNoteData, _vaoQuadWithKeyData, _vaoWave};
-	GLuint buffers[] = {_quadVertices, _quadIndices, _waveVertices, _waveIndices, _notesDataBuffer, _notesDataBuffer };
+	GLuint buffers[] = {_quadVertices, _quadIndices, _waveVertices, _waveIndices, _notesDataBuffer, _keysDataBuffer };
 	glDeleteVertexArrays(sizeof(vaos)/sizeof(vaos[0]), vaos);
 	glDeleteBuffers(sizeof(buffers)/sizeof(buffers[0]), buffers);
 

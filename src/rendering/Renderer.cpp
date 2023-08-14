@@ -353,8 +353,9 @@ void Renderer::drawParticles(const glm::vec2 & invSize) {
 
 void Renderer::drawScore(const glm::vec2 & invSize) {
 	glEnable(GL_BLEND);
-	_scene->drawScore(_timer * _state.scrollSpeed, invSize, _state.score, _state.scale, _state.keyboard.size, _state.horizontalScroll, _state.reverseScroll );
-	
+	// The score is resolution dependent, because of the text and line settings specified in pixels.
+	const auto& currentQuality = Quality::availables.at(_state.quality);
+	_scene->drawScore(_timer * _state.scrollSpeed, invSize, _state.score, _state.scale, currentQuality.finalResolution, _state.keyboard.size, _state.horizontalScroll, _state.reverseScroll );
 	glDisable(GL_BLEND);
 }
 

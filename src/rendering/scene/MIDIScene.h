@@ -27,7 +27,7 @@ public:
 
 	void drawWaves(float time, const glm::vec2 & invScreenSize, const State::WaveState & state, float keyboardHeight);
 
-	void drawScore(float time, const glm::vec2 & invScreenSize, const State::ScoreState & state, float measureScale, float keyboardHeight, bool horizontalMode, bool reverseScroll);
+	void drawScore(float time, const glm::vec2 & invScreenSize, const State::ScoreState & state, float measureScale, float qualityScale,  float keyboardHeight, bool horizontalMode, bool reverseScroll);
 
 	/// Clean function
 	void clean();

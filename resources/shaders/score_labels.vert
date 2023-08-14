@@ -6,6 +6,7 @@ uniform vec2 baseOffset;
 uniform vec2 nextOffset;
 uniform vec2 scale;
 uniform bool horizontalMode;
+uniform float digitCount;
 
 vec2 flipIfNeeded(vec2 inPos){
 	return horizontalMode ? vec2(inPos.y, -inPos.x) : inPos;
@@ -24,7 +25,7 @@ void main(){
 	vec2 pos = v.xy * scale * 2.0f + flipIfNeeded( fullOffset);
 	gl_Position = vec4(pos, 0.1, 1.0);
 	// Output the UV coordinates computed from the positions.
-	Out.uv = v.xy + 0.5;
+	Out.uv = (v.xy + 0.5) * vec2(digitCount, 1.0);
 	Out.id = float(gl_InstanceID);
 
 }
