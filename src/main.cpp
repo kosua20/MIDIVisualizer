@@ -6,7 +6,7 @@
 #include "helpers/ImGuiStyle.h"
 #include "helpers/System.h"
 
-#include "rendering/Renderer.h"
+#include "rendering/Viewer.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
@@ -19,21 +19,21 @@
 /// Callbacks
 
 void resize_callback(GLFWwindow* window, int width, int height){
-	Renderer *renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
-	renderer->resize(width, height);
+	Viewer *viewer = static_cast<Viewer*>(glfwGetWindowUserPointer(window));
+	viewer->resize(width, height);
 }
 
 void rescale_callback(GLFWwindow* window, float xscale, float yscale){
-	Renderer *renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
+	Viewer *viewer = static_cast<Viewer*>(glfwGetWindowUserPointer(window));
 	// Assume only one of the two for now.
-	renderer->rescale(xscale);
+	viewer->rescale(xscale);
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
 	if(!ImGui::GetIO().WantCaptureKeyboard){
-		// Get pointer to the renderer.
-		Renderer *renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
-		renderer->keyPressed(key, action);
+		// Get pointer to the viewer.
+		Viewer *viewer = static_cast<Viewer*>(glfwGetWindowUserPointer(window));
+		viewer->keyPressed(key, action);
 	}
 	ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
 }
@@ -47,7 +47,7 @@ void drop_callback(GLFWwindow* window, int count, const char** paths){
 		return;
 	}
 
-	Renderer *renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
+	Viewer *viewer = static_cast<Viewer*>(glfwGetWindowUserPointer(window));
 	bool loadedMIDI = false;
 	bool loadedConfig = false;
 	for(int i = 0; i < count; ++i){
@@ -68,14 +68,14 @@ void drop_callback(GLFWwindow* window, int count, const char** paths){
 		const bool isConfig = extension == "ini" || extension == "config";
 		// Attempt to load MIDI if not already loaded.
 		if(!loadedMIDI && isMIDI){
-			loadedMIDI = renderer->loadFile(path);
+			loadedMIDI = viewer->loadFile(path);
 		}
 		// Attempt to load state if not already loaded.
 		if(!loadedConfig && isConfig){
 			State newState;
 			loadedConfig = newState.load(path);
 			if(loadedConfig){
-				renderer->setState(newState);
+				viewer->setState(newState);
 			}
 		}
 	}
@@ -209,13 +209,13 @@ int main( int argc, char** argv) {
 
 	// The font should be maintained alive until the atlas is built.
 	ImFontConfig font;
-	// We need a scope to ensure the renderer is deleted before the OpenGL context is destroyed.
+	// We need a scope to ensure the viewer is deleted before the OpenGL context is destroyed.
 	{
 
 		// Setup resources.
 		ResourcesManager::loadResources();
-		// Create the renderer (passing options to display them)
-		Renderer renderer(config);
+		// Create the viewer (passing options to display them)
+		Viewer viewer(config);
 
 		// Setup ImGui for interface.
 		ImGui::CreateContext();
@@ -228,7 +228,7 @@ int main( int argc, char** argv) {
 
 		// Load midi file if specified.
 		if(!config.lastMidiPath.empty()){
-			renderer.loadFile(config.lastMidiPath);
+			viewer.loadFile(config.lastMidiPath);
 		}
 		// Apply custom state.
 		State state;
@@ -237,16 +237,16 @@ int main( int argc, char** argv) {
 		}
 		// Apply any extra display argument on top of the existing config.
 		state.load(config.args());
-		renderer.setState(state);
+		viewer.setState(state);
 
 		// Connect to MIDI device if specified. We do it after setting the state because there are constraints on the scroll direction when recording.
 		// But we don't want to force reverse-scroll when playing back a recorded liveplay.
 		if(!config.lastMidiDevice.empty()){
-			renderer.connectDevice(config.lastMidiDevice);
+			viewer.connectDevice(config.lastMidiDevice);
 		}
 
 		// Define utility pointer for callbacks (can be obtained back from inside the callbacks).
-		glfwSetWindowUserPointer(window, &renderer);
+		glfwSetWindowUserPointer(window, &viewer);
 		glfwSetFramebufferSizeCallback(window, resize_callback);
 		glfwSetKeyCallback(window,key_callback);
 		glfwSetScrollCallback(window,scroll_callback);
@@ -261,15 +261,15 @@ int main( int argc, char** argv) {
 		int width, height;
 		glfwGetFramebufferSize(window, &width, &height);
 		const float scale = float(width) / float((std::max)(frame[2], 1));
-		renderer.resizeAndRescale(width, height, scale);
+		viewer.resizeAndRescale(width, height, scale);
 
 		// Scale the GUI based on options. This one has to be done late, after ImGui initialisation.
-		renderer.setGUIScale(config.guiScale);
+		viewer.setGUIScale(config.guiScale);
 
 		// Direct export.
 		const bool directRecord = !config.exporting.path.empty();
 		if(directRecord){
-			const bool success = renderer.startDirectRecording(config.exporting, config.windowSize);
+			const bool success = viewer.startDirectRecording(config.exporting, config.windowSize);
 			if(!success){
 				// Quit.
 				performAction(SystemAction::QUIT, window, frame);
@@ -287,7 +287,7 @@ int main( int argc, char** argv) {
 			ImGui::NewFrame();
 
 			// Update the content of the window.
-			SystemAction action = renderer.draw(DEBUG_SPEED * float(glfwGetTime()));
+			SystemAction action = viewer.draw(DEBUG_SPEED * float(glfwGetTime()));
 
 			// Perform system window action if required.
 			performAction(action, window, frame);
@@ -303,7 +303,7 @@ int main( int argc, char** argv) {
 
 		}
 		// Refresh and save global settings.
-		renderer.updateConfiguration(config);
+		viewer.updateConfiguration(config);
 		glfwGetWindowPos(window, &config.windowPos[0], &config.windowPos[1]);
 		glfwGetWindowSize(window, &config.windowSize[0], &config.windowSize[1]);
 		config.save(internalConfigPath);
@@ -311,7 +311,7 @@ int main( int argc, char** argv) {
 		ImGui_ImplOpenGL3_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
-		renderer.clean();
+		viewer.clean();
 	}
 
 	sr_gui_cleanup();
