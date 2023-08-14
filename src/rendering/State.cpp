@@ -222,9 +222,12 @@ void State::defineOptions(){
 	_sharedInfos["scroll-reverse"] = {"Notes scroll from bottom to top instead of the opposite", OptionInfos::Type::BOOLEAN};
 	_sharedInfos["scroll-horizontal"] = {"Notes scroll from right to left when enabled", OptionInfos::Type::BOOLEAN};
 
-	_sharedInfos["score-lines-vertical-width"] = {"Score vertical lines height", OptionInfos::Type::FLOAT};
-	_sharedInfos["score-lines-horizontal-width"] = {"Score horizontal lines width", OptionInfos::Type::FLOAT};
+	_sharedInfos["score-lines-vertical-width"] = {"Score vertical lines height, in pixels", OptionInfos::Type::FLOAT};
+	_sharedInfos["score-lines-horizontal-width"] = {"Score horizontal lines width, in pixels", OptionInfos::Type::FLOAT};
 	_sharedInfos["score-digits-size"] = {"Score digits size", OptionInfos::Type::FLOAT};
+	_sharedInfos["score-digits-offset-x"] = {"Score digits offset from the side, in pixels", OptionInfos::Type::FLOAT};
+	_sharedInfos["score-digits-offset-y"] = {"Score digits offset from the measure line, in pixels", OptionInfos::Type::FLOAT};
+
 	// Paths.
 	_sharedInfos["bg-img-path"] = {"Path to an image on disk to use as background", OptionInfos::Type::PATH};
 	_sharedInfos["particles-paths"] = {"Set of paths (separated by spaces) to black and white images on disk to use as particles", OptionInfos::Type::PATH};
@@ -406,6 +409,8 @@ void State::updateOptions(){
 	_floatInfos["score-lines-vertical-width"] = &score.hLinesWidth;
 	_floatInfos["score-lines-horizontal-width"] = &score.vLinesWidth;
 	_floatInfos["score-digits-size"] = &score.digitsScale;
+	_floatInfos["score-digits-offset-x"] = &score.digitsOffset[0];
+	_floatInfos["score-digits-offset-y"] = &score.digitsOffset[1];
 }
 
 
@@ -725,6 +730,7 @@ void State::reset(){
 	score.hLinesWidth = 4.0f;
 	score.vLinesWidth = 4.0f;
 	score.digitsScale = 0.08f;
+	score.digitsOffset = {5, 5};
 
 	particles.speed = 0.2f;
 	particles.expansion = 1.0f;

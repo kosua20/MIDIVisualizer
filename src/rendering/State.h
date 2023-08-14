@@ -61,9 +61,10 @@ public:
 		glm::vec3 hLinesColor; ///< Score lines color.
 		glm::vec3 vLinesColor; ///< Score lines color.
 		glm::vec3 digitsColor; ///< Score text
-		float hLinesWidth;
-		float vLinesWidth;
-		float digitsScale;
+		glm::vec2 digitsOffset; /// < Offset in pixels.
+		float hLinesWidth; ///< Width in pixels
+		float vLinesWidth; ///< Width in pixels
+		float digitsScale; ///< Scale
 		bool hLines; ///< Show horizontal score lines.
 		bool vLines; ///< Show vertical score lines.
 		bool digits; ///< Show score text.
@@ -167,6 +168,7 @@ public:
 	WaveState waves;
 	NotesState notes;
 	FlashesState flashes;
+	// TODO: (MV) Regroup common state to pass to rendering functions.
 	
 	Quality::Level quality;
 	float scale; ///< Display vertical scale.
