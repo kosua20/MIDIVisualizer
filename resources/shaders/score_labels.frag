@@ -31,8 +31,7 @@ void main(){
 
 	vec2 distancesFont = textureLod(font, localUV, 0).rg;
 	float sdfFont = distancesFont.r - distancesFont.g;
-	// Clamp to a reasonable value here to avoid jumps at the edge between two distance fields.
-	// TODO: (MV) instead, merge distance fields when comuting them.
+	// Clamp to a reasonable value here to avoid edge artifacts?
 	float deltaStep = min(fwidth(sdfFont), 0.1);
 	float alpha = 1.0 - smoothstep(0.01 - deltaStep, 0.01 + deltaStep, sdfFont);
 	fragColor = vec4(color, alpha);
