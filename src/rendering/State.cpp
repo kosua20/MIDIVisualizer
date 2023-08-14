@@ -140,6 +140,7 @@ void State::defineOptions(){
 	_sharedInfos["color-keyboard-major"] = {"Custom color for pressed major keys", OptionInfos::Type::COLOR};
 	_sharedInfos["color-keyboard-minor"] = {"Custom color for pressed minor keys", OptionInfos::Type::COLOR};
 	_sharedInfos["color-lines"] = {"Score lines color", OptionInfos::Type::COLOR};
+	_sharedInfos["color-lines"].legacy = true;
 	_sharedInfos["color-lines-vertical"] = {"Score vertical lines color", OptionInfos::Type::COLOR};
 	_sharedInfos["color-lines-horizontal"] = {"Score horizontal lines color", OptionInfos::Type::COLOR};
 	_sharedInfos["color-numbers"] = {"Score measure numbers color", OptionInfos::Type::COLOR};
@@ -195,6 +196,7 @@ void State::defineOptions(){
 	_sharedInfos["pedal-size"] = {"Pedal indicator size", OptionInfos::Type::FLOAT, {0.05f, 0.5f}};
 	_sharedInfos["pedal-opacity"] = {"Pedal indicator opacity when not pressed", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
 	_sharedInfos["color-pedal"] = {"All pedals color when pressed", OptionInfos::Type::COLOR};
+	_sharedInfos["color-pedal"].legacy = true;
 	_sharedInfos["color-pedal-top"] = {"Top pedal color when pressed", OptionInfos::Type::COLOR};
 	_sharedInfos["color-pedal-center"] = {"Center pedal color when pressed", OptionInfos::Type::COLOR};
 	_sharedInfos["color-pedal-left"] = {"Left color when pressed", OptionInfos::Type::COLOR};
@@ -248,6 +250,10 @@ size_t State::helpText(std::string & configOpts, std::string & setsOpts){
 	std::vector<std::string> msgSets;
 
 	for(const auto & param : _sharedInfos){
+		// Don't list legacy settings.
+		if(param.second.legacy){
+			continue;
+		}
 		const std::string padString(alignSize - param.first.size(), ' ');
 		const std::string line = "--" + param.first + padString + param.second.description + " (" + param.second.values + ")\n";
 		if(param.second.category == OptionInfos::Category::SETS){
@@ -330,7 +336,7 @@ void State::updateOptions(){
 	_vecInfos["color-keyboard-major"] = &keyboard.majorColor[0];
 	_vecInfos["color-keyboard-minor"] = &keyboard.minorColor[0];
 	_vecInfos["color-keyboard"] = &keyboard.edgeColor;
-	_vecInfos["color-lines"] = &score.vLinesColor;
+	_vecInfos["color-lines"] = &score.vLinesColor; // Retro compat
 	_vecInfos["color-lines-vertical"] = &score.vLinesColor;
 	_vecInfos["color-lines-horizontal"] = &score.hLinesColor;
 	_vecInfos["color-numbers"] = &score.digitsColor;
@@ -422,38 +428,59 @@ void State::save(const std::string & path){
 
 	// Write all options.
 	for(const auto & param : _floatInfos){
-		configFile << std::endl << "# " << _sharedInfos[param.first].description << " (";
-		configFile << _sharedInfos[param.first].values << ")" << std::endl;
+		const auto& infos = _sharedInfos[param.first];
+		if(infos.legacy){
+			continue;
+		}
+		configFile << std::endl << "# " << infos.description << " (";
+		configFile << infos.values << ")" << std::endl;
 		configFile << param.first << ": " << *param.second << std::endl;
 	}
 
 	for(const auto & param : _intInfos){
-		configFile << std::endl << "# " << _sharedInfos[param.first].description << " (";
-		configFile << _sharedInfos[param.first].values << ")" << std::endl;
+		const auto& infos = _sharedInfos[param.first];
+		if(infos.legacy){
+			continue;
+		}
+		configFile << std::endl << "# " << infos.description << " (";
+		configFile << infos.values << ")" << std::endl;
 		configFile << param.first << ": " << *param.second << std::endl;
 	}
 
 	for(const auto & param : _boolInfos){
-		configFile << std::endl << "# " << _sharedInfos[param.first].description << " (";
-		configFile << _sharedInfos[param.first].values << ")" << std::endl;
+		const auto& infos = _sharedInfos[param.first];
+		if(infos.legacy){
+			continue;
+		}
+		configFile << std::endl << "# " << infos.description << " (";
+		configFile << infos.values << ")" << std::endl;
 		configFile << param.first << ": " << (*(param.second) ? 1 : 0) << std::endl;
 	}
 
 	for(const auto & param : _vecInfos){
-		configFile << std::endl << "# " << _sharedInfos[param.first].description << " (";
-		configFile << _sharedInfos[param.first].values << ")" << std::endl;
+		const auto& infos = _sharedInfos[param.first];
+		if(infos.legacy){
+			continue;
+		}
+		configFile << std::endl << "# " << infos.description << " (";
+		configFile << infos.values << ")" << std::endl;
 		const glm::vec3 & val = *param.second;
 		configFile << param.first << ": " << val[0] << " " << val[1] << " " << val[2] << std::endl;
 	}
 
 	for(const auto & param : _pathInfos){
+		const auto& infos = _sharedInfos[param.first];
+		if(infos.legacy){
+			continue;
+		}
+
 		// Skip empty path collection.
 		if(param.second->empty()){
 			continue;
 		}
 
-		configFile << std::endl << "# " << _sharedInfos[param.first].description << " (";
-		configFile << _sharedInfos[param.first].values << ")" << std::endl;
+		configFile << std::endl << "# " << infos.description << " (";
+		configFile << infos.values << ")" << std::endl;
 		configFile << param.first << ":";
 		for(const std::string& str : *(param.second)){
 			configFile << " " << str;
@@ -622,7 +649,7 @@ void State::load(const Arguments & configArgs){
 		pedals.leftColor = pedals.centerColor;
 		pedals.rightColor = pedals.centerColor;
 	}
-
+	// Legacy setting for score lines.
 	if(configArgs.count("color-lines") != 0){
 		score.hLinesColor = score.vLinesColor;
 	}

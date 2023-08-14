@@ -235,6 +235,7 @@ private:
 		Type type;
 		std::array<float, 2> range;
 		Category category = Category::DEFAULT;
+		bool legacy = false;
 
 		OptionInfos();
 
