@@ -616,12 +616,12 @@ void Renderer::drawScore(const std::shared_ptr<MIDIScene>& scene, float time, co
 		const float distanceToScreenEdge = (reverseScroll ? (1.0f - keyboardHeight) : (keyboardHeight) );
 		float firstMesureAbscisse = currentAbscisse - distanceToScreenEdge / measureScale;
 		const int firstMeasure = int(std::floor(firstMesureAbscisse));
-		const float firstMeasureTime = scene->secondsPerMeasure() * float(firstMeasure);
+		const float firstMeasureTime = float(scene->secondsPerMeasure()) * float(firstMeasure);
 
-		const float direction = (reverseScroll ? -1.0 : 1.0f);
+		const float direction = (reverseScroll ? -1.0f : 1.0f);
 		const float keyboardPos = (1.0f - 2.0f * keyboardHeight);
 		const float firstBarCoord = (direction * (firstMeasureTime - time) * measureScale - keyboardPos);
-		const float nextBarDeltaCoord = direction * (measureScale * scene->secondsPerMeasure());
+		const float nextBarDeltaCoord = direction * (measureScale * float(scene->secondsPerMeasure()));
 		const int barCount = int(std::ceil(1.0f/measureScale)) + 2 /* spaces and plots*/;
 
 		// Draw horizontal lines
@@ -643,7 +643,7 @@ void Renderer::drawScore(const std::shared_ptr<MIDIScene>& scene, float time, co
 			const glm::vec2 digitResolution = glm::vec2(200.0f, 256.0f);
 			const glm::vec2 digitSize = textScale * qualityScale * invScreenSize * digitResolution;
 			const float maxMeasureCount = float(scene->duration() / scene->secondsPerMeasure()) + 1.f / measureScale;
-			const float digitCount = std::floor(std::log10(std::max(1.f, maxMeasureCount))) + 1;
+			const float digitCount = std::floor(std::log10((std::max)(1.f, maxMeasureCount))) + 1;
 
 			const glm::vec2 offset = 2.0f * digitSize * state.digitsOffset;
 			const glm::vec2 margin = horizontalMode ? glm::vec2(margin.y, margin.x) : margin;
