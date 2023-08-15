@@ -646,7 +646,7 @@ void Renderer::drawScore(const std::shared_ptr<MIDIScene>& scene, float time, co
 			const float digitCount = std::floor(std::log10((std::max)(1.f, maxMeasureCount))) + 1;
 
 			const glm::vec2 offset = 2.0f * digitSize * state.digitsOffset;
-			const glm::vec2 margin = horizontalMode ? glm::vec2(margin.y, margin.x) : margin;
+			const glm::vec2 margin = horizontalMode ? glm::vec2(offset.y, offset.x) : offset;
 
 			_programScoreLabels.use();
 			_programScoreLabels.uniform("baseOffset", glm::vec2(-1.0f, firstBarCoord) + margin);
