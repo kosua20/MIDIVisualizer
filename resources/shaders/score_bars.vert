@@ -20,7 +20,7 @@ void main(){
 	
 	// We directly output the position.
 	vec2 pos = v.xy * scale * 2.0f + float(gl_InstanceID) * nextOffset + baseOffset;
-	gl_Position = vec4(flipIfNeeded(pos), 0.1, 1.0);
+	gl_Position = vec4(flipIfNeeded(pos), 0.0, 1.0);
 	// Output the UV coordinates computed from the positions.
 	Out.uv = 2.0 * (scale.x > 0.99 ? v.y : v.x);
 }

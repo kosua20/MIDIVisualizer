@@ -7,19 +7,31 @@ in INTERFACE {
 
 uniform sampler2D font;
 uniform vec3 color;
-uniform float digitCount;
+uniform int digitCount;
 uniform int firstMeasure;
-uniform bool reverseMode;
+
 
 out vec4 fragColor;
 
 void main(){
 	vec2 globalUV = In.uv;
 
-	float digitLoc = max(0.0, digitCount - floor(globalUV.x) - 1.0);
-	int measure = (reverseMode ? -1 : 1) * (firstMeasure + int(In.id));
+	int digitLoc = max(0, digitCount - int(floor(globalUV.x)) - 1);
+	int measure = (firstMeasure + int(In.id));
 
-	int powTen = int(pow(10, digitLoc));
+	if(measure < 0){
+		discard;
+	}
+
+	int powTen = 1;
+	for(int i = 0; i < digitLoc; ++i){
+		powTen *= 10;
+	}
+
+	if((measure < powTen) && (digitLoc != 0)){
+		discard;
+	}
+
 	int number = (measure / powTen) % 10;
 	// Remap 0,1 to 0.0, 1.0-padding on X,
 	const float paddingInTexture = 0.12;
@@ -35,14 +47,4 @@ void main(){
 	float deltaStep = min(fwidth(sdfFont), 0.1);
 	float alpha = 1.0 - smoothstep(0.01 - deltaStep, 0.01 + deltaStep, sdfFont);
 	fragColor = vec4(color, alpha);
-
-	if(measure < 0){
-		discard;
-	}
-
-	if((measure < powTen) && (digitLoc != 0)){
-		discard;
-	}
-
-
 }

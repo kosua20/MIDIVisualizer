@@ -610,17 +610,19 @@ void Renderer::drawScore(const std::shared_ptr<MIDIScene>& scene, float time, co
 
 	if(state.hLines || state.digits){
 
-		const float currentMesureAbcisse = time/float(scene->secondsPerMeasure())  * (reverseScroll ? -1.0 : 1.0f);
-		const float firstMesureAbscisse = currentMesureAbcisse - keyboardHeight / measureScale;
-		const float firstMesure = std::floor(firstMesureAbscisse);
-		const float firstMesureOffset = firstMesureAbscisse - firstMesure;
-		float firstBarCoord = -firstMesureOffset * measureScale;
-		firstBarCoord = (2.0f * firstBarCoord - 1.0f);
+		const float currentAbscisse = time/float(scene->secondsPerMeasure());
 
-		float nextBarDeltaCoord = measureScale;
-		nextBarDeltaCoord *= 2.0f;
-		// 1/measures on screen (independent of resolution or orientation)
-		const int barCount = int(std::ceil(1.0f/measureScale)) + 1;
+		// Find the measure at the bottom of the screen if forward, top of the screen if bottom
+		const float distanceToScreenEdge = (reverseScroll ? (1.0f - keyboardHeight) : (keyboardHeight) );
+		float firstMesureAbscisse = currentAbscisse - distanceToScreenEdge / measureScale;
+		const int firstMeasure = int(std::floor(firstMesureAbscisse));
+		const float firstMeasureTime = scene->secondsPerMeasure() * float(firstMeasure);
+
+		const float direction = (reverseScroll ? -1.0 : 1.0f);
+		const float keyboardPos = (1.0f - 2.0f * keyboardHeight);
+		const float firstBarCoord = (direction * (firstMeasureTime - time) * measureScale - keyboardPos);
+		const float nextBarDeltaCoord = direction * (measureScale * scene->secondsPerMeasure());
+		const int barCount = int(std::ceil(1.0f/measureScale)) + 2 /* spaces and plots*/;
 
 		// Draw horizontal lines
 		if(state.hLines){
@@ -643,14 +645,14 @@ void Renderer::drawScore(const std::shared_ptr<MIDIScene>& scene, float time, co
 			const float digitCount = std::ceil(std::log10(float(scene->duration() / scene->secondsPerMeasure()) + 1.f / measureScale));
 			const glm::vec2 textSize = glm::vec2(digitCount, 1.0f) * digitSize;
 			const glm::vec2 margin = qualityScale * invScreenSize * state.digitsOffset;
+			const glm::vec2 offsetSize = glm::vec2(horizontalMode ? textSize.y : textSize.x, 0.f);
 			_programScoreLabels.use();
-			_programScoreLabels.uniform("baseOffset", glm::vec2(-1.0f, firstBarCoord) + textSize + margin);
+			_programScoreLabels.uniform("baseOffset", glm::vec2(-1.0f, firstBarCoord) + offsetSize + margin);
 			_programScoreLabels.uniform("nextOffset", glm::vec2(0.0f, nextBarDeltaCoord));
 			_programScoreLabels.uniform("scale", textSize);
 			_programScoreLabels.uniform("color", state.digitsColor);
-			_programScoreLabels.uniform("digitCount", digitCount);
-			_programScoreLabels.uniform("firstMeasure", (int)firstMesure);
-			_programScoreLabels.uniform("reverseMode", reverseScroll);
+			_programScoreLabels.uniform("digitCount", int(digitCount));
+			_programScoreLabels.uniform("firstMeasure", firstMeasure);
 			_programScoreLabels.texture("font", _texFont, GL_TEXTURE_2D);
 			glBindVertexArray(_vaoQuad);
 			glDrawElementsInstanced(GL_TRIANGLES, int(_quadPrimitiveCount), GL_UNSIGNED_INT, (void*)0, barCount);

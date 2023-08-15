@@ -6,7 +6,7 @@ uniform vec2 baseOffset;
 uniform vec2 nextOffset;
 uniform vec2 scale;
 uniform bool horizontalMode;
-uniform float digitCount;
+uniform int digitCount;
 
 vec2 flipIfNeeded(vec2 inPos){
 	return horizontalMode ? vec2(inPos.y, -inPos.x) : inPos;
