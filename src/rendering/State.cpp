@@ -692,8 +692,8 @@ void State::reset(){
 	}
 
 	background.color = glm::vec3(0.0f, 0.0f, 0.0f);
-	score.hLinesColor = glm::vec3(1.0f, 1.0f, 1.0f);
-	score.vLinesColor = glm::vec3(1.0f, 1.0f, 1.0f);
+	score.hLinesColor = glm::vec3(0.25f);
+	score.vLinesColor = glm::vec3(0.75f);
 	score.digitsColor = glm::vec3(1.0f, 1.0f, 1.0f);
 	keyboard.edgeColor = glm::vec3(0.0f, 0.0f, 0.0f);
 
@@ -727,10 +727,10 @@ void State::reset(){
 	score.hLines = true;
 	score.vLines = true;
 	score.digits = true;
-	score.hLinesWidth = 4.0f;
-	score.vLinesWidth = 4.0f;
+	score.hLinesWidth = 2.0f;
+	score.vLinesWidth = 2.0f;
 	score.digitsScale = 0.08f;
-	score.digitsOffset = {5, 5};
+	score.digitsOffset = {0, 0};
 
 	particles.speed = 0.2f;
 	particles.expansion = 1.0f;
