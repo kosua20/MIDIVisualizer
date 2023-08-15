@@ -61,7 +61,7 @@ public:
 		glm::vec3 hLinesColor; ///< Score lines color.
 		glm::vec3 vLinesColor; ///< Score lines color.
 		glm::vec3 digitsColor; ///< Score text
-		glm::vec2 digitsOffset; /// < Offset in pixels.
+		glm::vec2 digitsOffset; /// < Offset in fraction of a digit.
 		float hLinesWidth; ///< Width in pixels
 		float vLinesWidth; ///< Width in pixels
 		float digitsScale; ///< Scale

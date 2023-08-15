@@ -1083,9 +1083,9 @@ void Viewer::showScoreOptions(){
 	ImGui::PopItemWidth();
 
 	ImGuiPushItemWidth(100);
-	ImGui::SliderFloat("Offset X##Digits", &_state.score.digitsOffset[0], -20.f, 20.0f, "%.0fpx");
+	ImGuiSliderPercent("Offset X##Digits", &_state.score.digitsOffset[0], -1.f, 1.0f);
 	ImGuiSameLine(COLUMN_SIZE);
-	ImGui::SliderFloat("Offset Y##Digits", &_state.score.digitsOffset[1], -20.f, 20.0f, "%.0fpx");
+	ImGuiSliderPercent("Offset Y##Digits", &_state.score.digitsOffset[1], -1.f, 1.0f);
 	ImGui::PopItemWidth();
 
 }

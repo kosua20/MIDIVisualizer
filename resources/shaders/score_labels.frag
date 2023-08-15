@@ -7,17 +7,14 @@ in INTERFACE {
 
 uniform sampler2D font;
 uniform vec3 color;
-uniform int digitCount;
-uniform int firstMeasure;
-
 
 out vec4 fragColor;
 
 void main(){
 	vec2 globalUV = In.uv;
 
-	int digitLoc = max(0, digitCount - int(floor(globalUV.x)) - 1);
-	int measure = (firstMeasure + int(In.id));
+	int digitLoc = int(floor(globalUV.x));
+	int measure = int(In.id);
 
 	if(measure < 0){
 		discard;
@@ -35,7 +32,8 @@ void main(){
 	int number = (measure / powTen) % 10;
 	// Remap 0,1 to 0.0, 1.0-padding on X,
 	const float paddingInTexture = 0.12;
-	vec2 localUV = fract(globalUV) * vec2(1.0-paddingInTexture, 1.0);
+	// Flip UVs back.
+	vec2 localUV = (1.0-fract(globalUV)) * vec2(1.0-paddingInTexture, 1.0);
 	vec2 pixelSize = 0.5 / vec2(200.0, 256.0);
 	localUV = clamp(localUV, pixelSize, 1.0 - pixelSize);
 	localUV += vec2(number % 5, 1 - (number / 5));

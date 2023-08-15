@@ -642,14 +642,16 @@ void Renderer::drawScore(const std::shared_ptr<MIDIScene>& scene, float time, co
 			// Based on texture size.
 			const glm::vec2 digitResolution = glm::vec2(200.0f, 256.0f);
 			const glm::vec2 digitSize = textScale * qualityScale * invScreenSize * digitResolution;
-			const float digitCount = std::ceil(std::log10(float(scene->duration() / scene->secondsPerMeasure()) + 1.f / measureScale));
-			const glm::vec2 textSize = glm::vec2(digitCount, 1.0f) * digitSize;
-			const glm::vec2 margin = qualityScale * invScreenSize * state.digitsOffset;
-			const glm::vec2 offsetSize = glm::vec2(horizontalMode ? textSize.y : textSize.x, 0.f);
+			const float maxMeasureCount = float(scene->duration() / scene->secondsPerMeasure()) + 1.f / measureScale;
+			const float digitCount = std::floor(std::log10(std::max(1.f, maxMeasureCount))) + 1;
+
+			const glm::vec2 offset = 2.0f * digitSize * state.digitsOffset;
+			const glm::vec2 margin = horizontalMode ? glm::vec2(margin.y, margin.x) : margin;
+
 			_programScoreLabels.use();
-			_programScoreLabels.uniform("baseOffset", glm::vec2(-1.0f, firstBarCoord) + offsetSize + margin);
+			_programScoreLabels.uniform("baseOffset", glm::vec2(-1.0f, firstBarCoord) + margin);
 			_programScoreLabels.uniform("nextOffset", glm::vec2(0.0f, nextBarDeltaCoord));
-			_programScoreLabels.uniform("scale", textSize);
+			_programScoreLabels.uniform("scale", digitSize);
 			_programScoreLabels.uniform("color", state.digitsColor);
 			_programScoreLabels.uniform("digitCount", int(digitCount));
 			_programScoreLabels.uniform("firstMeasure", firstMeasure);

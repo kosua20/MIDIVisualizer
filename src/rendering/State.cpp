@@ -225,8 +225,8 @@ void State::defineOptions(){
 	_sharedInfos["score-lines-vertical-width"] = {"Score vertical lines height, in pixels", OptionInfos::Type::FLOAT};
 	_sharedInfos["score-lines-horizontal-width"] = {"Score horizontal lines width, in pixels", OptionInfos::Type::FLOAT};
 	_sharedInfos["score-digits-size"] = {"Score digits size", OptionInfos::Type::FLOAT};
-	_sharedInfos["score-digits-offset-x"] = {"Score digits offset from the side, in pixels", OptionInfos::Type::FLOAT};
-	_sharedInfos["score-digits-offset-y"] = {"Score digits offset from the measure line, in pixels", OptionInfos::Type::FLOAT};
+	_sharedInfos["score-digits-offset-x"] = {"Score digits horizontal offset, as a fraction of a digit", OptionInfos::Type::FLOAT};
+	_sharedInfos["score-digits-offset-y"] = {"Score digits vertical offset, as a fraction of a digit", OptionInfos::Type::FLOAT};
 
 	// Paths.
 	_sharedInfos["bg-img-path"] = {"Path to an image on disk to use as background", OptionInfos::Type::PATH};
