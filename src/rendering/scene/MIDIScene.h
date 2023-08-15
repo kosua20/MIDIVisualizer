@@ -67,7 +67,7 @@ public:
 
 	int getEffectiveNotesCount() const { return _effectiveNotesCount; }
 
-	bool dirtyNotes(glm::vec2& range) { range = _dirtyNotesRange; return _dirtyNotes; }
+	bool dirtyNotes(glm::ivec2& range) { range = _dirtyNotesRange; return _dirtyNotes; }
 
 	void setUpToDate() { _dirtyNotes = false; _dirtyNotesRange = {0, 0}; }
 
@@ -79,7 +79,7 @@ protected:
 	Pedals _pedals;
 	int _effectiveNotesCount = 0;
 
-	glm::vec2 _dirtyNotesRange{0,0};
+	glm::ivec2 _dirtyNotesRange{0,0};
 	bool _dirtyNotes = true;
 	// Active keys, particles and pedals are always dirty.
 

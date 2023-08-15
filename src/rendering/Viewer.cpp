@@ -305,7 +305,7 @@ void Viewer::blurPrepass() {
 	}
 	if (_state.showBlurNotes) {
 		// Draw the notes.
-		_renderer.drawNotes(_scene, _timer, invSizeB, _state.notes, _state.reverseScroll, true);
+		_renderer.drawNotes(_scene, _timer * _state.scrollSpeed, invSizeB, _state.notes, _state.reverseScroll, true);
 	}
 
 	_particlesFramebuffer->unbind();

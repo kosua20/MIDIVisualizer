@@ -172,7 +172,7 @@ void Renderer::renderSetup(){
 }
 
 void Renderer::upload(const std::shared_ptr<MIDIScene>& scene){
-	glm::vec2 uploadRange;
+	glm::ivec2 uploadRange;
 	if(scene->dirtyNotes(uploadRange)){
 		constexpr size_t noteSize = sizeof(MIDIScene::GPUNote);
 		const auto& notes = scene->getNotes();
@@ -610,7 +610,7 @@ void Renderer::drawScore(const std::shared_ptr<MIDIScene>& scene, float time, co
 
 	if(state.hLines || state.digits){
 
-		const float currentMesureAbcisse = time/scene->secondsPerMeasure()  * (reverseScroll ? -1.0 : 1.0f);
+		const float currentMesureAbcisse = time/float(scene->secondsPerMeasure())  * (reverseScroll ? -1.0 : 1.0f);
 		const float firstMesureAbscisse = currentMesureAbcisse - keyboardHeight / measureScale;
 		const float firstMesure = std::floor(firstMesureAbscisse);
 		const float firstMesureOffset = firstMesureAbscisse - firstMesure;
@@ -640,7 +640,7 @@ void Renderer::drawScore(const std::shared_ptr<MIDIScene>& scene, float time, co
 			// Based on texture size.
 			const glm::vec2 digitResolution = glm::vec2(200.0f, 256.0f);
 			const glm::vec2 digitSize = textScale * qualityScale * invScreenSize * digitResolution;
-			const float digitCount = std::ceil(std::log10(scene->duration() / scene->secondsPerMeasure() + 1.f / measureScale));
+			const float digitCount = std::ceil(std::log10(float(scene->duration() / scene->secondsPerMeasure()) + 1.f / measureScale));
 			const glm::vec2 textSize = glm::vec2(digitCount, 1.0f) * digitSize;
 			const glm::vec2 margin = qualityScale * invScreenSize * state.digitsOffset;
 			_programScoreLabels.use();
