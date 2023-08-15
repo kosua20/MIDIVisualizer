@@ -1,11 +1,13 @@
 #pragma once
 #include <gl3w/gl3w.h>
 #include <glm/glm.hpp>
+
 #include "../midi/MIDIFile.h"
 #include "State.h"
 #include "../helpers/ProgramUtilities.h"
 
 #include <fstream>
+#include <memory>
 
 class MIDIScene;
 
