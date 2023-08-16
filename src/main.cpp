@@ -131,13 +131,40 @@ void performAction(SystemAction action, GLFWwindow * window, glm::ivec4 & frame)
 	}
 }
 
-/// The main function
+const char* getGlfwErrorType(int type){
+	switch (type) {
+		case GLFW_NO_ERROR: 			return "NO_ERROR";
+		case GLFW_NOT_INITIALIZED: 		return "NOT_INITIALIZED";
+		case GLFW_NO_CURRENT_CONTEXT: 	return "NO_CURRENT_CONTEXT";
+		case GLFW_INVALID_ENUM: 		return "INVALID_ENUM";
+		case GLFW_INVALID_VALUE: 		return "INVALID_VALUE";
+		case GLFW_OUT_OF_MEMORY: 		return "OUT_OF_MEMORY";
+		case GLFW_API_UNAVAILABLE: 		return "API_UNAVAILABLE";
+		case GLFW_VERSION_UNAVAILABLE: 	return "VERSION_UNAVAILABLE";
+		case GLFW_PLATFORM_ERROR: 		return "PLATFORM_ERROR";
+		case GLFW_FORMAT_UNAVAILABLE: 	return "FORMAT_UNAVAILABLE";
+		case GLFW_NO_WINDOW_CONTEXT: 	return "NO_WINDOW_CONTEXT";
+		default:						break;
+	}
+	return "UNKNOWN";
+}
 
+void logLastGlfwError(){
+	const char* msg = nullptr;
+	const int code = glfwGetError(&msg);
+	if(code == GLFW_NO_ERROR){
+		return;
+	}
+	std::cerr << "[ERROR]: GLFW error: " << getGlfwErrorType(code) << " \"" << (msg ? msg : "") << "\"" << std::endl;
+}
+
+/// The main function
 int main( int argc, char** argv) {
 
 	// Initialize glfw, which will create and setup an OpenGL context.
 	if (!glfwInit()) {
-		std::cerr << "[ERROR]: could not start GLFW3" << std::endl;
+		std::cerr << "[ERROR]: could not init GLFW3" << std::endl;
+		logLastGlfwError();
 		return 2;
 	}
 	// Ensure we are using the C locale.
@@ -184,7 +211,8 @@ int main( int argc, char** argv) {
 	// Create a window with a given size. Width and height are macros as we will need them again.
 	GLFWwindow* window = glfwCreateWindow(config.windowSize[0], config.windowSize[1], "MIDI Visualizer", NULL, NULL);
 	if (!window) {
-		std::cerr << "[ERROR]: could not open window with GLFW3" << std::endl;
+		std::cerr << "[ERROR]: Could not open window with GLFW3" << std::endl;
+		logLastGlfwError();
 		glfwTerminate();
 		return 2;
 	}
@@ -196,12 +224,14 @@ int main( int argc, char** argv) {
 	// Bind the OpenGL context and the new window.
 	glfwMakeContextCurrent(window);
 
-	if (gl3wInit()) {
+	if(gl3wInit()){
 		std::cerr << "[ERROR]: Failed to initialize OpenGL" << std::endl;
+		logLastGlfwError();
 		return -1;
 	}
-	if (!gl3wIsSupported(3, 2)) {
-		std::cerr << "[ERROR]: OpenGL 3.2 not supported\n" << std::endl;
+	if(!gl3wIsSupported(3, 2)){
+		std::cerr << "[ERROR]: OpenGL 3.2 not supported." << std::endl;
+		logLastGlfwError();
 		return -1;
 	}
 
