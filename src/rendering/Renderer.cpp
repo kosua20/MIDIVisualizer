@@ -613,16 +613,23 @@ void Renderer::drawScore(const std::shared_ptr<MIDIScene>& scene, float time, co
 		const float currentAbscisse = time/float(scene->secondsPerMeasure());
 
 		// Find the measure at the bottom of the screen if forward, top of the screen if bottom
-		const float distanceToScreenEdge = (reverseScroll ? (1.0f - keyboardHeight) : (keyboardHeight) );
+		// TODO: (MV) explain the magic values.
+		const float magigValue0 = 2.f; // Maybe UV -> NDC ?
+		const float magicValue1 = measureScale * float(scene->secondsPerMeasure()); // Units don't make sense...
+		const int magicValue2 = 3; // Extra safety multiplier, expected 1.
+
+		const float distanceToScreenEdge = magigValue0 * (reverseScroll ? (1.0f - keyboardHeight) : (keyboardHeight) );
+
 		float firstMesureAbscisse = currentAbscisse - distanceToScreenEdge / measureScale;
 		const int firstMeasure = int(std::floor(firstMesureAbscisse));
 		const float firstMeasureTime = float(scene->secondsPerMeasure()) * float(firstMeasure);
 
 		const float direction = (reverseScroll ? -1.0f : 1.0f);
-		const float keyboardPos = (1.0f - 2.0f * keyboardHeight);
-		const float firstBarCoord = (direction * (firstMeasureTime - time) * measureScale - keyboardPos);
-		const float nextBarDeltaCoord = direction * (measureScale * float(scene->secondsPerMeasure()));
-		const int barCount = int(std::ceil(1.0f/measureScale)) + 2 /* spaces and plots*/;
+		const float keyboardPos = 2.0f * keyboardHeight - 1.0f;
+		const float firstBarCoord = direction * (firstMeasureTime - time) * measureScale + keyboardPos;
+
+		const float nextBarDeltaCoord = direction * magicValue1;
+		const int barCount = magicValue2 * (int(std::ceil(1.0f / magicValue1)) + 1) /* spaces and plots*/;
 
 		// Draw horizontal lines
 		if(state.hLines){
