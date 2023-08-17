@@ -16,17 +16,11 @@ void main(){
 	int digitLoc = int(floor(globalUV.x));
 	int measure = int(In.id);
 
-	if(measure < 0){
-		discard;
-	}
+
 
 	int powTen = 1;
 	for(int i = 0; i < digitLoc; ++i){
 		powTen *= 10;
-	}
-
-	if((measure < powTen) && (digitLoc != 0)){
-		discard;
 	}
 
 	int number = (measure / powTen) % 10;
@@ -44,5 +38,13 @@ void main(){
 	// Clamp to a reasonable value here to avoid edge artifacts?
 	float deltaStep = min(fwidth(sdfFont), 0.1);
 	float alpha = 1.0 - smoothstep(0.01 - deltaStep, 0.01 + deltaStep, sdfFont);
+
+	if(measure < 0){
+		discard;
+	}
+	if((measure < powTen) && (digitLoc != 0)){
+		discard;
+	}
+	
 	fragColor = vec4(color, alpha);
 }

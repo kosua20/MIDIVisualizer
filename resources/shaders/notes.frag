@@ -69,19 +69,13 @@ void main(){
 		tinting = mix(tinting, texture(minorTexture, texUV).rgb, intensity);
 	}
 	
-	// If lower area of the screen, discard fragment as it should be hidden behind the keyboard.
-	if((horizontalMode ? normalizedCoord.x : normalizedCoord.y) < keyboardHeight){
-		discard;
-	}
+
 	
 	// Rounded corner (super-ellipse equation).
 	vec2 ellipseCoords = abs(In.uv / (0.5 * In.noteSize));
 	vec2 ellipseExps = In.noteSize / max(cornerRadius, 1e-3);
 	float radiusPosition = pow(ellipseCoords.x, ellipseExps.x) + pow(ellipseCoords.y, ellipseExps.y);
-	
-	if(	radiusPosition > 1.0){
-		discard;
-	}
+
 
 	// Fragment color.
 	int cid = int(In.channel);
@@ -92,6 +86,14 @@ void main(){
 	float edgeIntensity = smoothstep(1.0 - edgeWidth - deltaPix, 1.0 - edgeWidth + deltaPix, radiusPosition);
 	fragColor.rgb *= (1.0f + (edgeBrightness - 1.0f) * edgeIntensity);
 
+	// If lower area of the screen, discard fragment as it should be hidden behind the keyboard.
+	if((horizontalMode ? normalizedCoord.x : normalizedCoord.y) < keyboardHeight){
+		discard;
+	}
+	if(	radiusPosition > 1.0){
+		discard;
+	}
+	
 	float distFromBottom = horizontalMode ? normalizedCoord.x : normalizedCoord.y;
 	float fadeOutFinal = min(fadeOut, 0.9999);
 	distFromBottom = max(distFromBottom - fadeOutFinal, 0.0) / (1.0 - fadeOutFinal);

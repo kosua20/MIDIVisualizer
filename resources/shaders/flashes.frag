@@ -29,9 +29,7 @@ void main(){
 	
 	// If not on, discard flash immediatly.
 	int cid = int(In.onChannel);
-	if(cid < 0){
-		discard;
-	}
+
 	float mask = 0.0;
 
 	const float atlasSpeed = 15.0;
@@ -50,6 +48,10 @@ void main(){
 		mask = texture(textureFlash,finalUV).r;
 	}
 
+	if(cid < 0){
+		discard;
+	}
+	
 	// Colored sprite.
 	vec4 spriteColor = vec4(baseColor[cid], mask);
 	
