@@ -649,8 +649,10 @@ void Renderer::drawScore(const std::shared_ptr<MIDIScene>& scene, float time, co
 			// Based on texture size.
 			const glm::vec2 digitResolution = glm::vec2(200.0f, 256.0f);
 			const glm::vec2 digitSize = textScale * qualityScale * invScreenSize * digitResolution;
-			const float maxMeasureCount = float(scene->duration() / scene->secondsPerMeasure()) + 1.f / measureScale;
-			const float digitCount = std::floor(std::log10((std::max)(1.f, maxMeasureCount))) + 1;
+			// Ensure at least one measure.
+			const float maxMeasureCount = float(scene->duration() / scene->secondsPerMeasure()) + 1;
+			// Add one extra digit so that postroll measures are displayed entirely in all cases.
+			const float digitCount = (std::floor(std::log10((std::max)(1.f, maxMeasureCount))) + 1) + 1;
 
 			const glm::vec2 offset = 2.0f * digitSize * state.digitsOffset;
 			const glm::vec2 margin = horizontalMode ? glm::vec2(offset.y, offset.x) : offset;
@@ -660,7 +662,7 @@ void Renderer::drawScore(const std::shared_ptr<MIDIScene>& scene, float time, co
 			_programScoreLabels.uniform("nextOffset", glm::vec2(0.0f, nextBarDeltaCoord));
 			_programScoreLabels.uniform("scale", digitSize);
 			_programScoreLabels.uniform("color", state.digitsColor);
-			_programScoreLabels.uniform("digitCount", int(digitCount));
+			_programScoreLabels.uniform("maxDigitCount", int(digitCount));
 			_programScoreLabels.uniform("firstMeasure", firstMeasure);
 			_programScoreLabels.texture("font", _texFont, GL_TEXTURE_2D);
 			glBindVertexArray(_vaoQuad);

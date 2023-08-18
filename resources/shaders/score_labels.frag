@@ -7,6 +7,7 @@ in INTERFACE {
 
 uniform sampler2D font;
 uniform vec3 color;
+uniform int maxDigitCount;
 
 out vec4 fragColor;
 
@@ -14,12 +15,13 @@ void main(){
 	vec2 globalUV = In.uv;
 
 	int digitLoc = int(floor(globalUV.x));
-	int measure = int(In.id);
-
-
+	int measure = int(floor(In.id));
 
 	int powTen = 1;
-	for(int i = 0; i < digitLoc; ++i){
+	for(int i = 0; i <= maxDigitCount; ++i){
+		if(i >= digitLoc ){
+			continue;
+		}
 		powTen *= 10;
 	}
 
