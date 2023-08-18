@@ -616,20 +616,35 @@ void Renderer::drawScore(const std::shared_ptr<MIDIScene>& scene, float time, co
 		// TODO: (MV) explain the magic values.
 		const float magigValue0 = 2.f; // Maybe UV -> NDC ?
 		const float magicValue1 = measureScale * float(scene->secondsPerMeasure()); // Units don't make sense...
-		const int magicValue2 = 3; // Extra safety multiplier, expected 1.
 
 		const float distanceToScreenEdge = magigValue0 * (reverseScroll ? (1.0f - keyboardHeight) : (keyboardHeight) );
 
 		float firstMesureAbscisse = currentAbscisse - distanceToScreenEdge / measureScale;
-		const int firstMeasure = int(std::floor(firstMesureAbscisse));
+		int firstMeasure = int(std::floor(firstMesureAbscisse));
 		const float firstMeasureTime = float(scene->secondsPerMeasure()) * float(firstMeasure);
 
 		const float direction = (reverseScroll ? -1.0f : 1.0f);
 		const float keyboardPos = 2.0f * keyboardHeight - 1.0f;
-		const float firstBarCoord = direction * (firstMeasureTime - time) * measureScale + keyboardPos;
 
 		const float nextBarDeltaCoord = direction * magicValue1;
-		const int barCount = magicValue2 * (int(std::ceil(1.0f / magicValue1)) + 1) /* spaces and plots*/;
+
+		float firstBarCoord = direction * (firstMeasureTime - time) * measureScale + keyboardPos;
+		
+		// Corrective step.
+		// while the next bar is not on screen, keep stepping forwards.
+		while( direction * ( firstBarCoord + nextBarDeltaCoord ) < -1.f )
+		{
+			firstBarCoord += nextBarDeltaCoord;
+			++firstMeasure;
+		}
+		// while the first bar is on screen, keep stepping backwards.
+		while( direction * ( firstBarCoord ) > -1.f )
+		{
+			firstBarCoord -= nextBarDeltaCoord;
+			--firstMeasure;
+		}
+
+		const int barCount = std::ceil( std::abs( 2.f / nextBarDeltaCoord ) ) + 2; // Two extra bars because of corrective stepping.
 
 		// Draw horizontal lines
 		if(state.hLines){
