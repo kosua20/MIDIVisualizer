@@ -30,10 +30,13 @@ void MIDIScene::resetParticles() {
 	}
 }
 
-void MIDIScene::updateSets(const SetOptions & options){
+void MIDIScene::updateSetsAndVisibleNotes(const SetOptions & options, const FilterOptions& filter){
 }
 
-void MIDIScene::updatesActiveNotes(double time, double speed){
+void MIDIScene::updateVisibleNotes( const FilterOptions& filter ){
+}
+
+void MIDIScene::updatesActiveNotes(double time, double speed, const FilterOptions& filter ){
 }
 
 double MIDIScene::duration() const {

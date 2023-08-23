@@ -39,9 +39,11 @@ public:
 
 	void resetParticles();
 
-	virtual void updateSets(const SetOptions & options);
+	virtual void updateSetsAndVisibleNotes( const SetOptions& options, const FilterOptions& filter );
 
-	virtual void updatesActiveNotes(double time, double speed);
+	virtual void updateVisibleNotes( const FilterOptions& filter);
+
+	virtual void updatesActiveNotes(double time, double speed, const FilterOptions& filter);
 
 	virtual double duration() const;
 

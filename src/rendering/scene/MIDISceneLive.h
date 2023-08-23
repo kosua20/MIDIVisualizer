@@ -17,21 +17,23 @@ public:
 
 	MIDISceneLive(int port, bool verbose);
 
-	void updateSets(const SetOptions & options);
-
 	~MIDISceneLive();
 
-	void updatesActiveNotes(double time, double speed);
+	virtual void updateSetsAndVisibleNotes( const SetOptions& options, const FilterOptions& filter ) override;
 
-	double duration() const;
+	virtual void updateVisibleNotes( const FilterOptions& filter ) override;
 
-	double secondsPerMeasure() const;
+	void updatesActiveNotes(double time, double speed, const FilterOptions& filter ) override;
 
-	int notesCount() const;
+	double duration() const override;
 
-	void print() const;
+	double secondsPerMeasure() const override;
 
-	void save(std::ofstream& file) const;
+	int notesCount() const override;
+
+	void print() const override;
+
+	void save(std::ofstream& file) const override;
 
 	const std::string& deviceName() const;
 

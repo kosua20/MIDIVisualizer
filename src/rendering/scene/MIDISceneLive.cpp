@@ -52,7 +52,7 @@ MIDISceneLive::MIDISceneLive(int port, bool verbose) : MIDIScene() {
 	_dirtyNotesRange = {0, 0}; // Full array
 }
 
-void MIDISceneLive::updateSets(const SetOptions & options){
+void MIDISceneLive::updateSetsAndVisibleNotes(const SetOptions & options, const FilterOptions& filter){
 	_currentSetOption = options;
 	
 	for(size_t nid = 0; nid < _notesCount; ++nid){
@@ -65,7 +65,12 @@ void MIDISceneLive::updateSets(const SetOptions & options){
 	_dirtyNotesRange = {0, 0};  // Full array
 }
 
-void MIDISceneLive::updatesActiveNotes(double time, double speed){
+void MIDISceneLive::updateVisibleNotes(const FilterOptions& filter)
+{
+	// No tracks
+}
+
+void MIDISceneLive::updatesActiveNotes(double time, double speed, const FilterOptions& filter){
 	int minUpdated = MAX_NOTES_IN_FLIGHT;
 	int maxUpdated = 0;
 

@@ -17,60 +17,68 @@
 
 MIDISceneFile::~MIDISceneFile(){}
 
-MIDISceneFile::MIDISceneFile(const std::string & midiFilePath, const SetOptions & options) : MIDIScene() {
+MIDISceneFile::MIDISceneFile(const std::string & midiFilePath, const SetOptions & options, const FilterOptions& filter) : MIDIScene() {
 
 	_filePath = midiFilePath;
 	// MIDI processing.
 	_midiFile = MIDIFile(_filePath);
 
-	updateSets(options);
+	_midiFile.updateSets( options );
+	updateVisibleNotes( filter );
 
 	std::cout << "[INFO]: Final track duration " << _midiFile.duration() << " sec." << std::endl;
 }
 
 
-void MIDISceneFile::updateSets(const SetOptions & options){
-	// Generate note data for rendering.
-	_midiFile.updateSets(options);
+void MIDISceneFile::updateSetsAndVisibleNotes( const SetOptions& options, const FilterOptions& filter )
+{
+	_midiFile.updateSets( options );
+	updateVisibleNotes( filter );
+}
 
+void MIDISceneFile::updateVisibleNotes( const FilterOptions& filter )
+{
+	// Generate note data for rendering.
 	std::vector<MIDINote> notesM;
-	_midiFile.getNotes(notesM, NoteType::MAJOR, 0);
+	_midiFile.getNotes( notesM, NoteType::MAJOR, filter, 0 );
 	std::vector<MIDINote> notesm;
-	_midiFile.getNotes(notesm, NoteType::MINOR, 0);
+	_midiFile.getNotes( notesm, NoteType::MINOR, filter, 0 );
 
 	// Load notes shared data.
 	const size_t majorCount = notesM.size();
 	const size_t minorCount = notesm.size();
 	const size_t totalCount = majorCount + minorCount;
-	_notes.resize(totalCount);
+	_notes.resize( totalCount );
 
-	for(size_t i = 0; i < majorCount; ++i){
-		const MIDINote& note = notesM[i];
-		GPUNote& data = _notes[i];
-		data.note = float(note.note);
-		data.start = float(note.start);
-		data.duration = float(note.duration);
+	for( size_t i = 0; i < majorCount; ++i )
+	{
+		const MIDINote& note = notesM[ i ];
+		GPUNote& data = _notes[ i ];
+		data.note = float( note.note );
+		data.start = float( note.start );
+		data.duration = float( note.duration );
 		data.isMinor = 0.0f;
-		data.set = float(note.set);
+		data.set = float( note.set );
 	}
 
-	for(size_t i = 0; i < minorCount; ++i){
-		const MIDINote& note = notesm[i];
-		GPUNote& data = _notes[i + majorCount];
-		data.note = float(note.note);
-		data.start = float(note.start);
-		data.duration = float(note.duration);
-		data.isMinor =  1.0f;
-		data.set = float(note.set);
+	for( size_t i = 0; i < minorCount; ++i )
+	{
+		const MIDINote& note = notesm[ i ];
+		GPUNote& data = _notes[ i + majorCount ];
+		data.note = float( note.note );
+		data.start = float( note.start );
+		data.duration = float( note.duration );
+		data.isMinor = 1.0f;
+		data.set = float( note.set );
 	}
 	// Upload to the GPU.
-	assert(totalCount < (1 << 31));
+	assert( totalCount < ( 1 << 31 ) );
 	_dirtyNotes = true;
-	_effectiveNotesCount = int(totalCount);
-	_dirtyNotesRange = {0, 0}; // Means full array
+	_effectiveNotesCount = int( totalCount );
+	_dirtyNotesRange = { 0, 0 }; // Means full array
 }
 
-void MIDISceneFile::updatesActiveNotes(double time, double speed){
+void MIDISceneFile::updatesActiveNotes(double time, double speed, const FilterOptions& filter){
 	// Update the particle systems lifetimes.
 	for(auto & particle : _particles){
 		// Give a bit of a head start to the animation.
@@ -84,7 +92,7 @@ void MIDISceneFile::updatesActiveNotes(double time, double speed){
 	}
 	// Get notes actives.
 	auto actives = ActiveNotesArray();
-	_midiFile.getNotesActive(actives, time, 0);
+	_midiFile.getNotesActive(actives, time, filter, 0);
 	for(int i = 0; i < 128; ++i){
 		const auto & note = actives[i];
 		_actives[i] = note.enabled ? note.set : -1;

@@ -141,7 +141,7 @@ bool Viewer::loadFile(const std::string& midiFilePath) {
 	std::shared_ptr<MIDIScene> scene(nullptr);
 
 	try {
-		scene = std::make_shared<MIDISceneFile>(midiFilePath, _state.setOptions);
+		scene = std::make_shared<MIDISceneFile>(midiFilePath, _state.setOptions, _state.filter);
 	} catch(...){
 		// Failed to load.
 		return false;
@@ -238,7 +238,7 @@ SystemAction Viewer::draw(float currentTime) {
 void Viewer::drawScene(bool transparentBG){
 
 	// Update active notes listing.
-	_scene->updatesActiveNotes(_state.scrollSpeed * _timer, _state.scrollSpeed);
+	_scene->updatesActiveNotes(_state.scrollSpeed * _timer, _state.scrollSpeed, _state.filter);
 	// Let renderer update GPU data if needed.
 	_renderer.upload(_scene);
 
@@ -1318,7 +1318,7 @@ void Viewer::showSets(){
 
 		if(shouldUpdate){
 			_state.setOptions.rebuild();
-			_scene->updateSets(_state.setOptions);
+			_scene->updateSetsAndVisibleNotes(_state.setOptions, _state.filter);
 		}
 		ImGui::EndPopup();
 	}
@@ -1481,7 +1481,7 @@ void Viewer::showSetEditor(){
 		if(refreshSetOptions){
 			_state.setOptions.rebuild();
 			if(_scene){
-				_scene->updateSets(_state.setOptions);
+				_scene->updateSetsAndVisibleNotes(_state.setOptions, _state.filter);
 			}
 		}
 
@@ -2005,7 +2005,7 @@ void Viewer::setState(const State & state){
 
 	// Update split notes.
 	if(_scene){
-		_scene->updateSets(_state.setOptions);
+		_scene->updateSetsAndVisibleNotes(_state.setOptions, _state.filter);
 	}
 	applyAllSettings();
 

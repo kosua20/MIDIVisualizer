@@ -10,13 +10,15 @@ class MIDISceneFile : public MIDIScene {
 
 public:
 
-	MIDISceneFile(const std::string & midiFilePath, const SetOptions & options);
-
-	void updateSets(const SetOptions & options) override;
+	MIDISceneFile(const std::string & midiFilePath, const SetOptions & options, const FilterOptions& filter );
 
 	~MIDISceneFile();
 
-	void updatesActiveNotes(double time, double speed) override;
+	virtual void updateSetsAndVisibleNotes( const SetOptions& options, const FilterOptions& filter ) override;
+
+	virtual void updateVisibleNotes( const FilterOptions& filter ) override;
+
+	void updatesActiveNotes(double time, double speed, const FilterOptions& filter ) override;
 
 	double duration() const override;
 
