@@ -9,6 +9,9 @@
 #include <sstream>
 #include <algorithm>
 
+
+#define MAX_TRACK_COUNT 4096
+
 std::unordered_map<std::string, State::OptionInfos> State::_sharedInfos;
 
 // Quality names.
@@ -36,6 +39,71 @@ Quality::Quality(const Quality::Level & alevel, const float partRes, const float
 		}
 	}
 	particlesResolution = partRes; blurResolution = blurRes; finalResolution = finRes;
+}
+
+FilterOptions::FilterOptions(){
+	channels.fill( true );
+}
+
+void FilterOptions::fillChannelsFromTokens( const std::vector<std::string>& list, bool enabled ){
+	for( const std::string& token : list ){
+		if( token.empty() ){
+			continue;
+		}
+		int index = Configuration::parseInt( token );
+		if( index < 0 || index >= channels.size() ){
+			continue;
+		}
+		channels[ index ] = enabled;
+	}
+}
+
+void FilterOptions::fillTracksFromTokens( const std::vector<std::string>& list, bool enabled ){
+	for( const std::string& token : list ){
+		if( token.empty() ){
+			continue;
+		}
+		int index = Configuration::parseInt( token );
+		if( index < 0 || index >= MAX_TRACK_COUNT ){
+			continue;
+		}
+		const size_t newMaxTrack = ( std::max )( tracks.size(), size_t( index ) + 1 );
+		// All new tracks are assumed visible.
+		tracks.resize( newMaxTrack, true );
+		tracks[ index ] = enabled;
+	}
+}
+
+std::string FilterOptions::toHiddenChannelsString(){
+	std::vector<unsigned int> hiddenChannels;
+	hiddenChannels.reserve( channels.size() );
+	for( unsigned int i = 0; i < channels.size(); ++i )
+		if( !channels[ i ] )
+			hiddenChannels.push_back( i );
+
+	std::stringstream str;
+	for( unsigned int chan : hiddenChannels ){
+		str << chan << " ";
+	}
+	return str.str();
+}
+
+std::string FilterOptions::toHiddenTracksString(){
+	std::vector<unsigned int> hiddenTracks;
+	hiddenTracks.reserve( tracks.size() );
+	for( unsigned int i = 0; i < tracks.size(); ++i )
+		if( !tracks[ i ] )
+			hiddenTracks.push_back( i );
+
+	std::stringstream str;
+	for( unsigned int track : hiddenTracks ){
+		str << track << " ";
+	}
+	return str.str();
+}
+
+bool FilterOptions::accepts( int track, int channel ) const {
+	return channels[ channel ] && ( ( track >= tracks.size()) || tracks[ track ] );
 }
 
 State::OptionInfos::OptionInfos(){
@@ -153,8 +221,18 @@ void State::defineOptions(){
 	_sharedInfos["quality"].values = "values: LOW_RES, LOW, MEDIUM, HIGH, HIGH_RES";
 	_sharedInfos["layers"] = {"Active layers indices, from background to foreground", OptionInfos::Type::OTHER};
 	_sharedInfos["layers"].values = "values: bg-color: 0, bg-texture: 1, blur: 2, score: 3, keyboard: 4, particles: 5, notes: 6, flashes: 7, pedal: 8, wave: 9";
-	_sharedInfos["sets-separator-control-points"] = {"Sets of control points for dynamic set asignment", OptionInfos::Type::OTHER};
+	_sharedInfos["sets-separator-control-points"] = {"Sets of control points for dynamic set assignment", OptionInfos::Type::OTHER};
 	_sharedInfos["sets-separator-control-points"].values = "values: space-separated triplets time,key,set";
+
+	_sharedInfos[ "filter-hide-channels" ] = { "Enabled channels", OptionInfos::Type::OTHER };
+	_sharedInfos[ "filter-hide-channels" ].values = "Channels indices, between 0 and 15";
+	_sharedInfos[ "filter-show-channels" ] = { "Disabled channels", OptionInfos::Type::OTHER };
+	_sharedInfos[ "filter-show-channels" ].values = "Channels indices, between 0 and 15";
+
+	_sharedInfos[ "filter-hide-tracks" ] = { "Enabled tracks", OptionInfos::Type::OTHER };
+	_sharedInfos[ "filter-hide-tracks" ].values = "Track indices, starting from 0";
+	_sharedInfos[ "filter-show-tracks" ] = { "Disabled tracks", OptionInfos::Type::OTHER };
+	_sharedInfos[ "filter-show-tracks" ].values = "Channels indices, starting from 0";
 
 	// Sets
 	for(size_t cid = 1; cid < SETS_COUNT; ++cid){
@@ -509,6 +587,16 @@ void State::save(const std::string & path){
 	configFile << _sharedInfos["sets-separator-control-points"].values << ")" << std::endl;
 	configFile << "sets-separator-control-points: " << setOptions.toKeysString(" ") << std::endl;
 
+	configFile << std::endl << "# " << _sharedInfos[ "filter-hide-channels" ].description << " (";
+	configFile << _sharedInfos[ "filter-hide-channels" ].values << ")" << std::endl;
+	configFile << "filter-hide-channels: " << filter.toHiddenChannelsString() << std::endl;
+
+	configFile << std::endl << "# " << _sharedInfos[ "filter-hide-tracks" ].description << " (";
+	configFile << _sharedInfos[ "filter-hide-tracks" ].values << ")" << std::endl;
+	configFile << "filter-hide-tracks: " << filter.toHiddenTracksString() << std::endl;
+
+	// No need to save filter-show-tracks and filter-show-channels, they are complementary of the two above.
+
 	configFile.close();
 
 	_filePath = outputPath;
@@ -595,6 +683,23 @@ void State::load(const Arguments & configArgs){
 				str.append(arg.second[tid]);
 			}
 			setOptions.fromKeysString(str);
+			continue;
+		}
+
+		if( key == "filter-hide-channels" ){
+			filter.fillChannelsFromTokens( arg.second, false);
+			continue;
+		}
+		if( key == "filter-show-channels" ){
+			filter.fillChannelsFromTokens( arg.second, true );
+			continue;
+		}
+		if( key == "filter-hide-tracks" ){
+			filter.fillTracksFromTokens( arg.second, false );
+			continue;
+		}
+		if( key == "filter-show-tracks" ){
+			filter.fillTracksFromTokens( arg.second, true );
 			continue;
 		}
 
@@ -755,6 +860,8 @@ void State::reset(){
 	}
 
 	setOptions = SetOptions();
+
+	filter = FilterOptions();
 
 	notes.edgeBrightness = 1.05f;
 	notes.edgeWidth = 0.1f;

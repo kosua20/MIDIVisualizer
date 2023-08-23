@@ -43,6 +43,24 @@ struct Quality {
 	Quality(const Quality::Level & alevel, const float partRes, const float blurRes, const float finRes);
 };
 	
+struct FilterOptions
+{
+	std::vector<bool> tracks; // Will be resized to max track index + 1
+	std::array<bool, 16> channels;
+
+	FilterOptions();
+
+	void fillChannelsFromTokens( const std::vector<std::string>& list, bool enabled);
+
+	void fillTracksFromTokens( const std::vector<std::string>& list, bool enabled );
+
+	std::string toHiddenChannelsString();
+
+	std::string toHiddenTracksString();
+
+	bool accepts( int track, int channel ) const;
+
+};
 
 
 class State {
@@ -169,7 +187,8 @@ public:
 	NotesState notes;
 	FlashesState flashes;
 	// TODO: (MV) Regroup common state to pass to rendering functions.
-	
+	FilterOptions filter;
+
 	Quality::Level quality;
 	float scale; ///< Display vertical scale.
 	float attenuation; ///< Blur attenuation.
