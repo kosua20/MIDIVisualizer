@@ -29,7 +29,9 @@ public:
 
 	const double & duration() const { return _duration; }
 
-	const int & notesCount() const { return _count; }
+	const int & notesCount() const { return _notesCount; }
+
+	const int & tracksCount() const { return _trackCount; }
 
 private:
 
@@ -44,7 +46,8 @@ private:
 	double _signature = 4.0/4.0;
 	double _secondsPerMeasure = 1.0;
 	double _duration = 0.0;
-	int _count = 0;
+	int _notesCount = 0;
+	int _trackCount = 0;
 
 	std::vector<MIDITrack> _tracks;
 	std::vector<MIDITempo> _tempos;

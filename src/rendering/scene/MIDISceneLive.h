@@ -31,6 +31,8 @@ public:
 
 	int notesCount() const override;
 
+	int tracksCount() const override;
+
 	void print() const override;
 
 	void save(std::ofstream& file) const override;

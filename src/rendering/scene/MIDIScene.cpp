@@ -51,6 +51,10 @@ int MIDIScene::notesCount() const {
 	return 0;
 }
 
+int MIDIScene::tracksCount() const {
+	return 0;
+}
+
 void MIDIScene::print() const {
 }
 

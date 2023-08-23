@@ -61,16 +61,23 @@ void MIDISceneLive::updateSetsAndVisibleNotes(const SetOptions & options, const 
 		const int set = _currentSetOption.apply(int(note.note), _notesInfos[nid].channel, 0, note.start);
 		note.set = float(set);
 	}
-	_dirtyNotes = true;
-	_dirtyNotesRange = {0, 0};  // Full array
+
+	updateVisibleNotes(filter);
 }
 
-void MIDISceneLive::updateVisibleNotes(const FilterOptions& filter)
-{
-	// No tracks
+void MIDISceneLive::updateVisibleNotes(const FilterOptions& filter){
+	// Don't apply filter on live scenes. Assume the user won't want to hide what they are recording.
+	(void)filter;
+
+	// Just trigger a refresh of the full array.
+	_dirtyNotes = true;
+	_dirtyNotesRange = {0, 0};
 }
 
 void MIDISceneLive::updatesActiveNotes(double time, double speed, const FilterOptions& filter){
+	// Don't apply filter on live scenes. Assume the user won't want to hide what they are recording.
+	(void)filter;
+
 	int minUpdated = MAX_NOTES_IN_FLIGHT;
 	int maxUpdated = 0;
 
@@ -323,6 +330,10 @@ double MIDISceneLive::secondsPerMeasure() const {
 
 int MIDISceneLive::notesCount() const {
 	return _notesCount;
+}
+
+int MIDISceneLive::tracksCount() const {
+	return 1;
 }
 
 void MIDISceneLive::print() const {

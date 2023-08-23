@@ -51,6 +51,8 @@ public:
 
 	virtual int notesCount() const;
 
+	virtual int tracksCount() const;
+
 	virtual void print() const;
 
 	virtual void save(std::ofstream& file) const;

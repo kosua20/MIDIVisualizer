@@ -94,6 +94,8 @@ MIDIFile::MIDIFile(const std::string & filePath){
 		auto & track = _tracks[tid];
 		track.extractNotes(_tempos, _unitsPerQuarterNote, (unsigned int)tid);
 	}
+	// Save count before merging.
+	_trackCount = _tracks.size();
 
 	// For now, still merge.
 	shouldMerge = true;
@@ -114,7 +116,7 @@ MIDIFile::MIDIFile(const std::string & filePath){
 		for(const auto & note : notes){
 			_duration = (std::max)(_duration, note.start + note.duration);
 		}
-		_count += int(notes.size());
+		_notesCount += int(notes.size());
 	}
 }
 

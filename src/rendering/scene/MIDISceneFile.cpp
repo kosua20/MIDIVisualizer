@@ -23,8 +23,7 @@ MIDISceneFile::MIDISceneFile(const std::string & midiFilePath, const SetOptions 
 	// MIDI processing.
 	_midiFile = MIDIFile(_filePath);
 
-	_midiFile.updateSets( options );
-	updateVisibleNotes( filter );
+	updateSetsAndVisibleNotes( options, filter );
 
 	std::cout << "[INFO]: Final track duration " << _midiFile.duration() << " sec." << std::endl;
 }
@@ -130,6 +129,10 @@ double MIDISceneFile::secondsPerMeasure() const {
 
 int MIDISceneFile::notesCount() const {
 	return _midiFile.notesCount();
+}
+
+int MIDISceneFile::tracksCount() const {
+	return _midiFile.tracksCount();
 }
 
 void MIDISceneFile::print() const {

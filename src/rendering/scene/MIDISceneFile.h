@@ -25,6 +25,8 @@ public:
 	double secondsPerMeasure() const override;
 
 	int notesCount() const override;
+	
+	int tracksCount() const override;
 
 	void print() const override;
 	
