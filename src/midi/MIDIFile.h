@@ -17,9 +17,9 @@ public:
 
 	void print() const;
 
-	void getNotes(std::vector<MIDINote>& notes, NoteType type, size_t track) const;
+	void getNotes(std::vector<MIDINote>& notes, NoteType type, const FilterOptions& filter, size_t track) const;
 	
-	void getNotesActive(ActiveNotesArray& actives, double time, size_t track) const;
+	void getNotesActive(ActiveNotesArray& actives, double time, const FilterOptions& filter, size_t track) const;
 
 	void getPedalsActive(float &damper, float &sostenuto, float &soft, float &expression, double time, size_t track) const;
 

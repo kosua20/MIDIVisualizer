@@ -4,6 +4,7 @@
 
 #include "MIDIFile.h"
 #include "../helpers/System.h"
+#include "../rendering/State.h"
 
 MIDIFile::MIDIFile(){};
 
@@ -106,9 +107,10 @@ MIDIFile::MIDIFile(const std::string & filePath){
 	}
 
 	// Compute duration.
+	FilterOptions noFilter;
 	for(const auto & track : _tracks){
 		std::vector<MIDINote> notes;
-		track.getNotes(notes, NoteType::ALL);
+		track.getNotes(notes, NoteType::ALL, noFilter);
 		for(const auto & note : notes){
 			_duration = (std::max)(_duration, note.start + note.duration);
 		}
@@ -169,18 +171,18 @@ void MIDIFile::mergeTracks(){
 	
 }
 
-void MIDIFile::getNotes(std::vector<MIDINote> & notes, NoteType type, size_t track) const {
+void MIDIFile::getNotes(std::vector<MIDINote> & notes, NoteType type, const FilterOptions& filter, size_t track) const {
 	if(track >= _tracks.size()){
 		return;
 	}
-	_tracks[track].getNotes(notes, type);
+	_tracks[track].getNotes(notes, type, filter );
 }
 
-void MIDIFile::getNotesActive(ActiveNotesArray & actives, double time, size_t track) const {
+void MIDIFile::getNotesActive(ActiveNotesArray & actives, double time, const FilterOptions& filter, size_t track) const {
 	if(track >= _tracks.size()){
 		return;
 	}
-	_tracks[track].getNotesActive(actives, time);
+	_tracks[track].getNotesActive(actives, time, filter);
 }
 
 void MIDIFile::getPedalsActive(float & damper, float &sostenuto, float &soft, float &expression, double time, size_t track) const {

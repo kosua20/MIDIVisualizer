@@ -4,6 +4,7 @@
 #include <cmath>
 #include <algorithm>
 #include "../rendering/SetOptions.h"
+#include "../rendering/State.h"
 
 // We will have to keep track of active notes per-channel.
 struct NoteKey {
@@ -185,13 +186,15 @@ void MIDITrack::extractNotes(const std::vector<MIDITempo> & tempos, uint16_t uni
 	}
 }
 
-void MIDITrack::getNotes(std::vector<MIDINote> & notes, NoteType type) const {
+void MIDITrack::getNotes(std::vector<MIDINote> & notes, NoteType type, const FilterOptions& filter ) const {
 	notes.clear();
-
+	notes.reserve( _notes.size() );
 	for(auto& note : _notes){
 		const bool isMin = noteIsMinor[note.note % 12];
 		const short shiftId = (note.note/12) * 7 + noteShift[note.note % 12];
 		if(type == NoteType::ALL || (type == NoteType::MINOR && isMin) || (type == NoteType::MAJOR && !isMin)){
+			if( !filter.accepts( note.track, note.channel ) )
+				continue;
 			notes.push_back(note);
 			notes.back().note = shiftId;
 		}
@@ -199,7 +202,7 @@ void MIDITrack::getNotes(std::vector<MIDINote> & notes, NoteType type) const {
 
 }
 
-void MIDITrack::getNotesActive(ActiveNotesArray & actives, double time) const {
+void MIDITrack::getNotesActive(ActiveNotesArray & actives, double time, const FilterOptions& filter ) const {
 	// Reset all notes.
 	for(int i = 0; i < int(actives.size()); ++i){
 		 actives[i].enabled = false;
@@ -208,6 +211,8 @@ void MIDITrack::getNotesActive(ActiveNotesArray & actives, double time) const {
 	for(size_t i = 0; i < count; ++i){
 		auto& note = _notes[i];
 		if(note.start <= time && note.start+note.duration >= time){
+			if( !filter.accepts( note.track, note.channel ) )
+				continue;
 			auto & actNote = actives[note.note];
 			actNote.enabled = true;
 			actNote.duration = float(note.duration);

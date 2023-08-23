@@ -5,6 +5,8 @@
 
 typedef std::array<ActiveNoteInfos, 128> ActiveNotesArray;
 
+struct FilterOptions;
+
 class MIDITrack {
 public:
 	
@@ -16,9 +18,9 @@ public:
 
 	void print() const;
 
-	void getNotes(std::vector<MIDINote> & notes, NoteType type) const;
+	void getNotes(std::vector<MIDINote> & notes, NoteType type, const FilterOptions& filter ) const;
 
-	void getNotesActive(ActiveNotesArray & actives, double time) const;
+	void getNotesActive(ActiveNotesArray & actives, double time, const FilterOptions& filter ) const;
 
 	void normalizePedalVelocity();
 
