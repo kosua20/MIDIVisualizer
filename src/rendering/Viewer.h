@@ -133,6 +133,8 @@ private:
 
 	void showDevices();
 
+	void showVisibility();
+
 	void showSets();
 
 	void showSetEditor();

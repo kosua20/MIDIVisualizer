@@ -463,11 +463,24 @@ SystemAction Viewer::drawGUI(const float currentTime) {
 		if (ImGui::Button("Show effect layers...")) {
 			_showLayers = true;
 		}
-		ImGuiSameLine(COLUMN_SIZE);
-		if (ImGui::Checkbox("Same colors for all effects", &_state.lockParticleColor)) {
-			// If we enable the lock, make sure the colors are synched.
-			synchronizeColors(_state.notes.majorColors);
+
+		if(_liveplay){
+			ImGui::BeginDisabled();
 		}
+
+		ImGuiSameLine(COLUMN_SIZE);
+		if (ImGui::Button("Tracks & channels visibility...")) {
+			ImGui::OpenPopup("Visibility options");
+		}
+		showVisibility();
+
+		if(_liveplay){
+			ImGui::EndDisabled();
+			if(ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)){
+				ImGui::SetTooltip("Not available in liveplay");
+			}
+		}
+
 		if(ImGui::Checkbox("Per-set colors", &_state.perSetColors)){
 			if(!_state.perSetColors){
 				_state.synchronizeSets();
@@ -475,10 +488,14 @@ SystemAction Viewer::drawGUI(const float currentTime) {
 		}
 		if(_state.perSetColors){
 			ImGuiSameLine(COLUMN_SIZE);
-			if(ImGui::Button("Define sets...")){
+			if(ImGui::Button("Define color sets...")){
 				ImGui::OpenPopup("Note sets options");
 			}
 			showSets();
+		}
+		if (ImGui::Checkbox("Same colors for all effects", &_state.lockParticleColor)) {
+			// If we enable the lock, make sure the colors are synched.
+			synchronizeColors(_state.notes.majorColors);
 		}
 
 		if(ImGui::CollapsingHeader("Playback##HEADER")){
@@ -496,10 +513,17 @@ SystemAction Viewer::drawGUI(const float currentTime) {
 				reset();
 			}
 
-			if(!_liveplay){
-				ImGuiSameLine(COLUMN_SIZE);
-				if(ImGui::SliderFloat("Speed", &_state.scrollSpeed, 0.1f, 5.0f, "%.1fx")){
-					_state.scrollSpeed = (std::max)(0.01f, _state.scrollSpeed);
+			if(_liveplay){
+				ImGui::BeginDisabled();
+			}
+			ImGuiSameLine(COLUMN_SIZE);
+			if(ImGui::SliderFloat("Speed", &_state.scrollSpeed, 0.1f, 5.0f, "%.1fx")){
+				_state.scrollSpeed = (std::max)(0.01f, _state.scrollSpeed);
+			}
+			if(_liveplay){
+				ImGui::EndDisabled();
+				if(ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)){
+					ImGui::SetTooltip("Not available in liveplay");
 				}
 			}
 			ImGui::PopItemWidth();
@@ -507,9 +531,16 @@ SystemAction Viewer::drawGUI(const float currentTime) {
 			if(ImGui::Checkbox("Horizontal scroll", &_state.horizontalScroll)){
 				_renderer.setOrientation(_state.horizontalScroll);
 			}
-			if(!_liveplay){
-				ImGuiSameLine(COLUMN_SIZE);
-				ImGui::Checkbox("Reverse scroll", &_state.reverseScroll);
+			if(_liveplay){
+				ImGui::BeginDisabled();
+			}
+			ImGuiSameLine(COLUMN_SIZE);
+			ImGui::Checkbox("Reverse scroll", &_state.reverseScroll);
+			if(_liveplay){
+				ImGui::EndDisabled();
+				if(ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)){
+					ImGui::SetTooltip("Not available in liveplay");
+				}
 			}
 
 		}
@@ -1284,6 +1315,48 @@ void Viewer::showDevices(){
 	}
 }
 
+void Viewer::showVisibility(){
+
+	if(ImGui::BeginPopup("Visibility options")){
+		bool shouldUpdate = false;
+
+		ImGui::Text("Tracks");
+		ImGuiPushItemWidth(35);
+		const size_t trackCount = _state.filter.tracks.size();
+		const std::string tenPrefix = trackCount < 10 ? "" : "0";
+		for(size_t cid = 0; cid < trackCount; ++cid){
+			const std::string nameC = (cid < 10 ? tenPrefix : "") + std::to_string(cid);
+			bool val = _state.filter.tracks[cid];
+			shouldUpdate = ImGui::Checkbox(nameC.c_str(), &val) || shouldUpdate;
+			if(shouldUpdate){
+				_state.filter.tracks[cid] = val;
+			}
+			if((cid % 4 != 3) && (cid != (trackCount-1))){
+				ImGuiSameLine();
+			}
+		}
+		ImGui::PopItemWidth();
+
+		// Do 4x4 columns of checkboxes
+		ImGui::Text("Channels");
+		ImGuiPushItemWidth(35);
+		for(size_t cid = 0; cid < _state.filter.channels.size(); ++cid){
+			const std::string nameC = std::string(cid < 10 ? "0" : "") + std::to_string(cid);
+			shouldUpdate = ImGui::Checkbox(nameC.c_str(), &_state.filter.channels[cid]) || shouldUpdate;
+			if(cid % 4 != 3){
+				ImGuiSameLine();
+			}
+		}
+		ImGui::PopItemWidth();
+
+		if(shouldUpdate){
+			_scene->updateVisibleNotes(_state.filter);
+		}
+		ImGui::EndPopup();
+	}
+
+}
+
 void Viewer::showSets(){
 	if(ImGui::BeginPopup("Note sets options")){
 		ImGui::Text("Decide how notes should be grouped in multiple sets");
@@ -1881,6 +1954,11 @@ void Viewer::applyBackgroundColor(){
 
 void Viewer::applyAllSettings() {
 	// Apply all modifications.
+
+	// Adjust tracks count.
+	int trackCount = (std::max)(_scene->tracksCount(), int(_state.filter.tracks.size()));
+	trackCount = (std::max)(trackCount, 1);
+	_state.filter.tracks.resize(trackCount, true);
 
 	// One-shot parameters.
 	// TODO: (MV) just apply when needed?
