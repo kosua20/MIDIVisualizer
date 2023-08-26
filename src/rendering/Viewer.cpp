@@ -1321,6 +1321,7 @@ void Viewer::showVisibility(){
 		bool shouldUpdate = false;
 
 		ImGui::Text("Tracks");
+		ImGui::Separator();
 		ImGuiPushItemWidth(35);
 		const size_t trackCount = _state.filter.tracks.size();
 		const std::string tenPrefix = trackCount < 10 ? "" : "0";
@@ -1339,6 +1340,7 @@ void Viewer::showVisibility(){
 
 		// Do 4x4 columns of checkboxes
 		ImGui::Text("Channels");
+		ImGui::Separator();
 		ImGuiPushItemWidth(35);
 		for(size_t cid = 0; cid < _state.filter.channels.size(); ++cid){
 			const std::string nameC = std::string(cid < 10 ? "0" : "") + std::to_string(cid);

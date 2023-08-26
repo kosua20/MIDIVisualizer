@@ -224,15 +224,15 @@ void State::defineOptions(){
 	_sharedInfos["sets-separator-control-points"] = {"Sets of control points for dynamic set assignment", OptionInfos::Type::OTHER};
 	_sharedInfos["sets-separator-control-points"].values = "values: space-separated triplets time,key,set";
 
-	_sharedInfos[ "filter-hide-channels" ] = { "Enabled channels", OptionInfos::Type::OTHER };
-	_sharedInfos[ "filter-hide-channels" ].values = "Channels indices, between 0 and 15";
-	_sharedInfos[ "filter-show-channels" ] = { "Disabled channels", OptionInfos::Type::OTHER };
-	_sharedInfos[ "filter-show-channels" ].values = "Channels indices, between 0 and 15";
+	_sharedInfos["filter-hide-channels"] = { "Hidden channels", OptionInfos::Type::OTHER };
+	_sharedInfos["filter-hide-channels"].values = "Hidden channels indices, between 0 and 15";
+	_sharedInfos["filter-show-channels"] = { "Enabled channels", OptionInfos::Type::OTHER };
+	_sharedInfos["filter-show-channels"].values = "Visible channels indices, between 0 and 15";
 
-	_sharedInfos[ "filter-hide-tracks" ] = { "Enabled tracks", OptionInfos::Type::OTHER };
-	_sharedInfos[ "filter-hide-tracks" ].values = "Track indices, starting from 0";
-	_sharedInfos[ "filter-show-tracks" ] = { "Disabled tracks", OptionInfos::Type::OTHER };
-	_sharedInfos[ "filter-show-tracks" ].values = "Channels indices, starting from 0";
+	_sharedInfos["filter-hide-tracks"] = { "Hidden tracks", OptionInfos::Type::OTHER };
+	_sharedInfos["filter-hide-tracks"].values = "Hidden track indices, starting from 0";
+	_sharedInfos["filter-show-tracks"] = { "Enabled tracks", OptionInfos::Type::OTHER };
+	_sharedInfos["filter-show-tracks"].values = "Visible track indices, starting from 0";
 
 	// Sets
 	for(size_t cid = 1; cid < SETS_COUNT; ++cid){
