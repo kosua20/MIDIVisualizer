@@ -97,6 +97,8 @@ public:
 		float expansion; ///< Expansion factor.
 		float scale; ///< Particles scale.
 		int count; ///< Number of particles.
+		float turbulenceScale; ///< Turbulence noise scale (not exposed)
+		float turbulenceStrength; ///< Turbulence intensity
 	};
 
 	struct KeyboardState {

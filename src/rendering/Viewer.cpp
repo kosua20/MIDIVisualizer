@@ -955,6 +955,10 @@ void Viewer::showParticleOptions(){
 		_backupState = _state;
 	}
 
+	ImGuiPushItemWidth(100);
+	ImGuiSliderPercent("Turbulences", &_state.particles.turbulenceStrength, 0.01f, 8.0f);
+	ImGui::PopItemWidth();
+
 	ImGui::PopID();
 }
 

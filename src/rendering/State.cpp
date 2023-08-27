@@ -225,6 +225,7 @@ void State::defineOptions(){
 	_sharedInfos["particles-speed"] 		= {Category::PARTICLES, "Particles speed", Type::FLOAT};
 	_sharedInfos["particles-expansion"] 	= {Category::PARTICLES, "Particles expansion factor", Type::FLOAT};
 	_sharedInfos["particles-paths"] 		= {Category::PARTICLES, "Set of paths (separated by spaces) to black and white images on disk to use as particles", Type::PATH};
+	_sharedInfos["particles-turbulences"] 	= {Category::PARTICLES, "Particles turbulence strength", Type::FLOAT, {0.f, 10.f}};
 
 	// Pedal
 	_sharedInfos["pedal-size"] 				= {Category::PEDAL, "Pedal indicator size", Type::FLOAT, {0.05f, 0.5f}};
@@ -386,6 +387,7 @@ void State::updateOptions(){
 	_floatInfos["particles-size"] = &particles.scale;
 	_floatInfos["particles-speed"] = &particles.speed;
 	_floatInfos["particles-expansion"] = &particles.expansion;
+	_floatInfos["particles-turbulences"] = &particles.turbulenceStrength;
 	_floatInfos["blur-attenuation"] = &attenuation;
 	_floatInfos["flashes-size"] = &flashes.size;
 	_floatInfos["flashes-halo-inner"] = &flashes.haloInnerRadius;
@@ -835,6 +837,10 @@ void State::reset(){
 	const GLuint blankID = ResourcesManager::getTextureFor("blankarray");
 	particles.tex = blankID;
 	particles.texCount = 1;
+
+	particles.turbulenceStrength = 1.0;
+	particles.turbulenceScale = 1.0;
+
 	
 	quality = Quality::MEDIUM;
 	prerollTime = 1.0f;
