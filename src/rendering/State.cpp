@@ -111,12 +111,14 @@ State::OptionInfos::OptionInfos(){
 	type = Type::OTHER;
 	range = {0.0f, 0.0f};
 	values = "";
+	category = Category::GENERAL;
 }
 
-State::OptionInfos::OptionInfos(const std::string & adesc, State::OptionInfos::Type atype, const std::array<float, 2> & arange){
+State::OptionInfos::OptionInfos(Category acategory, const std::string & adesc, State::OptionInfos::Type atype, const std::array<float, 2> & arange){
 	description = adesc;
 	type = atype;
 	range = arange;
+	category = acategory;
 	// Generate value description based on type and range.
 	switch(type){
 		case Type::BOOLEAN:
@@ -149,175 +151,162 @@ State::OptionInfos::OptionInfos(const std::string & adesc, State::OptionInfos::T
 }
 
 void State::defineOptions(){
-	// Integers.
-	_sharedInfos["particles-count"] = {"Particles count", OptionInfos::Type::INTEGER, {1.0f, 512.0f}};
+	using Category = OptionInfos::Category;
+	using Type = OptionInfos::Type;
 
-	// Booleans.
-	_sharedInfos["show-particles"] = {"Should particles be shown", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["show-flashes"] = {"Should flashes be shown", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["show-blur"] = {"Should the blur be visible", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["show-blur-notes"] = {"Should the notes be part of the blur", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["lock-colors"] = {"Should the keys and all effects use the same color", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["show-horiz-lines"] = {"Should horizontal score lines be showed", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["show-vert-lines"] = {"Should vertical score lines be shown", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["show-numbers"] = {"Should measure numbers be shown", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["show-keyboard"] = {"Should the keyboard be shown", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["bg-img-behind-keyboard"] = {"Should the background image extend behind the keyboard", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["keyboard-highlight"] = {"Should the pressed keys be highlighted", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["keyboard-custom-colors"] = {"Override notes color for pressed keys", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["keyboard-minor-edges"] = {"Show edges around minor keys", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["show-score"] = {"Should the score (lines, numbers) be shown", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["show-bg-img"] = {"Use a background texture", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["show-notes"] = {"Should the notes be shown", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["notes-major-img-scroll"] = {"Should the major notes texture scroll with the notes", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["notes-minor-img-scroll"] = {"Should the minor notes texture scroll with the notes", OptionInfos::Type::BOOLEAN};
-
-	// Floats.
-	_sharedInfos["time-scale"] = {"Vertical display scale", OptionInfos::Type::FLOAT};
-	_sharedInfos["minor-size"] = {"Relative size of the minor keys and notes", OptionInfos::Type::FLOAT, {0.1f, 1.0f}};
-	_sharedInfos["particles-size"] = {"Size of the particles", OptionInfos::Type::FLOAT, {1.0f, 10.0f}};
-	_sharedInfos["particles-speed"] = {"Particles speed", OptionInfos::Type::FLOAT};
-	_sharedInfos["particles-expansion"] = {"Particles expansion factor", OptionInfos::Type::FLOAT};
-	_sharedInfos["blur-attenuation"] = {"Blur attenuation speed", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
-	_sharedInfos["flashes-size"] = {"Flash effect size", OptionInfos::Type::FLOAT, {0.1f, 3.0f}};
-	_sharedInfos["flashes-halo-inner"] = {"Flash inner halo size", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
-	_sharedInfos["flashes-halo-outer"] = {"Flash outer halo size", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
-	_sharedInfos["flashes-halo-intensity"] = {"Flash halo brightness", OptionInfos::Type::FLOAT, {0.0f, 2.0f}};
-
-	_sharedInfos["flashes-img-path"] = {"Path to an image on disk to use as the flash flipbook", OptionInfos::Type::PATH};
-	_sharedInfos["flashes-img-rows"] = {"Number of rows in the flipbook image", OptionInfos::Type::INTEGER};
-	_sharedInfos["flashes-img-columns"] = {"Number of columns in the flipbook image", OptionInfos::Type::INTEGER};
-
-	_sharedInfos["preroll"] = {"Preroll time in seconds before starting to play", OptionInfos::Type::FLOAT};
-	_sharedInfos["scroll-speed"] = {"Playback speed", OptionInfos::Type::FLOAT};
-	_sharedInfos["bg-img-opacity"] = {"Background opacity", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
-	_sharedInfos["fadeout-notes"] = {"Notes fade-out at the edge of the screen", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
-	_sharedInfos["notes-edge-width"] = {"Control the width of the edge around notes", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
-	_sharedInfos["notes-edge-intensity"] = {"Control the intensity of the edge around notes", OptionInfos::Type::FLOAT, {0.0f, 100.0f}};
-
-	_sharedInfos["notes-corner-radius"]  = {"Rounding radius of the notes corners", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
-	_sharedInfos["notes-major-img-scale"]    = {"Scale of the texture applied to major notes", OptionInfos::Type::FLOAT};
-	_sharedInfos["notes-major-img-intensity"] = {"Intensity of the texture applied to major notes", OptionInfos::Type::FLOAT, {0.0, 1.0f}};
-	_sharedInfos["notes-minor-img-scale"]    = {"Scale of the texture applied to minor notes", OptionInfos::Type::FLOAT};
-	_sharedInfos["notes-minor-img-intensity"] = {"Intensity of the texture applied to minor notes", OptionInfos::Type::FLOAT, {0.0, 1.0f}};
-
-	// Colors.
-	_sharedInfos["color-major"] = {"Major notes color", OptionInfos::Type::COLOR};
-	_sharedInfos["color-bg"] = {"Background color", OptionInfos::Type::COLOR};
-	_sharedInfos["color-particles"] = {"Particles color", OptionInfos::Type::COLOR};
-	_sharedInfos["color-keyboard-major"] = {"Custom color for pressed major keys", OptionInfos::Type::COLOR};
-	_sharedInfos["color-keyboard-minor"] = {"Custom color for pressed minor keys", OptionInfos::Type::COLOR};
-	_sharedInfos["color-lines"] = {"Score lines color", OptionInfos::Type::COLOR};
-	_sharedInfos["color-lines"].legacy = true;
-	_sharedInfos["color-lines-vertical"] = {"Score vertical lines color", OptionInfos::Type::COLOR};
-	_sharedInfos["color-lines-horizontal"] = {"Score horizontal lines color", OptionInfos::Type::COLOR};
-	_sharedInfos["color-numbers"] = {"Score measure numbers color", OptionInfos::Type::COLOR};
-	_sharedInfos["color-keyboard"] = {"Keyboard black keys color", OptionInfos::Type::COLOR};
-	_sharedInfos["color-minor"] = {"Minor notes color", OptionInfos::Type::COLOR};
-	_sharedInfos["color-flashes"] = {"Flash effect color", OptionInfos::Type::COLOR};
-
-	// Others.
-	_sharedInfos["quality"] = {"Rendering quality", OptionInfos::Type::OTHER};
-	_sharedInfos["quality"].values = "values: LOW_RES, LOW, MEDIUM, HIGH, HIGH_RES";
-	_sharedInfos["layers"] = {"Active layers indices, from background to foreground", OptionInfos::Type::OTHER};
-	_sharedInfos["layers"].values = "values: bg-color: 0, bg-texture: 1, blur: 2, score: 3, keyboard: 4, particles: 5, notes: 6, flashes: 7, pedal: 8, wave: 9";
-	_sharedInfos["sets-separator-control-points"] = {"Sets of control points for dynamic set assignment", OptionInfos::Type::OTHER};
+	// General
+	_sharedInfos["lock-colors"]						= {Category::GENERAL, "Should the keys and all effects use the same color", Type::BOOLEAN};
+	_sharedInfos["quality"] 						= {Category::GENERAL, "Rendering quality", Type::OTHER};
+	_sharedInfos["quality"].values 					= "values: LOW_RES, LOW, MEDIUM, HIGH, HIGH_RES";
+	_sharedInfos["sets-separator-control-points"] 	= {Category::GENERAL, "Sets of control points for dynamic set assignment", Type::OTHER};
 	_sharedInfos["sets-separator-control-points"].values = "values: space-separated triplets time,key,set";
+	_sharedInfos["filter-hide-channels"] 			= {Category::GENERAL, "Hidden channels", Type::OTHER };
+	_sharedInfos["filter-hide-channels"].values 	= "space-separated channels indices, between 0 and 15";
+	_sharedInfos["filter-show-channels"] 			= {Category::GENERAL, "Enabled channels", Type::OTHER };
+	_sharedInfos["filter-show-channels"].values 	= "space-separated channels indices, between 0 and 15";
+	_sharedInfos["filter-hide-tracks"] 				= {Category::GENERAL, "Hidden tracks", Type::OTHER };
+	_sharedInfos["filter-hide-tracks"].values 		= "space-separated track indices, starting from 0";
+	_sharedInfos["filter-show-tracks"] 				= {Category::GENERAL, "Enabled tracks", Type::OTHER };
+	_sharedInfos["filter-show-tracks"].values 		= "space-separated track indices, starting from 0";
+	_sharedInfos["colors-per-set"] 					= {Category::GENERAL, "Should each notes set use its own key/effects colors", Type::BOOLEAN};
+	_sharedInfos["sets-mode"] 						= {Category::GENERAL, "How should notes be grouped into sets", Type::OTHER};
+	_sharedInfos["sets-mode"].values 				= "per-channel: 0, per-track: 1, split based on a key separator: 2, per-key: 3, split based on list: 4, chromatic: 5";
+	_sharedInfos["sets-separator-key"] 				= {Category::GENERAL, "If notes are grouped in two sets, defines the key where the split should happen", Type::KEY, {0.0f, 127.0f}};
+	_sharedInfos["min-key"] 						= {Category::GENERAL, "Lowest key to display", Type::KEY, {0.0f, 127.0f}};
+	_sharedInfos["max-key"] 						= {Category::GENERAL, "Highest key to display", Type::KEY, {0.0f, 127.0f}};
+	_sharedInfos["smooth"] 							= {Category::GENERAL, "Apply anti-aliasing to smooth all lines", Type::BOOLEAN};
 
-	_sharedInfos["filter-hide-channels"] = { "Hidden channels", OptionInfos::Type::OTHER };
-	_sharedInfos["filter-hide-channels"].values = "Hidden channels indices, between 0 and 15";
-	_sharedInfos["filter-show-channels"] = { "Enabled channels", OptionInfos::Type::OTHER };
-	_sharedInfos["filter-show-channels"].values = "Visible channels indices, between 0 and 15";
+	// Playback
+	_sharedInfos["time-scale"] 			= {Category::PLAYBACK, "Vertical display scale", Type::FLOAT};
+	_sharedInfos["preroll"] 			= {Category::PLAYBACK, "Preroll time in seconds before starting to play", Type::FLOAT};
+	_sharedInfos["scroll-speed"] 		= {Category::PLAYBACK, "Playback speed", Type::FLOAT};
+	_sharedInfos["scroll-reverse"] 		= {Category::PLAYBACK, "Notes scroll from bottom to top instead of the opposite", Type::BOOLEAN};
+	_sharedInfos["scroll-horizontal"] 	= {Category::PLAYBACK, "Notes scroll from right to left when enabled", Type::BOOLEAN};
 
-	_sharedInfos["filter-hide-tracks"] = { "Hidden tracks", OptionInfos::Type::OTHER };
-	_sharedInfos["filter-hide-tracks"].values = "Hidden track indices, starting from 0";
-	_sharedInfos["filter-show-tracks"] = { "Enabled tracks", OptionInfos::Type::OTHER };
-	_sharedInfos["filter-show-tracks"].values = "Visible track indices, starting from 0";
+	// Effects
+	_sharedInfos["layers"] 			= {Category::EFFECTS, "Active layers indices, from background to foreground", Type::OTHER};
+	_sharedInfos["layers"].values 	= "values: bg-color: 0, bg-texture: 1, blur: 2, score: 3, keyboard: 4, particles: 5, notes: 6, flashes: 7, pedal: 8, wave: 9";
+	_sharedInfos["show-particles"] 	= {Category::EFFECTS, "Should particles be shown", Type::BOOLEAN};
+	_sharedInfos["show-flashes"] 	= {Category::EFFECTS, "Should flashes be shown", Type::BOOLEAN};
+	_sharedInfos["show-blur"] 		= {Category::EFFECTS, "Should the blur be visible", Type::BOOLEAN};
+	_sharedInfos["show-keyboard"] 	= {Category::EFFECTS, "Should the keyboard be shown", Type::BOOLEAN};
+	_sharedInfos["show-score"] 		= {Category::EFFECTS, "Should the score (lines, numbers) be shown", Type::BOOLEAN};
+	_sharedInfos["show-notes"] 		= {Category::EFFECTS, "Should the notes be shown", Type::BOOLEAN};
+	_sharedInfos["show-pedal"] 		= {Category::EFFECTS, "Display the pedals indicator", Type::BOOLEAN};
+	_sharedInfos["show-wave"] 		= {Category::EFFECTS, "Display the wave effect along the top of the keyboard", Type::BOOLEAN};
 
-	// Sets
+	// Notes
+	_sharedInfos["notes-major-img-scroll"] 		= {Category::NOTES, "Should the major notes texture scroll with the notes", Type::BOOLEAN};
+	_sharedInfos["notes-minor-img-scroll"] 		= {Category::NOTES, "Should the minor notes texture scroll with the notes", Type::BOOLEAN};
+	_sharedInfos["minor-size"] 					= {Category::NOTES, "Relative size of the minor keys and notes", Type::FLOAT, {0.1f, 1.0f}};
+	_sharedInfos["fadeout-notes"] 				= {Category::NOTES, "Notes fade-out at the edge of the screen", Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos["notes-edge-width"] 			= {Category::NOTES, "Control the width of the edge around notes", Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos["notes-edge-intensity"] 		= {Category::NOTES, "Control the intensity of the edge around notes", Type::FLOAT, {0.0f, 100.0f}};
+	_sharedInfos["notes-corner-radius"]  		= {Category::NOTES, "Rounding radius of the notes corners", Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos["notes-major-img-scale"]   	= {Category::NOTES, "Scale of the texture applied to major notes", Type::FLOAT};
+	_sharedInfos["notes-major-img-intensity"]	= {Category::NOTES, "Intensity of the texture applied to major notes", Type::FLOAT, {0.0, 1.0f}};
+	_sharedInfos["notes-minor-img-scale"]   	= {Category::NOTES, "Scale of the texture applied to minor notes", Type::FLOAT};
+	_sharedInfos["notes-minor-img-intensity"]	= {Category::NOTES, "Intensity of the texture applied to minor notes", Type::FLOAT, {0.0, 1.0f}};
+	_sharedInfos["notes-major-img-path"] 		= {Category::NOTES, "Path to an image on disk to use as texture for the major notes", Type::PATH};
+	_sharedInfos["notes-minor-img-path"] 		= {Category::NOTES, "Path to an image on disk to use as texture for the minor notes", Type::PATH};
+
+	// Flashes
+	_sharedInfos["flashes-size"] 			= {Category::FLASHES, "Flash effect size", Type::FLOAT, {0.1f, 3.0f}};
+	_sharedInfos["flashes-halo-inner"] 		= {Category::FLASHES, "Flash inner halo size", Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos["flashes-halo-outer"] 		= {Category::FLASHES, "Flash outer halo size", Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos["flashes-halo-intensity"] 	= {Category::FLASHES, "Flash halo brightness", Type::FLOAT, {0.0f, 2.0f}};
+	_sharedInfos["flashes-img-path"] 		= {Category::FLASHES, "Path to an image on disk to use as the flash flipbook", Type::PATH};
+	_sharedInfos["flashes-img-rows"] 		= {Category::FLASHES, "Number of rows in the flipbook image", Type::INTEGER};
+	_sharedInfos["flashes-img-columns"] 	= {Category::FLASHES, "Number of columns in the flipbook image", Type::INTEGER};
+
+	// Particles
+	_sharedInfos["particles-count"] 		= {Category::PARTICLES, "Particles count", Type::INTEGER, {1.0f, 512.0f}};
+	_sharedInfos["particles-size"] 			= {Category::PARTICLES, "Size of the particles", Type::FLOAT, {1.0f, 10.0f}};
+	_sharedInfos["particles-speed"] 		= {Category::PARTICLES, "Particles speed", Type::FLOAT};
+	_sharedInfos["particles-expansion"] 	= {Category::PARTICLES, "Particles expansion factor", Type::FLOAT};
+	_sharedInfos["particles-paths"] 		= {Category::PARTICLES, "Set of paths (separated by spaces) to black and white images on disk to use as particles", Type::PATH};
+
+	// Pedal
+	_sharedInfos["pedal-size"] 				= {Category::PEDAL, "Pedal indicator size", Type::FLOAT, {0.05f, 0.5f}};
+	_sharedInfos["pedal-opacity"] 			= {Category::PEDAL, "Pedal indicator opacity when not pressed", Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos["color-pedal"] 			= {Category::PEDAL, "All pedals color when pressed", Type::COLOR};
+	_sharedInfos["color-pedal"].legacy 		= true;
+	_sharedInfos["color-pedal-top"] 		= {Category::PEDAL, "Top pedal color when pressed", Type::COLOR};
+	_sharedInfos["color-pedal-center"] 		= {Category::PEDAL, "Center pedal color when pressed", Type::COLOR};
+	_sharedInfos["color-pedal-left"] 		= {Category::PEDAL, "Left color when pressed", Type::COLOR};
+	_sharedInfos["color-pedal-right"] 		= {Category::PEDAL, "Right pedal color when pressed", Type::COLOR};
+	_sharedInfos["pedal-merge"] 			= {Category::PEDAL, "Display only one pedal", Type::BOOLEAN};
+	_sharedInfos["pedal-location"] 			= {Category::PEDAL, "Pedal location on screen", Type::OTHER, {0.0f, 3.0f}};
+	_sharedInfos["pedal-location"].values 	= "top-left: 0, bottom-left: 1, top-right: 2, bottom-right: 3";
+	_sharedInfos["pedal-img-offset-x"] 		= {Category::PEDAL, "Horizontal overlap offset between pedals", Type::FLOAT, {-0.5f, 0.5f}};
+	_sharedInfos["pedal-img-offset-y"] 		= {Category::PEDAL, "Vertical overlap offset between pedals", Type::FLOAT  , {-0.5f, 0.5f}};
+	_sharedInfos["pedal-img-mirrored"] 		= {Category::PEDAL, "Should the right pedal be mirrored horizontally", Type::BOOLEAN};
+	_sharedInfos["pedal-top-img-path"] 		= {Category::PEDAL, "Path to an image on disk to use as texture for the top pedal", Type::PATH};
+	_sharedInfos["pedal-center-img-path"] 	= {Category::PEDAL, "Path to an image on disk to use as texture for the center pedal", Type::PATH};
+	_sharedInfos["pedal-side-img-paths"] 	= {Category::PEDAL, "Paths to one or two images on disk to use as textures for the side pedals", Type::PATH};
+
+	// Keyboard
+	_sharedInfos["keyboard-highlight"] 		= {Category::KEYBOARD, "Should the pressed keys be highlighted", Type::BOOLEAN};
+	_sharedInfos["keyboard-custom-colors"] 	= {Category::KEYBOARD, "Override notes color for pressed keys", Type::BOOLEAN};
+	_sharedInfos["keyboard-minor-edges"] 	= {Category::KEYBOARD, "Show edges around minor keys", Type::BOOLEAN};
+	_sharedInfos["color-keyboard-major"] 	= {Category::KEYBOARD, "Custom color for pressed major keys", Type::COLOR};
+	_sharedInfos["color-keyboard-minor"] 	= {Category::KEYBOARD, "Custom color for pressed minor keys", Type::COLOR};
+	_sharedInfos["color-keyboard"] 			= {Category::KEYBOARD, "Keyboard black keys color", Type::COLOR};
+	_sharedInfos["keyboard-size"] 			= {Category::KEYBOARD, "Vertical size of the keyboard", Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos["keyboard-minor-height"] 	= {Category::KEYBOARD, "Vertical fraction of the keyboard taken by minor keys", Type::FLOAT, {0.0f, 1.0f}};
+
+	// Score
+	_sharedInfos["show-horiz-lines"] 			= {Category::SCORE, "Should horizontal score lines be showed", Type::BOOLEAN};
+	_sharedInfos["show-vert-lines"] 			= {Category::SCORE, "Should vertical score lines be shown", Type::BOOLEAN};
+	_sharedInfos["show-numbers"] 				= {Category::SCORE, "Should measure numbers be shown", Type::BOOLEAN};
+	_sharedInfos["color-lines"] 				= {Category::SCORE, "Score lines color", Type::COLOR};
+	_sharedInfos["color-lines"].legacy 			= true;
+	_sharedInfos["color-lines-vertical"] 		= {Category::SCORE, "Score vertical lines color", Type::COLOR};
+	_sharedInfos["color-lines-horizontal"] 		= {Category::SCORE, "Score horizontal lines color", Type::COLOR};
+	_sharedInfos["color-numbers"] 				= {Category::SCORE, "Score measure numbers color", Type::COLOR};
+	_sharedInfos["score-lines-vertical-width"] 	= {Category::SCORE, "Score vertical lines height, in pixels", Type::FLOAT};
+	_sharedInfos["score-lines-horizontal-width"]= {Category::SCORE, "Score horizontal lines width, in pixels", Type::FLOAT};
+	_sharedInfos["score-digits-size"] 			= {Category::SCORE, "Score digits size", Type::FLOAT};
+	_sharedInfos["score-digits-offset-x"] 		= {Category::SCORE, "Score digits horizontal offset, as a fraction of a digit", Type::FLOAT};
+	_sharedInfos["score-digits-offset-y"] 		= {Category::SCORE, "Score digits vertical offset, as a fraction of a digit", Type::FLOAT};
+
+	// Wave
+	_sharedInfos["wave-size"] 				= {Category::WAVE, "Wave effect size", Type::FLOAT, {0.0f, 5.0f}};
+	_sharedInfos["wave-opacity"] 			= {Category::WAVE, "Wave effect opacity", Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos["wave-amplitude"] 			= {Category::WAVE, "Wave effect amplitude", Type::FLOAT, {0.0f, 5.0f}};
+	_sharedInfos["wave-frequency"] 			= {Category::WAVE, "Wave effect frequency", Type::FLOAT, {0.0f, 5.0f}};
+	_sharedInfos["color-wave"] 				= {Category::WAVE, "Wave effect color", Type::COLOR};
+	_sharedInfos["wave-speed"] 				= {Category::WAVE, "Wave scrolling speed", Type::FLOAT };
+	_sharedInfos["wave-noise-intensity"] 	= {Category::WAVE, "Wave noise intensity", Type::FLOAT };
+	_sharedInfos["wave-noise-extent"] 		= {Category::WAVE, "Wave noise extent on screen", Type::FLOAT };
+
+	// Background
+	_sharedInfos["show-blur-notes"] 		= {Category::BACKGROUND, "Should the notes be part of the blur", Type::BOOLEAN};
+	_sharedInfos["bg-img-behind-keyboard"]	= {Category::BACKGROUND, "Should the background image extend behind the keyboard", Type::BOOLEAN};
+	_sharedInfos["show-bg-img"] 			= {Category::BACKGROUND, "Use a background texture", Type::BOOLEAN};
+	_sharedInfos["blur-attenuation"] 		= {Category::BACKGROUND, "Blur attenuation speed", Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos["bg-img-opacity"] 			= {Category::BACKGROUND, "Background opacity", Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos["color-bg"] 				= {Category::BACKGROUND, "Background color", Type::COLOR};
+	_sharedInfos["bg-img-path"] 			= {Category::BACKGROUND, "Path to an image on disk to use as background", Type::PATH};
+
+	// Per sets
+	_sharedInfos["color-major"] 			= {Category::PER_SETS,"Major notes color", Type::COLOR};
+	_sharedInfos["color-particles"] 		= {Category::PER_SETS, "Particles color", Type::COLOR};
+	_sharedInfos["color-minor"] 			= {Category::PER_SETS,"Minor notes color", Type::COLOR};
+	_sharedInfos["color-flashes"] 			= {Category::PER_SETS,"Flash effect color", Type::COLOR};
+
 	for(size_t cid = 1; cid < SETS_COUNT; ++cid){
 		const std::string num = std::to_string(cid);
-		_sharedInfos["color-major-" + num] = {"Major notes color for set " + num, OptionInfos::Type::COLOR};
-		_sharedInfos["color-particles-" + num] = {"Particles color for set " + num, OptionInfos::Type::COLOR};
-		_sharedInfos["color-minor-" + num] = {"Minor notes color for set " + num, OptionInfos::Type::COLOR};
-		_sharedInfos["color-flashes-" + num] = {"Flash effect color for set " + num, OptionInfos::Type::COLOR};
-
-		_sharedInfos["color-major-" + num].category = OptionInfos::Category::SETS;
-		_sharedInfos["color-particles-" + num].category = OptionInfos::Category::SETS;
-		_sharedInfos["color-minor-" + num].category = OptionInfos::Category::SETS;
-		_sharedInfos["color-flashes-" + num].category = OptionInfos::Category::SETS;
+		_sharedInfos["color-major-" + num] 		= {Category::PER_SETS, "Major notes color for set " + num, Type::COLOR};
+		_sharedInfos["color-particles-" + num] 	= {Category::PER_SETS, "Particles color for set " + num, Type::COLOR};
+		_sharedInfos["color-minor-" + num] 		= {Category::PER_SETS, "Minor notes color for set " + num, Type::COLOR};
+		_sharedInfos["color-flashes-" + num] 	= {Category::PER_SETS, "Flash effect color for set " + num, Type::COLOR};
 
 	}
-	// Override set 0 parameters to stay consistent.
-	_sharedInfos["color-major"].category = OptionInfos::Category::SETS;
-	_sharedInfos["color-particles"].category = OptionInfos::Category::SETS;
-	_sharedInfos["color-minor"].category = OptionInfos::Category::SETS;
-	_sharedInfos["color-flashes"].category = OptionInfos::Category::SETS;
-	
-	_sharedInfos["colors-per-set"] = {"Should each notes set use its own key/effects colors", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["colors-per-set"].category = OptionInfos::Category::SETS;
 
-	_sharedInfos["sets-mode"] = {"How should notes be grouped into sets", OptionInfos::Type::OTHER};
-	_sharedInfos["sets-mode"].values = "per-channel: 0, per-track: 1, split based on a key separator: 2, per-key: 3, split based on list: 4, chromatic: 5";
-	_sharedInfos["sets-mode"].category = OptionInfos::Category::SETS;
-
-	_sharedInfos["sets-separator-key"] = {"If notes are grouped in two sets, defines the key where the split should happen", OptionInfos::Type::KEY, {0.0f, 127.0f}};
-	_sharedInfos["sets-separator-key"].category = OptionInfos::Category::SETS;
-
-	_sharedInfos["keyboard-size"] = {"Vertical size of the keyboard", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
-	_sharedInfos["keyboard-minor-height"] = {"Vertical fraction of the keyboard taken by minor keys", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
-
-	_sharedInfos["min-key"] = {"Lowest key to display", OptionInfos::Type::KEY, {0.0f, 127.0f}};
-	_sharedInfos["max-key"] = {"Highest key to display", OptionInfos::Type::KEY, {0.0f, 127.0f}};
-
-	_sharedInfos["show-pedal"] = {"Display the pedals indicator", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["pedal-size"] = {"Pedal indicator size", OptionInfos::Type::FLOAT, {0.05f, 0.5f}};
-	_sharedInfos["pedal-opacity"] = {"Pedal indicator opacity when not pressed", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
-	_sharedInfos["color-pedal"] = {"All pedals color when pressed", OptionInfos::Type::COLOR};
-	_sharedInfos["color-pedal"].legacy = true;
-	_sharedInfos["color-pedal-top"] = {"Top pedal color when pressed", OptionInfos::Type::COLOR};
-	_sharedInfos["color-pedal-center"] = {"Center pedal color when pressed", OptionInfos::Type::COLOR};
-	_sharedInfos["color-pedal-left"] = {"Left color when pressed", OptionInfos::Type::COLOR};
-	_sharedInfos["color-pedal-right"] = {"Right pedal color when pressed", OptionInfos::Type::COLOR};
-	_sharedInfos["pedal-merge"] = {"Display only one pedal", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["pedal-location"] = {"Pedal location on screen", OptionInfos::Type::OTHER, {0.0f, 3.0f}};
-	_sharedInfos["pedal-location"].values = "top-left: 0, bottom-left: 1, top-right: 2, bottom-right: 3";
-	_sharedInfos["pedal-img-offset-x"] = {"Horizontal overlap offset between pedals", OptionInfos::Type::FLOAT, {-0.5f, 0.5f}};
-	_sharedInfos["pedal-img-offset-y"] = {"Vertical overlap offset between pedals", OptionInfos::Type::FLOAT  , {-0.5f, 0.5f}};
-	_sharedInfos["pedal-img-mirrored"] = {"Should the right pedal be mirrored horizontally", OptionInfos::Type::BOOLEAN};
-
-	_sharedInfos["show-wave"] = {"Display the wave effect along the top of the keyboard", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["wave-size"] = {"Wave effect size", OptionInfos::Type::FLOAT, {0.0f, 5.0f}};
-	_sharedInfos["wave-opacity"] = {"Wave effect opacity", OptionInfos::Type::FLOAT, {0.0f, 1.0f}};
-	_sharedInfos["wave-amplitude"] = {"Wave effect amplitude", OptionInfos::Type::FLOAT, {0.0f, 5.0f}};
-	_sharedInfos["wave-frequency"] = {"Wave effect frequency", OptionInfos::Type::FLOAT, {0.0f, 5.0f}};
-	_sharedInfos["color-wave"] = {"Wave effect color", OptionInfos::Type::COLOR};
-	_sharedInfos["wave-speed"] = {"Wave scrolling speed", OptionInfos::Type::FLOAT };
-	_sharedInfos["wave-noise-intensity"] = {"Wave noise intensity", OptionInfos::Type::FLOAT };
-	_sharedInfos["wave-noise-extent"] = {"Wave noise extent on screen", OptionInfos::Type::FLOAT };
-
-	_sharedInfos["smooth"] = {"Apply anti-aliasing to smooth all lines", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["scroll-reverse"] = {"Notes scroll from bottom to top instead of the opposite", OptionInfos::Type::BOOLEAN};
-	_sharedInfos["scroll-horizontal"] = {"Notes scroll from right to left when enabled", OptionInfos::Type::BOOLEAN};
-
-	_sharedInfos["score-lines-vertical-width"] = {"Score vertical lines height, in pixels", OptionInfos::Type::FLOAT};
-	_sharedInfos["score-lines-horizontal-width"] = {"Score horizontal lines width, in pixels", OptionInfos::Type::FLOAT};
-	_sharedInfos["score-digits-size"] = {"Score digits size", OptionInfos::Type::FLOAT};
-	_sharedInfos["score-digits-offset-x"] = {"Score digits horizontal offset, as a fraction of a digit", OptionInfos::Type::FLOAT};
-	_sharedInfos["score-digits-offset-y"] = {"Score digits vertical offset, as a fraction of a digit", OptionInfos::Type::FLOAT};
-
-	// Paths.
-	_sharedInfos["bg-img-path"] = {"Path to an image on disk to use as background", OptionInfos::Type::PATH};
-	_sharedInfos["particles-paths"] = {"Set of paths (separated by spaces) to black and white images on disk to use as particles", OptionInfos::Type::PATH};
-	_sharedInfos["notes-major-img-path"] = {"Path to an image on disk to use as texture for the major notes", OptionInfos::Type::PATH};
-	_sharedInfos["notes-minor-img-path"] = {"Path to an image on disk to use as texture for the minor notes", OptionInfos::Type::PATH};
-
-	_sharedInfos["pedal-top-img-path"] = {"Path to an image on disk to use as texture for the top pedal", OptionInfos::Type::PATH};
-	_sharedInfos["pedal-center-img-path"] = {"Path to an image on disk to use as texture for the center pedal", OptionInfos::Type::PATH};
-	_sharedInfos["pedal-side-img-paths"] = {"Paths to one or two images on disk to use as textures for the side pedals", OptionInfos::Type::PATH};
 }
 
-size_t State::helpText(std::string & configOpts, std::string & setsOpts){
+size_t State::helpText(std::string & configOpts){
 	if(_sharedInfos.empty()){
 		defineOptions();
 	}
@@ -325,11 +314,16 @@ size_t State::helpText(std::string & configOpts, std::string & setsOpts){
 	for(const auto & param : _sharedInfos){
 		maxLength = (std::max)(maxLength, param.first.size());
 	}
-	size_t alignSize = maxLength + 4;
 
-	std::vector<std::string> msgDefault;
-	std::vector<std::string> msgSets;
+	std::array<std::vector<std::string>, size_t(OptionInfos::Category::COUNT)> linesPerCategory;
+	static const std::array<std::string, size_t(OptionInfos::Category::COUNT)> categoryNames = {
+		"General", "Playback", "Effect layers", "Notes", "Flashes", "Particles", "Keyboard", "Pedals", "Wave", "Score", "Background and blur", "Per-set settings",
+	};
 
+	for(const auto & header : categoryNames){
+		maxLength = (std::max)(maxLength, header.size());
+	}
+	const size_t alignSize = maxLength + 4;
 	for(const auto & param : _sharedInfos){
 		// Don't list legacy settings.
 		if(param.second.legacy){
@@ -337,26 +331,22 @@ size_t State::helpText(std::string & configOpts, std::string & setsOpts){
 		}
 		const std::string padString(alignSize - param.first.size(), ' ');
 		const std::string line = "--" + param.first + padString + param.second.description + " (" + param.second.values + ")\n";
-		if(param.second.category == OptionInfos::Category::SETS){
-			msgSets.push_back(line);
-		} else {
-			msgDefault.push_back(line);
+
+		linesPerCategory[size_t(param.second.category)].push_back(line);
+	}
+
+	std::stringstream messageStr;
+	for(size_t i = 0; i < size_t(OptionInfos::Category::COUNT); ++i){
+		auto& list = linesPerCategory[i];
+		std::sort(list.begin(), list.end());
+		// Insert sub header
+		messageStr << "\n# " << categoryNames[i] << "\n";
+		for(const auto& str : list){
+			messageStr << str;
 		}
 	}
-	std::sort(msgDefault.begin(), msgDefault.end());
-	std::sort(msgSets.begin(), msgSets.end());
 
-	std::stringstream msgDefaultStr;
-	std::stringstream msgSetsStr;
-
-	for(const auto& str : msgDefault){
-		msgDefaultStr << str;
-	}
-	for(const auto& str : msgSets){
-		msgSetsStr << str;
-	}
-	configOpts = msgDefaultStr.str();
-	setsOpts = msgSetsStr.str();
+	configOpts = messageStr.str();
 	return alignSize;
 }
 
@@ -637,7 +627,7 @@ bool State::load(const std::string & path){
 	// Two options: if we are < 5.0, we use the old positional format.
 	// Else we use the key-value format, similar to command line.
 	if(majVersion < 5){
-		load(configFile, majVersion, minVersion);
+		loadLegacy(configFile, majVersion, minVersion);
 		// No set options.
 	} else {
 		// Build arguments list.
@@ -918,7 +908,7 @@ void State::reset(){
 	_filePath = "";
 }
 
-void State::load(std::istream & configFile, int majVersion, int minVersion){
+void State::loadLegacy(std::istream & configFile, int majVersion, int minVersion){
 
 	// MIDIVIZ_VERSION_MAJOR == 3, MIDIVIZ_VERSION_MINOR == 0
 	// This part is always valid, as it was present when the saving system was introduced.

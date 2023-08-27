@@ -255,8 +255,8 @@ void Configuration::printVersion(){
 }
 
 void Configuration::printHelp(){
-	std::string configOpts, setsOpts;
-	const size_t alignSize = State::helpText(configOpts, setsOpts);
+	std::string configOpts;
+	const size_t alignSize = State::helpText(configOpts);
 
 	const std::vector<std::pair<std::string, std::string>> genOpts = {
 		{"midi", "path to a MIDI file to load"},
@@ -300,10 +300,7 @@ void Configuration::printHelp(){
 	}
 
 	std::cout << std::endl << "* Configuration options: (will override config file)" << std::endl
-	<< configOpts;
-
-	std::cout << std::endl << "* Note-sets options: (will override config file)" << std::endl
-	<< setsOpts << std::endl;
+	<< configOpts << std::endl;
 
 }
 

@@ -230,7 +230,7 @@ public:
 
 	const std::string& filePath() const;
 
-	static size_t helpText(std::string & configOpts, std::string & setsOpts);
+	static size_t helpText(std::string & configOpts);
 
 private:
 
@@ -239,7 +239,7 @@ private:
 	void updateOptions();
 
 	// Legacy loading.
-	void load(std::istream & configFile, int majVersion, int minVersion);
+	void loadLegacy(std::istream & configFile, int majVersion, int minVersion);
 
 	struct OptionInfos {
 
@@ -248,19 +248,19 @@ private:
 		};
 
 		enum class Category {
-			DEFAULT, SETS
+			GENERAL = 0, EFFECTS, PLAYBACK, NOTES, FLASHES, PARTICLES, KEYBOARD, PEDAL, WAVE, SCORE, BACKGROUND, PER_SETS, COUNT
 		};
 
 		std::string description;
 		std::string values;
 		Type type;
 		std::array<float, 2> range;
-		Category category = Category::DEFAULT;
+		Category category;
 		bool legacy = false;
 
 		OptionInfos();
 
-		OptionInfos(const std::string & adesc, Type atype, const std::array<float, 2> & arange = {0.0f, 0.0f});
+		OptionInfos(Category acategory, const std::string & adesc, Type atype, const std::array<float, 2> & arange = {0.0f, 0.0f});
 	};
 
 	static std::unordered_map<std::string, OptionInfos> _sharedInfos;
