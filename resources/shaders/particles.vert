@@ -9,6 +9,7 @@ uniform vec3 baseColor[SETS_COUNT];
 uniform vec2 inverseScreenSize;
 uniform sampler2D textureParticles;
 uniform vec2 inverseTextureSize;
+uniform sampler2D textureNoise;
 
 uniform int globalId;
 uniform float duration;
@@ -20,6 +21,9 @@ uniform float colorScale;
 uniform float expansionFactor = 1.0;
 uniform float speedScaling = 0.2;
 uniform float keyboardHeight = 0.25;
+
+uniform float turbulenceStrength;
+uniform float turbulenceScale;
 
 uniform int minNote;
 uniform float notesCount;
@@ -86,13 +90,19 @@ void main(){
 	float xshift = -1.0 + ((shifts[globalId] - shifts[int(minNote)]) * 2.0 + 1.0) / notesCount;
 	//  Combine global shift (due to note id) and local shift (based on read position).
 	vec2 globalShift = vec2(xshift, (2.0 * keyboardHeight - 1.0)-0.02);
-	vec2 localShift = 0.003 * scale * v + shift * duration * vec2(1.0,0.5);
+	vec2 localShift = shift * duration * vec2(1.0,0.5);
+	vec2 vertexShift = 0.003 * scale * v;
 
 	float screenRatio = inverseScreenSize.y/inverseScreenSize.x;
 	vec2 screenScaling = vec2(1.0, horizontalMode ? (1.0/screenRatio) : screenRatio);
 
-	vec2 finalPos = globalShift + screenScaling * localShift;
-	
+	vec2 particlePos = globalShift + screenScaling * localShift;
+
+	vec2 curlNoise = textureLod(textureNoise, turbulenceScale * particlePos.xy / screenScaling, 0).gb;
+	curlNoise.x = 2.0 * curlNoise.x - 1.0;
+	vec2 curlShift = 0.01 * turbulenceStrength * time * curlNoise;
+
+	vec2 finalPos = particlePos + screenScaling * (vertexShift + curlShift);
 	// Discard particles that reached the end of their trajectories by putting them off-screen.
 	finalPos = mix(vec2(-200.0),finalPos, position.z);
 	// Output final particle position.
