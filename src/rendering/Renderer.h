@@ -78,6 +78,7 @@ private:
 
 	GLuint _texParticles;
 	GLuint _texFont;
+	GLuint _texNoise;
 
 	// Cached info.
 	unsigned int _minKeyMajor{0};

@@ -163,6 +163,7 @@ void Renderer::renderSetup(){
 
 	// Pass texture size to shader.
 	_texFont = ResourcesManager::getTextureFor("font");
+	_texNoise = ResourcesManager::getTextureFor("noise");
 	_texParticles = ResourcesManager::getTextureFor("particles");
 	const glm::vec2 tsize = ResourcesManager::getTextureSizeFor("particles");
 	_programParticules.use();
@@ -301,8 +302,10 @@ void Renderer::drawParticles(const std::shared_ptr<MIDIScene>& scene, float time
 	
 	// Particles trajectories texture.
 	_programParticules.texture("textureParticles", _texParticles, GL_TEXTURE_2D);
+	_programParticules.texture("textureNoise", _texNoise, GL_TEXTURE_2D);
 	_programParticules.texture("lookParticles", state.tex, GL_TEXTURE_2D_ARRAY);
-
+	_programParticules.uniform("turbulenceStrength", state.turbulenceStrength);
+	_programParticules.uniform("turbulenceScale", state.turbulenceScale);
 	_programParticules.uniform("texCount", state.texCount);
 
 	// Select the geometry.
@@ -564,7 +567,7 @@ void Renderer::drawWaves(const std::shared_ptr<MIDIScene>& scene, float time, co
 	_programWaveNoise.uniform("keyboardSize", keyboardHeight);
 	_programWaveNoise.uniform("scale", state.noiseSize * 0.5f);
 
-	_programWaveNoise.texture("textureNoise", ResourcesManager::getTextureFor("noise"), GL_TEXTURE_2D);
+	_programWaveNoise.texture("textureNoise", _texNoise, GL_TEXTURE_2D);
 	_programWaveNoise.uniform("offset", time * state.speed * 0.05f);
 	_programWaveNoise.uniform("waveColor", state.color);
 	_programWaveNoise.uniform("noiseScale", state.frequency);
