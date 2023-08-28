@@ -2,7 +2,6 @@
 #define State_h
 
 #include "../helpers/Configuration.h"
-//#include "../midi/MIDIUtils.h"
 #include "SetOptions.h"
 
 #include <gl3w/gl3w.h>

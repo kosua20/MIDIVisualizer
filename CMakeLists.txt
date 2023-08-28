@@ -132,6 +132,7 @@ set(Sources
 	"src/rendering/camera/Camera.h"
 	"src/rendering/camera/Keyboard.cpp"
 	"src/rendering/camera/Keyboard.h"
+	"src/resources/strings.h"
 	"src/main.cpp")
 
 file(GLOB DataSources
