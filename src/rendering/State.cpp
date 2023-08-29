@@ -155,146 +155,146 @@ void State::defineOptions(){
 	using Type = OptionInfos::Type;
 
 	// General
-	_sharedInfos["lock-colors"]						= {Category::GENERAL, s_lock_colors_dsc, Type::BOOLEAN};
-	_sharedInfos["quality"] 						= {Category::GENERAL, s_quality_dsc, Type::OTHER};
-	_sharedInfos["quality"].values 					= "values: LOW_RES, LOW, MEDIUM, HIGH, HIGH_RES";
-	_sharedInfos["sets-separator-control-points"] 	= {Category::GENERAL, s_sets_separator_control_points_dsc, Type::OTHER};
-	_sharedInfos["sets-separator-control-points"].values = "values: space-separated triplets time,key,set";
-	_sharedInfos["filter-hide-channels"] 			= {Category::GENERAL, s_filter_hide_channels_dsc, Type::OTHER };
-	_sharedInfos["filter-hide-channels"].values 	= "space-separated channels indices, between 0 and 15";
-	_sharedInfos["filter-show-channels"] 			= {Category::GENERAL, s_filter_show_channels_dsc, Type::OTHER };
-	_sharedInfos["filter-show-channels"].values 	= "space-separated channels indices, between 0 and 15";
-	_sharedInfos["filter-hide-tracks"] 				= {Category::GENERAL, s_filter_hide_tracks_dsc, Type::OTHER };
-	_sharedInfos["filter-hide-tracks"].values 		= "space-separated track indices, starting from 0";
-	_sharedInfos["filter-show-tracks"] 				= {Category::GENERAL, s_filter_show_tracks_dsc, Type::OTHER };
-	_sharedInfos["filter-show-tracks"].values 		= "space-separated track indices, starting from 0";
-	_sharedInfos["colors-per-set"] 					= {Category::GENERAL, s_colors_per_set_dsc, Type::BOOLEAN};
-	_sharedInfos["sets-mode"] 						= {Category::GENERAL, s_sets_mode_dsc, Type::OTHER};
-	_sharedInfos["sets-mode"].values 				= "per-channel: 0, per-track: 1, split based on a key separator: 2, per-key: 3, split based on list: 4, chromatic: 5";
-	_sharedInfos["sets-separator-key"] 				= {Category::GENERAL, s_sets_separator_key_dsc, Type::KEY, {0.0f, 127.0f}};
-	_sharedInfos["min-key"] 						= {Category::GENERAL, s_min_key_dsc, Type::KEY, {0.0f, 127.0f}};
-	_sharedInfos["max-key"] 						= {Category::GENERAL, s_max_key_dsc, Type::KEY, {0.0f, 127.0f}};
-	_sharedInfos["smooth"] 							= {Category::GENERAL, s_smooth_dsc, Type::BOOLEAN};
+	_sharedInfos[s_lock_colors_key]						= {Category::GENERAL, s_lock_colors_dsc, Type::BOOLEAN};
+	_sharedInfos[s_quality_key] 						= {Category::GENERAL, s_quality_dsc, Type::OTHER};
+	_sharedInfos[s_quality_key].values 					= "values: LOW_RES, LOW, MEDIUM, HIGH, HIGH_RES";
+	_sharedInfos[s_sets_separator_control_points_key] 	= {Category::GENERAL, s_sets_separator_control_points_dsc, Type::OTHER};
+	_sharedInfos[s_sets_separator_control_points_key].values = "values: space-separated triplets time,key,set";
+	_sharedInfos[s_filter_hide_channels_key] 			= {Category::GENERAL, s_filter_hide_channels_dsc, Type::OTHER };
+	_sharedInfos[s_filter_hide_channels_key].values 	= "space-separated channels indices, between 0 and 15";
+	_sharedInfos[s_filter_show_channels_key] 			= {Category::GENERAL, s_filter_show_channels_dsc, Type::OTHER };
+	_sharedInfos[s_filter_show_channels_key].values 	= "space-separated channels indices, between 0 and 15";
+	_sharedInfos[s_filter_hide_tracks_key] 				= {Category::GENERAL, s_filter_hide_tracks_dsc, Type::OTHER };
+	_sharedInfos[s_filter_hide_tracks_key].values 		= "space-separated track indices, starting from 0";
+	_sharedInfos[s_filter_show_tracks_key] 				= {Category::GENERAL, s_filter_show_tracks_dsc, Type::OTHER };
+	_sharedInfos[s_filter_show_tracks_key].values 		= "space-separated track indices, starting from 0";
+	_sharedInfos[s_colors_per_set_key] 					= {Category::GENERAL, s_colors_per_set_dsc, Type::BOOLEAN};
+	_sharedInfos[s_sets_mode_key] 						= {Category::GENERAL, s_sets_mode_dsc, Type::OTHER};
+	_sharedInfos[s_sets_mode_key].values 				= "per-channel: 0, per-track: 1, split based on a key separator: 2, per-key: 3, split based on list: 4, chromatic keys: 5";
+	_sharedInfos[s_sets_separator_key_key] 				= {Category::GENERAL, s_sets_separator_key_dsc, Type::KEY, {0.0f, 127.0f}};
+	_sharedInfos[s_min_key_key] 						= {Category::GENERAL, s_min_key_dsc, Type::KEY, {0.0f, 127.0f}};
+	_sharedInfos[s_max_key_key] 						= {Category::GENERAL, s_max_key_dsc, Type::KEY, {0.0f, 127.0f}};
+	_sharedInfos[s_smooth_key] 							= {Category::GENERAL, s_smooth_dsc, Type::BOOLEAN};
 
 	// Playback
-	_sharedInfos["time-scale"] 			= {Category::PLAYBACK, s_time_scale_dsc, Type::FLOAT};
-	_sharedInfos["preroll"] 			= {Category::PLAYBACK, s_preroll_dsc, Type::FLOAT};
-	_sharedInfos["scroll-speed"] 		= {Category::PLAYBACK, s_scroll_speed_dsc, Type::FLOAT};
-	_sharedInfos["scroll-reverse"] 		= {Category::PLAYBACK, s_scroll_reverse_dsc, Type::BOOLEAN};
-	_sharedInfos["scroll-horizontal"] 	= {Category::PLAYBACK, s_scroll_horizontal_dsc, Type::BOOLEAN};
+	_sharedInfos[s_time_scale_key] 			= {Category::PLAYBACK, s_time_scale_dsc, Type::FLOAT};
+	_sharedInfos[s_preroll_key] 			= {Category::PLAYBACK, s_preroll_dsc, Type::FLOAT};
+	_sharedInfos[s_scroll_speed_key] 		= {Category::PLAYBACK, s_scroll_speed_dsc, Type::FLOAT};
+	_sharedInfos[s_scroll_reverse_key] 		= {Category::PLAYBACK, s_scroll_reverse_dsc, Type::BOOLEAN};
+	_sharedInfos[s_scroll_horizontal_key] 	= {Category::PLAYBACK, s_scroll_horizontal_dsc, Type::BOOLEAN};
 
 	// Effects
-	_sharedInfos["layers"] 			= {Category::EFFECTS, s_layers_dsc, Type::OTHER};
-	_sharedInfos["layers"].values 	= "values: bg-color: 0, bg-texture: 1, blur: 2, score: 3, keyboard: 4, particles: 5, notes: 6, flashes: 7, pedal: 8, wave: 9";
-	_sharedInfos["show-particles"] 	= {Category::EFFECTS, s_show_particles_dsc, Type::BOOLEAN};
-	_sharedInfos["show-flashes"] 	= {Category::EFFECTS, s_show_flashes_dsc, Type::BOOLEAN};
-	_sharedInfos["show-blur"] 		= {Category::EFFECTS, s_show_blur_dsc, Type::BOOLEAN};
-	_sharedInfos["show-keyboard"] 	= {Category::EFFECTS, s_show_keyboard_dsc, Type::BOOLEAN};
-	_sharedInfos["show-score"] 		= {Category::EFFECTS, s_show_score_dsc, Type::BOOLEAN};
-	_sharedInfos["show-notes"] 		= {Category::EFFECTS, s_show_notes_dsc, Type::BOOLEAN};
-	_sharedInfos["show-pedal"] 		= {Category::EFFECTS, s_show_pedal_dsc, Type::BOOLEAN};
-	_sharedInfos["show-wave"] 		= {Category::EFFECTS, s_show_wave_dsc, Type::BOOLEAN};
+	_sharedInfos[s_layers_key] 			= {Category::EFFECTS, s_layers_dsc, Type::OTHER};
+	_sharedInfos[s_layers_key].values 	= "values: bg-color: 0, bg-texture: 1, blur: 2, score: 3, keyboard: 4, particles: 5, notes: 6, flashes: 7, pedal: 8, wave: 9";
+	_sharedInfos[s_show_particles_key] 	= {Category::EFFECTS, s_show_particles_dsc, Type::BOOLEAN};
+	_sharedInfos[s_show_flashes_key] 	= {Category::EFFECTS, s_show_flashes_dsc, Type::BOOLEAN};
+	_sharedInfos[s_show_blur_key] 		= {Category::EFFECTS, s_show_blur_dsc, Type::BOOLEAN};
+	_sharedInfos[s_show_keyboard_key] 	= {Category::EFFECTS, s_show_keyboard_dsc, Type::BOOLEAN};
+	_sharedInfos[s_show_score_key] 		= {Category::EFFECTS, s_show_score_dsc, Type::BOOLEAN};
+	_sharedInfos[s_show_notes_key] 		= {Category::EFFECTS, s_show_notes_dsc, Type::BOOLEAN};
+	_sharedInfos[s_show_pedal_key] 		= {Category::EFFECTS, s_show_pedal_dsc, Type::BOOLEAN};
+	_sharedInfos[s_show_wave_key] 		= {Category::EFFECTS, s_show_wave_dsc, Type::BOOLEAN};
 
 	// Notes
-	_sharedInfos["notes-major-img-scroll"] 		= {Category::NOTES, s_notes_major_img_scroll_dsc, Type::BOOLEAN};
-	_sharedInfos["notes-minor-img-scroll"] 		= {Category::NOTES, s_notes_minor_img_scroll_dsc, Type::BOOLEAN};
-	_sharedInfos["minor-size"] 					= {Category::NOTES, s_minor_size_dsc, Type::FLOAT, {0.1f, 1.0f}};
-	_sharedInfos["fadeout-notes"] 				= {Category::NOTES, s_fadeout_notes_dsc, Type::FLOAT, {0.0f, 1.0f}};
-	_sharedInfos["notes-edge-width"] 			= {Category::NOTES, s_notes_edge_width_dsc, Type::FLOAT, {0.0f, 1.0f}};
-	_sharedInfos["notes-edge-intensity"] 		= {Category::NOTES, s_notes_edge_intensity_dsc, Type::FLOAT, {0.0f, 100.0f}};
-	_sharedInfos["notes-corner-radius"]  		= {Category::NOTES, s_notes_corner_radius_dsc, Type::FLOAT, {0.0f, 1.0f}};
-	_sharedInfos["notes-major-img-scale"]   	= {Category::NOTES, s_notes_major_img_scale_dsc, Type::FLOAT};
-	_sharedInfos["notes-major-img-intensity"]	= {Category::NOTES, s_notes_major_img_intensity_dsc, Type::FLOAT, {0.0, 1.0f}};
-	_sharedInfos["notes-minor-img-scale"]   	= {Category::NOTES, s_notes_minor_img_scale_dsc, Type::FLOAT};
-	_sharedInfos["notes-minor-img-intensity"]	= {Category::NOTES, s_notes_minor_img_intensity_dsc, Type::FLOAT, {0.0, 1.0f}};
-	_sharedInfos["notes-major-img-path"] 		= {Category::NOTES, s_notes_major_img_path_dsc, Type::PATH};
-	_sharedInfos["notes-minor-img-path"] 		= {Category::NOTES, s_notes_minor_img_path_dsc, Type::PATH};
+	_sharedInfos[s_notes_major_img_scroll_key] 		= {Category::NOTES, s_notes_major_img_scroll_dsc, Type::BOOLEAN};
+	_sharedInfos[s_notes_minor_img_scroll_key] 		= {Category::NOTES, s_notes_minor_img_scroll_dsc, Type::BOOLEAN};
+	_sharedInfos[s_minor_size_key] 					= {Category::NOTES, s_minor_size_dsc, Type::FLOAT, {0.1f, 1.0f}};
+	_sharedInfos[s_fadeout_notes_key] 				= {Category::NOTES, s_fadeout_notes_dsc, Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos[s_notes_edge_width_key] 			= {Category::NOTES, s_notes_edge_width_dsc, Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos[s_notes_edge_intensity_key] 		= {Category::NOTES, s_notes_edge_intensity_dsc, Type::FLOAT, {0.0f, 100.0f}};
+	_sharedInfos[s_notes_corner_radius_key]  		= {Category::NOTES, s_notes_corner_radius_dsc, Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos[s_notes_major_img_scale_key]   	= {Category::NOTES, s_notes_major_img_scale_dsc, Type::FLOAT};
+	_sharedInfos[s_notes_major_img_intensity_key]	= {Category::NOTES, s_notes_major_img_intensity_dsc, Type::FLOAT, {0.0, 1.0f}};
+	_sharedInfos[s_notes_minor_img_scale_key]   	= {Category::NOTES, s_notes_minor_img_scale_dsc, Type::FLOAT};
+	_sharedInfos[s_notes_minor_img_intensity_key]	= {Category::NOTES, s_notes_minor_img_intensity_dsc, Type::FLOAT, {0.0, 1.0f}};
+	_sharedInfos[s_notes_major_img_path_key] 		= {Category::NOTES, s_notes_major_img_path_dsc, Type::PATH};
+	_sharedInfos[s_notes_minor_img_path_key] 		= {Category::NOTES, s_notes_minor_img_path_dsc, Type::PATH};
 
 	// Flashes
-	_sharedInfos["flashes-size"] 			= {Category::FLASHES, s_flashes_size_dsc, Type::FLOAT, {0.1f, 3.0f}};
-	_sharedInfos["flashes-halo-inner"] 		= {Category::FLASHES, s_flashes_halo_inner_dsc, Type::FLOAT, {0.0f, 1.0f}};
-	_sharedInfos["flashes-halo-outer"] 		= {Category::FLASHES, s_flashes_halo_outer_dsc, Type::FLOAT, {0.0f, 1.0f}};
-	_sharedInfos["flashes-halo-intensity"] 	= {Category::FLASHES, s_flashes_halo_intensity_dsc, Type::FLOAT, {0.0f, 2.0f}};
-	_sharedInfos["flashes-img-path"] 		= {Category::FLASHES, s_flashes_img_path_dsc, Type::PATH};
-	_sharedInfos["flashes-img-rows"] 		= {Category::FLASHES, s_flashes_img_rows_dsc, Type::INTEGER};
-	_sharedInfos["flashes-img-columns"] 	= {Category::FLASHES, s_flashes_img_columns_dsc, Type::INTEGER};
+	_sharedInfos[s_flashes_size_key] 			= {Category::FLASHES, s_flashes_size_dsc, Type::FLOAT, {0.1f, 3.0f}};
+	_sharedInfos[s_flashes_halo_inner_key] 		= {Category::FLASHES, s_flashes_halo_inner_dsc, Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos[s_flashes_halo_outer_key] 		= {Category::FLASHES, s_flashes_halo_outer_dsc, Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos[s_flashes_halo_intensity_key] 	= {Category::FLASHES, s_flashes_halo_intensity_dsc, Type::FLOAT, {0.0f, 2.0f}};
+	_sharedInfos[s_flashes_img_path_key] 		= {Category::FLASHES, s_flashes_img_path_dsc, Type::PATH};
+	_sharedInfos[s_flashes_img_rows_key] 		= {Category::FLASHES, s_flashes_img_rows_dsc, Type::INTEGER};
+	_sharedInfos[s_flashes_img_columns_key] 	= {Category::FLASHES, s_flashes_img_columns_dsc, Type::INTEGER};
 
 	// Particles
-	_sharedInfos["particles-count"] 		= {Category::PARTICLES, s_particles_count_dsc, Type::INTEGER, {1.0f, 512.0f}};
-	_sharedInfos["particles-size"] 			= {Category::PARTICLES, s_particles_size_dsc, Type::FLOAT, {1.0f, 10.0f}};
-	_sharedInfos["particles-speed"] 		= {Category::PARTICLES, s_particles_speed_dsc, Type::FLOAT};
-	_sharedInfos["particles-expansion"] 	= {Category::PARTICLES, s_particles_expansion_dsc, Type::FLOAT};
-	_sharedInfos["particles-paths"] 		= {Category::PARTICLES, s_particles_paths_dsc, Type::PATH};
-	_sharedInfos["particles-turbulences"] 	= {Category::PARTICLES, s_particles_turbulences_dsc, Type::FLOAT, {0.f, 10.f}};
+	_sharedInfos[s_particles_count_key] 		= {Category::PARTICLES, s_particles_count_dsc, Type::INTEGER, {1.0f, 512.0f}};
+	_sharedInfos[s_particles_size_key] 			= {Category::PARTICLES, s_particles_size_dsc, Type::FLOAT, {1.0f, 10.0f}};
+	_sharedInfos[s_particles_speed_key] 		= {Category::PARTICLES, s_particles_speed_dsc, Type::FLOAT};
+	_sharedInfos[s_particles_expansion_key] 	= {Category::PARTICLES, s_particles_expansion_dsc, Type::FLOAT};
+	_sharedInfos[s_particles_paths_key] 		= {Category::PARTICLES, s_particles_paths_dsc, Type::PATH};
+	_sharedInfos[s_particles_turbulences_key] 	= {Category::PARTICLES, s_particles_turbulences_dsc, Type::FLOAT, {0.f, 10.f}};
 
 	// Pedal
-	_sharedInfos["pedal-size"] 				= {Category::PEDAL, s_pedal_size_dsc, Type::FLOAT, {0.05f, 0.5f}};
-	_sharedInfos["pedal-opacity"] 			= {Category::PEDAL, s_pedal_opacity_dsc, Type::FLOAT, {0.0f, 1.0f}};
-	_sharedInfos["color-pedal"] 			= {Category::PEDAL, s_color_pedal_dsc, Type::COLOR};
-	_sharedInfos["color-pedal"].legacy 		= true;
-	_sharedInfos["color-pedal-top"] 		= {Category::PEDAL, s_color_pedal_top_dsc, Type::COLOR};
-	_sharedInfos["color-pedal-center"] 		= {Category::PEDAL, s_color_pedal_center_dsc, Type::COLOR};
-	_sharedInfos["color-pedal-left"] 		= {Category::PEDAL, s_color_pedal_left_dsc, Type::COLOR};
-	_sharedInfos["color-pedal-right"] 		= {Category::PEDAL, s_color_pedal_right_dsc, Type::COLOR};
-	_sharedInfos["pedal-merge"] 			= {Category::PEDAL, s_pedal_merge_dsc, Type::BOOLEAN};
-	_sharedInfos["pedal-location"] 			= {Category::PEDAL, s_pedal_location_dsc, Type::OTHER, {0.0f, 3.0f}};
-	_sharedInfos["pedal-location"].values 	= "top-left: 0, bottom-left: 1, top-right: 2, bottom-right: 3";
-	_sharedInfos["pedal-img-offset-x"] 		= {Category::PEDAL, s_pedal_img_offset_x_dsc, Type::FLOAT, {-0.5f, 0.5f}};
-	_sharedInfos["pedal-img-offset-y"] 		= {Category::PEDAL, s_pedal_img_offset_y_dsc, Type::FLOAT  , {-0.5f, 0.5f}};
-	_sharedInfos["pedal-img-mirrored"] 		= {Category::PEDAL, s_pedal_img_mirrored_dsc, Type::BOOLEAN};
-	_sharedInfos["pedal-top-img-path"] 		= {Category::PEDAL, s_pedal_top_img_path_dsc, Type::PATH};
-	_sharedInfos["pedal-center-img-path"] 	= {Category::PEDAL, s_pedal_center_img_path_dsc, Type::PATH};
-	_sharedInfos["pedal-side-img-paths"] 	= {Category::PEDAL, s_pedal_side_img_paths_dsc, Type::PATH};
+	_sharedInfos[s_pedal_size_key] 				= {Category::PEDAL, s_pedal_size_dsc, Type::FLOAT, {0.05f, 0.5f}};
+	_sharedInfos[s_pedal_opacity_key] 			= {Category::PEDAL, s_pedal_opacity_dsc, Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos[s_color_pedal_key] 			= {Category::PEDAL, s_color_pedal_dsc, Type::COLOR};
+	_sharedInfos[s_color_pedal_key].legacy 		= true;
+	_sharedInfos[s_color_pedal_top_key] 		= {Category::PEDAL, s_color_pedal_top_dsc, Type::COLOR};
+	_sharedInfos[s_color_pedal_center_key] 		= {Category::PEDAL, s_color_pedal_center_dsc, Type::COLOR};
+	_sharedInfos[s_color_pedal_left_key] 		= {Category::PEDAL, s_color_pedal_left_dsc, Type::COLOR};
+	_sharedInfos[s_color_pedal_right_key] 		= {Category::PEDAL, s_color_pedal_right_dsc, Type::COLOR};
+	_sharedInfos[s_pedal_merge_key] 			= {Category::PEDAL, s_pedal_merge_dsc, Type::BOOLEAN};
+	_sharedInfos[s_pedal_location_key] 			= {Category::PEDAL, s_pedal_location_dsc, Type::OTHER, {0.0f, 3.0f}};
+	_sharedInfos[s_pedal_location_key].values 	= "top-left: 0, bottom-left: 1, top-right: 2, bottom-right: 3";
+	_sharedInfos[s_pedal_img_offset_x_key] 		= {Category::PEDAL, s_pedal_img_offset_x_dsc, Type::FLOAT, {-0.5f, 0.5f}};
+	_sharedInfos[s_pedal_img_offset_y_key] 		= {Category::PEDAL, s_pedal_img_offset_y_dsc, Type::FLOAT  , {-0.5f, 0.5f}};
+	_sharedInfos[s_pedal_img_mirrored_key] 		= {Category::PEDAL, s_pedal_img_mirrored_dsc, Type::BOOLEAN};
+	_sharedInfos[s_pedal_top_img_path_key] 		= {Category::PEDAL, s_pedal_top_img_path_dsc, Type::PATH};
+	_sharedInfos[s_pedal_center_img_path_key] 	= {Category::PEDAL, s_pedal_center_img_path_dsc, Type::PATH};
+	_sharedInfos[s_pedal_side_img_paths_key] 	= {Category::PEDAL, s_pedal_side_img_paths_dsc, Type::PATH};
 
 	// Keyboard
-	_sharedInfos["keyboard-highlight"] 		= {Category::KEYBOARD, s_keyboard_highlight_dsc, Type::BOOLEAN};
-	_sharedInfos["keyboard-custom-colors"] 	= {Category::KEYBOARD, s_keyboard_custom_colors_dsc, Type::BOOLEAN};
-	_sharedInfos["keyboard-minor-edges"] 	= {Category::KEYBOARD, s_keyboard_minor_edges_dsc, Type::BOOLEAN};
-	_sharedInfos["color-keyboard-major"] 	= {Category::KEYBOARD, s_color_keyboard_major_dsc, Type::COLOR};
-	_sharedInfos["color-keyboard-minor"] 	= {Category::KEYBOARD, s_color_keyboard_minor_dsc, Type::COLOR};
-	_sharedInfos["color-keyboard"] 			= {Category::KEYBOARD, s_color_keyboard_dsc, Type::COLOR};
-	_sharedInfos["keyboard-size"] 			= {Category::KEYBOARD, s_keyboard_size_dsc, Type::FLOAT, {0.0f, 1.0f}};
-	_sharedInfos["keyboard-minor-height"] 	= {Category::KEYBOARD, s_keyboard_minor_height_dsc, Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos[s_keyboard_highlight_key] 		= {Category::KEYBOARD, s_keyboard_highlight_dsc, Type::BOOLEAN};
+	_sharedInfos[s_keyboard_custom_colors_key] 	= {Category::KEYBOARD, s_keyboard_custom_colors_dsc, Type::BOOLEAN};
+	_sharedInfos[s_keyboard_minor_edges_key] 	= {Category::KEYBOARD, s_keyboard_minor_edges_dsc, Type::BOOLEAN};
+	_sharedInfos[s_color_keyboard_major_key] 	= {Category::KEYBOARD, s_color_keyboard_major_dsc, Type::COLOR};
+	_sharedInfos[s_color_keyboard_minor_key] 	= {Category::KEYBOARD, s_color_keyboard_minor_dsc, Type::COLOR};
+	_sharedInfos[s_color_keyboard_key] 			= {Category::KEYBOARD, s_color_keyboard_dsc, Type::COLOR};
+	_sharedInfos[s_keyboard_size_key] 			= {Category::KEYBOARD, s_keyboard_size_dsc, Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos[s_keyboard_minor_height_key] 	= {Category::KEYBOARD, s_keyboard_minor_height_dsc, Type::FLOAT, {0.0f, 1.0f}};
 
 	// Score
-	_sharedInfos["show-horiz-lines"] 			= {Category::SCORE, s_show_horiz_lines_dsc, Type::BOOLEAN};
-	_sharedInfos["show-vert-lines"] 			= {Category::SCORE, s_show_vert_lines_dsc, Type::BOOLEAN};
-	_sharedInfos["show-numbers"] 				= {Category::SCORE, s_show_numbers_dsc, Type::BOOLEAN};
-	_sharedInfos["color-lines"] 				= {Category::SCORE, s_color_lines_dsc, Type::COLOR};
-	_sharedInfos["color-lines"].legacy 			= true;
-	_sharedInfos["color-lines-vertical"] 		= {Category::SCORE, s_color_lines_vertical_dsc, Type::COLOR};
-	_sharedInfos["color-lines-horizontal"] 		= {Category::SCORE, s_color_lines_horizontal_dsc, Type::COLOR};
-	_sharedInfos["color-numbers"] 				= {Category::SCORE, s_color_numbers_dsc, Type::COLOR};
-	_sharedInfos["score-lines-vertical-width"] 	= {Category::SCORE, s_score_lines_vertical_width_dsc, Type::FLOAT};
-	_sharedInfos["score-lines-horizontal-width"]= {Category::SCORE, s_score_lines_horizontal_width_dsc, Type::FLOAT};
-	_sharedInfos["score-digits-size"] 			= {Category::SCORE, s_score_digits_size_dsc, Type::FLOAT};
-	_sharedInfos["score-digits-offset-x"] 		= {Category::SCORE, s_score_digits_offset_x_dsc, Type::FLOAT};
-	_sharedInfos["score-digits-offset-y"] 		= {Category::SCORE, s_score_digits_offset_y_dsc, Type::FLOAT};
+	_sharedInfos[s_show_horiz_lines_key] 			= {Category::SCORE, s_show_horiz_lines_dsc, Type::BOOLEAN};
+	_sharedInfos[s_show_vert_lines_key] 			= {Category::SCORE, s_show_vert_lines_dsc, Type::BOOLEAN};
+	_sharedInfos[s_show_numbers_key] 				= {Category::SCORE, s_show_numbers_dsc, Type::BOOLEAN};
+	_sharedInfos[s_color_lines_key] 				= {Category::SCORE, s_color_lines_dsc, Type::COLOR};
+	_sharedInfos[s_color_lines_key].legacy 			= true;
+	_sharedInfos[s_color_lines_vertical_key] 		= {Category::SCORE, s_color_lines_vertical_dsc, Type::COLOR};
+	_sharedInfos[s_color_lines_horizontal_key] 		= {Category::SCORE, s_color_lines_horizontal_dsc, Type::COLOR};
+	_sharedInfos[s_color_numbers_key] 				= {Category::SCORE, s_color_numbers_dsc, Type::COLOR};
+	_sharedInfos[s_score_lines_vertical_width_key] 	= {Category::SCORE, s_score_lines_vertical_width_dsc, Type::FLOAT};
+	_sharedInfos[s_score_lines_horizontal_width_key]= {Category::SCORE, s_score_lines_horizontal_width_dsc, Type::FLOAT};
+	_sharedInfos[s_score_digits_size_key] 			= {Category::SCORE, s_score_digits_size_dsc, Type::FLOAT};
+	_sharedInfos[s_score_digits_offset_x_key] 		= {Category::SCORE, s_score_digits_offset_x_dsc, Type::FLOAT};
+	_sharedInfos[s_score_digits_offset_y_key] 		= {Category::SCORE, s_score_digits_offset_y_dsc, Type::FLOAT};
 
 	// Wave
-	_sharedInfos["wave-size"] 				= {Category::WAVE, s_wave_size_dsc, Type::FLOAT, {0.0f, 5.0f}};
-	_sharedInfos["wave-opacity"] 			= {Category::WAVE, s_wave_opacity_dsc, Type::FLOAT, {0.0f, 1.0f}};
-	_sharedInfos["wave-amplitude"] 			= {Category::WAVE, s_wave_amplitude_dsc, Type::FLOAT, {0.0f, 5.0f}};
-	_sharedInfos["wave-frequency"] 			= {Category::WAVE, s_wave_frequency_dsc, Type::FLOAT, {0.0f, 5.0f}};
-	_sharedInfos["color-wave"] 				= {Category::WAVE, s_color_wave_dsc, Type::COLOR};
-	_sharedInfos["wave-speed"] 				= {Category::WAVE, s_wave_speed_dsc, Type::FLOAT };
-	_sharedInfos["wave-noise-intensity"] 	= {Category::WAVE, s_wave_noise_intensity_dsc, Type::FLOAT };
-	_sharedInfos["wave-noise-extent"] 		= {Category::WAVE, s_wave_noise_extent_dsc, Type::FLOAT };
+	_sharedInfos[s_wave_size_key] 				= {Category::WAVE, s_wave_size_dsc, Type::FLOAT, {0.0f, 5.0f}};
+	_sharedInfos[s_wave_opacity_key] 			= {Category::WAVE, s_wave_opacity_dsc, Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos[s_wave_amplitude_key] 			= {Category::WAVE, s_wave_amplitude_dsc, Type::FLOAT, {0.0f, 5.0f}};
+	_sharedInfos[s_wave_frequency_key] 			= {Category::WAVE, s_wave_frequency_dsc, Type::FLOAT, {0.0f, 5.0f}};
+	_sharedInfos[s_color_wave_key] 				= {Category::WAVE, s_color_wave_dsc, Type::COLOR};
+	_sharedInfos[s_wave_speed_key] 				= {Category::WAVE, s_wave_speed_dsc, Type::FLOAT };
+	_sharedInfos[s_wave_noise_intensity_key] 	= {Category::WAVE, s_wave_noise_intensity_dsc, Type::FLOAT };
+	_sharedInfos[s_wave_noise_extent_key] 		= {Category::WAVE, s_wave_noise_extent_dsc, Type::FLOAT };
 
 	// Background
-	_sharedInfos["show-blur-notes"] 		= {Category::BACKGROUND, s_show_blur_notes_dsc, Type::BOOLEAN};
-	_sharedInfos["bg-img-behind-keyboard"]	= {Category::BACKGROUND, s_bg_img_behind_keyboard_dsc, Type::BOOLEAN};
-	_sharedInfos["show-bg-img"] 			= {Category::BACKGROUND, s_show_bg_img_dsc, Type::BOOLEAN};
-	_sharedInfos["blur-attenuation"] 		= {Category::BACKGROUND, s_blur_attenuation_dsc, Type::FLOAT, {0.0f, 1.0f}};
-	_sharedInfos["bg-img-opacity"] 			= {Category::BACKGROUND, s_bg_img_opacity_dsc, Type::FLOAT, {0.0f, 1.0f}};
-	_sharedInfos["color-bg"] 				= {Category::BACKGROUND, s_color_bg_dsc, Type::COLOR};
-	_sharedInfos["bg-img-path"] 			= {Category::BACKGROUND, s_bg_img_path_dsc, Type::PATH};
+	_sharedInfos[s_show_blur_notes_key] 		= {Category::BACKGROUND, s_show_blur_notes_dsc, Type::BOOLEAN};
+	_sharedInfos[s_bg_img_behind_keyboard_key]	= {Category::BACKGROUND, s_bg_img_behind_keyboard_dsc, Type::BOOLEAN};
+	_sharedInfos[s_show_bg_img_key] 			= {Category::BACKGROUND, s_show_bg_img_dsc, Type::BOOLEAN};
+	_sharedInfos[s_blur_attenuation_key] 		= {Category::BACKGROUND, s_blur_attenuation_dsc, Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos[s_bg_img_opacity_key] 			= {Category::BACKGROUND, s_bg_img_opacity_dsc, Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos[s_color_bg_key] 				= {Category::BACKGROUND, s_color_bg_dsc, Type::COLOR};
+	_sharedInfos[s_bg_img_path_key] 			= {Category::BACKGROUND, s_bg_img_path_dsc, Type::PATH};
 
 	// Per sets
-	_sharedInfos["color-major"] 			= {Category::PER_SETS, s_color_major_dsc, Type::COLOR};
-	_sharedInfos["color-particles"] 		= {Category::PER_SETS, s_color_particles_dsc, Type::COLOR};
-	_sharedInfos["color-minor"] 			= {Category::PER_SETS, s_color_minor_dsc, Type::COLOR};
-	_sharedInfos["color-flashes"] 			= {Category::PER_SETS, s_color_flashes_dsc, Type::COLOR};
+	_sharedInfos[s_color_major_key] 			= {Category::PER_SETS, s_color_major_dsc, Type::COLOR};
+	_sharedInfos[s_color_particles_key] 		= {Category::PER_SETS, s_color_particles_dsc, Type::COLOR};
+	_sharedInfos[s_color_minor_key] 			= {Category::PER_SETS, s_color_minor_dsc, Type::COLOR};
+	_sharedInfos[s_color_flashes_key] 			= {Category::PER_SETS, s_color_flashes_dsc, Type::COLOR};
 
 	assert(sizeof(s_color_major_dscs) / sizeof(s_color_major_dscs[0]) == SETS_COUNT);
 	assert(sizeof(s_color_minor_dscs) / sizeof(s_color_minor_dscs[0]) == SETS_COUNT);
@@ -302,11 +302,10 @@ void State::defineOptions(){
 	assert(sizeof(s_color_flashes_dscs) / sizeof(s_color_flashes_dscs[0]) == SETS_COUNT);
 
 	for(size_t cid = 1; cid < SETS_COUNT; ++cid){
-		const std::string num = std::to_string(cid);
-		_sharedInfos["color-major-" + num] 		= {Category::PER_SETS, s_color_major_dscs[cid], Type::COLOR};
-		_sharedInfos["color-minor-" + num] 		= {Category::PER_SETS, s_color_minor_dscs[cid], Type::COLOR};
-		_sharedInfos["color-particles-" + num] 	= {Category::PER_SETS, s_color_particles_dscs[cid], Type::COLOR};
-		_sharedInfos["color-flashes-" + num] 	= {Category::PER_SETS, s_color_flashes_dscs[cid], Type::COLOR};
+		_sharedInfos[s_color_major_keys[cid]] 		= {Category::PER_SETS, s_color_major_dscs[cid], Type::COLOR};
+		_sharedInfos[s_color_minor_keys[cid]] 		= {Category::PER_SETS, s_color_minor_dscs[cid], Type::COLOR};
+		_sharedInfos[s_color_particles_keys[cid]] 	= {Category::PER_SETS, s_color_particles_dscs[cid], Type::COLOR};
+		_sharedInfos[s_color_flashes_keys[cid]] 	= {Category::PER_SETS, s_color_flashes_dscs[cid], Type::COLOR};
 	}
 
 }
@@ -365,126 +364,125 @@ void State::updateOptions(){
 		defineOptions();
 	}
 
-	_intInfos["particles-count"] = &particles.count;
-	_boolInfos["show-particles"] = &showParticles;
-	_boolInfos["show-flashes"] = &showFlashes;
-	_boolInfos["show-blur"] = &showBlur;
-	_boolInfos["show-blur-notes"] = &showBlurNotes;
-	_boolInfos["lock-colors"] = &lockParticleColor;
-	_boolInfos["colors-per-set"] = &perSetColors;
-	_boolInfos["show-horiz-lines"] = &score.hLines;
-	_boolInfos["show-vert-lines"] = &score.vLines;
-	_boolInfos["show-numbers"] = &score.digits;
-	_boolInfos["show-keyboard"] = &showKeyboard;
-	_boolInfos["bg-img-behind-keyboard"] = &background.imageBehindKeyboard;
-	_boolInfos["keyboard-highlight"] = &keyboard.highlightKeys;
-	_boolInfos["keyboard-custom-colors"] = &keyboard.customKeyColors;
-	_boolInfos["keyboard-minor-edges"] = &keyboard.minorEdges;
-	_boolInfos["show-score"] = &showScore;
-	_boolInfos["show-bg-img"] = &background.image;
-	_boolInfos["show-notes"] = &showNotes;
-	_boolInfos["notes-major-img-scroll"] = &notes.majorTexScroll;
-	_boolInfos["notes-minor-img-scroll"] = &notes.minorTexScroll;
+	_intInfos[s_particles_count_key] = &particles.count;
+	_boolInfos[s_show_particles_key] = &showParticles;
+	_boolInfos[s_show_flashes_key] = &showFlashes;
+	_boolInfos[s_show_blur_key] = &showBlur;
+	_boolInfos[s_show_blur_notes_key] = &showBlurNotes;
+	_boolInfos[s_lock_colors_key] = &lockParticleColor;
+	_boolInfos[s_colors_per_set_key] = &perSetColors;
+	_boolInfos[s_show_horiz_lines_key] = &score.hLines;
+	_boolInfos[s_show_vert_lines_key] = &score.vLines;
+	_boolInfos[s_show_numbers_key] = &score.digits;
+	_boolInfos[s_show_keyboard_key] = &showKeyboard;
+	_boolInfos[s_bg_img_behind_keyboard_key] = &background.imageBehindKeyboard;
+	_boolInfos[s_keyboard_highlight_key] = &keyboard.highlightKeys;
+	_boolInfos[s_keyboard_custom_colors_key] = &keyboard.customKeyColors;
+	_boolInfos[s_keyboard_minor_edges_key] = &keyboard.minorEdges;
+	_boolInfos[s_show_score_key] = &showScore;
+	_boolInfos[s_show_bg_img_key] = &background.image;
+	_boolInfos[s_show_notes_key] = &showNotes;
+	_boolInfos[s_notes_major_img_scroll_key] = &notes.majorTexScroll;
+	_boolInfos[s_notes_minor_img_scroll_key] = &notes.minorTexScroll;
 
-	_floatInfos["time-scale"] = &scale;
-	_floatInfos["minor-size"] = &background.minorsWidth;
-	_floatInfos["particles-size"] = &particles.scale;
-	_floatInfos["particles-speed"] = &particles.speed;
-	_floatInfos["particles-expansion"] = &particles.expansion;
-	_floatInfos["particles-turbulences"] = &particles.turbulenceStrength;
-	_floatInfos["blur-attenuation"] = &attenuation;
-	_floatInfos["flashes-size"] = &flashes.size;
-	_floatInfos["flashes-halo-inner"] = &flashes.haloInnerRadius;
-	_floatInfos["flashes-halo-outer"] = &flashes.haloOuterRadius;
-	_floatInfos["flashes-halo-intensity"] = &flashes.haloIntensity;
-	_floatInfos["preroll"] = &prerollTime;
-	_floatInfos["scroll-speed"] = &scrollSpeed;
-	_floatInfos["bg-img-opacity"] = &background.imageAlpha;
-	_floatInfos["fadeout-notes"] = &notes.fadeOut;
-	_floatInfos["notes-edge-width"] = &notes.edgeWidth;
-	_floatInfos["notes-edge-intensity"] = &notes.edgeBrightness;
-	_floatInfos["notes-corner-radius"] = &notes.cornerRadius;
-	_floatInfos["notes-major-img-scale"] = &notes.majorTexScale;
-	_floatInfos["notes-major-img-intensity"] = &notes.majorTexAlpha;
-	_floatInfos["notes-minor-img-scale"] = &notes.minorTexScale;
-	_floatInfos["notes-minor-img-intensity"] = &notes.minorTexAlpha;
+	_floatInfos[s_time_scale_key] = &scale;
+	_floatInfos[s_minor_size_key] = &background.minorsWidth;
+	_floatInfos[s_particles_size_key] = &particles.scale;
+	_floatInfos[s_particles_speed_key] = &particles.speed;
+	_floatInfos[s_particles_expansion_key] = &particles.expansion;
+	_floatInfos[s_particles_turbulences_key] = &particles.turbulenceStrength;
+	_floatInfos[s_blur_attenuation_key] = &attenuation;
+	_floatInfos[s_flashes_size_key] = &flashes.size;
+	_floatInfos[s_flashes_halo_inner_key] = &flashes.haloInnerRadius;
+	_floatInfos[s_flashes_halo_outer_key] = &flashes.haloOuterRadius;
+	_floatInfos[s_flashes_halo_intensity_key] = &flashes.haloIntensity;
+	_floatInfos[s_preroll_key] = &prerollTime;
+	_floatInfos[s_scroll_speed_key] = &scrollSpeed;
+	_floatInfos[s_bg_img_opacity_key] = &background.imageAlpha;
+	_floatInfos[s_fadeout_notes_key] = &notes.fadeOut;
+	_floatInfos[s_notes_edge_width_key] = &notes.edgeWidth;
+	_floatInfos[s_notes_edge_intensity_key] = &notes.edgeBrightness;
+	_floatInfos[s_notes_corner_radius_key] = &notes.cornerRadius;
+	_floatInfos[s_notes_major_img_scale_key] = &notes.majorTexScale;
+	_floatInfos[s_notes_major_img_intensity_key] = &notes.majorTexAlpha;
+	_floatInfos[s_notes_minor_img_scale_key] = &notes.minorTexScale;
+	_floatInfos[s_notes_minor_img_intensity_key] = &notes.minorTexAlpha;
 
-	_vecInfos["color-bg"] = &background.color;
-	_vecInfos["color-keyboard-major"] = &keyboard.majorColor[0];
-	_vecInfos["color-keyboard-minor"] = &keyboard.minorColor[0];
-	_vecInfos["color-keyboard"] = &keyboard.edgeColor;
-	_vecInfos["color-lines"] = &score.vLinesColor; // Retro compat
-	_vecInfos["color-lines-vertical"] = &score.vLinesColor;
-	_vecInfos["color-lines-horizontal"] = &score.hLinesColor;
-	_vecInfos["color-numbers"] = &score.digitsColor;
+	_vecInfos[s_color_bg_key] = &background.color;
+	_vecInfos[s_color_keyboard_major_key] = &keyboard.majorColor[0];
+	_vecInfos[s_color_keyboard_minor_key] = &keyboard.minorColor[0];
+	_vecInfos[s_color_keyboard_key] = &keyboard.edgeColor;
+	_vecInfos[s_color_lines_key] = &score.vLinesColor; // Retro compat
+	_vecInfos[s_color_lines_vertical_key] = &score.vLinesColor;
+	_vecInfos[s_color_lines_horizontal_key] = &score.hLinesColor;
+	_vecInfos[s_color_numbers_key] = &score.digitsColor;
 
-	_vecInfos["color-major"] = &notes.majorColors[0];
-	_vecInfos["color-particles"] = &particles.colors[0];
-	_vecInfos["color-minor"] = &notes.minorColors[0];
-	_vecInfos["color-flashes"] = &flashes.colors[0];
+	_vecInfos[s_color_major_key] = &notes.majorColors[0];
+	_vecInfos[s_color_particles_key] = &particles.colors[0];
+	_vecInfos[s_color_minor_key] = &notes.minorColors[0];
+	_vecInfos[s_color_flashes_key] = &flashes.colors[0];
 
 	for(size_t cid = 1; cid < notes.majorColors.size(); ++cid){
-		const std::string num = std::to_string(cid);
-		_vecInfos["color-major-" + num] = &notes.majorColors[cid];
-		_vecInfos["color-particles-" + num] = &particles.colors[cid];
-		_vecInfos["color-minor-" + num] = &notes.minorColors[cid];
-		_vecInfos["color-flashes-" + num] = &flashes.colors[cid];
+		_vecInfos[s_color_major_keys[cid]] = &notes.majorColors[cid];
+		_vecInfos[s_color_particles_keys[cid]] = &particles.colors[cid];
+		_vecInfos[s_color_minor_keys[cid]] = &notes.minorColors[cid];
+		_vecInfos[s_color_flashes_keys[cid]] = &flashes.colors[cid];
 	}
 
-	_intInfos["sets-mode"] = (int*)&setOptions.mode;
-	_intInfos["sets-separator-key"] = &setOptions.key;
-	_floatInfos["keyboard-size"] = &keyboard.size;
-	_floatInfos["keyboard-minor-height"] = &keyboard.minorHeight;
+	_intInfos[s_sets_mode_key] = (int*)&setOptions.mode;
+	_intInfos[s_sets_separator_key_key] = &setOptions.key;
+	_floatInfos[s_keyboard_size_key] = &keyboard.size;
+	_floatInfos[s_keyboard_minor_height_key] = &keyboard.minorHeight;
 
-	_intInfos["min-key"] = &minKey;
-	_intInfos["max-key"] = &maxKey;
+	_intInfos[s_min_key_key] = &minKey;
+	_intInfos[s_max_key_key] = &maxKey;
 
-	_boolInfos["show-pedal"] = &showPedal;
-	_floatInfos["pedal-size"] = &pedals.size;
-	_floatInfos["pedal-opacity"] = &pedals.opacity;
-	_vecInfos["color-pedal"] = &pedals.centerColor; // Retro-compat
-	_vecInfos["color-pedal-center"] = &pedals.centerColor;
-	_vecInfos["color-pedal-top"] = &pedals.topColor;
-	_vecInfos["color-pedal-right"] = &pedals.rightColor;
-	_vecInfos["color-pedal-left"] = &pedals.leftColor;
-	_boolInfos["pedal-merge"] = &pedals.merge;
-	_intInfos["pedal-location"] = (int*)&pedals.location;
-	_floatInfos["pedal-img-offset-x"] = &pedals.margin[0];
-	_floatInfos["pedal-img-offset-y"] = &pedals.margin[1];
-	_boolInfos["pedal-img-mirrored"] = &pedals.mirror;
+	_boolInfos[s_show_pedal_key] = &showPedal;
+	_floatInfos[s_pedal_size_key] = &pedals.size;
+	_floatInfos[s_pedal_opacity_key] = &pedals.opacity;
+	_vecInfos[s_color_pedal_key] = &pedals.centerColor; // Retro_compat
+	_vecInfos[s_color_pedal_center_key] = &pedals.centerColor;
+	_vecInfos[s_color_pedal_top_key] = &pedals.topColor;
+	_vecInfos[s_color_pedal_right_key] = &pedals.rightColor;
+	_vecInfos[s_color_pedal_left_key] = &pedals.leftColor;
+	_boolInfos[s_pedal_merge_key] = &pedals.merge;
+	_intInfos[s_pedal_location_key] = (int*)&pedals.location;
+	_floatInfos[s_pedal_img_offset_x_key] = &pedals.margin[0];
+	_floatInfos[s_pedal_img_offset_y_key] = &pedals.margin[1];
+	_boolInfos[s_pedal_img_mirrored_key] = &pedals.mirror;
 
-	_pathInfos["pedal-top-img-path"] = &pedals.topImagePath;
-	_pathInfos["pedal-center-img-path"] = &pedals.centerImagePath;
-	_pathInfos["pedal-side-img-paths"] = &pedals.sideImagePaths;
+	_pathInfos[s_pedal_top_img_path_key] = &pedals.topImagePath;
+	_pathInfos[s_pedal_center_img_path_key] = &pedals.centerImagePath;
+	_pathInfos[s_pedal_side_img_paths_key] = &pedals.sideImagePaths;
 
-	_boolInfos["show-wave"] = &showWave;
-	_floatInfos["wave-size"] = &waves.spread;
-	_floatInfos["wave-opacity"] = &waves.opacity;
-	_floatInfos["wave-amplitude"] =  &waves.amplitude;
-	_floatInfos["wave-frequency"] =  &waves.frequency;
-	_floatInfos["wave-noise-intensity"] =  &waves.noiseIntensity;
-	_floatInfos["wave-noise-extent"] =  &waves.noiseSize;
-	_floatInfos["wave-speed"] =  &waves.speed;
-	_vecInfos["color-wave"] = &waves.color;
+	_boolInfos[s_show_wave_key] = &showWave;
+	_floatInfos[s_wave_size_key] = &waves.spread;
+	_floatInfos[s_wave_opacity_key] = &waves.opacity;
+	_floatInfos[s_wave_amplitude_key] =  &waves.amplitude;
+	_floatInfos[s_wave_frequency_key] =  &waves.frequency;
+	_floatInfos[s_wave_noise_intensity_key] =  &waves.noiseIntensity;
+	_floatInfos[s_wave_noise_extent_key] =  &waves.noiseSize;
+	_floatInfos[s_wave_speed_key] =  &waves.speed;
+	_vecInfos[s_color_wave_key] = &waves.color;
 
-	_boolInfos["smooth"] = &applyAA;
-	_boolInfos["scroll-reverse"] = &reverseScroll;
-	_boolInfos["scroll-horizontal"] = &horizontalScroll;
+	_boolInfos[s_smooth_key] = &applyAA;
+	_boolInfos[s_scroll_reverse_key] = &reverseScroll;
+	_boolInfos[s_scroll_horizontal_key] = &horizontalScroll;
 
-	_pathInfos["bg-img-path"] = &background.imagePath;
-	_pathInfos["particles-paths"] = &particles.imagePaths;
+	_pathInfos[s_bg_img_path_key] = &background.imagePath;
+	_pathInfos[s_particles_paths_key] = &particles.imagePaths;
 
-	_pathInfos["notes-major-path"] = &notes.majorImagePath;
-	_pathInfos["notes-minor-path"] = &notes.minorImagePath;
-	_pathInfos["flashes-img-path"] = &flashes.imagePath;
-	_intInfos["flashes-img-rows"] = &flashes.texRowCount;
-	_intInfos["flashes-img-columns"] = &flashes.texColCount;
+	_pathInfos[s_notes_major_img_path_key] = &notes.majorImagePath;
+	_pathInfos[s_notes_minor_img_path_key] = &notes.minorImagePath;
+	_pathInfos[s_flashes_img_path_key] = &flashes.imagePath;
+	_intInfos[s_flashes_img_rows_key] = &flashes.texRowCount;
+	_intInfos[s_flashes_img_columns_key] = &flashes.texColCount;
 
-	_floatInfos["score-lines-vertical-width"] = &score.hLinesWidth;
-	_floatInfos["score-lines-horizontal-width"] = &score.vLinesWidth;
-	_floatInfos["score-digits-size"] = &score.digitsScale;
-	_floatInfos["score-digits-offset-x"] = &score.digitsOffset[0];
-	_floatInfos["score-digits-offset-y"] = &score.digitsOffset[1];
+	_floatInfos[s_score_lines_vertical_width_key] = &score.hLinesWidth;
+	_floatInfos[s_score_lines_horizontal_width_key] = &score.vLinesWidth;
+	_floatInfos[s_score_digits_size_key] = &score.digitsScale;
+	_floatInfos[s_score_digits_offset_x_key] = &score.digitsOffset[0];
+	_floatInfos[s_score_digits_offset_y_key] = &score.digitsOffset[1];
 }
 
 
@@ -567,29 +565,29 @@ void State::save(const std::string & path){
 		configFile << std::endl;
 	}
 
-	configFile << std::endl << "# " << _sharedInfos["quality"].description << " (";
-	configFile << _sharedInfos["quality"].values << ")" << std::endl;
-	configFile << "quality: " << Quality::availables.at(quality).name << std::endl;
+	configFile << std::endl << "# " << _sharedInfos[s_quality_key].description << " (";
+	configFile << _sharedInfos[s_quality_key].values << ")" << std::endl;
+	configFile << s_quality_key << ": " << Quality::availables.at(quality).name << std::endl;
 
-	configFile << std::endl << "# " << _sharedInfos["layers"].description << " (";
-	configFile << _sharedInfos["layers"].values << ")" << std::endl;
-	configFile << "layers: ";
+	configFile << std::endl << "# " << _sharedInfos[s_layers_key].description << " (";
+	configFile << _sharedInfos[s_layers_key].values << ")" << std::endl;
+	configFile << s_layers_key << ": ";
 	for (int i = 0; i < layersMap.size(); ++i) {
 		configFile << layersMap[i] << (i != (layersMap.size() - 1) ? " " : "");
 	}
 	configFile << std::endl;
 
-	configFile << std::endl << "# " << _sharedInfos["sets-separator-control-points"].description << " (";
-	configFile << _sharedInfos["sets-separator-control-points"].values << ")" << std::endl;
-	configFile << "sets-separator-control-points: " << setOptions.toKeysString(" ") << std::endl;
+	configFile << std::endl << "# " << _sharedInfos[s_sets_separator_control_points_key].description << " (";
+	configFile << _sharedInfos[s_sets_separator_control_points_key].values << ")" << std::endl;
+	configFile << s_sets_separator_control_points_key << ": " << setOptions.toKeysString(" ") << std::endl;
 
-	configFile << std::endl << "# " << _sharedInfos[ "filter-hide-channels" ].description << " (";
-	configFile << _sharedInfos[ "filter-hide-channels" ].values << ")" << std::endl;
-	configFile << "filter-hide-channels: " << filter.toHiddenChannelsString() << std::endl;
+	configFile << std::endl << "# " << _sharedInfos[s_filter_hide_channels_key].description << " (";
+	configFile << _sharedInfos[s_filter_hide_channels_key].values << ")" << std::endl;
+	configFile << s_filter_hide_channels_key <<": " << filter.toHiddenChannelsString() << std::endl;
 
-	configFile << std::endl << "# " << _sharedInfos[ "filter-hide-tracks" ].description << " (";
-	configFile << _sharedInfos[ "filter-hide-tracks" ].values << ")" << std::endl;
-	configFile << "filter-hide-tracks: " << filter.toHiddenTracksString() << std::endl;
+	configFile << std::endl << "# " << _sharedInfos[s_filter_hide_tracks_key].description << " (";
+	configFile << _sharedInfos[s_filter_hide_tracks_key].values << ")" << std::endl;
+	configFile << s_filter_hide_tracks_key << ": " << filter.toHiddenTracksString() << std::endl;
 
 	// No need to save filter-show-tracks and filter-show-channels, they are complementary of the two above.
 
@@ -656,7 +654,7 @@ void State::load(const Arguments & configArgs){
 			continue;
 		}
 
-		if(key == "quality"){
+		if(key == s_quality_key){
 			const std::string & qualityName = arg.second[0];
 			if(Quality::names.count(qualityName) > 0){
 				quality = Quality::names.at(qualityName);
@@ -664,7 +662,7 @@ void State::load(const Arguments & configArgs){
 			continue;
 		}
 
-		if(key == "layers"){
+		if(key == s_layers_key){
 			const size_t bound = (std::min)(layersMap.size(), arg.second.size());
 			for(size_t id = 0; id < bound; ++id){
 				layersMap[id] = Configuration::parseInt(arg.second[id]);
@@ -672,7 +670,7 @@ void State::load(const Arguments & configArgs){
 			continue;
 		}
 
-		if(key == "sets-separator-control-points"){
+		if(key == s_sets_separator_control_points_key){
 			std::string str = arg.second[0];
 			for(size_t tid = 1; tid < arg.second.size(); ++tid){
 				str.append(" ");
@@ -682,19 +680,19 @@ void State::load(const Arguments & configArgs){
 			continue;
 		}
 
-		if( key == "filter-hide-channels" ){
+		if( key == s_filter_hide_channels_key ){
 			filter.fillChannelsFromTokens( arg.second, false);
 			continue;
 		}
-		if( key == "filter-show-channels" ){
+		if( key == s_filter_show_channels_key ){
 			filter.fillChannelsFromTokens( arg.second, true );
 			continue;
 		}
-		if( key == "filter-hide-tracks" ){
+		if( key == s_filter_hide_tracks_key ){
 			filter.fillTracksFromTokens( arg.second, false );
 			continue;
 		}
-		if( key == "filter-show-tracks" ){
+		if( key ==s_filter_show_tracks_key ){
 			filter.fillTracksFromTokens( arg.second, true );
 			continue;
 		}
@@ -750,13 +748,13 @@ void State::load(const Arguments & configArgs){
 	}
 	
 	// Synchronization for pedals global/legacy setting.
-	if(configArgs.count("color-pedal") != 0){
+	if(configArgs.count(s_color_pedal_key) != 0){
 		pedals.topColor = pedals.centerColor;
 		pedals.leftColor = pedals.centerColor;
 		pedals.rightColor = pedals.centerColor;
 	}
 	// Legacy setting for score lines.
-	if(configArgs.count("color-lines") != 0){
+	if(configArgs.count(s_color_lines_key) != 0){
 		score.hLinesColor = score.vLinesColor;
 	}
 
