@@ -161,10 +161,14 @@ void logLastGlfwError(){
 /// The main function
 int main( int argc, char** argv) {
 
+	sr_gui_init();
+
 	// Initialize glfw, which will create and setup an OpenGL context.
 	if (!glfwInit()) {
 		std::cerr << "[ERROR]: could not init GLFW3" << std::endl;
 		logLastGlfwError();
+		sr_gui_show_message("Unable to start MIDIVisualizer", "Could not init GLFW", SR_GUI_MESSAGE_LEVEL_ERROR);
+		sr_gui_cleanup();
 		return 2;
 	}
 	// Ensure we are using the C locale.
@@ -190,11 +194,13 @@ int main( int argc, char** argv) {
 	if(config.showHelp){
 		Configuration::printHelp();
 		glfwTerminate();
+		sr_gui_cleanup();
 		return 0;
 	}
 	if(config.showVersion){
 		Configuration::printVersion();
 		glfwTerminate();
+		sr_gui_cleanup();
 		return 0;
 	}
 	
@@ -214,6 +220,8 @@ int main( int argc, char** argv) {
 		std::cerr << "[ERROR]: Could not open window with GLFW3" << std::endl;
 		logLastGlfwError();
 		glfwTerminate();
+		sr_gui_show_message("Unable to start MIDIVisualizer", "Could not open window with GLFW3", SR_GUI_MESSAGE_LEVEL_ERROR);
+		sr_gui_cleanup();
 		return 2;
 	}
 	// Set window position.
@@ -227,15 +235,19 @@ int main( int argc, char** argv) {
 	if(gl3wInit()){
 		std::cerr << "[ERROR]: Failed to initialize OpenGL" << std::endl;
 		logLastGlfwError();
+		glfwTerminate();
+		sr_gui_show_message("Unable to start MIDIVisualizer", "Failed to initialize OpenGL", SR_GUI_MESSAGE_LEVEL_ERROR);
+		sr_gui_cleanup();
 		return -1;
 	}
 	if(!gl3wIsSupported(3, 2)){
-		std::cerr << "[ERROR]: OpenGL 3.2 not supported." << std::endl;
+		std::cerr << "[ERROR]: OpenGL 3.2 not supported" << std::endl;
 		logLastGlfwError();
+		glfwTerminate();
+		sr_gui_show_message("Unable to start MIDIVisualizer", "OpenGL 3.2 not supported", SR_GUI_MESSAGE_LEVEL_ERROR);
+		sr_gui_cleanup();
 		return -1;
 	}
-
-	sr_gui_init();
 
 	// The font should be maintained alive until the atlas is built.
 	ImFontConfig font;
@@ -344,12 +356,12 @@ int main( int argc, char** argv) {
 		viewer.clean();
 	}
 
-	sr_gui_cleanup();
 	// Remove the window.
 	glfwDestroyWindow(window);
 	// Clean other resources
 	// Close GL context and any other GLFW resources.
 	glfwTerminate();
+	sr_gui_cleanup();
 	return 0;
 }
 
