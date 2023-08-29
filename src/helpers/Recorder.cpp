@@ -1,6 +1,7 @@
 #include "Recorder.h"
 #include "System.h"
 #include "../rendering/State.h"
+#include "../helpers/ImGuiStyle.h"
 
 #include <imgui/imgui.h>
 #include <sr_gui.h>
@@ -256,38 +257,28 @@ bool Recorder::drawGUI(float scale){
 			}
 			ImGui::EndCombo();
 		}
-		if(ImGui::IsItemHovered()){
-			ImGui::SetTooltip("Select the export format, either a video codec or an image sequence format");
-		}
+		ImGui::helpTooltip("Select the export format, either a video codec or an image sequence format");
 
 		// Extra options.
 		ImGui::SameLine(scaledColumn);
 		ImGui::InputInt("Framerate", &_config.framerate);
-		if(ImGui::IsItemHovered()){
-			ImGui::SetTooltip("Number of frames per second");
-		}
+		ImGui::helpTooltip("Number of frames per second");
 
 		if(ImGui::InputInt2("Export size", &_size[0])){
 			_size[0] += _size[0] % 2;
 			_size[1] += _size[1] % 2;
 		}
-		if(ImGui::IsItemHovered()){
-			ImGui::SetTooltip("Resolution of the sequence");
-		}
+		ImGui::helpTooltip("Resolution of the sequence");
 
 		ImGui::SameLine(scaledColumn);
 
 		ImGui::InputFloat("Postroll", &_config.postroll, 0.1f, 1.0f, "%.1fs");
-		if(ImGui::IsItemHovered()){
-			ImGui::SetTooltip("Extend the playback duration");
-		}
+		ImGui::helpTooltip( "Extend the playback duration");
 
 		bool lineStarted = false;
 		if(_config.format == Export::Format::PNG || _config.format == Export::Format::PRORES){
 			ImGui::Checkbox("Transparent bg.", &_config.alphaBackground);
-			if(ImGui::IsItemHovered()){
-				ImGui::SetTooltip("Use a transparent background");
-			}
+			ImGui::helpTooltip( "Use a transparent background");
 			lineStarted = true;
 		}
 
@@ -296,15 +287,11 @@ bool Recorder::drawGUI(float scale){
 				ImGui::SameLine(scaledColumn);
 			}
 			ImGui::InputInt("Rate (Mbps)", &_config.bitrate);
-			if(ImGui::IsItemHovered()){
-				ImGui::SetTooltip("Set the video export quality");
-			}
+			ImGui::helpTooltip("Set the video export quality");
 		}
 		if((_config.format == Export::Format::PNG || _config.format == Export::Format::PRORES) && _config.alphaBackground){
 			ImGui::Checkbox("Fix premultiply", &_config.fixPremultiply);
-			if(ImGui::IsItemHovered()){
-				ImGui::SetTooltip("Compensate for alpha premultiplication");
-			}
+			ImGui::helpTooltip("Compensate for alpha premultiplication");
 		}
 
 		ImGui::PopItemWidth();

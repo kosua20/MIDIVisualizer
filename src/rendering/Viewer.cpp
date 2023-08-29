@@ -20,22 +20,6 @@
 #include <algorithm>
 #include <fstream>
 
-
-bool ImGuiSliderPercent(const char* label, float* v, float v_min, float v_max){
-	float tmp = (*v) * 100.0f;
-	const bool press = ImGui::SliderFloat(label, &tmp, v_min * 100.0f, v_max * 100.0f, "%.0f%%");
-	if(press){
-		*v = tmp / 100.0f;
-	}
-	return press;
-}
-
-void helpTooltip(const char* msg){
-	if(ImGui::IsItemHovered()){
-		ImGui::SetTooltip("%s", msg);
-	}
-}
-
 SystemAction::SystemAction(SystemAction::Type act) {
 	type = act;
 	data = glm::ivec4(0);
@@ -454,7 +438,7 @@ SystemAction Viewer::drawGUI(const float currentTime) {
 				}
 				free(savePath);
 			}
-			helpTooltip("Export a new MIDI file of the current session");
+			ImGui::helpTooltip("Export a new MIDI file of the current session");
 		}
 
 		ImGui::Separator();
@@ -463,18 +447,18 @@ SystemAction Viewer::drawGUI(const float currentTime) {
 		if (ImGui::Combo("Quality", (int *)(&_state.quality), "Half\0Low\0Medium\0High\0Double\0\0")) {
 			updateSizes();
 		}
-		helpTooltip(s_quality_dsc);
+		ImGui::helpTooltip(s_quality_dsc);
 		ImGui::PopItemWidth();
 
 		// Add FXAA.
 		ImGuiSameLine(COLUMN_SIZE);
 		ImGui::Checkbox("Smoothing", &_state.applyAA);
-		helpTooltip(s_smooth_dsc);
+		ImGui::helpTooltip(s_smooth_dsc);
 
 		if (ImGui::Button("Show effect layers...")) {
 			_showLayers = true;
 		}
-		helpTooltip("Define which effects are visible and their ordering");
+		ImGui::helpTooltip("Define which effects are visible and their ordering");
 
 		if(_liveplay){
 			ImGui::BeginDisabled();
@@ -484,7 +468,7 @@ SystemAction Viewer::drawGUI(const float currentTime) {
 		if (ImGui::Button("Tracks & channels visibility...")) {
 			ImGui::OpenPopup("Visibility options");
 		}
-		helpTooltip("Define which tracks and channels are visible");
+		ImGui::helpTooltip("Define which tracks and channels are visible");
 		showVisibility();
 
 		if(_liveplay){
@@ -499,14 +483,14 @@ SystemAction Viewer::drawGUI(const float currentTime) {
 				_state.synchronizeSets();
 			}
 		}
-		helpTooltip(s_colors_per_set_dsc);
+		ImGui::helpTooltip(s_colors_per_set_dsc);
 
 		if(_state.perSetColors){
 			ImGuiSameLine(COLUMN_SIZE);
 			if(ImGui::Button("Define color sets...")){
 				ImGui::OpenPopup("Note sets options");
 			}
-			helpTooltip("Define how notes should be assigned to color sets");
+			ImGui::helpTooltip("Define how notes should be assigned to color sets");
 			showSets();
 		}
 
@@ -514,25 +498,25 @@ SystemAction Viewer::drawGUI(const float currentTime) {
 			// If we enable the lock, make sure the colors are synched.
 			synchronizeColors(_state.notes.majorColors);
 		}
-		helpTooltip(s_lock_colors_dsc);
+		ImGui::helpTooltip(s_lock_colors_dsc);
 
 		if(ImGui::CollapsingHeader("Playback##HEADER")){
 			ImGuiPushItemWidth(100);
 			if(ImGui::Combo("Min key", &_state.minKey, midiKeysStrings, 128)){
 				updateMinMaxKeys();
 			}
-			helpTooltip(s_min_key_dsc);
+			ImGui::helpTooltip(s_min_key_dsc);
 
 			ImGuiSameLine(COLUMN_SIZE);
 			if(ImGui::Combo("Max key", &_state.maxKey, midiKeysStrings, 128)){
 				updateMinMaxKeys();
 			}
-			helpTooltip(s_max_key_dsc);
+			ImGui::helpTooltip(s_max_key_dsc);
 
 			if (ImGui::InputFloat("Preroll", &_state.prerollTime, 0.1f, 1.0f, "%.1fs")) {
 				reset();
 			}
-			helpTooltip(s_preroll_dsc);
+			ImGui::helpTooltip(s_preroll_dsc);
 
 			if(_liveplay){
 				ImGui::BeginDisabled();
@@ -547,14 +531,14 @@ SystemAction Viewer::drawGUI(const float currentTime) {
 					ImGui::SetTooltip("Not available in liveplay");
 				}
 			} else {
-				helpTooltip(s_scroll_speed_dsc);
+				ImGui::helpTooltip(s_scroll_speed_dsc);
 			}
 			ImGui::PopItemWidth();
 
 			if(ImGui::Checkbox("Horizontal scroll", &_state.horizontalScroll)){
 				_renderer.setOrientation(_state.horizontalScroll);
 			}
-			helpTooltip(s_scroll_horizontal_dsc);
+			ImGui::helpTooltip(s_scroll_horizontal_dsc);
 
 			if(_liveplay){
 				ImGui::BeginDisabled();
@@ -567,7 +551,7 @@ SystemAction Viewer::drawGUI(const float currentTime) {
 					ImGui::SetTooltip("Not available in liveplay");
 				}
 			} else {
-				helpTooltip(s_scroll_reverse_dsc);
+				ImGui::helpTooltip(s_scroll_reverse_dsc);
 			}
 
 		}
@@ -722,7 +706,7 @@ SystemAction Viewer::showTopButtons(double currentTime){
 	if(ImGui::Button("Display")){
 		ImGui::OpenPopup("Display options");
 	}
-	helpTooltip("Configure display settings");
+	ImGui::helpTooltip("Configure display settings");
 
 	SystemAction action = SystemAction::NONE;
 	if(ImGui::BeginPopup("Display options")){
@@ -732,18 +716,18 @@ SystemAction Viewer::showTopButtons(double currentTime){
 			_guiScale = glm::clamp(_guiScale, 0.25f, 4.0f);
 			setGUIScale(_guiScale);
 		}
-		helpTooltip("Scale of the interface texts and buttons on screen");
+		ImGui::helpTooltip("Scale of the interface texts and buttons on screen");
 		ImGui::PopItemWidth();
 		ImGuiSameLine(EXPORT_COLUMN_SIZE);
 		if(ImGui::Button("Reset##GUI")){
 			setGUIScale(1.0f);
 		}
-		helpTooltip("Reset the scale of the interface to 1x");
+		ImGui::helpTooltip("Reset the scale of the interface to 1x");
 
 		if(ImGui::Checkbox("Fullscreen", &_fullscreen)){
 			action = SystemAction::FULLSCREEN;
 		}
-		helpTooltip("Toggle fullscreen window");
+		ImGui::helpTooltip("Toggle fullscreen window");
 
 		if(!_fullscreen){
 			ImGuiPushItemWidth(100);
@@ -755,14 +739,14 @@ SystemAction Viewer::showTopButtons(double currentTime){
 				action.data[0] = _windowSize[0];
 				action.data[1] = _windowSize[1];
 			}
-			helpTooltip("Apply the specified size to the window");
+			ImGui::helpTooltip("Apply the specified size to the window");
 		}
 
 		if(_supportTransparency) {
 			if(ImGui::Checkbox("Transparent", &_useTransparency)){
 				_useTransparency = _useTransparency && _supportTransparency;
 			}
-			helpTooltip("Toggle background window transparency");
+			ImGui::helpTooltip("Toggle background window transparency");
 		}
 
 		ImGui::EndPopup();
@@ -788,19 +772,19 @@ void Viewer::showNoteOptions() {
 	if(channelColorEdit("Notes", "Notes", _state.notes.majorColors)){
 		synchronizeColors(_state.notes.majorColors);
 	}
-	helpTooltip(s_color_major_dsc);
+	ImGui::helpTooltip(s_color_major_dsc);
 	ImGuiSameLine();
 
 	if(channelColorEdit("Minors", "Minors", _state.notes.minorColors)){
 		synchronizeColors(_state.notes.minorColors);
 	}
-	helpTooltip(s_color_minor_dsc);
+	ImGui::helpTooltip(s_color_minor_dsc);
 	ImGuiSameLine(COLUMN_SIZE);
 
 	if(ImGui::Button("Use background images...")){
 		ImGui::OpenPopup("Note background textures");
 	}
-	helpTooltip("Define background textures for major and minor notes");
+	ImGui::helpTooltip("Define background textures for major and minor notes");
 
 	if(ImGui::BeginPopup("Note background textures")){
 		struct BackgroundTextureParams {
@@ -840,31 +824,31 @@ void Viewer::showNoteOptions() {
 				 }
 				 free(outPath);
 			 }
-			helpTooltip(paramDescs[i][0]);
+			ImGui::helpTooltip(paramDescs[i][0]);
 			ImGuiSameLine();
 			if(ImGui::Button("Clear")) {
 				 group.paths.clear();
 				 glDeleteTextures(1, &group.tex);
 				 group.tex = 0;
 			}
-			helpTooltip("Remove the current image");
+			ImGui::helpTooltip("Remove the current image");
 			ImGuiSameLine();
 
 			ImGuiPushItemWidth(100);
 			if(ImGui::SliderFloat("Scale", &group.scale, 0.1f, 15.0f, "%.2fx")){
 				group.scale = glm::max(group.scale, 0.001f);
 			}
-			helpTooltip(paramDescs[i][1]);
+			ImGui::helpTooltip(paramDescs[i][1]);
 			ImGuiSameLine();
 
-			if(ImGuiSliderPercent("Intensity", &group.alpha, 0.0f, 1.0f)){
+			if(ImGui::SliderPercent("Intensity", &group.alpha, 0.0f, 1.0f)){
 				group.alpha = glm::clamp(group.alpha, 0.0f, 1.0f);
 			}
-			helpTooltip(paramDescs[i][2]);
+			ImGui::helpTooltip(paramDescs[i][2]);
 			ImGuiSameLine();
 
 			ImGui::Checkbox("Scroll", &group.scroll);
-			helpTooltip(paramDescs[i][3]);
+			ImGui::helpTooltip(paramDescs[i][3]);
 			ImGui::PopItemWidth();
 			ImGui::PopID();
 		}
@@ -875,11 +859,11 @@ void Viewer::showNoteOptions() {
 
 	ImGuiPushItemWidth(100);
 	bool smw0 = ImGui::InputFloat("Scale", &_state.scale, 0.01f, 0.1f, "%.2fx");
-	helpTooltip(s_time_scale_dsc);
+	ImGui::helpTooltip(s_time_scale_dsc);
 	ImGuiSameLine(COLUMN_SIZE);
 
-	smw0 = ImGuiSliderPercent("Minor width", &_state.background.minorsWidth, 0.1f, 1.0f) || smw0;
-	helpTooltip(s_minor_size_dsc);
+	smw0 = ImGui::SliderPercent("Minor width", &_state.background.minorsWidth, 0.1f, 1.0f) || smw0;
+	ImGui::helpTooltip(s_minor_size_dsc);
 	ImGui::PopItemWidth();
 
 	if (smw0) {
@@ -893,25 +877,25 @@ void Viewer::showNoteOptions() {
 	if(ImGui::SliderFloat("Radius", &_state.notes.cornerRadius, 0.0f, 1.0f)){
 		_state.notes.cornerRadius = glm::clamp(_state.notes.cornerRadius, 0.0f, 1.0f);
 	}
-	helpTooltip(s_notes_corner_radius_dsc);
+	ImGui::helpTooltip(s_notes_corner_radius_dsc);
 
 	ImGuiSameLine(COLUMN_SIZE);
 	if(ImGui::SliderFloat("Fadeout", &_state.notes.fadeOut, 0.0f, 1.0f)){
 		_state.notes.fadeOut = glm::clamp(_state.notes.fadeOut, 0.0f, 1.0f);
 		_renderer.setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notes.fadeOut);
 	}
-	helpTooltip(s_fadeout_notes_dsc);
+	ImGui::helpTooltip(s_fadeout_notes_dsc);
 
-	if(ImGuiSliderPercent("Edge", &_state.notes.edgeWidth, 0.0f, 1.0f)){
+	if(ImGui::SliderPercent("Edge", &_state.notes.edgeWidth, 0.0f, 1.0f)){
 		_state.notes.edgeWidth = glm::clamp(_state.notes.edgeWidth, 0.0f, 1.0f);
 	}
-	helpTooltip(s_notes_edge_width_dsc);
+	ImGui::helpTooltip(s_notes_edge_width_dsc);
 	ImGuiSameLine(COLUMN_SIZE);
 
-	if(ImGuiSliderPercent("Intensity", &_state.notes.edgeBrightness, 0.0f, 4.0f)){
+	if(ImGui::SliderPercent("Intensity", &_state.notes.edgeBrightness, 0.0f, 4.0f)){
 		_state.notes.edgeBrightness = glm::max(_state.notes.edgeBrightness, 0.0f);
 	}
-	helpTooltip(s_notes_edge_intensity_dsc);
+	ImGui::helpTooltip(s_notes_edge_intensity_dsc);
 
 	ImGui::PopItemWidth();
 }
@@ -920,12 +904,12 @@ void Viewer::showFlashOptions() {
 	if(channelColorEdit("Color##Flashes", "Color", _state.flashes.colors)){
 		synchronizeColors(_state.flashes.colors);
 	}
-	helpTooltip(s_color_flashes_dsc);
+	ImGui::helpTooltip(s_color_flashes_dsc);
 
 	ImGuiSameLine(COLUMN_SIZE);
 	ImGuiPushItemWidth(100);
 	ImGui::SliderFloat("Scale##flash", &_state.flashes.size, 0.1f, 3.0f, "%.2fx");
-	helpTooltip(s_flashes_size_dsc);
+	ImGui::helpTooltip(s_flashes_size_dsc);
 	ImGui::PopItemWidth();
 
 	// Additional halo control
@@ -933,17 +917,17 @@ void Viewer::showFlashOptions() {
 	if(ImGui::SliderFloat("Halo min", &_state.flashes.haloInnerRadius, 0.0f, 1.0f)){
 		_state.flashes.haloInnerRadius = glm::clamp(_state.flashes.haloInnerRadius, 0.0f, _state.flashes.haloOuterRadius);
 	}
-	helpTooltip(s_flashes_halo_inner_dsc);
+	ImGui::helpTooltip(s_flashes_halo_inner_dsc);
 	ImGuiSameLine(COLUMN_SIZE);
 	if(ImGui::SliderFloat("Halo max", &_state.flashes.haloOuterRadius, 0.0f, 1.0f)){
 		_state.flashes.haloOuterRadius = glm::clamp(_state.flashes.haloOuterRadius, _state.flashes.haloInnerRadius, 1.0f);
 	}
-	helpTooltip(s_flashes_halo_outer_dsc);
+	ImGui::helpTooltip(s_flashes_halo_outer_dsc);
 
-	if(ImGuiSliderPercent("Intensity##Halo", &_state.flashes.haloIntensity, 0.0f, 2.0f)){
+	if(ImGui::SliderPercent("Intensity##Halo", &_state.flashes.haloIntensity, 0.0f, 2.0f)){
 		_state.flashes.haloIntensity = std::max(0.f, _state.flashes.haloIntensity);
 	}
-	helpTooltip(s_flashes_halo_intensity_dsc);
+	ImGui::helpTooltip(s_flashes_halo_intensity_dsc);
 
 	// Texture atlas (specify rows/cols count)
 	if (ImGui::Button("Load image...##Flashes")){
@@ -960,7 +944,7 @@ void Viewer::showFlashOptions() {
 		}
 		free(outPath);
 	}
-	helpTooltip("Load an atlas image for the animated flash");
+	ImGui::helpTooltip("Load an atlas image for the animated flash");
 
 	ImGuiSameLine(COLUMN_SIZE);
 	if (ImGui::Button("Clear image##Flashes")) {
@@ -972,19 +956,19 @@ void Viewer::showFlashOptions() {
 		_state.flashes.texColCount = 2;
 		_state.flashes.texRowCount = 4;
 	}
-	helpTooltip("Restore the default flash image atlas");
+	ImGui::helpTooltip("Restore the default flash image atlas");
 
 	// Don't expose tiling on default image.
 	if(!_state.flashes.imagePath.empty()){
 		if(ImGui::InputInt("Columns", &_state.flashes.texColCount)){
 			_state.flashes.texColCount = std::max(1, _state.flashes.texColCount);
 		}
-		helpTooltip(s_flashes_img_columns_dsc);
+		ImGui::helpTooltip(s_flashes_img_columns_dsc);
 		ImGuiSameLine(COLUMN_SIZE);
 		if(ImGui::InputInt("Rows", &_state.flashes.texRowCount)){
 			_state.flashes.texRowCount = std::max(1, _state.flashes.texRowCount);
 		}
-		helpTooltip(s_flashes_img_rows_dsc);
+		ImGui::helpTooltip(s_flashes_img_rows_dsc);
 	}
 
 	ImGui::PopItemWidth();
@@ -996,7 +980,7 @@ void Viewer::showParticleOptions(){
 	if(channelColorEdit("Color##Particles", "Color", _state.particles.colors)){
 		synchronizeColors(_state.particles.colors);
 	}
-	helpTooltip(s_color_particles_dsc);
+	ImGui::helpTooltip(s_color_particles_dsc);
 
 	ImGuiSameLine(COLUMN_SIZE);
 
@@ -1004,19 +988,19 @@ void Viewer::showParticleOptions(){
 	if (ImGui::InputFloat("Size##particles", &_state.particles.scale, 1.0f, 10.0f, "%.0fpx")) {
 		_state.particles.scale = (std::max)(1.0f, _state.particles.scale);
 	}
-	helpTooltip(s_particles_size_dsc);
+	ImGui::helpTooltip(s_particles_size_dsc);
 
 	const bool mp0 = ImGui::InputFloat("Speed", &_state.particles.speed, 0.01f, 1.0f, "%.2fx");
-	helpTooltip(s_particles_speed_dsc);
+	ImGui::helpTooltip(s_particles_speed_dsc);
 	ImGuiSameLine(COLUMN_SIZE);
 
 	const bool mp1 = ImGui::InputFloat("Spread", &_state.particles.expansion, 0.1f, 5.0f, "%.1fx");
-	helpTooltip(s_particles_expansion_dsc);
+	ImGui::helpTooltip(s_particles_expansion_dsc);
 
 	if (ImGui::SliderInt("Count", &_state.particles.count, 1, 512)) {
 		_state.particles.count = glm::clamp(_state.particles.count, 1, 512);
 	}
-	helpTooltip(s_particles_count_dsc);
+	ImGui::helpTooltip(s_particles_count_dsc);
 	ImGui::PopItemWidth();
 
 	if (mp1 || mp0) {
@@ -1030,11 +1014,11 @@ void Viewer::showParticleOptions(){
 		_showParticleEditor = true;
 		_backupState = _state;
 	}
-	helpTooltip("Define images to assign randomly to each particle");
+	ImGui::helpTooltip("Define images to assign randomly to each particle");
 
 	ImGuiPushItemWidth(100);
-	ImGuiSliderPercent("Turbulences", &_state.particles.turbulenceStrength, 0.01f, 8.0f);
-	helpTooltip(s_particles_turbulences_dsc);
+	ImGui::SliderPercent("Turbulences", &_state.particles.turbulenceStrength, 0.01f, 8.0f);
+	ImGui::helpTooltip(s_particles_turbulences_dsc);
 	ImGui::PopItemWidth();
 
 	ImGui::PopID();
@@ -1043,16 +1027,16 @@ void Viewer::showParticleOptions(){
 void Viewer::showKeyboardOptions(){
 	ImGuiPushItemWidth(25);
 	ImGui::ColorEdit3("Fill Color##Keys", &_state.keyboard.edgeColor[0], ImGuiColorEditFlags_NoInputs);
-	helpTooltip(s_color_keyboard_dsc);
+	ImGui::helpTooltip(s_color_keyboard_dsc);
 	ImGui::PopItemWidth();
 	ImGuiSameLine(COLUMN_SIZE);
 
 	ImGuiPushItemWidth(100);
-	if(ImGuiSliderPercent("Height##Keys", &_state.keyboard.size, 0.0f, 1.0f)){
+	if(ImGui::SliderPercent("Height##Keys", &_state.keyboard.size, 0.0f, 1.0f)){
 		_state.keyboard.size = glm::clamp(_state.keyboard.size, 0.0f, 1.0f);
 		_renderer.setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notes.fadeOut);
 	}
-	helpTooltip(s_keyboard_size_dsc);
+	ImGui::helpTooltip(s_keyboard_size_dsc);
 	ImGui::PopItemWidth();
 
 	ImGuiPushItemWidth(25);
@@ -1060,25 +1044,25 @@ void Viewer::showKeyboardOptions(){
 		// TODO: (MV) just apply when needed?
 		_renderer.setMinorEdgesAndHeight(_state.keyboard.minorEdges, _state.keyboard.minorHeight);
 	}
-	helpTooltip(s_keyboard_minor_edges_dsc);
+	ImGui::helpTooltip(s_keyboard_minor_edges_dsc);
 	ImGui::PopItemWidth();
 	ImGuiSameLine(COLUMN_SIZE);
 
 	ImGuiPushItemWidth(100);
-	if(ImGuiSliderPercent("Minor height##Keys", &_state.keyboard.minorHeight, 0.0f, 1.0f)){
+	if(ImGui::SliderPercent("Minor height##Keys", &_state.keyboard.minorHeight, 0.0f, 1.0f)){
 		_state.keyboard.minorHeight = glm::clamp(_state.keyboard.minorHeight, 0.0f, 1.0f);
 		// TODO: (MV) just apply when needed?
 		_renderer.setMinorEdgesAndHeight(_state.keyboard.minorEdges, _state.keyboard.minorHeight);
 	}
-	helpTooltip(s_keyboard_minor_height_dsc);
+	ImGui::helpTooltip(s_keyboard_minor_height_dsc);
 	ImGui::PopItemWidth();
 
 	ImGui::Checkbox("Highlight keys", &_state.keyboard.highlightKeys);
-	helpTooltip(s_keyboard_highlight_dsc);
+	ImGui::helpTooltip(s_keyboard_highlight_dsc);
 
 	if (_state.keyboard.highlightKeys) {
 		ImGui::Checkbox("Custom colors", &_state.keyboard.customKeyColors);
-		helpTooltip(s_keyboard_custom_colors_dsc);
+		ImGui::helpTooltip(s_keyboard_custom_colors_dsc);
 
 		if (_state.keyboard.customKeyColors) {
 			ImGuiSameLine(COLUMN_SIZE);
@@ -1089,7 +1073,7 @@ void Viewer::showKeyboardOptions(){
 					_state.keyboard.majorColor[cid] = _state.keyboard.majorColor[0];
 				}
 			}
-			helpTooltip(s_color_keyboard_major_dsc);
+			ImGui::helpTooltip(s_color_keyboard_major_dsc);
 
 			ImGuiSameLine(COLUMN_SIZE+80);
 			if(ImGui::ColorEdit3("Minor##KeysHighlight", &_state.keyboard.minorColor[0][0], ImGuiColorEditFlags_NoInputs)){
@@ -1098,7 +1082,7 @@ void Viewer::showKeyboardOptions(){
 					_state.keyboard.minorColor[cid] = _state.keyboard.minorColor[0];
 				}
 			}
-			helpTooltip(s_color_keyboard_minor_dsc);
+			ImGui::helpTooltip(s_color_keyboard_minor_dsc);
 			ImGui::PopItemWidth();
 		}
 	}
@@ -1112,73 +1096,73 @@ void Viewer::showPedalOptions(){
 		_state.pedals.leftColor = _state.pedals.centerColor;
 		_state.pedals.rightColor = _state.pedals.centerColor;
 	}
-	helpTooltip(s_color_pedal_dsc);
+	ImGui::helpTooltip(s_color_pedal_dsc);
 	ImGui::PopItemWidth();
 
 	ImGuiPushItemWidth(100);
 	ImGuiSameLine(COLUMN_SIZE);
 	ImGui::Combo("Location", (int*)&_state.pedals.location, "Top left\0Bottom left\0Top right\0Bottom right\0");
-	helpTooltip(s_pedal_location_dsc);
+	ImGui::helpTooltip(s_pedal_location_dsc);
 
-	if(ImGuiSliderPercent("Opacity##Pedals", &_state.pedals.opacity, 0.0f, 1.0f)){
+	if(ImGui::SliderPercent("Opacity##Pedals", &_state.pedals.opacity, 0.0f, 1.0f)){
 		_state.pedals.opacity = glm::clamp(_state.pedals.opacity, 0.0f, 1.0f);
 	}
-	helpTooltip(s_pedal_opacity_dsc);
+	ImGui::helpTooltip(s_pedal_opacity_dsc);
 	ImGuiSameLine(COLUMN_SIZE);
-	if(ImGuiSliderPercent("Size##Pedals", &_state.pedals.size, 0.05f, 0.5f)){
+	if(ImGui::SliderPercent("Size##Pedals", &_state.pedals.size, 0.05f, 0.5f)){
 		_state.pedals.size = glm::clamp(_state.pedals.size, 0.05f, 0.5f);
 	}
-	helpTooltip(s_pedal_size_dsc);
+	ImGui::helpTooltip(s_pedal_size_dsc);
 	ImGui::PopItemWidth();
 
 	ImGui::Checkbox("Merge pedals", &_state.pedals.merge);
-	helpTooltip(s_pedal_merge_dsc);
+	ImGui::helpTooltip(s_pedal_merge_dsc);
 	ImGuiSameLine(COLUMN_SIZE);
 	if(ImGui::Button("Configure images...##Pedals")) {
 		_showPedalsEditor = true;
 		_backupState = _state;
 	}
-	helpTooltip("Define images to use for each pedal and their layout");
+	ImGui::helpTooltip("Define images to use for each pedal and their layout");
 
 }
 
 void Viewer::showWaveOptions(){
 	ImGuiPushItemWidth(25);
 	ImGui::ColorEdit3("Color##Waves", &_state.waves.color[0], ImGuiColorEditFlags_NoInputs);
-	helpTooltip(s_color_wave_dsc);
+	ImGui::helpTooltip(s_color_wave_dsc);
 	ImGui::PopItemWidth();
 
 	ImGuiPushItemWidth(100);
 	ImGuiSameLine(COLUMN_SIZE);
 	ImGui::SliderFloat("Amplitude##Waves", &_state.waves.amplitude, 0.0f, 5.0f, "%.2fx");
-	helpTooltip(s_wave_amplitude_dsc);
+	ImGui::helpTooltip(s_wave_amplitude_dsc);
 
 	ImGui::SliderFloat("Spread##Waves", &_state.waves.spread, 0.0f, 5.0f, "%.2fx");
-	helpTooltip(s_wave_size_dsc);
+	ImGui::helpTooltip(s_wave_size_dsc);
 	ImGuiSameLine(COLUMN_SIZE);
 	ImGui::SliderFloat("Frequency##Waves", &_state.waves.frequency, 0.0f, 5.0f, "%.2fx");
-	helpTooltip(s_wave_frequency_dsc);
+	ImGui::helpTooltip(s_wave_frequency_dsc);
 
-	if(ImGuiSliderPercent("Opacity##Waves", &_state.waves.opacity, 0.0f, 1.0f)){
+	if(ImGui::SliderPercent("Opacity##Waves", &_state.waves.opacity, 0.0f, 1.0f)){
 		_state.waves.opacity = glm::clamp(_state.waves.opacity, 0.0f, 1.0f);
 	}
-	helpTooltip(s_wave_opacity_dsc);
+	ImGui::helpTooltip(s_wave_opacity_dsc);
 	ImGuiSameLine(COLUMN_SIZE);
 	ImGui::SliderFloat("Speed##Waves", &_state.waves.speed, 0.0f, 5.0f, "%.2fx");
-	helpTooltip(s_wave_speed_dsc);
+	ImGui::helpTooltip(s_wave_speed_dsc);
 	
-	ImGuiSliderPercent("Noise##Waves", &_state.waves.noiseIntensity, 0.0f, 2.0f);
-	helpTooltip(s_wave_noise_intensity_dsc);
+	ImGui::SliderPercent("Noise##Waves", &_state.waves.noiseIntensity, 0.0f, 2.0f);
+	ImGui::helpTooltip(s_wave_noise_intensity_dsc);
 	ImGuiSameLine(COLUMN_SIZE);
-	ImGuiSliderPercent("Extent##Waves", &_state.waves.noiseSize, 0.0f, 1.0f);
-	helpTooltip(s_wave_noise_extent_dsc);
+	ImGui::SliderPercent("Extent##Waves", &_state.waves.noiseSize, 0.0f, 1.0f);
+	ImGui::helpTooltip(s_wave_noise_extent_dsc);
 	ImGui::PopItemWidth();
 
 }
 
 void Viewer::showBlurOptions(){
 	ImGui::Checkbox("Blur the notes", &_state.showBlurNotes);
-	helpTooltip(s_show_blur_notes_dsc);
+	ImGui::helpTooltip(s_show_blur_notes_dsc);
 	ImGuiSameLine(COLUMN_SIZE);
 
 	ImGuiPushItemWidth(100);
@@ -1188,54 +1172,54 @@ void Viewer::showBlurOptions(){
 		_blurringScreen.program().uniform("attenuationFactor", _state.attenuation);
 		glUseProgram(0);
 	}
-	helpTooltip(s_blur_attenuation_dsc);
+	ImGui::helpTooltip(s_blur_attenuation_dsc);
 	ImGui::PopItemWidth();
 }
 
 void Viewer::showScoreOptions(){
 	ImGuiPushItemWidth(25);
 	ImGui::ColorEdit3("Vertical lines##Background", &_state.score.vLinesColor[0], ImGuiColorEditFlags_NoInputs);
-	helpTooltip(s_color_lines_vertical_dsc);
+	ImGui::helpTooltip(s_color_lines_vertical_dsc);
 	ImGuiSameLine();
 
 	ImGui::ColorEdit3("Horizontal lines##Background", &_state.score.hLinesColor[0], ImGuiColorEditFlags_NoInputs);
-	helpTooltip(s_color_lines_horizontal_dsc);
+	ImGui::helpTooltip(s_color_lines_horizontal_dsc);
 	ImGuiSameLine();
 
 	ImGui::ColorEdit3("Labels##Background", &_state.score.digitsColor[0], ImGuiColorEditFlags_NoInputs);
-	helpTooltip(s_color_numbers_dsc);
+	ImGui::helpTooltip(s_color_numbers_dsc);
 	ImGui::PopItemWidth();
 
 	ImGui::Checkbox("Horizontal lines", &_state.score.hLines);
-	helpTooltip(s_show_horiz_lines_dsc);
+	ImGui::helpTooltip(s_show_horiz_lines_dsc);
 	ImGuiSameLine(COLUMN_SIZE);
 	ImGuiPushItemWidth(100);
 	ImGui::SliderFloat("Thickness##Horizontal", &_state.score.hLinesWidth, 0.0f, 15.0f, "%.0fpx");
-	helpTooltip(s_score_lines_horizontal_width_dsc);
+	ImGui::helpTooltip(s_score_lines_horizontal_width_dsc);
 	ImGui::PopItemWidth();
 
 	ImGui::Checkbox("Vertical lines", &_state.score.vLines);
-	helpTooltip(s_show_vert_lines_dsc);
+	ImGui::helpTooltip(s_show_vert_lines_dsc);
 	ImGuiSameLine(COLUMN_SIZE);
 	ImGuiPushItemWidth(100);
 	ImGui::SliderFloat("Thickness##Vertical", &_state.score.vLinesWidth, 0.0f, 15.0f, "%.0fpx");
-	helpTooltip(s_score_lines_vertical_width_dsc);
+	ImGui::helpTooltip(s_score_lines_vertical_width_dsc);
 	ImGui::PopItemWidth();
 
 	ImGui::Checkbox("Digits", &_state.score.digits);
-	helpTooltip(s_show_numbers_dsc);
+	ImGui::helpTooltip(s_show_numbers_dsc);
 	ImGuiSameLine(COLUMN_SIZE);
 	ImGuiPushItemWidth(100);
-	ImGuiSliderPercent("Scale##Digits", &_state.score.digitsScale, 0.0f, 0.5f);
-	helpTooltip(s_score_digits_size_dsc);
+	ImGui::SliderPercent("Scale##Digits", &_state.score.digitsScale, 0.0f, 0.5f);
+	ImGui::helpTooltip(s_score_digits_size_dsc);
 	ImGui::PopItemWidth();
 
 	ImGuiPushItemWidth(100);
-	ImGuiSliderPercent("Offset X##Digits", &_state.score.digitsOffset[0], -1.f, 1.0f);
-	helpTooltip(s_score_digits_offset_x_dsc);
+	ImGui::SliderPercent("Offset X##Digits", &_state.score.digitsOffset[0], -1.f, 1.0f);
+	ImGui::helpTooltip(s_score_digits_offset_x_dsc);
 	ImGuiSameLine(COLUMN_SIZE);
-	ImGuiSliderPercent("Offset Y##Digits", &_state.score.digitsOffset[1], -1.f, 1.0f);
-	helpTooltip(s_score_digits_offset_y_dsc);
+	ImGui::SliderPercent("Offset Y##Digits", &_state.score.digitsOffset[1], -1.f, 1.0f);
+	ImGui::helpTooltip(s_score_digits_offset_y_dsc);
 	ImGui::PopItemWidth();
 
 }
@@ -1245,7 +1229,7 @@ void Viewer::showBackgroundOptions(){
 	const glm::vec3 oldColor(_state.background.color);
 	ImGui::ColorEdit3("Color##Background", &_state.background.color[0],
 		ImGuiColorEditFlags_NoInputs);
-	helpTooltip(s_color_bg_dsc);
+	ImGui::helpTooltip(s_color_bg_dsc);
 	if(oldColor != _state.background.color){
 		applyBackgroundColor();
 	}
@@ -1253,10 +1237,10 @@ void Viewer::showBackgroundOptions(){
 	ImGuiSameLine(COLUMN_SIZE);
 
 	ImGuiPushItemWidth(100);
-	if (ImGuiSliderPercent("Opacity##Background", &_state.background.imageAlpha, 0.0f, 1.0f)) {
+	if (ImGui::SliderPercent("Opacity##Background", &_state.background.imageAlpha, 0.0f, 1.0f)) {
 		_state.background.imageAlpha = glm::clamp(_state.background.imageAlpha, 0.0f, 1.0f);
 	}
-	helpTooltip(s_bg_img_opacity_dsc);
+	ImGui::helpTooltip(s_bg_img_opacity_dsc);
 
 	ImGui::PopItemWidth();
 	if (ImGui::Button("Load image...##Background")){
@@ -1278,7 +1262,7 @@ void Viewer::showBackgroundOptions(){
 		}
 		free(outPath);
 	}
-	helpTooltip("Define an image for the background");
+	ImGui::helpTooltip("Define an image for the background");
 	ImGuiSameLine(COLUMN_SIZE);
 
 	if (ImGui::Button("Clear image##Background")) {
@@ -1287,10 +1271,10 @@ void Viewer::showBackgroundOptions(){
 		glDeleteTextures(1, &_state.background.tex);
 		_state.background.tex = 0;
 	}
-	helpTooltip("Remove the background image");
+	ImGui::helpTooltip("Remove the background image");
 
 	ImGui::Checkbox("Image extends under keyboard", &_state.background.imageBehindKeyboard);
-	helpTooltip(s_bg_img_behind_keyboard_dsc);
+	ImGui::helpTooltip(s_bg_img_behind_keyboard_dsc);
 
 }
 
@@ -1298,7 +1282,7 @@ void Viewer::showBottomButtons(){
 	if(ImGui::Button("Export...")){
 		ImGui::OpenPopup("Export");
 	}
-	helpTooltip("Export video recording");
+	ImGui::helpTooltip("Export video recording");
 
 	if(_recorder.drawGUI(_guiScale)){
 		startRecording();
@@ -1315,7 +1299,7 @@ void Viewer::showBottomButtons(){
 		}
 		free(savePath);
 	}
-	helpTooltip("Save the current settings for all effects");
+	ImGui::helpTooltip("Save the current settings for all effects");
 	ImGuiSameLine();
 
 	if (ImGui::Button("Load config...")) {
@@ -1330,14 +1314,14 @@ void Viewer::showBottomButtons(){
 		}
 		free(outPath);
 	}
-	helpTooltip("Load effects settings from a configuration file");
+	ImGui::helpTooltip("Load effects settings from a configuration file");
 	ImGuiSameLine();
 
 	if (ImGui::Button("Reset##config")) {
 		_state.reset();
 		setState(_state);
 	}
-	helpTooltip("Restore the default effects settings");
+	ImGui::helpTooltip("Restore the default effects settings");
 }
 
 void Viewer::showLayers() {
@@ -1365,7 +1349,6 @@ void Viewer::showLayers() {
 			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
 			{
 				ImGui::Text("%s", layer.name.c_str());
-				helpTooltip( layer.name.c_str() ); // TODO: (MV)
 				ImGui::SetDragDropPayload("REORDER_LAYER", &i, sizeof(int));
 				ImGui::EndDragDropSource();
 			}
@@ -1405,7 +1388,7 @@ void Viewer::showDevices(){
 			_scene = std::make_shared<MIDISceneLive>(-1, _verbose);
 			starting = true;
 		}
-		helpTooltip("Act as a virtual device (via JACK)\nother MIDI elements can connect to");
+		ImGui::helpTooltip("Act as a virtual device (via JACK)\nother MIDI elements can connect to");
 		ImGui::Separator();
 
 		const auto & devices = MIDISceneLive::availablePorts();
@@ -1499,19 +1482,19 @@ void Viewer::showSets(){
 
 		bool shouldUpdate = false;
 		shouldUpdate = ImGui::RadioButton("Channel", (int*)(&_state.setOptions.mode), int(SetMode::CHANNEL)) || shouldUpdate;
-		helpTooltip("Assign each channel to a color set");
+		ImGui::helpTooltip("Assign each channel to a color set");
 		ImGuiSameLine(90);
 		shouldUpdate = ImGui::RadioButton("Track", (int*)(&_state.setOptions.mode), int(SetMode::TRACK)) || shouldUpdate;
-		helpTooltip("Assign each track to a color set");
+		ImGui::helpTooltip("Assign each track to a color set");
 		ImGuiSameLine(2*90);
 		shouldUpdate = ImGui::RadioButton("Key", (int*)(&_state.setOptions.mode), int(SetMode::KEY)) || shouldUpdate;
-		helpTooltip("Assign each of the eight keys to a color set");
+		ImGui::helpTooltip("Assign each of the eight keys to a color set");
 		ImGuiSameLine(3*90);
 		shouldUpdate = ImGui::RadioButton("Chromatic", (int*)(&_state.setOptions.mode), int(SetMode::CHROMATIC)) || shouldUpdate;
-		helpTooltip("Assign each of the twelve keys to a color set");
+		ImGui::helpTooltip("Assign each of the twelve keys to a color set");
 
 		shouldUpdate = ImGui::RadioButton("Split", (int*)(&_state.setOptions.mode), int(SetMode::SPLIT)) || shouldUpdate;
-		helpTooltip("Assign keys to a color set based on a separating key");
+		ImGui::helpTooltip("Assign keys to a color set based on a separating key");
 		ImGuiSameLine();
 		ImGuiPushItemWidth(100);
 		shouldUpdate = ImGui::Combo("##key", &_state.setOptions.key, midiKeysStrings, 128) || shouldUpdate;
@@ -1519,7 +1502,7 @@ void Viewer::showSets(){
 
 		ImGuiSameLine(2*90);
 		shouldUpdate = ImGui::RadioButton("List", (int*)(&_state.setOptions.mode), int(SetMode::LIST)) || shouldUpdate;
-		helpTooltip("Assign keys to sets based on a list of keys, sets and timings");
+		ImGui::helpTooltip("Assign keys to sets based on a list of keys, sets and timings");
 		ImGuiSameLine();
 		if(ImGui::Button("Configure...")){
 			_showSetListEditor = true;
@@ -1767,14 +1750,14 @@ void Viewer::showParticlesEditor(){
 			_state.particles.imagePaths.clear();
 			refreshTextures = true;
 		}
-		helpTooltip("Remove all particle images");
+		ImGui::helpTooltip("Remove all particle images");
 		ImGuiSameLine();
 		// Just restore the last backup.
 		if(ImGui::Button("Reset")){
 			_state = _backupState;
 			refreshTextures = true;
 		}
-		helpTooltip("Restore the previous particle images set");
+		ImGui::helpTooltip("Restore the previous particle images set");
 		ImGui::Separator();
 
 		// List of existing keys.
@@ -1824,7 +1807,7 @@ void Viewer::showParticlesEditor(){
 				if(ImGui::Button("x")){
 					removeIndex = int(row);
 				}
-				helpTooltip("Remove from the set");
+				ImGui::helpTooltip("Remove from the set");
 				ImGui::PopID();
 			}
 			ImGui::EndTable();
@@ -1860,7 +1843,7 @@ void Viewer::showParticlesEditor(){
 			}
 			free(outPaths);
 		}
-		helpTooltip("Add a new particle image to the set");
+		ImGui::helpTooltip("Add a new particle image to the set");
 
 		// Actions
 		if(!_showParticleEditor){
@@ -1910,7 +1893,7 @@ bool Viewer::drawPedalImageSettings(GLuint tex, const glm::vec2& size, bool labe
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.f,0.0f));
 	ImGui::ColorEdit3("Picker", &color[0], ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
 	ImGui::PopStyleVar();
-	helpTooltip("Define the pedal color");
+	ImGui::helpTooltip("Define the pedal color");
 
 	ImGuiSameLine(0);
 	if(ImGui::SmallButton("Load")){
@@ -1927,13 +1910,13 @@ bool Viewer::drawPedalImageSettings(GLuint tex, const glm::vec2& size, bool labe
 		}
 		free(outPath);
 	}
-	helpTooltip("Load an image for the pedal");
+	ImGui::helpTooltip("Load an image for the pedal");
 	ImGuiSameLine(0);
 	if(ImGui::SmallButton("x")){
 		path.clear();
 		refresh = true;
 	}
-	helpTooltip("Restore the default image");
+	ImGui::helpTooltip("Restore the default image");
 
 	if(!labelsAfter){
 		ImGui::Image((void*)(uint64_t)tex, size, startUV, endUV, color);
@@ -2005,14 +1988,14 @@ void Viewer::showPedalsEditor(){
 				_state.pedals.sideImagePaths.clear();
 				refreshTextures = true;
 			}
-			helpTooltip("Remove all images");
+			ImGui::helpTooltip("Remove all images");
 			ImGuiSameLine();
 			// Just restore the last backup.
 			if(ImGui::Button("Reset")){
 				_state = _backupState;
 				refreshTextures = true;
 			}
-			helpTooltip("Restore the previous images for all pedals");
+			ImGui::helpTooltip("Restore the previous images for all pedals");
 		}
 		ImGui::Separator();
 
@@ -2053,19 +2036,19 @@ void Viewer::showPedalsEditor(){
 			if(ImGui::SliderFloat("##OffsetX", &_state.pedals.margin[0], -0.5f, 0.5f, "Horiz.: %.2f")){
 				_state.pedals.margin[0] = glm::clamp(_state.pedals.margin[0], -0.5f, 0.5f);
 			}
-			helpTooltip(s_pedal_img_offset_x_dsc);
+			ImGui::helpTooltip(s_pedal_img_offset_x_dsc);
 			ImGuiSameLine();
 			if(ImGui::SliderFloat("##OffsetY", &_state.pedals.margin[1], -0.5f, 0.5f, "Vert.: %.2f")){
 				_state.pedals.margin[1] = glm::clamp(_state.pedals.margin[1], -0.5f, 0.5f);
 			}
-			helpTooltip(s_pedal_img_offset_y_dsc);
+			ImGui::helpTooltip(s_pedal_img_offset_y_dsc);
 			ImGui::PopItemWidth();
 			ImGuiSameLine();
 			ImGui::AlignTextToFramePadding();
 			ImGui::Text("Offsets");
 
 			ImGui::Checkbox("Mirror right pedal", &_state.pedals.mirror);
-			helpTooltip(s_pedal_img_mirrored_dsc);
+			ImGui::helpTooltip(s_pedal_img_mirrored_dsc);
 		}
 		
 		// Actions

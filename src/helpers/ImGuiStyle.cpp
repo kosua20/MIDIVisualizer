@@ -96,3 +96,21 @@ void ImGui::configureStyle(){
 	style.ItemSpacing.y		 = 3.0f;
 }
 
+bool ImGui::SliderPercent( const char* label, float* v, float v_min, float v_max )
+{
+	float tmp = ( *v ) * 100.0f;
+	const bool press = ImGui::SliderFloat( label, &tmp, v_min * 100.0f, v_max * 100.0f, "%.0f%%" );
+	if( press )
+	{
+		*v = tmp / 100.0f;
+	}
+	return press;
+}
+
+void ImGui::helpTooltip( const char* msg )
+{
+	if( ImGui::IsItemHovered() )
+	{
+		ImGui::SetTooltip( "%s", msg );
+	}
+}
