@@ -785,8 +785,8 @@ int sr_gui_open_in_explorer(const char* path){
 		LPITEMIDLIST file_item = NULL;
 		hr = desktop->ParseDisplayName(NULL, NULL, pathW, NULL, &file_item, NULL);
 		if (!FAILED(hr)) {
-			//hr = SHOpenFolderAndSelectItems(file_item, 0, NULL, NULL);
-			//done = !FAILED(hr);
+			hr = SHOpenFolderAndSelectItems(file_item, 0, NULL, NULL);
+			done = !FAILED(hr);
 		}
 		if (file_item) {
 			CoTaskMemFree(file_item);
