@@ -50,7 +50,7 @@ wchar_t* _sr_gui_widen_string(const char* str) {
 
 // Transfer output ownership to the caller.
 char* _sr_gui_narrow_string(const wchar_t* wstr) {
-	if(wstr == NULL) {
+	if(wstr == NULL){
 		return NULL;
 	}
 	const int sizeNarrow = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
@@ -59,10 +59,23 @@ char* _sr_gui_narrow_string(const wchar_t* wstr) {
 	return output;
 }
 
+// Modify in place
+void _sr_gui_convert_path_separators(wchar_t* str) {
+	if(str == NULL){
+		return;
+	}
+	const size_t len = wcslen(str);
+	for( size_t i = 0; i < len; ++i ){
+		if( str[ i ] == L'/' ){
+			str[i] = L'\\';
+		}
+	}
+}
+
 void sr_gui_show_message(const char* title, const char* message, int level) {
 
-	wchar_t* titleW	  = _sr_gui_widen_string(title);
-	wchar_t* messageW = _sr_gui_widen_string(message);
+	wchar_t* titleW	  = _sr_gui_widen_string(title ? title : SR_GUI_APP_NAME);
+	wchar_t* messageW = _sr_gui_widen_string(message ? message : "");
 
 	PCWSTR icon = TD_INFORMATION_ICON;
 	if(level == SR_GUI_MESSAGE_LEVEL_ERROR) {
@@ -191,8 +204,8 @@ void sr_gui_show_notification(const char* title, const char* message) {
 
 	// Create the notification template
 	WCHAR* templateBase			   = L"<toast><visual><binding template='ToastGeneric'><text>%s</text><text>%s</text></binding></visual></toast>";
-	WCHAR* titleW				   = _sr_gui_widen_string(title);
-	WCHAR* messageW				   = _sr_gui_widen_string(message);
+	WCHAR* titleW				   = _sr_gui_widen_string(title ? title : SR_GUI_APP_NAME);
+	WCHAR* messageW				   = _sr_gui_widen_string(message ? message : "");
 	const size_t templateTotalSize = wcslen(templateBase) + wcslen(titleW) + wcslen(messageW) + 1;
 	WCHAR* templateStr			   = (WCHAR*)SR_GUI_MALLOC(templateTotalSize * sizeof(WCHAR));
 	if(templateStr == NULL) {
@@ -313,6 +326,7 @@ bool _sr_gui_add_default_path(const char* path, IFileDialog* dialog) {
 		return true;
 	}
 	WCHAR* startDirW = _sr_gui_widen_string(path);
+	_sr_gui_convert_path_separators(startDirW);
 	IShellItem* pathShell;
 	HRESULT res = SHCreateItemFromParsingName(startDirW, NULL, IID_PPV_ARGS(&pathShell));
 	SR_GUI_FREE(startDirW);
@@ -325,7 +339,10 @@ bool _sr_gui_add_default_path(const char* path, IFileDialog* dialog) {
 }
 
 int sr_gui_ask_directory(const char* title, const char* startDir, char** outPath) {
-	*outPath = nullptr;
+	if(!outPath) {
+		return SR_GUI_CANCELLED;
+	}
+	*outPath = NULL;
 
 	IFileOpenDialog* dialog = NULL;
 	HRESULT res				= CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL, IID_PPV_ARGS(&dialog));
@@ -340,7 +357,7 @@ int sr_gui_ask_directory(const char* title, const char* startDir, char** outPath
 	}
 
 	// Set title.
-	WCHAR* titleW = _sr_gui_widen_string(title);
+	WCHAR* titleW = _sr_gui_widen_string(title ? title : SR_GUI_APP_NAME);
 	res			  = dialog->SetTitle(titleW);
 	SR_GUI_FREE(titleW);
 	if(!SUCCEEDED(res)) {
@@ -387,6 +404,9 @@ int sr_gui_ask_directory(const char* title, const char* startDir, char** outPath
 }
 
 int sr_gui_ask_load_files(const char* title, const char* startDir, const char* exts, char*** outPaths, int* outCount) {
+	if(!outCount  || !outPaths) {
+		return SR_GUI_CANCELLED;
+	}
 	*outCount = 0;
 	*outPaths = NULL;
 
@@ -410,7 +430,7 @@ int sr_gui_ask_load_files(const char* title, const char* startDir, const char* e
 	}
 
 	// Set title.
-	WCHAR* titleW = _sr_gui_widen_string(title);
+	WCHAR* titleW = _sr_gui_widen_string(title ? title : SR_GUI_APP_NAME);
 	res			  = dialog->SetTitle(titleW);
 	SR_GUI_FREE(titleW);
 	if(!SUCCEEDED(res)) {
@@ -480,6 +500,9 @@ int sr_gui_ask_load_files(const char* title, const char* startDir, const char* e
 }
 
 int sr_gui_ask_load_file(const char* title, const char* startDir, const char* exts, char** outPath) {
+	if(!outPath) {
+		return SR_GUI_CANCELLED;
+	}
 	*outPath = NULL;
 
 	IFileOpenDialog* dialog = NULL;
@@ -502,7 +525,7 @@ int sr_gui_ask_load_file(const char* title, const char* startDir, const char* ex
 	}
 
 	// Set title.
-	WCHAR* titleW = _sr_gui_widen_string(title);
+	WCHAR* titleW = _sr_gui_widen_string(title ? title : SR_GUI_APP_NAME);
 	res			  = dialog->SetTitle(titleW);
 	SR_GUI_FREE(titleW);
 	if(!SUCCEEDED(res)) {
@@ -536,6 +559,9 @@ int sr_gui_ask_load_file(const char* title, const char* startDir, const char* ex
 }
 
 int sr_gui_ask_save_file(const char* title, const char* startDir, const char* exts, char** outPath) {
+	if(!outPath) {
+		return SR_GUI_CANCELLED;
+	}
 	*outPath = NULL;
 
 	IFileSaveDialog* dialog = NULL;
@@ -558,7 +584,7 @@ int sr_gui_ask_save_file(const char* title, const char* startDir, const char* ex
 	}
 
 	// Set title.
-	WCHAR* titleW = _sr_gui_widen_string(title);
+	WCHAR* titleW = _sr_gui_widen_string(title ? title : SR_GUI_APP_NAME);
 	res			  = dialog->SetTitle(titleW);
 	SR_GUI_FREE(titleW);
 	if(!SUCCEEDED(res)) {
@@ -592,8 +618,8 @@ int sr_gui_ask_save_file(const char* title, const char* startDir, const char* ex
 }
 
 int sr_gui_ask_choice(const char* title, const char* message, int level, const char* button0, const char* button1, const char* button2) {
-	WCHAR* titleW	= _sr_gui_widen_string(title);
-	WCHAR* messageW = _sr_gui_widen_string(message);
+	WCHAR* titleW	= _sr_gui_widen_string(title ? title : SR_GUI_APP_NAME);
+	WCHAR* messageW = _sr_gui_widen_string(message ? message : "");
 	WCHAR* button0W = _sr_gui_widen_string(button0);
 	WCHAR* button1W = _sr_gui_widen_string(button1);
 	WCHAR* button2W = _sr_gui_widen_string(button2);
@@ -659,6 +685,7 @@ struct _sr_gui_message_callback_data {
 	HWND textField;
 	HFONT font;
 	char** content;
+	wchar_t* defaultString;
 };
 
 HRESULT _sr_gui_message_callback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, LONG_PTR lpRefData) {
@@ -675,8 +702,7 @@ HRESULT _sr_gui_message_callback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 		// Add text field.
 		data->textField = CreateWindow(L"EDIT", NULL, WS_BORDER | WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_LEFT | WS_TABSTOP, 10, h - 110, w - 40, 18, hwnd, (HMENU)5, NULL, NULL);
 		// Field default value and font.
-		const WCHAR* dfltName = L"Default string";
-		SendMessage(data->textField, WM_SETTEXT, NULL, (LPARAM)dfltName);
+		SendMessage(data->textField, WM_SETTEXT, NULL, (LPARAM)(data->defaultString));
 		SendMessage(data->textField, EM_SETSEL, 0, -1);
 
 		HDC context	   = GetDC(hwnd);
@@ -697,13 +723,16 @@ HRESULT _sr_gui_message_callback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 }
 
 int sr_gui_ask_string(const char* title, const char* message, char** result) {
-
+	if(!result) {
+		return SR_GUI_CANCELLED;
+	}
 	// Message string.
-	WCHAR* messageWTemp		 = _sr_gui_widen_string(message);
-	const size_t messageSize = strlen(message);
+	WCHAR* messageWTemp		 = _sr_gui_widen_string(message ? message : "");
+	const size_t messageSize = wcslen(messageWTemp);
 	WCHAR* messageW			 = (WCHAR*)SR_GUI_MALLOC((messageSize + 2 + 1) * sizeof(WCHAR));
 	if(messageW == NULL) {
 		SR_GUI_FREE(messageWTemp);
+		*result = NULL;
 		return SR_GUI_CANCELLED;
 	}
 	// Append a line return to make room for the text field that we will add afterwards.
@@ -713,10 +742,14 @@ int sr_gui_ask_string(const char* title, const char* message, char** result) {
 	messageW[messageSize + 2] = '\0';
 	SR_GUI_FREE(messageWTemp);
 
-	WCHAR* titleW = _sr_gui_widen_string(title);
+	WCHAR* titleW		  = _sr_gui_widen_string(title ? title : SR_GUI_APP_NAME);
+	WCHAR* dfltValue	  = _sr_gui_widen_string(*result ? *result : "Default value");
+	*result				  = NULL;
 
+	char* content = NULL;
 	_sr_gui_message_callback_data callData;
-	callData.content = result;
+	callData.content	    = &content;
+	callData.defaultString	= dfltValue;
 
 	TASKDIALOGCONFIG dialog	  = {0};
 	dialog.cbSize			  = sizeof(TASKDIALOGCONFIG);
@@ -732,24 +765,19 @@ int sr_gui_ask_string(const char* title, const char* message, char** result) {
 	HRESULT res = TaskDialogIndirect(&dialog, &button, NULL, NULL);
 	SR_GUI_FREE(messageW);
 	SR_GUI_FREE(titleW);
+	SR_GUI_FREE(dfltValue);
 	DeleteObject(callData.font);
 	DeleteObject(callData.textField);
 
-	// Result status.
-	if(FAILED(res) || button != IDOK) {
-		if(*(callData.content) != NULL) {
-			SR_GUI_FREE(*(callData.content));
-		}
-		*(callData.content) = NULL;
-		return SR_GUI_CANCELLED;
-	}
-
-	// The string pointer has been stored in the callback data and is already up to date.
-	return SR_GUI_VALIDATED;
+	// Retrieve the string content (will be null if no success).
+	*result = content;
+	return (SUCCEEDED(res) && (button == IDOK)) ? SR_GUI_VALIDATED : SR_GUI_CANCELLED;
 }
 
 int sr_gui_ask_color(unsigned char color[3]) {
-
+	if(!color) {
+		return SR_GUI_CANCELLED;
+	}
 	DWORD colorD = RGB(color[0], color[1], color[2]);
 	// Preserve palette of favorite colors between calls.
 	static COLORREF acrCustClr[16];
@@ -775,8 +803,11 @@ int sr_gui_ask_color(unsigned char color[3]) {
 }
 
 int sr_gui_open_in_explorer(const char* path){
-
+	if(!path){
+		return SR_GUI_CANCELLED;
+	}
 	WCHAR* pathW = _sr_gui_widen_string(path);
+	_sr_gui_convert_path_separators(pathW);
 
 	bool done = false;
 	IShellFolder* desktop = NULL;
@@ -812,4 +843,59 @@ int sr_gui_open_in_explorer(const char* path){
 	return SR_GUI_VALIDATED;
 }
 
+int sr_gui_open_in_default_app(const char* path){
+	if(!path){
+		return SR_GUI_CANCELLED;
+	}
+	WCHAR* pathW = _sr_gui_widen_string(path);
+	_sr_gui_convert_path_separators(pathW);
+	ShellExecute(NULL, NULL, pathW, NULL, NULL, SW_SHOW);
+	SR_GUI_FREE(pathW);
+	return SR_GUI_VALIDATED;
+}
+
+int sr_gui_open_in_browser(const char* url){
+	if(!url){
+		return SR_GUI_CANCELLED;
+	}
+	WCHAR* urlW = _sr_gui_widen_string(url);
+	ShellExecute(NULL, NULL, urlW, NULL, NULL, SW_SHOW);
+	SR_GUI_FREE(urlW);
+	return SR_GUI_VALIDATED;
+}
+
+int sr_gui_get_app_data_path(char** outPath) {
+	if(!outPath) {
+		return SR_GUI_CANCELLED;
+	}
+	*outPath = NULL;
+
+	// %APPDATA%, ie C:/Users/name/AppData/
+	PWSTR pathData = nullptr;
+	HRESULT res	   = SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, NULL, &pathData);
+	if(res != S_OK) {
+		CoTaskMemFree(pathData);
+		return SR_GUI_CANCELLED;
+	}
+	_sr_gui_convert_path_separators(pathData);
+	*outPath = _sr_gui_narrow_string(pathData);
+	CoTaskMemFree(pathData);
+
+	// Fixup trailing slash.
+	char* oldOutPath	 = *outPath;
+	const size_t strSize = strlen(oldOutPath);
+	if((strSize != 0) && (oldOutPath[strSize - 1] != '\\')) {
+		// New copy of outPath will be used.
+		*outPath = (char*)SR_GUI_MALLOC((strSize + 2) * sizeof(char));
+		if(*outPath == NULL){
+			SR_GUI_FREE(oldOutPath);
+			return SR_GUI_CANCELLED;
+		}
+		SR_GUI_MEMCPY(*outPath, oldOutPath, strSize * sizeof(char));
+		(*outPath)[strSize]	  = '\\';
+		(*outPath)[strSize + 1] = '\0';
+		SR_GUI_FREE(oldOutPath);
+	}
+	return SR_GUI_VALIDATED;
+}
 #endif

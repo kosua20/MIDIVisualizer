@@ -28,8 +28,10 @@ void sr_gui_show_message(const char* title, const char* message, int level) {
 		levelGtk = GTK_MESSAGE_WARNING;
 	}
 
-	GtkWidget* dialog = gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL, levelGtk, GTK_BUTTONS_OK, "%s", title);
-	gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog), "%s", message);
+	GtkWidget* dialog = gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL, levelGtk, GTK_BUTTONS_OK, "%s", (title ? title : SR_GUI_APP_NAME));
+	if(message){
+		gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog), "%s", message);
+	}
 
 	int res = gtk_dialog_run(GTK_DIALOG(dialog));
 	(void)res;
@@ -37,7 +39,7 @@ void sr_gui_show_message(const char* title, const char* message, int level) {
 }
 
 void sr_gui_show_notification(const char* title, const char* message) {
-	NotifyNotification* notif = notify_notification_new(title, message, NULL);
+	NotifyNotification* notif = notify_notification_new(title ? title : SR_GUI_APP_NAME, message ? message : "", NULL);
 	notify_notification_set_timeout(notif, NOTIFY_EXPIRES_DEFAULT);
 	notify_notification_set_urgency(notif, NOTIFY_URGENCY_NORMAL);
 
@@ -107,15 +109,21 @@ void _sr_gui_pump_events(){
 }
 
 int sr_gui_ask_directory(const char* title, const char* startDir, char** outPath) {
+	if(!outPath) {
+		return SR_GUI_CANCELLED;
+	}
+
 	*outPath = NULL;
 	if(!gtk_init_check(NULL, NULL)) {
 		return SR_GUI_CANCELLED;
 	}
 
-	GtkFileChooserNative* pickerNative = gtk_file_chooser_native_new(title, NULL, GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, NULL, NULL);
+	GtkFileChooserNative* pickerNative = gtk_file_chooser_native_new(title ? title : SR_GUI_APP_NAME, NULL, GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, NULL, NULL);
 	GtkFileChooser* picker			   = GTK_FILE_CHOOSER(pickerNative);
 	gtk_file_chooser_set_create_folders(picker, TRUE);
-	gtk_file_chooser_set_current_folder(picker, startDir);
+	if(startDir){
+		gtk_file_chooser_set_current_folder(picker, startDir);
+	}
 
 	int res = gtk_native_dialog_run(GTK_NATIVE_DIALOG(pickerNative));
 	if(res != GTK_RESPONSE_ACCEPT) {
@@ -142,15 +150,20 @@ int sr_gui_ask_directory(const char* title, const char* startDir, char** outPath
 }
 
 int sr_gui_ask_load_files(const char* title, const char* startDir, const char* exts, char*** outPaths, int* outCount) {
+	if(!outCount || !outPaths) {
+		return SR_GUI_CANCELLED;
+	}
 	*outCount = 0;
 	*outPaths = NULL;
 	if(!gtk_init_check(NULL, NULL)) {
 		return SR_GUI_CANCELLED;
 	}
 
-	GtkFileChooserNative* pickerNative = gtk_file_chooser_native_new(title, NULL, GTK_FILE_CHOOSER_ACTION_OPEN, NULL, NULL);
+	GtkFileChooserNative* pickerNative = gtk_file_chooser_native_new(title ? title : SR_GUI_APP_NAME, NULL, GTK_FILE_CHOOSER_ACTION_OPEN, NULL, NULL);
 	GtkFileChooser* picker			   = GTK_FILE_CHOOSER(pickerNative);
-	gtk_file_chooser_set_current_folder(picker, startDir);
+	if(startDir){
+		gtk_file_chooser_set_current_folder(picker, startDir);
+	}
 	gtk_file_chooser_set_select_multiple(picker, TRUE);
 
 	if(_sr_gui_add_filter_extensions(exts, picker) != 1) {
@@ -202,14 +215,20 @@ int sr_gui_ask_load_files(const char* title, const char* startDir, const char* e
 }
 
 int sr_gui_ask_load_file(const char* title, const char* startDir, const char* exts, char** outPath) {
+	if(!outPath) {
+		return SR_GUI_CANCELLED;
+	}
+
 	*outPath = NULL;
 	if(!gtk_init_check(NULL, NULL)) {
 		return SR_GUI_CANCELLED;
 	}
 
-	GtkFileChooserNative* pickerNative = gtk_file_chooser_native_new(title, NULL, GTK_FILE_CHOOSER_ACTION_OPEN, NULL, NULL);
+	GtkFileChooserNative* pickerNative = gtk_file_chooser_native_new(title ? title : SR_GUI_APP_NAME, NULL, GTK_FILE_CHOOSER_ACTION_OPEN, NULL, NULL);
 	GtkFileChooser* picker			   = GTK_FILE_CHOOSER(pickerNative);
-	gtk_file_chooser_set_current_folder(picker, startDir);
+	if(startDir){
+		gtk_file_chooser_set_current_folder(picker, startDir);
+	}
 	gtk_file_chooser_set_select_multiple(picker, FALSE);
 
 	if(_sr_gui_add_filter_extensions(exts, picker) != 1) {
@@ -244,17 +263,23 @@ int sr_gui_ask_load_file(const char* title, const char* startDir, const char* ex
 }
 
 int sr_gui_ask_save_file(const char* title, const char* startDir, const char* exts, char** outPath) {
+	if(!outPath) {
+		return SR_GUI_CANCELLED;
+	}
+
 	*outPath = NULL;
 	if(!gtk_init_check(NULL, NULL)) {
 		return SR_GUI_CANCELLED;
 	}
 
-	GtkFileChooserNative* pickerNative = gtk_file_chooser_native_new(title, NULL, GTK_FILE_CHOOSER_ACTION_SAVE, NULL, NULL);
+	GtkFileChooserNative* pickerNative = gtk_file_chooser_native_new(title ? title : SR_GUI_APP_NAME, NULL, GTK_FILE_CHOOSER_ACTION_SAVE, NULL, NULL);
 	GtkFileChooser* picker			   = GTK_FILE_CHOOSER(pickerNative);
 	gtk_file_chooser_set_do_overwrite_confirmation(picker, TRUE);
 	gtk_file_chooser_set_create_folders(picker, TRUE);
-	gtk_file_chooser_set_current_folder(picker, startDir);
-	
+	if(startDir){
+		gtk_file_chooser_set_current_folder(picker, startDir);
+	}
+
 	if(_sr_gui_add_filter_extensions(exts, picker) != 1) {
 		g_object_unref(pickerNative);
 		_sr_gui_pump_events();
@@ -324,19 +349,23 @@ int sr_gui_ask_choice(const char* title, const char* message, int level, const c
 	// Pack title and message in a vertical box.
 	// Configure title.
 	GtkWidget* head = gtk_label_new(title);
-	char* markup	= g_markup_printf_escaped("\t<b>%s</b>", title);
+	char* markup	= g_markup_printf_escaped("\t<b>%s</b>", title ? title : SR_GUI_APP_NAME);
 	gtk_label_set_markup(GTK_LABEL(head), markup);
 	g_free(markup);
 	gtk_widget_set_halign(head, GTK_ALIGN_START);
-	// Configure message.
-	GtkWidget* label = gtk_label_new(message);
-	gtk_label_set_width_chars(GTK_LABEL(label), 50);
-	gtk_label_set_max_width_chars(GTK_LABEL(label), 50);
-	gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
+
 	// Pack both labels.
 	GtkWidget* textArea = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
 	gtk_container_add(GTK_CONTAINER(textArea), head);
-	gtk_container_add(GTK_CONTAINER(textArea), label);
+
+	// Configure message.
+	if(message){
+		GtkWidget* label = gtk_label_new(message);
+		gtk_label_set_width_chars(GTK_LABEL(label), 50);
+		gtk_label_set_max_width_chars(GTK_LABEL(label), 50);
+		gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
+		gtk_container_add(GTK_CONTAINER(textArea), label);
+	}
 
 	// Pack the icon and texts in an horizontal box.
 	GtkWidget* icon		= gtk_image_new_from_icon_name(iconName, GTK_ICON_SIZE_DIALOG);
@@ -369,15 +398,22 @@ int sr_gui_ask_choice(const char* title, const char* message, int level, const c
 }
 
 int sr_gui_ask_string(const char* title, const char* message, char** result) {
+	if(!result) {
+		return SR_GUI_CANCELLED;
+	}
 	if(!gtk_init_check(NULL, NULL)) {
+		*result = NULL;
 		return SR_GUI_CANCELLED;
 	}
 
-	GtkWidget* dialog = gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL, GTK_MESSAGE_OTHER, GTK_BUTTONS_OK_CANCEL, "%s", title);
-	gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog), "%s", message);
+	GtkWidget* dialog = gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL, GTK_MESSAGE_OTHER, GTK_BUTTONS_OK_CANCEL, "%s", title ? title : SR_GUI_APP_NAME);
+	if(message){
+		gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog), "%s", message);
+	}
 
 	GtkWidget* contentArea	= gtk_message_dialog_get_message_area(GTK_MESSAGE_DIALOG(dialog));
-	GtkEntryBuffer* textStr = gtk_entry_buffer_new("Default value", 13);
+	const char* defaultValue = *result ? *result : "Default value";
+	GtkEntryBuffer* textStr = gtk_entry_buffer_new(defaultValue, strlen(defaultValue));
 	gtk_entry_buffer_set_max_length(textStr, SR_GUI_MAX_STR_SIZE);
 	GtkWidget* textField = gtk_entry_new_with_buffer(textStr);
 	gtk_container_add(GTK_CONTAINER(contentArea), textField);
@@ -387,6 +423,7 @@ int sr_gui_ask_string(const char* title, const char* message, char** result) {
 	if(res != GTK_RESPONSE_ACCEPT && res != GTK_RESPONSE_OK && res != GTK_RESPONSE_APPLY && res != GTK_RESPONSE_YES) {
 		gtk_widget_destroy(dialog);
 		_sr_gui_pump_events();
+		*result = NULL;
 		return SR_GUI_CANCELLED;
 	}
 
@@ -406,6 +443,9 @@ int sr_gui_ask_string(const char* title, const char* message, char** result) {
 }
 
 int sr_gui_ask_color(unsigned char color[3]) {
+	if(!color) {
+		return SR_GUI_CANCELLED;
+	}
 	if(!gtk_init_check(NULL, NULL)) {
 		return SR_GUI_CANCELLED;
 	}
@@ -441,6 +481,9 @@ int sr_gui_ask_color(unsigned char color[3]) {
 }
 
 int sr_gui_open_in_explorer(const char* path){
+	if(!path){
+		return SR_GUI_CANCELLED;
+	}
 	const unsigned int strSize = strlen(path) + 1;
 	char* buffer = SR_GUI_MALLOC((strSize + 10) * sizeof(char));
 	// Generate a xdg-open command with the parent directory.
@@ -457,4 +500,94 @@ int sr_gui_open_in_explorer(const char* path){
 	int res = system(buffer);
 	SR_GUI_FREE(buffer);
 	return res == 0 ? SR_GUI_VALIDATED : SR_GUI_CANCELLED;
+}
+
+int sr_gui_open_in_default_app(const char* path){
+	if(!path){
+		return SR_GUI_CANCELLED;
+	}
+	const unsigned int strSize = strlen(path) + 1;
+	char* buffer = SR_GUI_MALLOC((strSize + 10) * sizeof(char));
+	// Generate a xdg-open command with the file path.
+	sprintf(buffer, "xdg-open %s", path);
+	// Run
+	int res = system(buffer);
+	SR_GUI_FREE(buffer);
+	return res == 0 ? SR_GUI_VALIDATED : SR_GUI_CANCELLED;
+}
+
+int sr_gui_open_in_browser(const char* url){
+	if(!url){
+		return SR_GUI_CANCELLED;
+	}
+	const unsigned int strSize = strlen(url) + 1;
+	char* buffer = SR_GUI_MALLOC((strSize + 10) * sizeof(char));
+	// Generate a xdg-open command with the URL
+	sprintf(buffer, "xdg-open %s", url);
+	// Run
+	int res = system(buffer);
+	SR_GUI_FREE(buffer);
+	return res == 0 ? SR_GUI_VALIDATED : SR_GUI_CANCELLED;
+}
+
+int sr_gui_get_app_data_path(char** outPath) {
+	if(!outPath) {
+		return SR_GUI_CANCELLED;
+	}
+	*outPath = NULL;
+	// /home/name/.config/ or other, based on $XDG_CONFIG_HOME or $HOME
+	const char* envConfig = getenv("XDG_CONFIG_HOME");
+	if(envConfig && (strlen(envConfig) != 0)) {
+		const unsigned int strSize = strlen(envConfig);
+		const int slashSize = ((strSize != 0) && (envConfig[strSize - 1] != '/')) ? 1 : 0;
+		const unsigned int finalSize = strSize + slashSize + 1;
+		*outPath = (char*)SR_GUI_MALLOC(finalSize * sizeof(char));
+		if(*outPath == NULL) {
+			return SR_GUI_CANCELLED;
+		}
+		// Copy config path
+		SR_GUI_MEMCPY(*outPath, envConfig, sizeof(char) * strSize);
+		unsigned int nextIndex = strSize;
+		// Append slash if needed
+		if(slashSize != 0){
+			(*outPath)[nextIndex++] = '/';
+		}
+		(*outPath)[nextIndex] = '\0';
+		return SR_GUI_VALIDATED;
+	}
+	// Fallback to HOME/.config
+	const char* envHome = getenv("HOME");
+	if(!envHome) {
+		// If nothing found, return the working directory.
+		*outPath = (char*)SR_GUI_MALLOC(1 * sizeof(char));
+		if(*outPath == NULL) {
+			return SR_GUI_CANCELLED;
+		}
+		*outPath[0] = '\0';
+		return SR_GUI_VALIDATED;
+	}
+
+	const char* suffix = ".config/";
+	const unsigned int strSize = strlen(envHome);
+	const unsigned int suffixSize = strlen(suffix);
+	const int slashSize = ((strSize != 0) && (envHome[strSize - 1] != '/')) ? 1 : 0;
+	const unsigned int finalSize = strSize + slashSize + suffixSize + 1;
+
+	*outPath = (char*)SR_GUI_MALLOC(finalSize * sizeof(char));
+	if(*outPath == NULL) {
+		return SR_GUI_CANCELLED;
+	}
+	
+	// Copy home path
+	SR_GUI_MEMCPY(*outPath, envHome, sizeof(char) * strSize);
+	unsigned int nextIndex = strSize;
+	// Append slash if needed
+	if(slashSize != 0){
+		(*outPath)[nextIndex++] = '/';
+	}
+	// Append config.
+	SR_GUI_MEMCPY(*outPath + nextIndex, suffix, sizeof(char) * suffixSize);
+	// End string.
+	(*outPath)[finalSize-1] = '\0';
+	return SR_GUI_VALIDATED;
 }
