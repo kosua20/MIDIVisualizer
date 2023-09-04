@@ -16,7 +16,7 @@ jobs:
           - os: windows-2019
             cmake-opts: -A x64
           - os: macos-11
-            cmake-opts:
+            cmake-opts: -G Xcode
     
     runs-on: ${{ matrix.os }}
     

@@ -22,10 +22,10 @@ jobs:
             asset_name: MIDIVisualizer-windows-64bits.zip
             ffmpeg-archive: ffmpeg-windows-64-static-lgpl.zip
           - os: macos-11
-            cmake-opts: 
-            artifact_name: build/MIDIVisualizer.app
+            cmake-opts: -G Xcode
+            artifact_name: build/Release/MIDIVisualizer.app
             asset_name: MIDIVisualizer-macos.zip
-            ffmpeg-archive: ffmpeg-osx-64-static-lgpl.zip
+            ffmpeg-archive: ffmpeg-osx-uni64-static-lgpl.zip
     
     runs-on: ${{ matrix.os }}
 

@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.8)
+
+# macOS specific settings (force Universal binary)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.12" CACHE STRING "Minimum OS X deployment version")
+set(CMAKE_OSX_ARCHITECTURES "$(ARCHS_STANDARD)" CACHE STRING "" FORCE)
 
 project(MIDIVisualizer)
 set(CMAKE_CXX_STANDARD 11)
