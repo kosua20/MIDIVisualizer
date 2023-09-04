@@ -1,4 +1,5 @@
 #include "System.h"
+#include <sr_gui.h>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -18,8 +19,6 @@
 
 #ifdef __APPLE__
 #include <sysdir.h>
-#include <CoreFoundation/CoreFoundation.h>
-extern "C" CFStringRef NSHomeDirectory( void );
 #endif
 
 // On Windows, we can notify both AMD and Nvidia drivers that we prefer discrete GPUs.
@@ -121,69 +120,19 @@ std::ofstream System::openOutputFile(const std::string& path, bool binary){
 
 #endif
 
-#ifdef _WIN32
-
 std::string System::getApplicationDataDirectory(){
-	// %APPDATA%, ie D:/Users/name/AppData/
-	PWSTR pathData = nullptr;
-	HRESULT res = SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, NULL, &pathData);
-
-	std::string path;
-	if(res == S_OK){
-		path = narrow(pathData);
-	}
-	CoTaskMemFree(pathData);
-	// If the call above failed, this will return an empty path, the working directory.
-	fixPathEnding(path);
-	return path;
-}
-
-#elif defined(__APPLE__)
-
-std::string System::getApplicationDataDirectory(){
-	// /Users/name/Library/Application Support/
-	// Retrieve the user application support path, relative to the home directory.
-	sysdir_search_path_enumeration_state state = sysdir_start_search_path_enumeration(SYSDIR_DIRECTORY_APPLICATION_SUPPORT, SYSDIR_DOMAIN_MASK_USER);
-	std::string path;
-	char pathBuffer[PATH_MAX];
-	while((state = sysdir_get_next_search_path_enumeration(state, pathBuffer))){
-		path = std::string(pathBuffer);
-		if(!path.empty()){
-			// We found a valid one!
-			break;
+	char* path = nullptr;
+	std::string pathStr;
+	if( sr_gui_get_app_data_path( &path ) == SR_GUI_VALIDATED){
+		if( path ){
+			pathStr = std::string( path );
 		}
 	}
-	// If nothing found, return the working directory.
-	if(path.empty()){
-		return "";
+	if( path ){
+		free( path );
 	}
-	// Retrieve home directory
-	CFStringGetCString((CFStringRef)NSHomeDirectory(), pathBuffer, sizeof(pathBuffer), kCFStringEncodingUTF8);
-	std::string homePath(pathBuffer);
-	fixPathEnding(homePath);
-	// Expand ~ if present in the path.
-	if(path[0] == '~'){
-		path = homePath.substr(0, homePath.size()-1) + path.substr(1);
-	}
-	fixPathEnding(path);
-	return path;
+	return pathStr;
 }
-
-#else
-
-std::string System::getApplicationDataDirectory(){
-	// /home/name/.config/ or other, based on $HOME
-	const char* envHome = std::getenv("HOME");
-	if(envHome){
-		std::string path = std::string(envHome);
-		fixPathEnding(path);
-		return path + ".config/";
-	}
-	// If nothing found, return the working directory.
-	return "";
-}
-
-#endif
 
 std::string System::loadStringFromFile(const std::string& path){
 	std::ifstream file = System::openInputFile(path, false);
