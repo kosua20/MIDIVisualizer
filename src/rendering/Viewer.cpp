@@ -764,6 +764,9 @@ SystemAction Viewer::showTopButtons(double currentTime){
 		ImGui::PopTextWrapPos();
 		ImGui::EndTooltip();
 	}
+	if(ImGui::IsItemClicked()){
+		sr_gui_open_in_browser("https://github.com/kosua20/MIDIVisualizer");
+	}
 	return action;
 }
 
