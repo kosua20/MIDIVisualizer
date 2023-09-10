@@ -12,7 +12,7 @@
 #include <array>
 
 #define MIDIVIZ_VERSION_MAJOR 7
-#define MIDIVIZ_VERSION_MINOR 1
+#define MIDIVIZ_VERSION_MINOR 2
 
 #define COLUMN_SIZE 170
 #define EXPORT_COLUMN_SIZE 200
@@ -67,6 +67,7 @@ public:
 	struct BackgroundState {
 		PathCollection imagePath; ///< Path to an image on disk (expect only one).
 		glm::vec3 color; ///< Background color.
+		glm::vec2 scrollSpeed; ///< Image scrolling speed
 		float minorsWidth; ///< Minor keys and notes width.
 		bool image; ///< Use background image.
 		bool imageBehindKeyboard; ///< Should image pass behind keyboard.

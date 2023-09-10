@@ -309,6 +309,12 @@ constexpr const char* s_color_bg_dsc 						= "Background color";
 constexpr const char* s_bg_img_path_key 					= "bg-img-path";
 constexpr const char* s_bg_img_path_dsc 					= "Path to an image on disk to use as background";
 
+constexpr const char* s_bg_img_scroll_x_key 				= "bg-img-scroll-x";
+constexpr const char* s_bg_img_scroll_x_dsc 				= "Horizontal scroll speed of the background image";
+
+constexpr const char* s_bg_img_scroll_y_key 				= "bg-img-scroll-y";
+constexpr const char* s_bg_img_scroll_y_dsc 				= "Vertical scroll speed of the background image";
+
 constexpr const char* s_color_major_key 					= "color-major";
 constexpr const char* s_color_major_dsc 					= "Major notes color";
 

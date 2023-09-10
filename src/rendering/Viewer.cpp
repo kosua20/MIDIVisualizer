@@ -331,6 +331,7 @@ void Viewer::drawBackgroundImage(const glm::vec2 &) {
 	bgProg.uniform("textureAlpha", _state.background.imageAlpha);
 	bgProg.uniform("behindKeyboard", _state.background.imageBehindKeyboard);
 	bgProg.uniform("keyboardHeight", _state.keyboard.size);
+	bgProg.uniform("scroll", _timer * _state.background.scrollSpeed);
 	_backgroundTexture.draw(_state.background.tex, _timer);
 
 	glDisable(GL_BLEND);
@@ -1275,6 +1276,14 @@ void Viewer::showBackgroundOptions(){
 		_state.background.tex = 0;
 	}
 	ImGui::helpTooltip("Remove the background image");
+
+	ImGuiPushItemWidth(100);
+	ImGui::SliderFloat("Scroll X##Background", &_state.background.scrollSpeed[0], -0.25f, 0.25f);
+	ImGui::helpTooltip(s_bg_img_scroll_x_dsc);
+	ImGuiSameLine(COLUMN_SIZE);
+	ImGui::SliderFloat("Scroll Y##Background", &_state.background.scrollSpeed[1], -0.25f, 0.25f);
+	ImGui::helpTooltip(s_bg_img_scroll_y_dsc);
+	ImGui::PopItemWidth();
 
 	ImGui::Checkbox("Image extends under keyboard", &_state.background.imageBehindKeyboard);
 	ImGui::helpTooltip(s_bg_img_behind_keyboard_dsc);

@@ -289,6 +289,8 @@ void State::defineOptions(){
 	_sharedInfos[s_bg_img_opacity_key] 			= {Category::BACKGROUND, s_bg_img_opacity_dsc, Type::FLOAT, {0.0f, 1.0f}};
 	_sharedInfos[s_color_bg_key] 				= {Category::BACKGROUND, s_color_bg_dsc, Type::COLOR};
 	_sharedInfos[s_bg_img_path_key] 			= {Category::BACKGROUND, s_bg_img_path_dsc, Type::PATH};
+	_sharedInfos[s_bg_img_scroll_x_key] 		= {Category::BACKGROUND, s_bg_img_scroll_x_dsc, Type::FLOAT};
+	_sharedInfos[s_bg_img_scroll_y_key] 		= {Category::BACKGROUND, s_bg_img_scroll_y_dsc, Type::FLOAT};
 
 	// Per sets
 	_sharedInfos[s_color_major_key] 			= {Category::PER_SETS, s_color_major_dsc, Type::COLOR};
@@ -399,6 +401,8 @@ void State::updateOptions(){
 	_floatInfos[s_preroll_key] = &prerollTime;
 	_floatInfos[s_scroll_speed_key] = &scrollSpeed;
 	_floatInfos[s_bg_img_opacity_key] = &background.imageAlpha;
+	_floatInfos[s_bg_img_scroll_x_key] = &background.scrollSpeed[0];
+	_floatInfos[s_bg_img_scroll_y_key] = &background.scrollSpeed[1];
 	_floatInfos[s_fadeout_notes_key] = &notes.fadeOut;
 	_floatInfos[s_notes_edge_width_key] = &notes.edgeWidth;
 	_floatInfos[s_notes_edge_intensity_key] = &notes.edgeBrightness;
@@ -821,6 +825,7 @@ void State::reset(){
 	background.imageAlpha = 1.0f;
 	background.tex = 0;
 	background.imageBehindKeyboard = false;
+	background.scrollSpeed = glm::vec2(0.f);
 	background.imagePath.clear();
 
 	score.hLines = true;
