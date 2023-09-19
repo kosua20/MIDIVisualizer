@@ -73,15 +73,15 @@ Configuration::Configuration(const std::string& path, const std::vector<std::str
 		// Window options
 		{
 			if(name == "size" && vals.size() >= 2){
-				windowSize[0] = Configuration::parseInt(vals[0]);
-				windowSize[1] = Configuration::parseInt(vals[1]);
+				windowSize[0] = glm::max(Configuration::parseInt(vals[0]), 128);
+				windowSize[1] = glm::max(Configuration::parseInt(vals[1]), 128);
 			}
 			if(name == "position" && vals.size() >= 2){
 				windowPos[0] = Configuration::parseInt(vals[0]);
 				windowPos[1] = Configuration::parseInt(vals[1]);
 			}
 			if(name == "gui-size" && vals.size() >= 1){
-				guiScale = Configuration::parseFloat(vals[0]);
+				guiScale = glm::clamp(Configuration::parseFloat(vals[0]), 0.1f, 1024.f);
 			}
 
 			if(name == "fullscreen"){
@@ -115,10 +115,10 @@ Configuration::Configuration(const std::string& path, const std::vector<std::str
 				exporting.path = join(vals, " ");
 			}
 			if(name == "framerate" && vals.size() >= 1){
-				exporting.framerate = Configuration::parseInt(vals[0]);
+				exporting.framerate = std::max(Configuration::parseInt(vals[0]), 1);
 			}
 			if(name == "bitrate" && vals.size() >= 1){
-				exporting.bitrate = Configuration::parseInt(vals[0]);
+				exporting.bitrate = std::max(Configuration::parseInt(vals[0]), 1);
 			}
 			if(name == "postroll" && vals.size() >= 1){
 				exporting.postroll = Configuration::parseFloat(vals[0]);
@@ -139,6 +139,14 @@ Configuration::Configuration(const std::string& path, const std::vector<std::str
 				}
 			}
 		}
+	}
+
+	// Ensure the window is visible on screen.
+	if(windowPos[0] + windowSize[0] < 0){
+		windowPos[0] = 0.f;
+	}
+	if(windowPos[1] + windowSize[1] < 0){
+		windowPos[1] = 0.f;
 	}
 
 }
