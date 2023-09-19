@@ -73,8 +73,8 @@ Configuration::Configuration(const std::string& path, const std::vector<std::str
 		// Window options
 		{
 			if(name == "size" && vals.size() >= 2){
-				windowSize[0] = glm::max(Configuration::parseInt(vals[0]), 128);
-				windowSize[1] = glm::max(Configuration::parseInt(vals[1]), 128);
+				windowSize[0] = glm::clamp(Configuration::parseInt(vals[0]), 128, 16384);
+				windowSize[1] = glm::clamp(Configuration::parseInt(vals[1]), 128, 16384);
 			}
 			if(name == "position" && vals.size() >= 2){
 				windowPos[0] = Configuration::parseInt(vals[0]);
@@ -115,10 +115,10 @@ Configuration::Configuration(const std::string& path, const std::vector<std::str
 				exporting.path = join(vals, " ");
 			}
 			if(name == "framerate" && vals.size() >= 1){
-				exporting.framerate = std::max(Configuration::parseInt(vals[0]), 1);
+				exporting.framerate = (std::max)(Configuration::parseInt(vals[0]), 1);
 			}
 			if(name == "bitrate" && vals.size() >= 1){
-				exporting.bitrate = std::max(Configuration::parseInt(vals[0]), 1);
+				exporting.bitrate = (std::max)(Configuration::parseInt(vals[0]), 1);
 			}
 			if(name == "postroll" && vals.size() >= 1){
 				exporting.postroll = Configuration::parseFloat(vals[0]);
