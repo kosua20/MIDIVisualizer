@@ -143,10 +143,10 @@ Configuration::Configuration(const std::string& path, const std::vector<std::str
 
 	// Ensure the window is visible on screen.
 	if(windowPos[0] + windowSize[0] < 0){
-		windowPos[0] = 0.f;
+		windowPos[0] = 32.f;
 	}
 	if(windowPos[1] + windowSize[1] < 0){
-		windowPos[1] = 0.f;
+		windowPos[1] = 32.f;
 	}
 
 }
