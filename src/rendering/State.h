@@ -12,7 +12,7 @@
 #include <array>
 
 #define MIDIVIZ_VERSION_MAJOR 7
-#define MIDIVIZ_VERSION_MINOR 2
+#define MIDIVIZ_VERSION_MINOR 3
 
 #define COLUMN_SIZE 170
 #define EXPORT_COLUMN_SIZE 200
@@ -105,6 +105,7 @@ public:
 		ColorArray majorColor; ///< Major key pressed color.
 		ColorArray minorColor; ///< Minor key pressed color.
 		glm::vec3 edgeColor; ///< Black keys color.
+		glm::vec3 backColor; ///< Major keys background color.
 		float size; ///< Size on screen, starting from the bottom.
 		float minorHeight; ///< Fraction of the keyboard height taken by the minor keys.
 		bool highlightKeys; ///< Highlight pressed keys.

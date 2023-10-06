@@ -220,7 +220,10 @@ constexpr const char* s_color_keyboard_minor_key 			= "color-keyboard-minor";
 constexpr const char* s_color_keyboard_minor_dsc 			= "Custom color for pressed minor keys";
 
 constexpr const char* s_color_keyboard_key 					= "color-keyboard";
-constexpr const char* s_color_keyboard_dsc 					= "Keyboard edges and keys color";
+constexpr const char* s_color_keyboard_dsc 					= "Keyboard edges and minor keys color";
+
+constexpr const char* s_color_keyboard_bg_key 					= "color-bg-keyboard";
+constexpr const char* s_color_keyboard_bg_dsc 					= "Keyboard background color";
 
 constexpr const char* s_keyboard_size_key 					= "keyboard-size";
 constexpr const char* s_keyboard_size_dsc 					= "Vertical size of the keyboard";

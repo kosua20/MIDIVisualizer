@@ -416,6 +416,8 @@ void State::updateOptions(){
 	_vecInfos[s_color_keyboard_major_key] = &keyboard.majorColor[0];
 	_vecInfos[s_color_keyboard_minor_key] = &keyboard.minorColor[0];
 	_vecInfos[s_color_keyboard_key] = &keyboard.edgeColor;
+	_vecInfos[s_color_keyboard_bg_key] = &keyboard.backColor;
+
 	_vecInfos[s_color_lines_key] = &score.vLinesColor; // Retro compat
 	_vecInfos[s_color_lines_vertical_key] = &score.vLinesColor;
 	_vecInfos[s_color_lines_horizontal_key] = &score.hLinesColor;
@@ -799,6 +801,7 @@ void State::reset(){
 	score.vLinesColor = glm::vec3(0.75f);
 	score.digitsColor = glm::vec3(1.0f, 1.0f, 1.0f);
 	keyboard.edgeColor = glm::vec3(0.0f, 0.0f, 0.0f);
+	keyboard.backColor = glm::vec3(1.0f, 1.0f, 1.0f);
 
 	scale = 0.5f ;
 	attenuation = 0.99f;
