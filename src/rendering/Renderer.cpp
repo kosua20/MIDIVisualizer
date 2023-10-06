@@ -399,13 +399,14 @@ void Renderer::drawFlashes(const std::shared_ptr<MIDIScene>& scene, float time, 
 	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
 }
 
-void Renderer::drawKeyboard(const std::shared_ptr<MIDIScene>& scene, float, const glm::vec2 & invScreenSize, const glm::vec3 & keyColor, const ColorArray & majorColors, const ColorArray & minorColors, bool highlightKeys) {
+void Renderer::drawKeyboard(const std::shared_ptr<MIDIScene>& scene, float, const glm::vec2 & invScreenSize, const glm::vec3 & edgeColor, const glm::vec3 & keyColor, const ColorArray & majorColors, const ColorArray & minorColors, bool highlightKeys) {
 
 	{
 		_programKeyMajors.use();
 		// Uniforms setup.
 		_programKeyMajors.uniform("inverseScreenSize", invScreenSize);
-		_programKeyMajors.uniform("edgeColor", keyColor);
+		_programKeyMajors.uniform("edgeColor", edgeColor);
+		_programKeyMajors.uniform("keyColor", keyColor);
 		_programKeyMajors.uniforms("majorColor", majorColors.size(), majorColors.data());
 		_programKeyMajors.uniform("highlightKeys", highlightKeys);
 
@@ -418,7 +419,7 @@ void Renderer::drawKeyboard(const std::shared_ptr<MIDIScene>& scene, float, cons
 		_programKeyMinors.use();
 		// Uniforms setup.
 		_programKeyMinors.uniform("inverseScreenSize", invScreenSize);
-		_programKeyMinors.uniform("edgeColor", keyColor);
+		_programKeyMinors.uniform("edgeColor", edgeColor);
 		_programKeyMinors.uniforms("minorColor", minorColors.size(), minorColors.data());
 		_programKeyMinors.uniform("highlightKeys", highlightKeys);
 

@@ -358,7 +358,7 @@ void Viewer::drawScore(const glm::vec2 & invSize) {
 void Viewer::drawKeyboard(const glm::vec2 & invSize) {
 	const ColorArray & majColors = _state.keyboard.customKeyColors ? _state.keyboard.majorColor : _state.notes.majorColors;
 	const ColorArray & minColors = _state.keyboard.customKeyColors ? _state.keyboard.minorColor : _state.notes.minorColors;
-	_renderer.drawKeyboard(_scene, _timer, invSize, _state.keyboard.edgeColor, majColors, minColors, _state.keyboard.highlightKeys);
+	_renderer.drawKeyboard(_scene, _timer, invSize, _state.keyboard.edgeColor, _state.keyboard.backColor, majColors, minColors, _state.keyboard.highlightKeys);
 }
 
 void Viewer::drawNotes(const glm::vec2 & invSize) {

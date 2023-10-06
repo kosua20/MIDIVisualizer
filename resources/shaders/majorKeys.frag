@@ -14,6 +14,7 @@ uniform int actives[128];
 uniform int minNoteMajor;
 uniform vec2 inverseScreenSize;
 uniform vec3 edgeColor = vec3(0.0);
+uniform vec3 keyColor = vec3(1.0);
 
 uniform vec3 majorColor[SETS_COUNT];
 
@@ -34,7 +35,7 @@ void main(){
 	// If the current major key is active, the majorColor is specific.
 	int majorId = majorIds[clamp(int(In.uv.x * notesCount) + minNoteMajor, 0, 74)];
 	int cidMajor = actives[majorId];
-	vec3 frontColor = (highlightKeys && cidMajor >= 0) ? majorColor[cidMajor] : vec3(1.0);
+	vec3 frontColor = (highlightKeys && cidMajor >= 0) ? majorColor[cidMajor] : keyColor;
 
 	// Mix.
 	fragColor.rgb = mix(edgeColor, frontColor, centerIntensity);
