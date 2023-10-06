@@ -1030,10 +1030,12 @@ void Viewer::showParticleOptions(){
 
 void Viewer::showKeyboardOptions(){
 	ImGuiPushItemWidth(25);
-	ImGui::ColorEdit3("Fill Color##Keys", &_state.keyboard.edgeColor[0], ImGuiColorEditFlags_NoInputs);
+	ImGui::ColorEdit3("Edge Color##Keys", &_state.keyboard.edgeColor[0], ImGuiColorEditFlags_NoInputs);
 	ImGui::helpTooltip(s_color_keyboard_dsc);
-	ImGui::PopItemWidth();
 	ImGuiSameLine(COLUMN_SIZE);
+	ImGui::ColorEdit3("Fill Color##Keys", &_state.keyboard.backColor[0], ImGuiColorEditFlags_NoInputs);
+	ImGui::helpTooltip(s_color_keyboard_bg_dsc);
+	ImGui::PopItemWidth();
 
 	ImGuiPushItemWidth(100);
 	if(ImGui::SliderPercent("Height##Keys", &_state.keyboard.size, 0.0f, 1.0f)){
@@ -1041,6 +1043,14 @@ void Viewer::showKeyboardOptions(){
 		_renderer.setKeyboardSizeAndFadeout(_state.keyboard.size, _state.notes.fadeOut);
 	}
 	ImGui::helpTooltip(s_keyboard_size_dsc);
+	ImGuiSameLine(COLUMN_SIZE);
+
+	if(ImGui::SliderPercent("Minor height##Keys", &_state.keyboard.minorHeight, 0.0f, 1.0f)){
+		_state.keyboard.minorHeight = glm::clamp(_state.keyboard.minorHeight, 0.0f, 1.0f);
+		// TODO: (MV) just apply when needed?
+		_renderer.setMinorEdgesAndHeight(_state.keyboard.minorEdges, _state.keyboard.minorHeight);
+	}
+	ImGui::helpTooltip(s_keyboard_minor_height_dsc);
 	ImGui::PopItemWidth();
 
 	ImGuiPushItemWidth(25);
@@ -1051,16 +1061,6 @@ void Viewer::showKeyboardOptions(){
 	ImGui::helpTooltip(s_keyboard_minor_edges_dsc);
 	ImGui::PopItemWidth();
 	ImGuiSameLine(COLUMN_SIZE);
-
-	ImGuiPushItemWidth(100);
-	if(ImGui::SliderPercent("Minor height##Keys", &_state.keyboard.minorHeight, 0.0f, 1.0f)){
-		_state.keyboard.minorHeight = glm::clamp(_state.keyboard.minorHeight, 0.0f, 1.0f);
-		// TODO: (MV) just apply when needed?
-		_renderer.setMinorEdgesAndHeight(_state.keyboard.minorEdges, _state.keyboard.minorHeight);
-	}
-	ImGui::helpTooltip(s_keyboard_minor_height_dsc);
-	ImGui::PopItemWidth();
-
 	ImGui::Checkbox("Highlight keys", &_state.keyboard.highlightKeys);
 	ImGui::helpTooltip(s_keyboard_highlight_dsc);
 
