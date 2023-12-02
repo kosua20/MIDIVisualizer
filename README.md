@@ -55,7 +55,8 @@ If display options are given, they will override those specified in the configur
 	--flashes-size      Flash effect size (number in [0.100000,3.000000])
 	--particles-count   Particles count (integer in [1,512])
 	--preroll           Preroll time in seconds before starting to play (number)
-	--quality           Rendering quality (values: LOW_RES, LOW, MEDIUM, HIGH, HIGH_RES)	--show-keyboard     Should the keyboard be shown (1 or 0 to enable/disable)
+	--quality           Rendering quality (values: LOW_RES, LOW, MEDIUM, HIGH, HIGH_RES)
+ 	--show-keyboard     Should the keyboard be shown (1 or 0 to enable/disable)
 	...
 
 ![Result image](result3.png) 
