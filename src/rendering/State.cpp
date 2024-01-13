@@ -182,6 +182,7 @@ void State::defineOptions(){
 	_sharedInfos[s_scroll_speed_key] 		= {Category::PLAYBACK, s_scroll_speed_dsc, Type::FLOAT};
 	_sharedInfos[s_scroll_reverse_key] 		= {Category::PLAYBACK, s_scroll_reverse_dsc, Type::BOOLEAN};
 	_sharedInfos[s_scroll_horizontal_key] 	= {Category::PLAYBACK, s_scroll_horizontal_dsc, Type::BOOLEAN};
+	_sharedInfos[s_loop_key] 				= {Category::PLAYBACK, s_loop_dsc, Type::BOOLEAN};
 
 	// Effects
 	_sharedInfos[s_layers_key] 			= {Category::EFFECTS, s_layers_dsc, Type::OTHER};
@@ -474,6 +475,7 @@ void State::updateOptions(){
 	_boolInfos[s_smooth_key] = &applyAA;
 	_boolInfos[s_scroll_reverse_key] = &reverseScroll;
 	_boolInfos[s_scroll_horizontal_key] = &horizontalScroll;
+	_boolInfos[s_loop_key] = &loop;
 
 	_pathInfos[s_bg_img_path_key] = &background.imagePath;
 	_pathInfos[s_particles_paths_key] = &particles.imagePaths;
@@ -920,6 +922,7 @@ void State::reset(){
 	applyAA = false;
 	reverseScroll = false;
 	horizontalScroll = false;
+	loop = false;
 
 	_filePath = "";
 }

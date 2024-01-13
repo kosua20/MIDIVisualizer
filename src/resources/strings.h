@@ -54,6 +54,9 @@ constexpr const char* s_scroll_reverse_dsc 					= "Notes scroll from bottom to t
 constexpr const char* s_scroll_horizontal_key 				= "scroll-horizontal";
 constexpr const char* s_scroll_horizontal_dsc 				= "Notes scroll from right to left when enabled";
 
+constexpr const char* s_loop_key 							= "loop";
+constexpr const char* s_loop_dsc 							= "Loop playback from start to end";
+
 constexpr const char* s_layers_key 							= "layers";
 constexpr const char* s_layers_dsc 							= "Active layers indices, from background to foreground";
 
