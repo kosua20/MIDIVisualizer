@@ -213,6 +213,10 @@ SystemAction Viewer::draw(float currentTime) {
 	// playback is disabled.
 	_timer = _shouldPlay ? (currentTime - _timerStart) : _timer;
 
+	if (_shouldPlay && _state.loop && _timer >= _scene->duration()) {
+		reset();
+	}
+
 	// Render scene and blit, with GUI on top if needed.
 	drawScene(_useTransparency);
 
@@ -555,6 +559,18 @@ SystemAction Viewer::drawGUI(const float currentTime) {
 				ImGui::helpTooltip(s_scroll_reverse_dsc);
 			}
 
+			if(_liveplay){
+				ImGui::BeginDisabled();
+			}
+			ImGui::Checkbox("Loop", &_state.loop);
+			if(_liveplay){
+				ImGui::EndDisabled();
+				if(ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)){
+					ImGui::SetTooltip("Not available in liveplay");
+				}
+			} else {
+				ImGui::helpTooltip(s_loop_dsc);
+			}
 		}
 
 		if(ImGui::CollapsingHeader("Notes##HEADER")){

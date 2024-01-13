@@ -216,6 +216,7 @@ public:
 	bool applyAA;
 	bool reverseScroll;
 	bool horizontalScroll;
+	bool loop;
 
 	std::array<int, 16> layersMap; ///< Location of each layer.
 
