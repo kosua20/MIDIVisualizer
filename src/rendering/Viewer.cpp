@@ -4,6 +4,7 @@
 #include "../helpers/System.h"
 #include "../resources/strings.h"
 
+#include <cstdlib>
 #include <cstring>
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui/imgui.h>
@@ -19,6 +20,9 @@
 
 #include <algorithm>
 #include <fstream>
+#ifndef _WIN32
+#include <dirent.h>
+#endif
 
 SystemAction::SystemAction(SystemAction::Type act) {
 	type = act;
@@ -362,6 +366,10 @@ void Viewer::drawScore(const glm::vec2 & invSize) {
 void Viewer::drawKeyboard(const glm::vec2 & invSize) {
 	const ColorArray & majColors = _state.keyboard.customKeyColors ? _state.keyboard.majorColor : _state.notes.majorColors;
 	const ColorArray & minColors = _state.keyboard.customKeyColors ? _state.keyboard.minorColor : _state.notes.minorColors;
+	if(_state.keyboard.style3D && !_state.horizontalScroll){
+		_renderer.drawKeyboard3D(_scene, _timer, invSize, _state.keyboard, _state.mascot, majColors, minColors);
+		return;
+	}
 	_renderer.drawKeyboard(_scene, _timer, invSize, _state.keyboard.edgeColor, _state.keyboard.backColor, majColors, minColors, _state.keyboard.highlightKeys);
 }
 
@@ -387,6 +395,8 @@ void Viewer::drawWaves(const glm::vec2 & invSize){
 SystemAction Viewer::drawGUI(const float currentTime) {
 
 	SystemAction action = SystemAction::NONE;
+
+	showTransport(currentTime);
 
 	if (ImGui::Begin("Settings", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
 
@@ -587,6 +597,10 @@ SystemAction Viewer::drawGUI(const float currentTime) {
 
 		if (_state.showKeyboard && ImGui::CollapsingHeader("Keyboard##HEADER")) {
 			showKeyboardOptions();
+		}
+
+		if (_state.showKeyboard && _state.keyboard.style3D && ImGui::CollapsingHeader("Mascot##HEADER")) {
+			showMascotOptions();
 		}
 
 		if(_state.showPedal && ImGui::CollapsingHeader("Pedal##HEADER")){
@@ -1106,6 +1120,191 @@ void Viewer::showKeyboardOptions(){
 			ImGui::PopItemWidth();
 		}
 	}
+
+	ImGui::Checkbox("3D keys", &_state.keyboard.style3D);
+	ImGui::helpTooltip(s_keyboard_3d_dsc);
+	if(_state.keyboard.style3D){
+		ImGuiSameLine(COLUMN_SIZE);
+		ImGuiPushItemWidth(25);
+		ImGui::ColorEdit3("Felt##Keys3D", &_state.keyboard.feltColor[0], ImGuiColorEditFlags_NoInputs);
+		ImGui::helpTooltip(s_color_keyboard_felt_dsc);
+		ImGui::PopItemWidth();
+
+		ImGuiPushItemWidth(100);
+		ImGui::SliderFloat("Tilt##Keys3D", &_state.keyboard.tilt, 10.0f, 90.0f, "%.0f deg");
+		ImGui::helpTooltip(s_keyboard_3d_tilt_dsc);
+		ImGuiSameLine(COLUMN_SIZE);
+		ImGui::SliderFloat("Distance##Keys3D", &_state.keyboard.perspective, 20.0f, 400.0f, "%.0f");
+		ImGui::helpTooltip(s_keyboard_3d_perspective_dsc);
+
+		ImGui::SliderFloat("Note light##Keys3D", &_state.keyboard.noteLight, 0.0f, 40.0f, "%.1f");
+		ImGui::helpTooltip(s_keyboard_3d_note_light_dsc);
+		ImGuiSameLine(COLUMN_SIZE);
+		ImGui::SliderFloat("Radius##Keys3D", &_state.keyboard.noteLightRadius, 0.2f, 10.0f, "%.1f");
+		ImGui::helpTooltip(s_keyboard_3d_note_radius_dsc);
+
+		ImGui::SliderFloat("Fill light##Keys3D", &_state.keyboard.fillLight, 0.0f, 2.0f, "%.2f");
+		ImGui::helpTooltip(s_keyboard_3d_fill_light_dsc);
+		ImGuiSameLine(COLUMN_SIZE);
+		ImGui::SliderFloat("Ambient##Keys3D", &_state.keyboard.ambientLight, 0.0f, 4.0f, "%.2f");
+		ImGui::helpTooltip(s_keyboard_3d_ambient_dsc);
+
+		ImGui::SliderFloat("Key dip##Keys3D", &_state.keyboard.dip, 0.0f, 1.0f, "%.2f");
+		ImGui::helpTooltip(s_keyboard_3d_dip_dsc);
+		ImGuiSameLine(COLUMN_SIZE);
+		ImGui::SliderFloat("Key speed##Keys3D", &_state.keyboard.keySpeed, 0.2f, 3.0f, "%.2fx");
+		ImGui::helpTooltip(s_keyboard_3d_key_speed_dsc);
+
+		ImGui::SliderFloat("Bulb##Keys3D", &_state.keyboard.backLight, 0.0f, 100.0f, "%.1f");
+		ImGui::helpTooltip(s_keyboard_3d_back_light_dsc);
+		ImGuiSameLine(COLUMN_SIZE);
+		ImGui::SliderFloat("Bulb position##Keys3D", &_state.keyboard.backLightPosition, 0.0f, 1.0f, "%.2f");
+		ImGui::helpTooltip(s_keyboard_3d_back_position_dsc);
+
+		if(ImGui::SliderFloat("Bulb radius##Keys3D", &_state.keyboard.backLightRadius, 0.0f, 10.0f, "%.2f")){
+			// Steps of 0.05.
+			_state.keyboard.backLightRadius = std::round(_state.keyboard.backLightRadius * 20.0f) / 20.0f;
+		}
+		ImGui::helpTooltip(s_keyboard_3d_back_radius_dsc);
+		ImGuiSameLine(COLUMN_SIZE);
+		ImGui::SliderFloat("Bulb height##Keys3D", &_state.keyboard.backLightHeight, 0.0f, 10.0f, "%.2f");
+		ImGui::helpTooltip(s_keyboard_3d_back_height_dsc);
+		ImGui::PopItemWidth();
+
+		ImGuiPushItemWidth(25);
+		ImGui::ColorEdit3("Bulb color##Keys3D", &_state.keyboard.backLightColor[0], ImGuiColorEditFlags_NoInputs);
+		ImGui::helpTooltip(s_color_keyboard_back_light_dsc);
+		ImGui::PopItemWidth();
+		ImGuiSameLine(COLUMN_SIZE);
+		ImGuiPushItemWidth(100);
+		ImGui::SliderPercent("3D resolution##Keys3D", &_state.keyboard.resolution, 0.25f, 1.0f);
+		ImGui::helpTooltip(s_keyboard_3d_resolution_dsc);
+		ImGui::PopItemWidth();
+
+	}
+}
+
+void Viewer::selectMascot(const std::string & path){
+	_state.mascot.path = { path };
+	// Loaded right away rather than at the next frame, to apply its settings now.
+	// A track config keeps its own settings: this only happens on a choice in the menu.
+	if(_renderer.loadMascot(path)){
+		_state.mascot = *_renderer.mascotDefaults();
+		_state.mascot.path = { path };
+	}
+}
+
+void Viewer::showMascotOptions(){
+	// The settings parser splits paths at spaces.
+	std::string current;
+	for(const std::string& part : _state.mascot.path){
+		current += (current.empty() ? "" : " ") + part;
+	}
+	const size_t slash = current.find_last_of("/\\");
+	const std::string folder = slash == std::string::npos ? "" : current.substr(0, slash + 1);
+	const std::string currentName = current.substr(folder.size());
+
+	// Choice among the models next to the current one.
+	ImGuiPushItemWidth(160);
+	if(ImGui::BeginCombo("Model##Mascot", current.empty() ? "None" : currentName.c_str())){
+		if(ImGui::Selectable("None", current.empty())){
+			_state.mascot.path.clear();
+		}
+		std::vector<std::string> names;
+#ifndef _WIN32
+		std::string listed = folder;
+		if(listed.size() > 1 && listed[0] == '~' && std::getenv("HOME")){
+			listed = std::string(std::getenv("HOME")) + listed.substr(1);
+		}
+		if(DIR* dir = opendir(listed.empty() ? "." : listed.c_str())){
+			while(dirent* entry = readdir(dir)){
+				const std::string name(entry->d_name);
+				if(name.size() > 7 && name.compare(name.size() - 7, 7, ".mascot") == 0){
+					names.push_back(name);
+				}
+			}
+			closedir(dir);
+		}
+		std::sort(names.begin(), names.end());
+#endif
+		for(const std::string& name : names){
+			if(ImGui::Selectable(name.c_str(), name == currentName)){
+				selectMascot(folder + name);
+			}
+		}
+		ImGui::EndCombo();
+	}
+	ImGui::helpTooltip(s_mascot_path_dsc);
+	ImGui::PopItemWidth();
+	ImGuiSameLine(COLUMN_SIZE);
+	if(ImGui::Button("Load model...##Mascot")){
+		char *outPath = nullptr;
+		int res = sr_gui_ask_load_file("Select mascot", "", "mascot", &outPath);
+		System::forceLocale();
+		if(res == SR_GUI_VALIDATED && outPath){
+			selectMascot(std::string(outPath));
+		}
+		free(outPath);
+	}
+	ImGui::helpTooltip("Choose a .mascot file, the list shows the other models in its folder");
+	if(current.empty()){
+		return;
+	}
+	if(!_renderer.mascotError().empty()){
+		ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.4f, 1.0f), "%s", _renderer.mascotError().c_str());
+	}
+	if(const State::MascotState* defaults = _renderer.mascotDefaults()){
+		if(ImGui::Button("Reset##Mascot")){
+			_state.mascot = *defaults;
+			_state.mascot.path = { current };
+		}
+		ImGui::helpTooltip("Back to the settings stored with the model");
+	}
+
+	ImGuiPushItemWidth(100);
+	ImGui::SliderFloat("Position##Mascot", &_state.mascot.position.x, -5.0f, 30.0f, "%.2f");
+	ImGui::helpTooltip(s_mascot_x_dsc);
+	ImGuiSameLine(COLUMN_SIZE);
+	ImGui::SliderFloat("Height##Mascot", &_state.mascot.position.y, -1.0f, 10.0f, "%.2f");
+	ImGui::helpTooltip(s_mascot_y_dsc);
+
+	ImGui::SliderFloat("Depth##Mascot", &_state.mascot.position.z, -8.0f, 8.0f, "%.2f");
+	ImGui::helpTooltip(s_mascot_z_dsc);
+	ImGuiSameLine(COLUMN_SIZE);
+	ImGui::SliderFloat("Size##Mascot", &_state.mascot.size, 0.1f, 4.0f, "%.2fx");
+	ImGui::helpTooltip(s_mascot_size_dsc);
+
+	ImGui::SliderFloat("Turn##Mascot", &_state.mascot.turn, -180.0f, 180.0f, "%.0f deg");
+	ImGui::helpTooltip(s_mascot_turn_dsc);
+	ImGuiSameLine(COLUMN_SIZE);
+	ImGui::SliderFloat("Lean##Mascot", &_state.mascot.lean, -60.0f, 60.0f, "%.0f deg");
+	ImGui::helpTooltip(s_mascot_lean_dsc);
+	ImGui::PopItemWidth();
+
+	ImGuiPushItemWidth(25);
+	ImGui::ColorEdit3("Color##Mascot", &_state.mascot.color[0], ImGuiColorEditFlags_NoInputs);
+	ImGui::helpTooltip(s_color_mascot_dsc);
+	ImGui::PopItemWidth();
+	ImGuiSameLine(COLUMN_SIZE);
+	ImGuiPushItemWidth(100);
+	ImGui::SliderFloat("Glow##Mascot", &_state.mascot.glow, 0.0f, 4.0f, "%.2f");
+	ImGui::helpTooltip(s_mascot_glow_dsc);
+
+	ImGui::SliderFloat("Light##Mascot", &_state.mascot.light, 0.0f, 60.0f, "%.1f");
+	ImGui::helpTooltip(s_mascot_light_dsc);
+	ImGuiSameLine(COLUMN_SIZE);
+	ImGui::SliderFloat("Bulb##Mascot", &_state.mascot.bulb, 0.0f, 0.5f, "%.2f");
+	ImGui::helpTooltip(s_mascot_bulb_dsc);
+
+	ImGui::SliderFloat("Light X##Mascot", &_state.mascot.lightPosition.x, -5.0f, 5.0f, "%.2f");
+	ImGui::helpTooltip(s_mascot_light_x_dsc);
+	ImGuiSameLine(COLUMN_SIZE);
+	ImGui::SliderFloat("Light Y##Mascot", &_state.mascot.lightPosition.y, -2.0f, 8.0f, "%.2f");
+	ImGui::helpTooltip(s_mascot_light_y_dsc);
+
+	ImGui::SliderFloat("Light Z##Mascot", &_state.mascot.lightPosition.z, -5.0f, 5.0f, "%.2f");
+	ImGui::helpTooltip(s_mascot_light_z_dsc);
+	ImGui::PopItemWidth();
 }
 
 void Viewer::showPedalOptions(){
@@ -2221,11 +2420,85 @@ void Viewer::keyPressed(int key, int action) {
 			_shouldQuit = 1;
 		}
 	}
+	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+		if (key == GLFW_KEY_LEFT) {
+			seek(_timer * _state.scrollSpeed - 5.0f);
+		}
+		else if (key == GLFW_KEY_RIGHT) {
+			seek(_timer * _state.scrollSpeed + 5.0f);
+		}
+	}
 }
 
 void Viewer::reset() {
 	_timer = -_state.prerollTime;
 	_timerStart = DEBUG_SPEED * float(glfwGetTime()) + (_shouldPlay ? _state.prerollTime : 0.0f);
+	_scene->resetParticles();
+}
+
+void Viewer::showTransport(float currentTime) {
+	const ImGuiIO& io = ImGui::GetIO();
+	const float width = (std::min)(io.DisplaySize.x - 20.0f, (std::max)(0.7f * io.DisplaySize.x, 420.0f * _guiScale));
+	ImGui::SetNextWindowPos(ImVec2(0.5f * io.DisplaySize.x, 8.0f * _guiScale), ImGuiCond_Always, ImVec2(0.5f, 0.0f));
+	ImGui::SetNextWindowSize(ImVec2(width, 0.0f), ImGuiCond_Always);
+	ImGui::SetNextWindowBgAlpha(0.85f);
+	const ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
+		| ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar
+		| ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoFocusOnAppearing;
+
+	if(ImGui::Begin("##Transport", nullptr, flags)){
+		const float duration = (std::max)(float(_scene->duration()), 0.0f);
+		float sceneTime = _timer * _state.scrollSpeed;
+
+		if(ImGui::Button("|<##Transport")){
+			reset();
+		}
+		ImGui::helpTooltip("Restart (r)");
+		ImGui::SameLine();
+		if(ImGui::Button("<<##Transport")){
+			seek(sceneTime - 5.0f);
+		}
+		ImGui::helpTooltip("Back 5 seconds (left arrow)");
+		ImGui::SameLine();
+		if(ImGui::Button(_shouldPlay ? " || ##Transport" : " > ##Transport")){
+			_shouldPlay = !_shouldPlay;
+			_timerStart = currentTime - _timer;
+		}
+		ImGui::helpTooltip("Play / pause (p)");
+		ImGui::SameLine();
+		if(ImGui::Button(">>##Transport")){
+			seek(sceneTime + 5.0f);
+		}
+		ImGui::helpTooltip("Forward 5 seconds (right arrow)");
+		ImGui::SameLine();
+		if(ImGui::Button("[]##Transport")){
+			_shouldPlay = false;
+			seek(0.0f);
+		}
+		ImGui::helpTooltip("Stop");
+		ImGui::SameLine();
+
+		const int cur = int((std::max)(sceneTime, 0.0f));
+		const int total = int(duration);
+		char label[32];
+		snprintf(label, sizeof(label), "%02d:%02d / %02d:%02d", cur / 60, cur % 60, total / 60, total % 60);
+		const float labelWidth = ImGui::CalcTextSize("00:00 / 00:00").x;
+		ImGui::PushItemWidth((std::max)(ImGui::GetContentRegionAvail().x - labelWidth - ImGui::GetStyle().ItemSpacing.x, 50.0f));
+		if(ImGui::SliderFloat("##TransportSeek", &sceneTime, 0.0f, (std::max)(duration, 0.1f), "")){
+			seek(sceneTime);
+		}
+		ImGui::PopItemWidth();
+		ImGui::SameLine();
+		ImGui::TextUnformatted(label);
+	}
+	ImGui::End();
+}
+
+void Viewer::seek(float sceneTime) {
+	const float duration = float(_scene->duration());
+	sceneTime = glm::clamp(sceneTime, 0.0f, (std::max)(duration, 0.0f));
+	_timer = sceneTime / _state.scrollSpeed;
+	_timerStart = DEBUG_SPEED * float(glfwGetTime()) - _timer;
 	_scene->resetParticles();
 }
 

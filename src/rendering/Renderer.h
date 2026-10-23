@@ -5,11 +5,14 @@
 #include "../midi/MIDIFile.h"
 #include "State.h"
 #include "../helpers/ProgramUtilities.h"
+#include "ScreenQuad.h"
 
 #include <fstream>
 #include <memory>
+#include <vector>
 
 class MIDIScene;
+class Framebuffer;
 
 class Renderer {
 
@@ -40,6 +43,18 @@ public:
 	
 	void drawKeyboard(const std::shared_ptr<MIDIScene>& scene, float time, const glm::vec2 & invScreenSize, const glm::vec3 & edgeColor, const glm::vec3 & keyColor, const ColorArray & majorColors, const ColorArray & minorColors, bool highlightKeys);
 
+	/// Volumetric keyboard lit by the notes, replaces the flat one (vertical scrolling only).
+	void drawKeyboard3D(const std::shared_ptr<MIDIScene>& scene, float time, const glm::vec2 & invScreenSize, const State::KeyboardState & state, const State::MascotState & mascot, const ColorArray & majorColors, const ColorArray & minorColors);
+
+	/// Load a .mascot file (a model baked into a distance field), empty path to remove it. Returns false on failure.
+	bool loadMascot(const std::string & path);
+
+	/// Why the last requested mascot could not be loaded, empty if it was.
+	const std::string & mascotError() const { return _mascotError; }
+
+	/// Settings stored with the loaded mascot (its look from the mockups, path left empty), null if none is loaded.
+	const State::MascotState * mascotDefaults() const { return _mascotDist ? &_mascotDefaults : nullptr; }
+
 	void drawPedals(const std::shared_ptr<MIDIScene>& scene, float time, const glm::vec2 & invScreenSize, const State::PedalsState & state, float keyboardHeight, bool horizontalMode);
 
 	void drawWaves(const std::shared_ptr<MIDIScene>& scene, float time, const glm::vec2 & invScreenSize, const State::WaveState & state, float keyboardHeight);
@@ -55,6 +70,30 @@ private:
 	ShaderProgram _programParticules;
 	ShaderProgram _programKeyMinors;
 	ShaderProgram _programKeyMajors;
+	ShaderProgram _programKeys3D;
+	/// Travel of each 3D key (0: rest, 1: bottom), animated by a spring so that presses have some weight.
+	std::array<float, 128> _keyTravel{};
+	std::array<float, 128> _keyVelocity{};
+	float _keyAnimTime = 0.0f;
+	float _minorWidth = 1.0f;
+	float _keyboardHeight = 0.25f;
+	/// The 3D keyboard at rest, rendered once and reused for the keys where nothing happens.
+	std::shared_ptr<Framebuffer> _keys3DBake;
+	/// Everything the baked image depends on; it is rendered again when any of it changes.
+	std::vector<float> _keys3DBakeSignature;
+	/// Lower resolution render of the 3D keyboard, and the pass scaling it up onto the frame.
+	std::shared_ptr<Framebuffer> _keys3DLow;
+	ScreenQuad _keys3DUpscale;
+	/// Mascot: distance to its surface and its colors (rgb albedo, a: glow), in a box around the model.
+	GLuint _mascotDist = 0;
+	GLuint _mascotColor = 0;
+	glm::vec3 _mascotHalf{1.0f};
+	glm::vec3 _mascotCenter{0.0f};
+	glm::vec2 _mascotDistRange{0.0f, 1.0f};
+	std::string _mascotPath; ///< Last requested file, loaded or not.
+	std::string _mascotError;
+	State::MascotState _mascotDefaults;
+	int _mascotGeneration = 0; ///< Changes with each loaded file, for the bake signature.
 	ShaderProgram _programPedals;
 	ShaderProgram _programWave;
 	ShaderProgram _programWaveNoise;
