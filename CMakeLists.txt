@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 3.8...4.2)
 
 # macOS specific settings (force Universal binary)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.12" CACHE STRING "Minimum OS X deployment version")
-set(CMAKE_OSX_ARCHITECTURES "$(ARCHS_STANDARD)" CACHE STRING "" FORCE)
+# $(ARCHS_STANDARD) only means something to Xcode: with Makefiles it leaves an empty -arch, other generators build for this machine.
+if(CMAKE_GENERATOR STREQUAL "Xcode")
+	set(CMAKE_OSX_ARCHITECTURES "$(ARCHS_STANDARD)" CACHE STRING "" FORCE)
+endif()
 
 project(MIDIVisualizer)
 set(CMAKE_CXX_STANDARD 11)

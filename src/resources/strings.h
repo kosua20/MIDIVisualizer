@@ -234,6 +234,97 @@ constexpr const char* s_keyboard_size_dsc 					= "Vertical size of the keyboard"
 constexpr const char* s_keyboard_minor_height_key 			= "keyboard-minor-height";
 constexpr const char* s_keyboard_minor_height_dsc 			= "Vertical fraction of the keyboard taken by minor keys";
 
+constexpr const char* s_keyboard_3d_key 					= "keyboard-3d";
+constexpr const char* s_keyboard_3d_dsc 					= "Draw the keyboard in 3D, lit where the notes touch it";
+
+constexpr const char* s_keyboard_3d_tilt_key 				= "keyboard-3d-tilt";
+constexpr const char* s_keyboard_3d_tilt_dsc 				= "Camera angle below the horizon for the 3D keyboard, in degrees (90: top view)";
+
+constexpr const char* s_keyboard_3d_perspective_key 		= "keyboard-3d-perspective";
+constexpr const char* s_keyboard_3d_perspective_dsc 		= "Camera distance for the 3D keyboard, in white key widths (lower: stronger perspective)";
+
+constexpr const char* s_keyboard_3d_fill_light_key 			= "keyboard-3d-fill-light";
+constexpr const char* s_keyboard_3d_fill_light_dsc 			= "Light from the viewer on the 3D keyboard, shows the key fronts";
+
+constexpr const char* s_keyboard_3d_ambient_key 			= "keyboard-3d-ambient";
+constexpr const char* s_keyboard_3d_ambient_dsc 			= "Ambient light on the 3D keyboard, in the color of the bulb";
+
+constexpr const char* s_keyboard_3d_note_light_key 			= "keyboard-3d-note-light";
+constexpr const char* s_keyboard_3d_note_light_dsc 			= "Intensity of the light emitted where a note touches its key";
+
+constexpr const char* s_keyboard_3d_note_radius_key 		= "keyboard-3d-note-light-radius";
+constexpr const char* s_keyboard_3d_note_radius_dsc 		= "Falloff radius of the note light, in white key widths";
+
+constexpr const char* s_keyboard_3d_dip_key 				= "keyboard-3d-dip";
+constexpr const char* s_keyboard_3d_dip_dsc 				= "How deep a pressed key goes at its front, in white key widths";
+
+
+constexpr const char* s_keyboard_3d_key_speed_key 			= "keyboard-3d-key-speed";
+constexpr const char* s_keyboard_3d_key_speed_dsc 			= "Speed of the 3D keys going down and up (lower: heavier keys)";
+
+constexpr const char* s_keyboard_3d_back_light_key 			= "keyboard-3d-back-light";
+constexpr const char* s_keyboard_3d_back_light_dsc 			= "Constant warm bulb on the felt strip behind the 3D keys, with shadows";
+
+constexpr const char* s_keyboard_3d_back_radius_key 		= "keyboard-3d-back-light-radius";
+constexpr const char* s_keyboard_3d_back_radius_dsc 		= "Falloff radius of the bulb, in white key widths";
+
+constexpr const char* s_keyboard_3d_back_position_key 		= "keyboard-3d-back-light-position";
+constexpr const char* s_keyboard_3d_back_position_dsc 		= "Where the bulb stands along the keyboard (0: left, 1: right)";
+
+constexpr const char* s_keyboard_3d_back_height_key 		= "keyboard-3d-back-light-height";
+constexpr const char* s_keyboard_3d_back_height_dsc 		= "Height of the bulb above the white keys, in white key widths";
+
+constexpr const char* s_color_keyboard_back_light_key 		= "color-keyboard-back-light";
+constexpr const char* s_color_keyboard_back_light_dsc 		= "Color of the back light behind the 3D keys";
+
+constexpr const char* s_keyboard_3d_resolution_key 		= "keyboard-3d-resolution";
+constexpr const char* s_keyboard_3d_resolution_dsc 		= "Resolution of the 3D keyboard relative to the frame (lower: lighter for the GPU, softer edges)";
+
+constexpr const char* s_mascot_path_key 				= "mascot-path";
+constexpr const char* s_mascot_path_dsc 				= "Model standing on the 3D keyboard, a .mascot file baked from a 3D model (absolute path)";
+
+constexpr const char* s_mascot_x_key 					= "mascot-x";
+constexpr const char* s_mascot_x_dsc 					= "Mascot position along the keyboard, from the middle of the left cheek block, in white key widths";
+
+constexpr const char* s_mascot_y_key 					= "mascot-y";
+constexpr const char* s_mascot_y_dsc 					= "Mascot height above the cheek block, in white key widths";
+
+constexpr const char* s_mascot_z_key 					= "mascot-z";
+constexpr const char* s_mascot_z_dsc 					= "Mascot position towards the canvas (negative: towards the viewer), in white key widths";
+
+constexpr const char* s_mascot_turn_key 				= "mascot-turn";
+constexpr const char* s_mascot_turn_dsc 				= "Mascot rotation around the vertical, counterclockwise seen from above, in degrees";
+
+constexpr const char* s_mascot_lean_key 				= "mascot-lean";
+constexpr const char* s_mascot_lean_dsc 				= "Mascot lean towards the keys, in degrees";
+
+constexpr const char* s_mascot_size_key 				= "mascot-size";
+constexpr const char* s_mascot_size_dsc 				= "Mascot scale, relative to its baked size";
+
+constexpr const char* s_mascot_glow_key 				= "mascot-glow";
+constexpr const char* s_mascot_glow_dsc 				= "Glow of the emissive parts of the mascot";
+
+constexpr const char* s_mascot_light_key 				= "mascot-light";
+constexpr const char* s_mascot_light_dsc 				= "Intensity of the light the mascot casts on the keyboard";
+
+constexpr const char* s_mascot_light_x_key 			= "mascot-light-x";
+constexpr const char* s_mascot_light_x_dsc 			= "Position of the mascot light, sideways in the model, in white key widths";
+
+constexpr const char* s_mascot_light_y_key 			= "mascot-light-y";
+constexpr const char* s_mascot_light_y_dsc 			= "Position of the mascot light, height in the model, in white key widths";
+
+constexpr const char* s_mascot_light_z_key 			= "mascot-light-z";
+constexpr const char* s_mascot_light_z_dsc 			= "Position of the mascot light, front (negative) to back in the model, in white key widths";
+
+constexpr const char* s_mascot_bulb_key 				= "mascot-bulb";
+constexpr const char* s_mascot_bulb_dsc 				= "Radius of a small glowing bulb at the mascot light (0: invisible light)";
+
+constexpr const char* s_color_mascot_key 				= "color-mascot";
+constexpr const char* s_color_mascot_dsc 				= "Color of the mascot glow and light";
+
+constexpr const char* s_color_keyboard_felt_key 			= "color-keyboard-felt";
+constexpr const char* s_color_keyboard_felt_dsc 			= "Color of the felt strip behind the 3D keys";
+
 constexpr const char* s_show_horiz_lines_key 				= "show-horiz-lines";
 constexpr const char* s_show_horiz_lines_dsc 				= "Should horizontal score lines be shown";
 

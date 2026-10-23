@@ -256,6 +256,38 @@ void State::defineOptions(){
 	_sharedInfos[s_color_keyboard_key] 			= {Category::KEYBOARD, s_color_keyboard_dsc, Type::COLOR};
 	_sharedInfos[s_keyboard_size_key] 			= {Category::KEYBOARD, s_keyboard_size_dsc, Type::FLOAT, {0.0f, 1.0f}};
 	_sharedInfos[s_keyboard_minor_height_key] 	= {Category::KEYBOARD, s_keyboard_minor_height_dsc, Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos[s_keyboard_3d_key] 			= {Category::KEYBOARD, s_keyboard_3d_dsc, Type::BOOLEAN};
+	_sharedInfos[s_keyboard_3d_tilt_key] 		= {Category::KEYBOARD, s_keyboard_3d_tilt_dsc, Type::FLOAT, {10.0f, 90.0f}};
+	_sharedInfos[s_keyboard_3d_perspective_key] = {Category::KEYBOARD, s_keyboard_3d_perspective_dsc, Type::FLOAT, {20.0f, 400.0f}};
+	_sharedInfos[s_keyboard_3d_fill_light_key] 	= {Category::KEYBOARD, s_keyboard_3d_fill_light_dsc, Type::FLOAT, {0.0f, 2.0f}};
+	_sharedInfos[s_keyboard_3d_ambient_key] 	= {Category::KEYBOARD, s_keyboard_3d_ambient_dsc, Type::FLOAT, {0.0f, 4.0f}};
+	_sharedInfos[s_keyboard_3d_note_light_key] 	= {Category::KEYBOARD, s_keyboard_3d_note_light_dsc, Type::FLOAT, {0.0f, 40.0f}};
+	_sharedInfos[s_keyboard_3d_note_radius_key] = {Category::KEYBOARD, s_keyboard_3d_note_radius_dsc, Type::FLOAT, {0.2f, 10.0f}};
+	_sharedInfos[s_keyboard_3d_dip_key] 		= {Category::KEYBOARD, s_keyboard_3d_dip_dsc, Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos[s_keyboard_3d_key_speed_key] 	= {Category::KEYBOARD, s_keyboard_3d_key_speed_dsc, Type::FLOAT, {0.2f, 3.0f}};
+	_sharedInfos[s_keyboard_3d_back_light_key] 	= {Category::KEYBOARD, s_keyboard_3d_back_light_dsc, Type::FLOAT, {0.0f, 100.0f}};
+	_sharedInfos[s_keyboard_3d_back_radius_key] = {Category::KEYBOARD, s_keyboard_3d_back_radius_dsc, Type::FLOAT, {0.0f, 10.0f}};
+	_sharedInfos[s_keyboard_3d_back_position_key] = {Category::KEYBOARD, s_keyboard_3d_back_position_dsc, Type::FLOAT, {0.0f, 1.0f}};
+	_sharedInfos[s_keyboard_3d_back_height_key] = {Category::KEYBOARD, s_keyboard_3d_back_height_dsc, Type::FLOAT, {0.0f, 10.0f}};
+	_sharedInfos[s_color_keyboard_back_light_key] = {Category::KEYBOARD, s_color_keyboard_back_light_dsc, Type::COLOR};
+	_sharedInfos[s_keyboard_3d_resolution_key] 	= {Category::KEYBOARD, s_keyboard_3d_resolution_dsc, Type::FLOAT, {0.25f, 1.0f}};
+
+	// Mascot
+	_sharedInfos[s_mascot_path_key] 			= {Category::MASCOT, s_mascot_path_dsc, Type::PATH};
+	_sharedInfos[s_mascot_x_key] 				= {Category::MASCOT, s_mascot_x_dsc, Type::FLOAT, {-5.0f, 30.0f}};
+	_sharedInfos[s_mascot_y_key] 				= {Category::MASCOT, s_mascot_y_dsc, Type::FLOAT, {-1.0f, 10.0f}};
+	_sharedInfos[s_mascot_z_key] 				= {Category::MASCOT, s_mascot_z_dsc, Type::FLOAT, {-8.0f, 8.0f}};
+	_sharedInfos[s_mascot_turn_key] 			= {Category::MASCOT, s_mascot_turn_dsc, Type::FLOAT, {-180.0f, 180.0f}};
+	_sharedInfos[s_mascot_lean_key] 			= {Category::MASCOT, s_mascot_lean_dsc, Type::FLOAT, {-60.0f, 60.0f}};
+	_sharedInfos[s_mascot_size_key] 			= {Category::MASCOT, s_mascot_size_dsc, Type::FLOAT, {0.1f, 4.0f}};
+	_sharedInfos[s_mascot_glow_key] 			= {Category::MASCOT, s_mascot_glow_dsc, Type::FLOAT, {0.0f, 4.0f}};
+	_sharedInfos[s_mascot_light_key] 			= {Category::MASCOT, s_mascot_light_dsc, Type::FLOAT, {0.0f, 60.0f}};
+	_sharedInfos[s_mascot_light_x_key] 			= {Category::MASCOT, s_mascot_light_x_dsc, Type::FLOAT, {-5.0f, 5.0f}};
+	_sharedInfos[s_mascot_light_y_key] 			= {Category::MASCOT, s_mascot_light_y_dsc, Type::FLOAT, {-2.0f, 8.0f}};
+	_sharedInfos[s_mascot_light_z_key] 			= {Category::MASCOT, s_mascot_light_z_dsc, Type::FLOAT, {-5.0f, 5.0f}};
+	_sharedInfos[s_mascot_bulb_key] 			= {Category::MASCOT, s_mascot_bulb_dsc, Type::FLOAT, {0.0f, 0.5f}};
+	_sharedInfos[s_color_mascot_key] 			= {Category::MASCOT, s_color_mascot_dsc, Type::COLOR};
+	_sharedInfos[s_color_keyboard_felt_key] 	= {Category::KEYBOARD, s_color_keyboard_felt_dsc, Type::COLOR};
 
 	// Score
 	_sharedInfos[s_show_horiz_lines_key] 			= {Category::SCORE, s_show_horiz_lines_dsc, Type::BOOLEAN};
@@ -324,7 +356,7 @@ size_t State::helpText(std::string & configOpts){
 
 	std::array<std::vector<std::string>, size_t(OptionInfos::Category::COUNT)> linesPerCategory;
 	static const std::array<std::string, size_t(OptionInfos::Category::COUNT)> categoryNames = {
-		"General", "Playback", "Effect layers", "Notes", "Flashes", "Particles", "Keyboard", "Pedals", "Wave", "Score", "Background and blur", "Per-set settings",
+		"General", "Playback", "Effect layers", "Notes", "Flashes", "Particles", "Keyboard", "Pedals", "Wave", "Score", "Background and blur", "Per-set settings", "Mascot",
 	};
 
 	for(const auto & header : categoryNames){
@@ -382,6 +414,7 @@ void State::updateOptions(){
 	_boolInfos[s_keyboard_highlight_key] = &keyboard.highlightKeys;
 	_boolInfos[s_keyboard_custom_colors_key] = &keyboard.customKeyColors;
 	_boolInfos[s_keyboard_minor_edges_key] = &keyboard.minorEdges;
+	_boolInfos[s_keyboard_3d_key] = &keyboard.style3D;
 	_boolInfos[s_show_score_key] = &showScore;
 	_boolInfos[s_show_bg_img_key] = &background.image;
 	_boolInfos[s_show_notes_key] = &showNotes;
@@ -418,6 +451,9 @@ void State::updateOptions(){
 	_vecInfos[s_color_keyboard_minor_key] = &keyboard.minorColor[0];
 	_vecInfos[s_color_keyboard_key] = &keyboard.edgeColor;
 	_vecInfos[s_color_keyboard_bg_key] = &keyboard.backColor;
+	_vecInfos[s_color_keyboard_felt_key] = &keyboard.feltColor;
+	_vecInfos[s_color_mascot_key] = &mascot.color;
+	_vecInfos[s_color_keyboard_back_light_key] = &keyboard.backLightColor;
 
 	_vecInfos[s_color_lines_key] = &score.vLinesColor; // Retro compat
 	_vecInfos[s_color_lines_vertical_key] = &score.vLinesColor;
@@ -440,6 +476,31 @@ void State::updateOptions(){
 	_intInfos[s_sets_separator_key_key] = &setOptions.key;
 	_floatInfos[s_keyboard_size_key] = &keyboard.size;
 	_floatInfos[s_keyboard_minor_height_key] = &keyboard.minorHeight;
+	_floatInfos[s_keyboard_3d_tilt_key] = &keyboard.tilt;
+	_floatInfos[s_keyboard_3d_perspective_key] = &keyboard.perspective;
+	_floatInfos[s_keyboard_3d_fill_light_key] = &keyboard.fillLight;
+	_floatInfos[s_keyboard_3d_ambient_key] = &keyboard.ambientLight;
+	_floatInfos[s_keyboard_3d_note_light_key] = &keyboard.noteLight;
+	_floatInfos[s_keyboard_3d_note_radius_key] = &keyboard.noteLightRadius;
+	_floatInfos[s_keyboard_3d_dip_key] = &keyboard.dip;
+	_floatInfos[s_keyboard_3d_key_speed_key] = &keyboard.keySpeed;
+	_floatInfos[s_keyboard_3d_resolution_key] = &keyboard.resolution;
+	_floatInfos[s_mascot_x_key] = &mascot.position.x;
+	_floatInfos[s_mascot_y_key] = &mascot.position.y;
+	_floatInfos[s_mascot_z_key] = &mascot.position.z;
+	_floatInfos[s_mascot_turn_key] = &mascot.turn;
+	_floatInfos[s_mascot_lean_key] = &mascot.lean;
+	_floatInfos[s_mascot_size_key] = &mascot.size;
+	_floatInfos[s_mascot_glow_key] = &mascot.glow;
+	_floatInfos[s_mascot_light_key] = &mascot.light;
+	_floatInfos[s_mascot_light_x_key] = &mascot.lightPosition.x;
+	_floatInfos[s_mascot_light_y_key] = &mascot.lightPosition.y;
+	_floatInfos[s_mascot_light_z_key] = &mascot.lightPosition.z;
+	_floatInfos[s_mascot_bulb_key] = &mascot.bulb;
+	_floatInfos[s_keyboard_3d_back_light_key] = &keyboard.backLight;
+	_floatInfos[s_keyboard_3d_back_radius_key] = &keyboard.backLightRadius;
+	_floatInfos[s_keyboard_3d_back_position_key] = &keyboard.backLightPosition;
+	_floatInfos[s_keyboard_3d_back_height_key] = &keyboard.backLightHeight;
 
 	_intInfos[s_min_key_key] = &minKey;
 	_intInfos[s_max_key_key] = &maxKey;
@@ -483,6 +544,7 @@ void State::updateOptions(){
 	_pathInfos[s_notes_major_img_path_key] = &notes.majorImagePath;
 	_pathInfos[s_notes_minor_img_path_key] = &notes.minorImagePath;
 	_pathInfos[s_flashes_img_path_key] = &flashes.imagePath;
+	_pathInfos[s_mascot_path_key] = &mascot.path;
 	_intInfos[s_flashes_img_rows_key] = &flashes.texRowCount;
 	_intInfos[s_flashes_img_columns_key] = &flashes.texColCount;
 
@@ -880,8 +942,35 @@ void State::reset(){
 	keyboard.highlightKeys = true;
 	keyboard.minorEdges = true;
 	keyboard.customKeyColors = false;
-	keyboard.size = 0.25f;
+	keyboard.size = 0.2f;
 	keyboard.minorHeight = 0.6f;
+	keyboard.style3D = false;
+	keyboard.tilt = 40.0f;
+	keyboard.perspective = 91.0f;
+	keyboard.fillLight = 0.7f;
+	keyboard.ambientLight = 0.7f;
+	keyboard.noteLight = 10.0f;
+	keyboard.noteLightRadius = 2.0f;
+	keyboard.dip = 0.4f;
+	keyboard.keySpeed = 1.0f;
+	keyboard.resolution = 1.0f;
+	keyboard.backLight = 60.0f;
+	keyboard.backLightRadius = 1.3f;
+	keyboard.backLightPosition = 0.5f;
+	keyboard.backLightHeight = 10.0f;
+	keyboard.backLightColor = glm::vec3(1.0f, 0.72f, 0.38f);
+	keyboard.feltColor = glm::vec3(0.42f, 0.04f, 0.06f);
+
+	mascot.path.clear();
+	mascot.position = glm::vec3(0.0f);
+	mascot.turn = 0.0f;
+	mascot.lean = 0.0f;
+	mascot.size = 1.0f;
+	mascot.glow = 1.0f;
+	mascot.light = 0.0f;
+	mascot.lightPosition = glm::vec3(0.0f, 1.0f, -0.5f);
+	mascot.bulb = 0.0f;
+	mascot.color = glm::vec3(0.72f, 0.86f, 1.0f);
 
 	for (int i = 0; i < layersMap.size(); ++i) {
 		layersMap[i] = i;
