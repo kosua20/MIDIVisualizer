@@ -9,6 +9,7 @@
 #include "../../midi/MIDIUtils.h"
 
 #include "MIDISceneLive.h"
+#include <cmath>
 
 #include <libremidi/writer.hpp>
 
@@ -387,10 +388,20 @@ void MIDISceneLive::save(std::ofstream& file) const {
 	writer.add_event(0, 0, libremidi::meta_events::key_signature(1, false));
 
 	// Write all messages.
+	// Deltas are derived from rounded absolute positions: truncating each delta separately
+	// drops ~0.5 tick per event and the recording drifts ahead (~0.27s per 1000 events).
+	long long writtenTicks = 0;
 	for(const MIDIFrame& frame : allMessages){
-		for(const libremidi::message& message : frame.messages){
-			writer.add_event(int(message.timestamp * unitsPerSecond), 0, message);
+		if(frame.messages.empty()){
+			continue;
 		}
+		const long long frameTicks = (std::max)(std::llround(frame.timestamp * unitsPerSecond), writtenTicks);
+		bool first = true;
+		for(const libremidi::message& message : frame.messages){
+			writer.add_event(first ? int(frameTicks - writtenTicks) : 0, 0, message);
+			first = false;
+		}
+		writtenTicks = frameTicks;
 	}
 	writer.write(file);
 }
