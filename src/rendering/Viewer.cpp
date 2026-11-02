@@ -388,6 +388,8 @@ SystemAction Viewer::drawGUI(const float currentTime) {
 
 	SystemAction action = SystemAction::NONE;
 
+	showTransport(currentTime);
+
 	if (ImGui::Begin("Settings", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
 
 		action = showTopButtons(currentTime);
@@ -2221,11 +2223,85 @@ void Viewer::keyPressed(int key, int action) {
 			_shouldQuit = 1;
 		}
 	}
+	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+		if (key == GLFW_KEY_LEFT) {
+			seek(_timer * _state.scrollSpeed - 5.0f);
+		}
+		else if (key == GLFW_KEY_RIGHT) {
+			seek(_timer * _state.scrollSpeed + 5.0f);
+		}
+	}
 }
 
 void Viewer::reset() {
 	_timer = -_state.prerollTime;
 	_timerStart = DEBUG_SPEED * float(glfwGetTime()) + (_shouldPlay ? _state.prerollTime : 0.0f);
+	_scene->resetParticles();
+}
+
+void Viewer::showTransport(float currentTime) {
+	const ImGuiIO& io = ImGui::GetIO();
+	const float width = (std::min)(io.DisplaySize.x - 20.0f, (std::max)(0.7f * io.DisplaySize.x, 420.0f * _guiScale));
+	ImGui::SetNextWindowPos(ImVec2(0.5f * io.DisplaySize.x, 8.0f * _guiScale), ImGuiCond_Always, ImVec2(0.5f, 0.0f));
+	ImGui::SetNextWindowSize(ImVec2(width, 0.0f), ImGuiCond_Always);
+	ImGui::SetNextWindowBgAlpha(0.85f);
+	const ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
+		| ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar
+		| ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoFocusOnAppearing;
+
+	if(ImGui::Begin("##Transport", nullptr, flags)){
+		const float duration = (std::max)(float(_scene->duration()), 0.0f);
+		float sceneTime = _timer * _state.scrollSpeed;
+
+		if(ImGui::Button("|<##Transport")){
+			reset();
+		}
+		ImGui::helpTooltip("Restart (r)");
+		ImGui::SameLine();
+		if(ImGui::Button("<<##Transport")){
+			seek(sceneTime - 5.0f);
+		}
+		ImGui::helpTooltip("Back 5 seconds (left arrow)");
+		ImGui::SameLine();
+		if(ImGui::Button(_shouldPlay ? " || ##Transport" : " > ##Transport")){
+			_shouldPlay = !_shouldPlay;
+			_timerStart = currentTime - _timer;
+		}
+		ImGui::helpTooltip("Play / pause (p)");
+		ImGui::SameLine();
+		if(ImGui::Button(">>##Transport")){
+			seek(sceneTime + 5.0f);
+		}
+		ImGui::helpTooltip("Forward 5 seconds (right arrow)");
+		ImGui::SameLine();
+		if(ImGui::Button("[]##Transport")){
+			_shouldPlay = false;
+			seek(0.0f);
+		}
+		ImGui::helpTooltip("Stop");
+		ImGui::SameLine();
+
+		const int cur = int((std::max)(sceneTime, 0.0f));
+		const int total = int(duration);
+		char label[32];
+		snprintf(label, sizeof(label), "%02d:%02d / %02d:%02d", cur / 60, cur % 60, total / 60, total % 60);
+		const float labelWidth = ImGui::CalcTextSize("00:00 / 00:00").x;
+		ImGui::PushItemWidth((std::max)(ImGui::GetContentRegionAvail().x - labelWidth - ImGui::GetStyle().ItemSpacing.x, 50.0f));
+		if(ImGui::SliderFloat("##TransportSeek", &sceneTime, 0.0f, (std::max)(duration, 0.1f), "")){
+			seek(sceneTime);
+		}
+		ImGui::PopItemWidth();
+		ImGui::SameLine();
+		ImGui::TextUnformatted(label);
+	}
+	ImGui::End();
+}
+
+void Viewer::seek(float sceneTime) {
+	const float duration = float(_scene->duration());
+	sceneTime = glm::clamp(sceneTime, 0.0f, (std::max)(duration, 0.0f));
+	_timer = sceneTime / _state.scrollSpeed;
+	_timerStart = DEBUG_SPEED * float(glfwGetTime()) - _timer;
 	_scene->resetParticles();
 }
 
