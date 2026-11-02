@@ -111,6 +111,36 @@ public:
 		bool highlightKeys; ///< Highlight pressed keys.
 		bool customKeyColors; ///< Use the custom colors above instead of the color of the notes.
 		bool minorEdges; ///< Show edges on minor keys.
+		bool style3D; ///< Volumetric keys lit by the notes.
+		float tilt; ///< 3D camera angle below the horizon, in degrees.
+		float perspective; ///< 3D camera distance, in white key widths.
+		float fillLight; ///< 3D light from the viewer.
+		float ambientLight; ///< 3D ambient light.
+		float noteLight; ///< Intensity of the light where a note touches its key.
+		float noteLightRadius; ///< Falloff radius of that light, in white key widths.
+		float dip; ///< Depth of a pressed key at its front, in white key widths.
+		float keySpeed; ///< Speed of the 3D key animation.
+		float resolution; ///< Render scale of the 3D keyboard, relative to the frame.
+		float backLight; ///< Constant warm bulb on the felt strip.
+		float backLightRadius; ///< Its falloff radius, in white key widths.
+		float backLightPosition; ///< Its position along the keyboard, 0 to 1.
+		float backLightHeight; ///< Its height above the white keys, in white key widths.
+		glm::vec3 backLightColor; ///< Its color.
+		glm::vec3 feltColor; ///< Felt strip behind the 3D keys.
+	};
+
+	/// A baked 3D model standing on the 3D keyboard.
+	struct MascotState {
+		std::vector<std::string> path; ///< .mascot file, empty for none.
+		glm::vec3 position; ///< From the middle of the left cheek block, in white key widths.
+		float turn; ///< Counterclockwise seen from above, in degrees.
+		float lean; ///< Towards the keys, in degrees.
+		float size; ///< Relative to the baked size.
+		float glow; ///< Emissive parts.
+		float light; ///< Light cast on the keyboard.
+		glm::vec3 lightPosition; ///< In the model, before rotation and scale.
+		float bulb; ///< Radius of a glowing bulb at the light.
+		glm::vec3 color; ///< Glow and light color.
 	};
 
 	struct PedalsState {
@@ -184,6 +214,7 @@ public:
 	ScoreState score;
 	ParticlesState particles;
 	KeyboardState keyboard;
+	MascotState mascot;
 	SetOptions setOptions;
 	PedalsState pedals;
 	WaveState waves;
@@ -252,7 +283,7 @@ private:
 		};
 
 		enum class Category {
-			GENERAL = 0, EFFECTS, PLAYBACK, NOTES, FLASHES, PARTICLES, KEYBOARD, PEDAL, WAVE, SCORE, BACKGROUND, PER_SETS, COUNT
+			GENERAL = 0, EFFECTS, PLAYBACK, NOTES, FLASHES, PARTICLES, KEYBOARD, PEDAL, WAVE, SCORE, BACKGROUND, PER_SETS, MASCOT, COUNT
 		};
 
 		std::string description;
