@@ -153,6 +153,12 @@ private:
 	
 	void reset();
 
+	/// Jump to a given time of the track, in seconds (as displayed), keeping the play/pause state.
+	void seek(float sceneTime);
+
+	/// Player-like bar at the top of the window: transport buttons and a seek bar.
+	void showTransport(float currentTime);
+
 	void startRecording();
 
 	void updateSizes();
