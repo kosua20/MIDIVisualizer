@@ -2,11 +2,18 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "../helpers/ResourcesManager.h"
+#include <lodepng/lodepng.h>
+#include <cstdlib>
+#include <cstring>
+#include <fstream>
+#include <iterator>
 
 #include "Renderer.h"
+#include "Framebuffer.h"
 #include "scene/MIDIScene.h"
 
 #include <imgui/imgui.h>
@@ -155,6 +162,8 @@ void Renderer::renderSetup(){
 	_programParticules.init("particles_vert", "particles_frag");
 	_programKeyMajors.init("majorKeys_vert", "majorKeys_frag");
 	_programKeyMinors.init("minorKeys_vert", "minorKeys_frag");
+	_programKeys3D.init("keys3d_vert", "keys3d_frag");
+	_keys3DUpscale.init("screenquad_frag");
 	_programPedals.init("pedal_vert", "pedal_frag");
 	_programScoreBars.init("score_bars_vert", "score_bars_frag");
 	_programScoreLabels.init("score_labels_vert", "score_labels_frag");
@@ -198,6 +207,8 @@ void Renderer::upload(const std::shared_ptr<MIDIScene>& scene){
 	_programKeyMajors.uniforms("actives", actives.size(), actives.data());
 	_programKeyMinors.use();
 	_programKeyMinors.uniforms("actives", actives.size(), actives.data());
+	_programKeys3D.use();
+	_programKeys3D.uniforms("actives", actives.size(), actives.data());
 	glUseProgram(0);
 }
 
@@ -207,6 +218,9 @@ void Renderer::setScaleAndMinorWidth(const float scale, const float minorWidth){
 	_programNotes.uniform("minorsWidth", minorWidth);
 	_programKeyMinors.use();
 	_programKeyMinors.uniform("minorsWidth", minorWidth);
+	_programKeys3D.use();
+	_programKeys3D.uniform("minorsWidth", minorWidth);
+	_minorWidth = minorWidth;
 	glUseProgram(0);
 }
 
@@ -229,6 +243,9 @@ void Renderer::setKeyboardSizeAndFadeout(float keyboardHeight, float fadeOut){
 	_programKeyMinors.uniform("keyboardHeight", keyboardHeight);
 	_programKeyMajors.use();
 	_programKeyMajors.uniform("keyboardHeight", keyboardHeight);
+	_programKeys3D.use();
+	_programKeys3D.uniform("keyboardHeight", keyboardHeight);
+	_keyboardHeight = keyboardHeight;
 	_programFlashes.use();
 	_programFlashes.uniform("keyboardHeight", keyboardHeight);
 	glUseProgram(0);
@@ -254,6 +271,9 @@ void Renderer::setMinMaxKeys(int minKey, int minKeyMajor, int notesCount){
 	_programKeyMinors.use();
 	_programKeyMinors.uniform("minNoteMajor", minKeyMajor);
 	_programKeyMinors.uniform("notesCount", float(notesCount));
+	_programKeys3D.use();
+	_programKeys3D.uniform("minNoteMajor", minKeyMajor);
+	_programKeys3D.uniform("notesCount", float(notesCount));
 	_programParticules.use();
 	_programParticules.uniform("minNote", minKey);
 	_programParticules.uniform("notesCount", float(notesCount));
@@ -429,6 +449,364 @@ void Renderer::drawKeyboard(const std::shared_ptr<MIDIScene>& scene, float, cons
 	
 	glBindVertexArray(0);
 	glUseProgram(0);
+}
+
+bool Renderer::loadMascot(const std::string & path){
+	_mascotPath = path;
+	++_mascotGeneration;
+	glDeleteTextures(1, &_mascotDist);
+	glDeleteTextures(1, &_mascotColor);
+	_mascotDist = _mascotColor = 0;
+	_mascotError.clear();
+	if(path.empty()){
+		return true;
+	}
+
+	// Header with the default settings, then zlib-compressed distances (16 bits, x fastest) followed by colors (rgba 8 bits).
+	struct Header {
+		char magic[4];
+		uint32_t version;
+		uint32_t dims[3];
+		uint32_t colorDims[3];
+		float half[3];
+		float center[3];
+		float distRange[2];
+		float position[3];
+		float turn, lean, size, glow, light;
+		float lightPosition[3];
+		float bulb;
+		float color[3];
+		uint32_t dataSize;
+	};
+	std::string fullPath = path;
+	if(fullPath.size() > 1 && fullPath[0] == '~' && std::getenv("HOME")){
+		fullPath = std::string(std::getenv("HOME")) + fullPath.substr(1);
+	}
+	std::ifstream file(fullPath, std::ios::binary);
+	if(!file.is_open()){
+		_mascotError = "Unable to open the file";
+		std::cerr << "[MASCOT]: " << path << ": " << _mascotError << std::endl;
+		return false;
+	}
+	const std::vector<unsigned char> content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+	Header header;
+	if(content.size() < sizeof(Header)){
+		_mascotError = "Not a mascot file";
+		std::cerr << "[MASCOT]: " << path << ": " << _mascotError << std::endl;
+		return false;
+	}
+	std::memcpy(&header, content.data(), sizeof(Header));
+	if(std::strncmp(header.magic, "MSCT", 4) != 0 || header.version != 3 || content.size() < sizeof(Header) + header.dataSize){
+		_mascotError = "Not a mascot file, or baked for another version (download it again)";
+		std::cerr << "[MASCOT]: " << path << ": " << _mascotError << std::endl;
+		return false;
+	}
+	std::vector<unsigned char> data;
+	const size_t distCount = size_t(header.dims[0]) * header.dims[1] * header.dims[2];
+	const size_t colorCount = size_t(header.colorDims[0]) * header.colorDims[1] * header.colorDims[2];
+	if(lodepng::decompress(data, content.data() + sizeof(Header), header.dataSize) != 0 || data.size() != 2 * distCount + 4 * colorCount){
+		_mascotError = "The file is damaged";
+		std::cerr << "[MASCOT]: " << path << ": " << _mascotError << std::endl;
+		return false;
+	}
+
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	GLuint textures[2];
+	glGenTextures(2, textures);
+	for(int i = 0; i < 2; ++i){
+		const uint32_t* dims = i == 0 ? header.dims : header.colorDims;
+		glBindTexture(GL_TEXTURE_3D, textures[i]);
+		glTexImage3D(GL_TEXTURE_3D, 0, i == 0 ? GL_R16 : GL_RGBA8, GLsizei(dims[0]), GLsizei(dims[1]), GLsizei(dims[2]), 0,
+					 i == 0 ? GL_RED : GL_RGBA, i == 0 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_BYTE, data.data() + (i == 0 ? 0 : 2 * distCount));
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	}
+	glBindTexture(GL_TEXTURE_3D, 0);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+	_mascotDist = textures[0];
+	_mascotColor = textures[1];
+	_mascotHalf = glm::vec3(header.half[0], header.half[1], header.half[2]);
+	_mascotCenter = glm::vec3(header.center[0], header.center[1], header.center[2]);
+	_mascotDistRange = glm::vec2(header.distRange[0], header.distRange[1]);
+	_mascotDefaults.path.clear();
+	_mascotDefaults.position = glm::vec3(header.position[0], header.position[1], header.position[2]);
+	_mascotDefaults.turn = header.turn;
+	_mascotDefaults.lean = header.lean;
+	_mascotDefaults.size = header.size;
+	_mascotDefaults.glow = header.glow;
+	_mascotDefaults.light = header.light;
+	_mascotDefaults.lightPosition = glm::vec3(header.lightPosition[0], header.lightPosition[1], header.lightPosition[2]);
+	_mascotDefaults.bulb = header.bulb;
+	_mascotDefaults.color = glm::vec3(header.color[0], header.color[1], header.color[2]);
+	return true;
+}
+
+void Renderer::drawKeyboard3D(const std::shared_ptr<MIDIScene>& scene, float time, const glm::vec2 & invScreenSize, const State::KeyboardState & state, const State::MascotState & mascot, const ColorArray & majorColors, const ColorArray & minorColors) {
+
+	// Key travel: a damped spring towards pressed or released, stiffer on the way down.
+	// The slight overshoot is the key hitting the felt at the bottom, and bouncing back on release.
+	// Driven by the scene time, so that exports are deterministic; when paused or seeking, keys snap.
+	const auto& actives = scene->getActiveKeys();
+	const float dt = time - _keyAnimTime;
+	_keyAnimTime = time;
+	const bool snap = dt <= 0.0f || dt > 0.25f;
+	const int substeps = snap ? 0 : int(std::ceil(dt / 0.001f));
+	const float h = substeps > 0 ? dt / float(substeps) : 0.0f;
+	for(size_t k = 0; k < actives.size(); ++k){
+		const float target = (state.highlightKeys && actives[k] >= 0) ? 1.0f : 0.0f;
+		if(snap){
+			_keyTravel[k] = target;
+			_keyVelocity[k] = 0.0f;
+			continue;
+		}
+		const bool pressing = target > 0.5f;
+		// Natural frequency (rad/s) and damping ratio: ~35ms down, ~70ms back up at speed 1.
+		const float omega = (pressing ? 75.0f : 40.0f) * state.keySpeed;
+		const float zeta = pressing ? 0.55f : 0.5f;
+		for(int i = 0; i < substeps; ++i){
+			const float acc = omega * omega * (target - _keyTravel[k]) - 2.0f * zeta * omega * _keyVelocity[k];
+			_keyVelocity[k] += acc * h;
+			_keyTravel[k] += _keyVelocity[k] * h;
+		}
+		_keyTravel[k] = glm::clamp(_keyTravel[k], -0.2f, 1.2f);
+	}
+
+	// Position of a key along the keyboard, laid out exactly as the shader places the keys (in white key
+	// widths from the left edge). Black key between white keys i and i+1, shifted like in the flat keyboard.
+	std::array<float, 128> keyX;
+	std::array<bool, 128> keyVisible;
+	{
+		int majorIndex = 0; // Index of the next white key among all notes 0..127.
+		for(int note = 0; note < 128; ++note){
+			const int pc = note % 12;
+			const bool isMinor = pc == 1 || pc == 3 || pc == 6 || pc == 8 || pc == 10;
+			if(!isMinor){
+				const int i = majorIndex - int(_minKeyMajor);
+				keyVisible[note] = i >= 0 && i < int(_keyCount);
+				keyX[note] = float(i) + 0.5f;
+				++majorIndex;
+			} else {
+				const int i = majorIndex - 1 - int(_minKeyMajor);
+				const float shift = (pc == 1 || pc == 6) ? -0.09f : ((pc == 3 || pc == 10) ? 0.09f : 0.0f);
+				keyVisible[note] = i >= 0 && i < int(_keyCount) - 1;
+				keyX[note] = float(i + 1) + shift * _minorWidth;
+			}
+		}
+	}
+	auto isMinorNote = [](int note){ const int pc = note % 12; return pc == 1 || pc == 3 || pc == 6 || pc == 8 || pc == 10; };
+
+	// Lit notes.
+	constexpr int maxNoteLights = 24;
+	std::array<glm::vec3, maxNoteLights> noteLights;
+	std::array<glm::vec3, maxNoteLights> noteLightColors;
+	int noteLightCount = 0;
+	if(state.highlightKeys){
+		for(int note = 0; note < 128 && noteLightCount < maxNoteLights; ++note){
+			const int set = actives[note];
+			if(set < 0 || !keyVisible[note]){
+				continue;
+			}
+			const bool minor = isMinorNote(note);
+			// Just above the key top. In front of the felt for white keys; against the canvas for black keys,
+			// which go through the felt: their top behind a light in front of the felt would stay dark.
+			noteLights[noteLightCount] = minor ? glm::vec3(keyX[note], 0.142f + 0.467f, 0.03f)
+											   : glm::vec3(keyX[note], 0.142f, 0.183f + 0.061f);
+			noteLightColors[noteLightCount] = minor ? minorColors[set] : majorColors[set];
+			++noteLightCount;
+		}
+	}
+
+	// Parts of the keyboard that differ from the baked image: around lit notes, as far as their light reaches,
+	// and around keys that are not at rest (their neighbours' walls and shadows change too).
+	constexpr int maxRanges = 48;
+	std::vector<glm::vec2> ranges;
+	const float reach = 4.0f * state.noteLightRadius; // Same as in the shader.
+	for(int i = 0; i < noteLightCount; ++i){
+		ranges.emplace_back(noteLights[i].x - reach, noteLights[i].x + reach);
+	}
+	for(int note = 0; note < 128; ++note){
+		if(keyVisible[note] && std::abs(_keyTravel[note]) > 1e-3f){
+			ranges.emplace_back(keyX[note] - 2.0f, keyX[note] + 2.0f);
+		}
+	}
+	std::sort(ranges.begin(), ranges.end(), [](const glm::vec2& a, const glm::vec2& b){ return a.x < b.x; });
+	std::vector<glm::vec2> merged;
+	for(const glm::vec2& r : ranges){
+		if(!merged.empty() && r.x <= merged.back().y){
+			merged.back().y = (std::max)(merged.back().y, r.y);
+		} else {
+			merged.push_back(r);
+		}
+	}
+	if(merged.size() > size_t(maxRanges)){
+		merged = { glm::vec2(-1e6f, 1e6f) };
+	}
+
+	// Offscreen buffers must be cleared to transparent: pixels the keys do not cover show what is behind.
+	// (Framebuffer::resize clears with the current clear color, which is the opaque background color.)
+	auto clearTransparent = [](){
+		GLfloat previous[4];
+		glGetFloatv(GL_COLOR_CLEAR_VALUE, previous);
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glClearColor(previous[0], previous[1], previous[2], previous[3]);
+	};
+
+	// Render size of the keyboard: lower than the frame to spare the GPU, then scaled up.
+	const float resolution = glm::clamp(state.resolution, 0.25f, 1.0f);
+	const int frameWidth = int(std::round(1.0f / invScreenSize.x));
+	const int frameHeight = int(std::round(1.0f / invScreenSize.y));
+	const int width = (std::max)(1, int(std::round(float(frameWidth) * resolution)));
+	const int height = (std::max)(1, int(std::round(float(frameHeight) * resolution)));
+	const bool scaled = width != frameWidth || height != frameHeight;
+
+	_programKeys3D.use();
+	_programKeys3D.uniform("inverseScreenSize", glm::vec2(1.0f / float(width), 1.0f / float(height)));
+	_programKeys3D.uniform("edgeColor", state.edgeColor);
+	_programKeys3D.uniform("keyColor", state.backColor);
+	_programKeys3D.uniforms("majorColor", majorColors.size(), majorColors.data());
+	_programKeys3D.uniforms("minorColor", minorColors.size(), minorColors.data());
+	_programKeys3D.uniform("highlightKeys", state.highlightKeys);
+	_programKeys3D.uniform("tilt", state.tilt);
+	_programKeys3D.uniform("perspective", state.perspective);
+	_programKeys3D.uniform("fillLight", state.fillLight);
+	_programKeys3D.uniform("ambientLight", state.ambientLight);
+	_programKeys3D.uniform("noteLight", state.noteLight);
+	_programKeys3D.uniform("noteLightRadius", state.noteLightRadius);
+	_programKeys3D.uniform("keyDip", state.dip);
+	_programKeys3D.uniform("feltColor", state.feltColor);
+	_programKeys3D.uniform("backLight", state.backLight);
+	_programKeys3D.uniform("backLightRadius", state.backLightRadius);
+	_programKeys3D.uniform("backLightColor", state.backLightColor);
+	_programKeys3D.uniform("backLightPosition", state.backLightPosition);
+	_programKeys3D.uniform("backLightHeight", state.backLightHeight);
+
+	// Mascot. Its file path is split at spaces by the settings parser.
+	std::string mascotPath;
+	for(const std::string& part : mascot.path){
+		mascotPath += (mascotPath.empty() ? "" : " ") + part;
+	}
+	if(mascotPath != _mascotPath){
+		loadMascot(mascotPath);
+	}
+	const bool mascotOn = _mascotDist != 0;
+	// Model to scene: scaled, turned counterclockwise seen from above, then leaning towards the keys (+x).
+	const float mascotSize = (std::max)(mascot.size, 0.01f);
+	const glm::mat3 mascotTurn(glm::rotate(glm::mat4(1.0f), glm::radians(-mascot.turn), glm::vec3(0.0f, 1.0f, 0.0f)));
+	const glm::mat3 mascotLean(glm::rotate(glm::mat4(1.0f), glm::radians(-mascot.lean), glm::vec3(0.0f, 0.0f, 1.0f)));
+	const glm::mat3 mascotToScene = mascotLean * mascotTurn * mascotSize;
+	const glm::vec3 mascotLightOffset = mascotToScene * mascot.lightPosition;
+	// Highest point it can reach above its base: rays start above it.
+	float mascotTop = mascotSize * (glm::length(_mascotCenter) + glm::length(_mascotHalf));
+	if(mascot.bulb > 0.0f){
+		mascotTop = (std::max)(mascotTop, mascotLightOffset.y + mascot.bulb);
+	}
+	mascotTop += mascot.position.y;
+	_programKeys3D.uniform("mascotEnabled", mascotOn);
+	_programKeys3D.uniform("mascotHalf", _mascotHalf);
+	_programKeys3D.uniform("mascotCenter", _mascotCenter);
+	_programKeys3D.uniform("mascotDistRange", _mascotDistRange);
+	_programKeys3D.uniform("mascotOffset", mascot.position);
+	_programKeys3D.uniform("mascotToModel", glm::inverse(mascotToScene));
+	_programKeys3D.uniform("mascotSize", mascotSize);
+	_programKeys3D.uniform("mascotTop", mascotTop);
+	_programKeys3D.uniform("mascotGlow", mascot.glow);
+	_programKeys3D.uniform("mascotLight", mascot.light);
+	_programKeys3D.uniform("mascotLightOffset", mascotLightOffset);
+	_programKeys3D.uniform("mascotBulb", mascot.bulb);
+	_programKeys3D.uniform("mascotColor", mascot.color);
+	_programKeys3D.texture("mascotDist", _mascotDist, GL_TEXTURE_3D);
+	_programKeys3D.texture("mascotColors", _mascotColor, GL_TEXTURE_3D);
+	// The quad covers what rises above the keyboard line: black keys and the felt, and the mascot
+	// (its height plus the cheek block, with a margin for the perspective).
+	_programKeys3D.uniform("topMargin", mascotOn ? (std::max)(2.0f, 1.3f * (mascotTop + 0.9f) + 1.0f) : 2.0f);
+
+	GLint frameFramebuffer = 0;
+	GLint frameViewport[4];
+	if(scaled){
+		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &frameFramebuffer);
+		glGetIntegerv(GL_VIEWPORT, frameViewport);
+		if(!_keys3DLow){
+			_keys3DLow = std::make_shared<Framebuffer>(width, height, GL_RGBA, GL_UNSIGNED_BYTE, GL_LINEAR, GL_CLAMP_TO_EDGE);
+		}
+		_keys3DLow->resize(width, height);
+		_keys3DLow->bind();
+		glViewport(0, 0, width, height);
+		clearTransparent();
+	}
+
+	// Bake the keyboard at rest when anything it depends on has changed (settings, layout, render size).
+	const std::vector<float> signature = {
+		float(width), float(height), _keyboardHeight, float(_keyCount), float(_minKeyMajor), _minorWidth,
+		state.tilt, state.perspective, state.fillLight, state.ambientLight,
+		state.backLight, state.backLightRadius, state.backLightPosition, state.backLightHeight,
+		state.backLightColor.r, state.backLightColor.g, state.backLightColor.b,
+		state.feltColor.r, state.feltColor.g, state.feltColor.b,
+		state.edgeColor.r, state.edgeColor.g, state.edgeColor.b,
+		state.backColor.r, state.backColor.g, state.backColor.b,
+		mascotOn ? float(_mascotGeneration) : -1.0f, mascot.position.x, mascot.position.y, mascot.position.z,
+		mascot.turn, mascot.lean, mascot.size, mascot.glow, mascot.light,
+		mascot.lightPosition.x, mascot.lightPosition.y, mascot.lightPosition.z, mascot.bulb,
+		mascot.color.r, mascot.color.g, mascot.color.b };
+	if(!_keys3DBake || signature != _keys3DBakeSignature){
+		_keys3DBakeSignature = signature;
+		GLint previousFramebuffer = 0;
+		GLint previousViewport[4];
+		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previousFramebuffer);
+		glGetIntegerv(GL_VIEWPORT, previousViewport);
+		if(!_keys3DBake){
+			_keys3DBake = std::make_shared<Framebuffer>(width, height, GL_RGBA, GL_UNSIGNED_BYTE, GL_NEAREST, GL_CLAMP_TO_EDGE);
+		}
+		_keys3DBake->resize(width, height);
+		_keys3DBake->bind();
+		glViewport(0, 0, width, height);
+		clearTransparent();
+		_programKeys3D.use();
+		static const std::array<float, 128> atRest{};
+		_programKeys3D.uniforms("keyTravel", atRest.size(), atRest.data());
+		_programKeys3D.uniform("noteLightCount", 0);
+		_programKeys3D.uniform("useBake", false);
+		glBindVertexArray(_vaoQuad);
+		glDrawElements(GL_TRIANGLES, int(_quadPrimitiveCount), GL_UNSIGNED_INT, (void*)0);
+		glBindFramebuffer(GL_FRAMEBUFFER, GLuint(previousFramebuffer));
+		glViewport(previousViewport[0], previousViewport[1], previousViewport[2], previousViewport[3]);
+	}
+
+	_programKeys3D.use();
+	_programKeys3D.uniforms("keyTravel", _keyTravel.size(), _keyTravel.data());
+	_programKeys3D.uniform("noteLightCount", noteLightCount);
+	if(noteLightCount > 0){
+		_programKeys3D.uniforms("noteLights", size_t(noteLightCount), noteLights.data());
+		_programKeys3D.uniforms("noteLightColors", size_t(noteLightCount), noteLightColors.data());
+	}
+	_programKeys3D.uniform("useBake", true);
+	_programKeys3D.texture("bakeTex", _keys3DBake->textureId(), GL_TEXTURE_2D);
+	_programKeys3D.uniform("dynamicRangeCount", int(merged.size()));
+	if(!merged.empty()){
+		_programKeys3D.uniforms("dynamicRanges", merged.size(), merged.data());
+	}
+
+	// Black keys and the felt strip rise above the keyboard line: the quad extends above it,
+	// pixels where rays miss the keys are discarded so the notes stay visible there.
+	glBindVertexArray(_vaoQuad);
+	glDrawElements(GL_TRIANGLES, int(_quadPrimitiveCount), GL_UNSIGNED_INT, (void*)0);
+	glBindVertexArray(0);
+	glUseProgram(0);
+
+	if(scaled){
+		// Scale up onto the frame. Colors are either opaque or fully transparent black, so they are
+		// premultiplied already: filtered edges blend correctly over the notes.
+		glBindFramebuffer(GL_FRAMEBUFFER, GLuint(frameFramebuffer));
+		glViewport(frameViewport[0], frameViewport[1], frameViewport[2], frameViewport[3]);
+		glEnable(GL_BLEND);
+		glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		_keys3DUpscale.draw(_keys3DLow->textureId(), 0.0f);
+		glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
+		glDisable(GL_BLEND);
+	}
 }
 
 void Renderer::drawPedals(const std::shared_ptr<MIDIScene>& scene, float time, const glm::vec2 & invScreenSize, const State::PedalsState & state, float keyboardHeight, bool horizontalMode) {
@@ -703,6 +1081,11 @@ void Renderer::clean(){
 	_programParticules.clean();
 	_programKeyMinors.clean();
 	_programKeyMajors.clean();
+	_programKeys3D.clean();
+	_keys3DBake.reset();
+	_keys3DLow.reset();
+	_keys3DUpscale.clean();
+	loadMascot("");
 	_programPedals.clean();
 	_programWave.clean();
 	_programWaveNoise.clean();

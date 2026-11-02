@@ -115,6 +115,11 @@ private:
 
 	void showKeyboardOptions();
 
+	void showMascotOptions();
+
+	/// Switch to another mascot file and take the settings stored with it.
+	void selectMascot(const std::string & path);
+
 	void showFlashOptions();
 
 	void showPedalOptions();
